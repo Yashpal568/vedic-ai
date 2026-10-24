@@ -418,7 +418,7 @@ export default function Home() {
               <button type="button" className="tool-button" onClick={() => setToast("Voice input is planned for a later release.")}><AudioLines size={15} /><span>Voice</span></button>
             </div><button type="submit" className="send-button" aria-label="Send message" disabled={!input.trim() || isLoading}><ArrowUp size={17} /></button></div>
           </form>
-          <p className="footer-note">Vedic AI can make mistakes. Astrological interpretations are traditional perspectives, not certainties.</p>
+          <p className="footer-note">Vedic AI can make mistakes. Astrological interpretations are traditional perspectives, not certainties. <span className="footer-separator">·</span> <Link href="/privacy">Privacy</Link> <span className="footer-separator">·</span> <Link href="/terms">Terms</Link></p>
         </div></footer>
       </section>
 
