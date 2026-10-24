@@ -81,7 +81,6 @@ export default function LoginPage() {
           {error && <p className="auth-error" role="alert">{error}</p>}
           <button className="primary-button auth-submit" type="submit" disabled={busy || googleBusy}>{busy ? "Sending secure link…" : "Continue with email"} <ArrowUpRight size={15}/></button>
         </form>
-        {error && <p className="auth-error auth-google-error" role="alert">{error}</p>}
         <p className="auth-privacy"><ShieldCheck size={14}/> Secure sign-in powered by Supabase Auth.</p>
       </> : <div className="auth-success">
         <span className="auth-success-icon"><CheckCircle2 size={25}/></span>
