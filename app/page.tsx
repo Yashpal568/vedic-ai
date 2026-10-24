@@ -5,7 +5,6 @@ import {
   ArrowDown, ArrowUp, AudioLines, BookOpen, CalendarDays, Check, ChevronDown,
   CircleHelp, Gem, History, Menu, MessageCircle, MoonStar, Orbit, Plus,
   ShieldCheck, Sparkles, Stars, UserRound, X, BriefcaseBusiness, Heart,
-  Send, Compass, Sun,
 } from "lucide-react";
 
 type Message = { id: string; role: "user" | "assistant"; content: string };
@@ -22,6 +21,7 @@ const makeId = () => Date.now().toString(36) + Math.random().toString(36).slice(
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const [isBirthOpen, setIsBirthOpen] = useState(false);
   const [birth, setBirth] = useState<BirthProfile>({ name: "", date: "", time: "", place: "" });
   const [savedBirth, setSavedBirth] = useState<BirthProfile | null>(null);
@@ -47,16 +47,33 @@ export default function Home() {
     setMobileMenuOpen(false);
   }
 
-  function sendMessage(value?: string) {
+  async function sendMessage(value?: string) {
     const trimmed = (value === undefined ? input : value).trim();
-    if (!trimmed) return;
-    setMessages((current) => [...current, { id: makeId(), role: "user", content: trimmed }]);
+    if (!trimmed || isLoading) return;
+    const userMessage: Message = { id: makeId(), role: "user", content: trimmed };
+    const nextMessages = [...messages, userMessage];
+    setMessages(nextMessages);
     setInput("");
+    setIsLoading(true);
     if (textareaRef.current) textareaRef.current.style.height = "auto";
-    const answer = savedBirth
-      ? "I have your birth profile saved in this session" + (savedBirth.name ? " for " + savedBirth.name : "") + ". To give you a reliable kundli-based answer, this project still needs its astrology calculation engine and AI provider connected. I won't invent your lagna, planetary degrees, nakshatra, or dasha dates.\n\nYour confirmed details are " + savedBirth.date + " at " + savedBirth.time + ", in " + savedBirth.place + ". The next step is to calculate the chart using explicit sidereal settings, then use that structured data to answer your question: “" + trimmed + "”."
-      : "That’s a good place to start. For a personalised Vedic kundli reading, I first need your birth date, local birth time, and birthplace. Use “Add birth details” below to enter them.\n\nThis early preview does not yet call an AI provider or calculate a real chart, so I won’t guess your planetary placements. Once the server-side AI and verified calculation engine are connected, this conversation will be grounded in your actual chart data.";
-    window.setTimeout(() => setMessages((current) => [...current, { id: makeId(), role: "assistant", content: answer }]), 350);
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: nextMessages.map(({ role, content }) => ({ role, content })),
+          birthProfile: savedBirth || undefined,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "The AI service is not available right now.");
+      setMessages((current) => [...current, { id: makeId(), role: "assistant", content: data.reply }]);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to reach the AI service.";
+      setMessages((current) => [...current, { id: makeId(), role: "assistant", content: message }]);
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   function submitMessage(event: FormEvent<HTMLFormElement>) { event.preventDefault(); sendMessage(); }
@@ -64,22 +81,37 @@ export default function Home() {
     if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); sendMessage(); }
   }
 
-  function submitBirth(event: FormEvent<HTMLFormElement>) {
+  async function submitBirth(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!birth.date || !birth.time || !birth.place.trim()) return;
-    setSavedBirth(birth);
+    if (!birth.date || !birth.time || !birth.place.trim() || isLoading) return;
+    const profile = { ...birth, place: birth.place.trim() };
+    setSavedBirth(profile);
     setIsBirthOpen(false);
-    const details = (birth.name.trim() ? "Name: " + birth.name.trim() + "\n" : "") +
-      "Date of birth: " + birth.date + "\nLocal birth time: " + birth.time + "\nBirthplace: " + birth.place.trim();
-    setMessages((current) => [
-      ...current,
-      { id: makeId(), role: "user", content: "Please use these birth details for my kundli:\n" + details },
-      { id: makeId(), role: "assistant", content:
-        "Thank you" + (birth.name.trim() ? ", " + birth.name.trim() : "") + ". Your birth details are now held in this browser session for the prototype.\n\nBirth details received\n• Date: " + birth.date + "\n• Local time: " + birth.time + "\n• Place: " + birth.place.trim() + "\n\nBefore a real kundli can be generated, the backend must resolve this place to coordinates and an IANA timezone, validate the historical local time, and run the selected Vedic calculation engine. That integration is not active in this UI preview yet, so no planetary positions or predictions have been fabricated."
-      },
-    ]);
+    const details = (profile.name.trim() ? "Name: " + profile.name.trim() + "\n" : "") +
+      "Date of birth: " + profile.date + "\nLocal birth time: " + profile.time + "\nBirthplace: " + profile.place;
+    const userMessage: Message = { id: makeId(), role: "user", content: "Please use these birth details for my kundli:\n" + details };
+    const nextMessages = [...messages, userMessage];
+    setMessages(nextMessages);
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: nextMessages.map(({ role, content }) => ({ role, content })),
+          birthProfile: profile,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "The AI service is not available right now.");
+      setMessages((current) => [...current, { id: makeId(), role: "assistant", content: data.reply }]);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to reach the AI service.";
+      setMessages((current) => [...current, { id: makeId(), role: "assistant", content: message }]);
+    } finally {
+      setIsLoading(false);
+    }
   }
-
   return (
     <main className="app-shell">
       <aside className="sidebar">
@@ -160,7 +192,7 @@ export default function Home() {
                 <div className="assistant-note"><Sparkles size={14} style={{ flexShrink: 0, color: "var(--gold)", marginTop: 2 }} /><span>Interpretations are intended for reflection and learning. Chart-based answers will be enabled once calculation and AI services are configured.</span></div>
               </div> : <div className="user-bubble">{message.content}</div>}
             </div>)}
-            <div ref={bottomRef} />
+            {isLoading && <div className="message-row"><div className="message-avatar"><MoonStar size={16} /></div><div className="message-content"><div className="message-meta">VEDIC AI · THINKING</div><div className="message-text">Preparing a thoughtful response…</div></div></div>}<div ref={bottomRef} />
           </section>}
         </div>
 
@@ -170,7 +202,7 @@ export default function Home() {
             <div className="composer-bottom"><div className="composer-tools">
               <button type="button" className="tool-button" onClick={() => setIsBirthOpen(true)}><Plus size={15} /><span>{savedBirth ? "Birth profile added" : "Add birth details"}</span></button>
               <button type="button" className="tool-button" onClick={() => setToast("Voice input is planned for a later release.")}><AudioLines size={15} /><span>Voice</span></button>
-            </div><button type="submit" className="send-button" aria-label="Send message" disabled={!input.trim()}><ArrowUp size={17} /></button></div>
+            </div><button type="submit" className="send-button" aria-label="Send message" disabled={!input.trim() || isLoading}><ArrowUp size={17} /></button></div>
           </form>
           <p className="footer-note">Vedic AI can make mistakes. Astrological interpretations are traditional perspectives, not certainties.</p>
         </div></footer>
