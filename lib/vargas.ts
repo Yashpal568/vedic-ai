@@ -1,4 +1,7 @@
-import { SIGNS } from "@/lib/astrology";
+const SIGNS = [
+  "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
+  "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces",
+] as const;
 
 /**
  * Parashari divisional sign mapping for commonly used Vargas.
