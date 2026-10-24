@@ -9,7 +9,7 @@ import { printKundliReport } from "@/lib/print-report";
 import {
   ArrowDown, ArrowUp, AudioLines, BookOpen, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight,
   CircleHelp, Gem, History, Menu, MessageCircle, MoonStar, Orbit, Plus,
-  ShieldCheck, Sparkles, Stars, UserRound, X, BriefcaseBusiness, Heart, Compass, Trash2,
+  ShieldCheck, Sparkles, Stars, UserRound, X, BriefcaseBusiness, Heart, Compass, Trash2, RefreshCw,
 } from "lucide-react";
 
 type Message = { id: string; role: "user" | "assistant"; content: string };
@@ -161,6 +161,8 @@ export default function Home() {
   const [birth, setBirth] = useState<BirthProfile>({ name: "", date: "", time: "", place: "" });
   const [savedBirth, setSavedBirth] = useState<BirthProfile | null>(null);
   const [chartReport, setChartReport] = useState<KundliReport | null>(null);
+  const [transitReport, setTransitReport] = useState<KundliReport | null>(null);
+  const [transitLoading, setTransitLoading] = useState(false);
   const [placeOptions, setPlaceOptions] = useState<PlaceOption[]>([]);
   const [selectedPlace, setSelectedPlace] = useState<PlaceOption | null>(null);
   const [isGeocoding, setIsGeocoding] = useState(false);
@@ -211,6 +213,7 @@ export default function Home() {
     setMessages([]);
     setInput("");
     setChartReport(null);
+    setTransitReport(null);
     setActiveConversationId(null);
     setMobileMenuOpen(false);
   }
@@ -225,6 +228,7 @@ export default function Home() {
       })));
       setActiveConversationId(id);
       setChartReport(data.chartReport || null);
+      setTransitReport(null);
       if (data.chartReport?.birth) {
         setSavedBirth({
           name: "",
@@ -406,6 +410,7 @@ export default function Home() {
       profile.timezone = report.birth.timezone;
       setSavedBirth(profile);
       setChartReport(report);
+      setTransitReport(null);
       setIsBirthOpen(false);
       const details = (profile.name.trim() ? "Name: " + profile.name.trim() + "\n" : "") +
         "Date of birth: " + profile.date + "\nLocal birth time: " + profile.time +
@@ -564,6 +569,29 @@ export default function Home() {
     }
   }
 
+  async function loadCurrentTransits() {
+    if (!chartReport || transitLoading) return;
+    setTransitLoading(true);
+    try {
+      const response = await fetch("/api/transits", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          place: chartReport.birth.place,
+          latitude: chartReport.birth.latitude,
+          longitude: chartReport.birth.longitude,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Could not calculate current transits.");
+      setTransitReport(data.report as KundliReport);
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : "Could not calculate current transits.");
+    } finally {
+      setTransitLoading(false);
+    }
+  }
+
   async function saveChartReport() {
     if (!chartReport || !savedBirth) return;
     try {
@@ -662,7 +690,7 @@ export default function Home() {
             <div className="assistant-note" style={{ marginTop: 22 }}><ShieldCheck size={15} style={{ flexShrink: 0, color: "var(--gold)", marginTop: 1 }} /><span>For a personalised reading, add your birth date, exact local birth time, and birthplace. This preview won’t invent planetary placements; verified chart calculations will be connected in the next development phase.</span></div>
           </section> : <section className="chat-area" aria-live="polite">
             {chartReport && <section className="chart-panel">
-              <div className="chart-panel-head"><div><div className="eyebrow"><span className="eyebrow-line" /> YOUR VEDIC BIRTH CHART</div><h2 className="chart-title">{chartReport.ascendant.sign} Ascendant <span>· {chartReport.birth.place.split(",").slice(0, 2).join(",")}</span></h2><p className="chart-subtitle">Lahiri sidereal · Whole-sign houses · {chartReport.birth.timezone}</p></div><button className="secondary-button chart-export" onClick={() => { const blob = new Blob([JSON.stringify(chartReport, null, 2)], { type: "application/json" }); const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.href = url; link.download = "vedic-ai-kundli.json"; link.click(); URL.revokeObjectURL(url); }}>Export chart <ArrowDown size={13}/></button><button className="secondary-button chart-export" onClick={() => { try { printKundliReport(chartReport); } catch (error) { setToast(error instanceof Error ? error.message : "Could not open PDF preview."); } }}>Print / Save PDF</button><button className="primary-button chart-save" onClick={saveChartReport}>Save kundli <Check size={13}/></button></div>
+              <div className="chart-panel-head"><div><div className="eyebrow"><span className="eyebrow-line" /> YOUR VEDIC BIRTH CHART</div><h2 className="chart-title">{chartReport.ascendant.sign} Ascendant <span>· {chartReport.birth.place.split(",").slice(0, 2).join(",")}</span></h2><p className="chart-subtitle">Lahiri sidereal · Whole-sign houses · {chartReport.birth.timezone}</p></div><button className="secondary-button chart-export" onClick={() => { const blob = new Blob([JSON.stringify(chartReport, null, 2)], { type: "application/json" }); const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.href = url; link.download = "vedic-ai-kundli.json"; link.click(); URL.revokeObjectURL(url); }}>Export chart <ArrowDown size={13}/></button><button className="secondary-button chart-export" onClick={() => { try { printKundliReport(chartReport); } catch (error) { setToast(error instanceof Error ? error.message : "Could not open PDF preview."); } }}>Print / Save PDF</button><button className="primary-button chart-save" onClick={saveChartReport}>Save kundli <Check size={13}/></button><button className="secondary-button chart-export" onClick={loadCurrentTransits} disabled={transitLoading}>{transitLoading ? <RefreshCw size={13} className="spin-icon"/> : <Orbit size={13}/>} {transitLoading ? "Calculating…" : "Current transits"}</button></div>
               <div className="chart-stats"><div className="chart-stat"><span>Ascendant / Lagna</span><strong>{chartReport.ascendant.sign}</strong><small>{chartReport.ascendant.degreeInSign.toFixed(2)}° · {chartReport.ascendant.nakshatra}</small></div><div className="chart-stat"><span>Moon Nakshatra</span><strong>{chartReport.planets.find((planet) => planet.name === "Moon")?.nakshatra || "—"}</strong><small>Pada {chartReport.planets.find((planet) => planet.name === "Moon")?.nakshatraPada || "—"}</small></div><div className="chart-stat"><span>Current Mahadasha</span><strong>{chartReport.vimshottari.currentMahadasha.lord}</strong><small>{new Date(chartReport.vimshottari.currentMahadasha.start).toLocaleDateString()} – {new Date(chartReport.vimshottari.currentMahadasha.end).toLocaleDateString()}</small></div></div>
               <div className="chart-secondary-grid">
                 <KundliDiagram report={chartReport} />
@@ -675,6 +703,11 @@ export default function Home() {
               </div>
               <div className="chart-table-wrap"><table className="chart-table"><thead><tr><th>Graha</th><th>Rashi</th><th>Degree</th><th>House</th><th>Nakshatra</th><th>D9 Navamsa</th><th>D10 Dashamsa</th><th>Status</th></tr></thead><tbody>{chartReport.planets.map((planet) => <tr key={planet.name}><td>{planet.name}</td><td>{planet.sign}</td><td>{planet.degreeInSign.toFixed(2)}°</td><td>{planet.house}</td><td>{planet.nakshatra} · {planet.nakshatraPada}</td><td>{planet.navamsaSign}</td><td>{planet.dashamsaSign}</td><td>{planet.retrograde ? "Retrograde" : "Direct"}</td></tr>)}</tbody></table></div>
               <p className="chart-disclaimer"><ShieldCheck size={13}/> {chartReport.disclaimer} D9/D10 sign mapping is tested separately, but the underlying planetary longitudes and full chart are still awaiting independent ephemeris validation.</p>
+            </section>}
+            {transitReport && chartReport && <section className="chart-panel transit-panel">
+              <div className="chart-panel-head"><div><div className="eyebrow"><span className="eyebrow-line" /> CURRENT SKY · EXPERIMENTAL</div><h2 className="chart-title">Transit snapshot <span>· {transitReport.birth.timezone}</span></h2><p className="chart-subtitle">Calculated at {new Date(transitReport.birth.utc).toLocaleString()} · compared with natal Lagna</p></div><button className="secondary-button" onClick={loadCurrentTransits} disabled={transitLoading}>{transitLoading ? "Refreshing…" : "Refresh"}</button></div>
+              <p className="chart-disclaimer"><ShieldCheck size={13}/> Transit positions use the experimental calculation engine and are not independently validated. Treat this as a preview, not a predictive reading.</p>
+              <div className="chart-table-wrap"><table className="chart-table"><thead><tr><th>Graha</th><th>Current sign</th><th>Degree</th><th>House from natal Lagna</th><th>Natal sign</th></tr></thead><tbody>{transitReport.planets.map((planet) => { const natal = chartReport.planets.find((item) => item.name === planet.name); return <tr key={planet.name}><td>{planet.name}</td><td>{planet.sign}</td><td>{planet.degreeInSign.toFixed(2)}°</td><td>{(planet.signIndex - chartReport.ascendant.signIndex + 12) % 12 + 1}</td><td>{natal?.sign || "—"}</td></tr>; })}</tbody></table></div>
             </section>}
             {messages.map((message) => <div className={"message-row " + message.role} key={message.id}>
               {message.role === "assistant" && <div className="message-avatar"><MoonStar size={16} /></div>}
