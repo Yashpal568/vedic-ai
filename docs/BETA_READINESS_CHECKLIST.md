@@ -15,7 +15,7 @@ Status key: **Implemented (needs deployment verification)**, **Partial**, **Not 
 - [x] **Ambiguous DST fall-back times** — the calculation engine rejects repeated local wall times during a fall-back transition rather than silently choosing one instant; verify the UX presents the actionable error clearly in the deployed app.
 - [x] **D9/D10 sign-mapping unit tests (limited scope)** — mapping functions have deterministic tests against an independent longitude fixture. This does not validate the underlying ephemeris or full chart.
 - [ ] **Nakshatra/Navamsa/Dasha fixtures** — test exact boundary values, D9 placements from the app's computed longitudes, dasha start/end and date boundaries against independent full-chart reference calculations.
-- [ ] **Chart-grounded AI regression tests** — add mocked-provider tests proving fabricated client chart values cannot influence answers, and that unsupported yogas/divisional charts are described as not computed.
+- [ ] **Chart-grounded AI regression tests** — add mocked-provider tests proving fabricated client chart values cannot influence answers, and that experimental yoga/Panchang/transit outputs remain clearly qualified.
 - [ ] **Save/retrieve reports E2E** — sign in, save, refresh, verify reports page, delete, and verify removal.
 - [ ] **Conversation ownership tests** — run two-account forged conversation/report/birth-profile ID tests against Supabase RLS and API routes.
 - [ ] **Responsive/accessibility audit** — test keyboard-only navigation, visible focus, contrast, Hindi long messages, screen readers, loading/error states, and actual device sizes.
@@ -41,7 +41,7 @@ Status key: **Implemented (needs deployment verification)**, **Partial**, **Not 
 - [x] **Printable report export** — chart/report pages open a print-ready report with browser `Print / Save as PDF`. A dedicated generated PDF file, Hindi font embedding, and page-break QA remain outstanding.
 - [ ] **D9/D10 and other divisional charts** — do not mark complete until the ephemeris/license decision and independent reference fixtures are approved; see `docs/ASTROLOGY_ACCURACY_AND_LICENSING.md`.
 - [ ] **Yoga rules** — implement deterministic rule definitions with cited Jyotish sources and false-positive/reference tests after the engine accuracy and rule-convention review.
-- [ ] **Panchang/transits** — only after validated timezone/location/date calculations and explicit ayanamsha/astronomical conventions.
+- [x] **Experimental birth Panchang and current transit preview (limited scope)** — birth tithi/paksha/yoga/karana/vara and a current-location transit snapshot are implemented with unit-tested Panchang formula boundaries. **Still not validated for production** until the ephemeris, timezone conventions, and full chart fixtures are approved.
 - [ ] **Subscriptions/paid access** — payment provider, server-side entitlements, refund and webhook verification.
 - [ ] **SEO/legal** — metadata, sitemap, robots, canonical URLs, privacy/terms/contact pages reviewed for launch.
 - [ ] **Automated end-to-end journey** — login → birth details → chart → AI → save → reload → delete. Print-to-PDF is implemented, but end-to-end browser tests are not yet executed.
