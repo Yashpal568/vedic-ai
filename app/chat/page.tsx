@@ -95,9 +95,13 @@ function BirthDatePicker({ value, onChange }: { value: string; onChange: (value:
       <div className="birth-calendar-heading">
         <div className="birth-calendar-selectors">
           <select aria-label="Month" value={viewMonth} onChange={(event) => setViewMonth(Number(event.target.value))}>
-            {monthNames.map((month, index) => <option value={index} key={month}>{month}</option>)}
+            {monthNames.map((month, index) => <option value={index} key={month} disabled={viewYear === maxDate.getFullYear() && index > maxDate.getMonth()}>{month}</option>)}
           </select>
-          <select aria-label="Year" value={viewYear} onChange={(event) => { setViewYear(Number(event.target.value)); }}>
+          <select aria-label="Year" value={viewYear} onChange={(event) => {
+            const nextYear = Number(event.target.value);
+            setViewYear(nextYear);
+            if (nextYear === maxDate.getFullYear() && viewMonth > maxDate.getMonth()) setViewMonth(maxDate.getMonth());
+          }}>
             {years.map((year) => <option value={year} key={year}>{year}</option>)}
           </select>
         </div>
