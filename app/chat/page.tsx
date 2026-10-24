@@ -51,7 +51,7 @@ function BirthDatePicker({ value, onChange }: { value: string; onChange: (value:
     const onPointerDown = (event: PointerEvent) => {
       if (rootRef.current && !rootRef.current.contains(event.target as Node)) setOpen(false);
     };
-    const onKeyDown = (event: KeyboardEvent) => {
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
       if (event.key === "Escape") setOpen(false);
     };
     document.addEventListener("pointerdown", onPointerDown);
@@ -105,7 +105,7 @@ function BirthDatePicker({ value, onChange }: { value: string; onChange: (value:
             : <button type="button" key={day} disabled={isFuture} className={"birth-calendar-day" + (isSelected ? " selected" : "") + (isToday ? " today" : "")} aria-pressed={isSelected} onClick={() => chooseDay(day)}>{day}</button>;
         })}
       </div>
-      <div className="birth-calendar-footer"><button type="button" onClick={() => { setViewYear(today.getFullYear()); setViewMonth(today.getMonth()); chooseDay(today.getDate()); }}>Today</button><span>Future dates are unavailable</span></div>
+      <div className="birth-calendar-footer"><button type="button" onClick={() => { setViewYear(today.getFullYear()); setViewMonth(today.getMonth()); onChange([today.getFullYear(), String(today.getMonth() + 1).padStart(2, "0"), String(today.getDate()).padStart(2, "0")].join("-")); setOpen(false); }}>Today</button><span>Future dates are unavailable</span></div>
     </div>}
   </div>;
 }
