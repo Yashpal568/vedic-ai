@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import tzlookup from "@photostructure/tz-lookup";
 import { calculateKundli } from "@/lib/astrology";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,6 +16,8 @@ const schema = z.object({
 });
 
 export async function POST(request: Request) {
+  const rate = checkRateLimit(request, "kundli", 15, 60_000);
+  if (!rate.allowed) return NextResponse.json({ error: "Too many chart calculations. Please wait and try again." }, { status: 429, headers: { "Retry-After": String(rate.retryAfterSeconds) } });
   try {
     const body = schema.parse(await request.json());
     const timezone = tzlookup(body.latitude, body.longitude);
