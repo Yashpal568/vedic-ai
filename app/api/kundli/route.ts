@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import tzlookup from "tz-lookup";
+import tzlookup from "@photostructure/tz-lookup";
 import { calculateKundli } from "@/lib/astrology";
 
 export const runtime = "nodejs";
