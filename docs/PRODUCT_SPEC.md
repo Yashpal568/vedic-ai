@@ -49,21 +49,22 @@ The chart payload should include:
 
 ## MVP boundaries
 
-### In progress / scaffolded
+### Implemented in the current repository
 - Next.js App Router, TypeScript, Tailwind CSS.
-- Premium chat-first UI and responsive birth-detail form.
-- Server-side Gemini/OpenAI provider adapter.
-- Basic health endpoint and environment template.
-- Initial Supabase relational schema with RLS policies.
-- Project overview and architecture docs.
+- Premium chat-first UI, responsive birth-detail form, location candidate selection, and chart summary table.
+- Server-side Gemini/OpenAI provider adapter with chart-context support.
+- Astronomy Engine-based tropical longitudes converted to sidereal signs, approximate Lahiri ayanamsha, whole-sign houses, nakshatra/pada, Navamsa sign, mean lunar nodes, and Vimshottari mahadasha scaffold.
+- Birthplace geocoding and coordinate-based IANA timezone lookup.
+- Supabase passwordless sign-in scaffold, authenticated report save endpoint, and private saved-kundli library.
+- Initial Supabase schema with Row Level Security, health endpoint, environment template, product docs, and Vitest invariants.
 
 ### Not yet production-ready
-- Real ephemeris-backed kundli calculations.
-- Birthplace geocoding and historical timezone resolution.
-- Supabase authentication and persistence wired into UI.
+- Validation of the calculation engine against trusted reference charts and a precision/ayanamsha review.
+- Robust DST ambiguous/nonexistent-time handling and timezone-boundary verification.
 - Durable rate limiting, quotas, abuse prevention, and observability.
-- Calculation test suite and reference-chart validation.
-- PDF report generation, subscriptions, matching, panchang, transits, and divisional charts.
+- Full conversation-history persistence, account deletion/export, privacy retention controls, and production security tests.
+- PDF report generation, subscriptions, Panchang/transits, yoga rule engine, and full D9/D10 divisional charts.
+- End-to-end tests, accessible UI audit, and deployment environment verification.
 
 ## Acceptance criteria for first usable beta
 
