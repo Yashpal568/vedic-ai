@@ -17,8 +17,11 @@ Never paste API keys, passwords, Supabase service-role keys, or recovery codes i
 1. Open [Supabase](https://supabase.com/) and create a project. Save the database password in your password manager; Vedic AI does not need that password in its environment variables.
 2. Wait for the project to finish provisioning.
 3. Open **SQL Editor → New query**.
-4. Open the repository file [initial schema migration](../supabase/migrations/202610240001_initial_schema.sql), copy the entire SQL file, paste it into the SQL Editor, and click **Run**.
-5. Confirm the query succeeds. In **Table Editor**, check for `profiles`, `birth_profiles`, `conversations`, `chat_messages`, and `kundli_reports`. The migration enables Row Level Security (RLS); do not turn RLS off.
+4. Run the migration files **in order**, each in its own SQL Editor query:
+   - [001 — initial schema](../supabase/migrations/202610240001_initial_schema.sql)
+   - [002 — user-editable context memory](../supabase/migrations/202610240002_user_memory.sql)
+   - [003 — persistence and security hardening](../supabase/migrations/202610240003_persistence_security_hardening.sql)
+5. Confirm each query succeeds. In **Table Editor**, check for `profiles`, `birth_profiles`, `conversations`, `chat_messages`, `kundli_reports`, and `user_memories`. The migrations enable Row Level Security (RLS); do not turn RLS off. Migration 003 also updates conversation recency when messages are saved and permits users to delete their own profile row.
 6. Open **Project Settings → API** (or the project's API/Connect details). Copy:
    - Project URL → `NEXT_PUBLIC_SUPABASE_URL`
    - Public anon key / publishable key → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
