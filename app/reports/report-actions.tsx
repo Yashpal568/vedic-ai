@@ -4,11 +4,18 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Download, LoaderCircle, Trash2 } from "lucide-react";
 import type { KundliReport } from "@/lib/astrology";
+import { printKundliReport } from "@/lib/print-report";
 
 export default function ReportActions({ id, report }: { id: string; report: KundliReport }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+
+  function printReport() {
+    setError("");
+    try { printKundliReport(report, id); }
+    catch (cause) { setError(cause instanceof Error ? cause.message : "Could not open report preview."); }
+  }
 
   function downloadReport() {
     const blob = new Blob([JSON.stringify(report, null, 2)], { type: "application/json" });
@@ -37,6 +44,7 @@ export default function ReportActions({ id, report }: { id: string; report: Kund
   }
 
   return <div className="report-actions">
+    <button className="secondary-button" onClick={printReport}>Print / Save PDF</button>
     <button className="secondary-button" onClick={downloadReport}><Download size={13}/> Export JSON</button>
     <button className="secondary-button report-delete" onClick={deleteReport} disabled={busy}>{busy ? <LoaderCircle size={13}/> : <Trash2 size={13}/>} Delete</button>
     {error && <p role="alert" className="report-action-error">{error}</p>}
