@@ -65,6 +65,11 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [isBirthOpen, setIsBirthOpen] = useState(false);
+  const [isMemoryOpen, setIsMemoryOpen] = useState(false);
+  const [memoryText, setMemoryText] = useState("");
+  const [memoryDraft, setMemoryDraft] = useState("");
+  const [memoryLoading, setMemoryLoading] = useState(false);
+  const [memorySaving, setMemorySaving] = useState(false);
   const [birth, setBirth] = useState<BirthProfile>({ name: "", date: "", time: "", place: "" });
   const [savedBirth, setSavedBirth] = useState<BirthProfile | null>(null);
   const [chartReport, setChartReport] = useState<KundliReport | null>(null);
@@ -347,6 +352,54 @@ export default function Home() {
   }
 
 
+  async function openMemory() {
+    if (!isSignedIn) {
+      setToast("Sign in to use saved context memory.");
+      window.location.href = "/login";
+      return;
+    }
+    setIsMemoryOpen(true);
+    setMemoryLoading(true);
+    try {
+      const response = await fetch("/api/memory", { cache: "no-store" });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Could not load saved memory.");
+      setMemoryText(data.memory || "");
+      setMemoryDraft(data.memory || "");
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : "Could not load saved memory.");
+    } finally { setMemoryLoading(false); }
+  }
+
+  async function saveMemory() {
+    setMemorySaving(true);
+    try {
+      const response = await fetch("/api/memory", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ memory: memoryDraft }) });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Could not save memory.");
+      setMemoryText(data.memory || "");
+      setMemoryDraft(data.memory || "");
+      setToast("Your saved context memory has been updated.");
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : "Could not save memory.");
+    } finally { setMemorySaving(false); }
+  }
+
+  async function deleteMemory() {
+    if (!window.confirm("Delete your saved context memory? Your chat history will not be deleted.")) return;
+    setMemorySaving(true);
+    try {
+      const response = await fetch("/api/memory", { method: "DELETE" });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Could not delete memory.");
+      setMemoryText("");
+      setMemoryDraft("");
+      setToast("Saved context memory deleted. Chat history remains available.");
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : "Could not delete memory.");
+    } finally { setMemorySaving(false); }
+  }
+
   async function signOut() {
     const supabase = getSupabaseBrowserClient();
     if (!supabase) return;
@@ -429,6 +482,7 @@ export default function Home() {
           </div>
           <div className="topbar-actions">
             {isSignedIn ? <button className="topbar-link" onClick={signOut}><UserRound size={14}/> Sign out</button> : <Link href="/login" className="topbar-link"><UserRound size={14}/> Sign in</Link>}
+            <button className="topbar-link" onClick={openMemory}><BookOpen size={14} /> Memory</button>
             <button className="topbar-link" onClick={() => setIsBirthOpen(true)}><Orbit size={14} /> {savedBirth ? "Edit birth details" : "Add birth details"}</button>
             <button className="icon-button" aria-label="Help and product status" onClick={() => setToast("Vedic AI is an early preview. Astrology calculations need reference-chart validation; AI and saved history depend on configured services.")}><CircleHelp size={17} /></button>
           </div>
@@ -510,6 +564,23 @@ export default function Home() {
             <div className="assistant-note"><ShieldCheck size={14} style={{ flexShrink: 0, color: "var(--gold)", marginTop: 2 }} /><span>Birth details are sent to the chart service to calculate your kundli. This prototype does not save them to a database; add sign-in and storage configuration before using cloud history.</span></div>
             <div className="modal-actions"><button type="button" className="secondary-button" onClick={() => setIsBirthOpen(false)}>Cancel</button><button type="submit" className="primary-button">Save birth details <ArrowUp size={14} /></button></div>
           </form>
+        </section>
+      </div>}
+
+      {isMemoryOpen && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setIsMemoryOpen(false); }}>
+        <section className="modal memory-modal" role="dialog" aria-modal="true" aria-labelledby="memory-modal-title">
+          <div className="modal-head"><div>
+            <div className="eyebrow"><span className="eyebrow-line" /> PERSONALIZATION</div>
+            <h2 className="modal-title" id="memory-modal-title" style={{ margin: "12px 0 0" }}>Saved context memory</h2>
+            <p className="modal-copy">Add details you want Vedic AI to remember across chats. This text is included as context for your replies when you are signed in.</p>
+          </div><button className="icon-button" onClick={() => setIsMemoryOpen(false)} aria-label="Close memory settings"><X size={17} /></button></div>
+          {memoryLoading ? <p role="status" className="modal-copy">Loading your saved memory…</p> : <>
+            <label className="form-field full"><span className="form-label">What should Vedic AI remember? ({memoryDraft.length}/6000)</span>
+              <textarea className="form-input memory-textarea" rows={8} maxLength={6000} value={memoryDraft} onChange={(event) => setMemoryDraft(event.target.value)} placeholder={"Examples:\n• I prefer concise explanations in Hindi.\n• Explain astrology terms in simple language.\n• My preferred name is…"} />
+            </label>
+            <div className="assistant-note"><ShieldCheck size={14} style={{ flexShrink: 0, color: "var(--gold)", marginTop: 2 }} /><span>Memory is editable and can be deleted here. Save only information you are comfortable sending as context to your configured AI provider. Do not store passwords, payment details, or sensitive personal information.</span></div>
+            <div className="modal-actions"><button type="button" className="secondary-button" onClick={deleteMemory} disabled={memorySaving || !memoryText}>Delete memory</button><button type="button" className="secondary-button" onClick={() => { setMemoryDraft(memoryText); setIsMemoryOpen(false); }}>Cancel</button><button type="button" className="primary-button" onClick={saveMemory} disabled={memorySaving}>{memorySaving ? "Saving…" : "Save memory"} <Check size={14} /></button></div>
+          </>}
         </section>
       </div>}
     </main>
