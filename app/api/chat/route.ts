@@ -12,7 +12,7 @@ const requestSchema = z.object({
   messages: z.array(z.object({
     role: z.enum(["user", "assistant"]),
     content: z.string().trim().min(1).max(12000),
-  })).min(1).max(30),
+  })).min(1).max(30).refine((messages) => messages.reduce((total, message) => total + message.content.length, 0) <= 24000, "Conversation context is too large."),
   birthProfile: z.object({
     name: z.string().max(100).optional(),
     date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
@@ -111,6 +111,25 @@ export async function POST(request: Request) {
   if (!rate.allowed) return NextResponse.json({ error: "Too many chat requests. Please wait a moment and try again." }, { status: 429, headers: { "Retry-After": String(rate.retryAfterSeconds) } });
   try {
     const body = requestSchema.parse(await request.json());
+    // Apply account-level AI budgets in addition to the shared IP request limit.
+    // These are request-count budgets; configure provider billing alerts for monetary caps.
+    const sessionClient = await createSupabaseServerClient();
+    let signedInUserId: string | null = null;
+    if (sessionClient) {
+      const { data: { user } } = await sessionClient.auth.getUser();
+      signedInUserId = user?.id || null;
+    }
+    if (signedInUserId) {
+      const hourlyQuota = await checkRateLimit(request, "ai-user-hour", 12, 60 * 60 * 1000, signedInUserId);
+      if (!hourlyQuota.allowed) {
+        return NextResponse.json({ error: "You've reached the hourly AI usage limit. Please try again later." }, { status: 429, headers: { "Retry-After": String(hourlyQuota.retryAfterSeconds) } });
+      }
+      const dailyQuota = await checkRateLimit(request, "ai-user-day", 40, 24 * 60 * 60 * 1000, signedInUserId);
+      if (!dailyQuota.allowed) {
+        return NextResponse.json({ error: "You've reached today's AI usage limit. Please try again tomorrow." }, { status: 429, headers: { "Retry-After": String(dailyQuota.retryAfterSeconds) } });
+      }
+    }
+
     // Never trust chart facts supplied by the browser. Recalculate on the server from
     // the submitted birth inputs, deriving timezone from coordinates rather than trusting
     // a client-provided timezone or planetary placements.
