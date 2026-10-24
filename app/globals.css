@@ -114,3 +114,7 @@ html{scroll-behavior:smooth;scroll-padding-top:84px}
 .danger-button{border-color:rgba(221,112,103,.3)!important;color:#e9a29c!important}
 .danger-button:hover{background:rgba(221,112,103,.08)!important}
 @media(max-width:560px){.memory-data-actions{flex-direction:column}.memory-data-buttons{width:100%;justify-content:flex-start}.memory-data-buttons button{flex:1}}
+
+.birth-consent{display:flex;align-items:flex-start;gap:10px;margin-top:14px;padding:13px;border:1px solid rgba(212,183,122,.24);border-radius:10px;background:rgba(212,183,122,.045);color:var(--muted);font-size:11px;line-height:1.7;cursor:pointer}
+.birth-consent input{flex:0 0 auto;width:15px;height:15px;margin-top:2px;accent-color:var(--gold)}
+.birth-consent:focus-within{outline:2px solid var(--gold);outline-offset:2px}
