@@ -97,7 +97,6 @@ function navamsaSign(longitude: number) {
 function ascendantLongitude(date: Date, latitude: number, longitude: number) {
   const lst = norm(SiderealTime(date) * 15 + longitude) * Math.PI / 180;
   const lat = latitude * Math.PI / 180;
-  const year = date.getUTCFullYear();
   const days = (date.getTime() - Date.UTC(2000, 0, 1, 12)) / 86400000;
   const obliquity = (23.439291 - 0.00000036 * days / 365.25) * Math.PI / 180;
   const y = -Math.cos(lst);
@@ -115,8 +114,8 @@ function ascendantLongitude(date: Date, latitude: number, longitude: number) {
     return h;
   };
   const a = hourAngleFor(candidate);
-  const b = hourAngleFor(opposite);
-  return Math.abs(a) < Math.abs(b) ? (a < 0 ? candidate : opposite) : (b < 0 ? opposite : candidate);
+  // The ascendant is the eastern intersection of the ecliptic and the horizon.
+  return a < 0 ? candidate : opposite;
 }
 
 function nodeLongitude(date: Date) {
@@ -197,7 +196,6 @@ export function calculateKundli(input: {
   const birthLordIndex = moon.index % 9;
   const birthLord = VIMSHOTTARI[birthLordIndex];
   const balanceYears = birthLord.years * (1 - moon.fraction);
-  const birthYear = utc.getUTCFullYear() + (utc.getUTCMonth() + utc.getUTCDate() / 31) / 12;
   const periods: { lord: string; start: string; end: string; years: number }[] = [];
   let cursor = new Date(utc.getTime() - (birthLord.years - balanceYears) * 365.2425 * 86400000);
   for (let i = 0; i < 18; i++) {
