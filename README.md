@@ -109,7 +109,8 @@ The migration enables Row Level Security. Do not disable RLS to fix a permission
 | --- | --- | --- |
 | `/api/health` | GET | App/integration readiness snapshot |
 | `/api/geocode` | POST | Search and return candidate birthplaces |
-| `/api/kundli` | POST | Calculate chart payload from date/time/coordinates |
+| `/api/kundli` | POST | Calculate experimental chart payload from date/time/coordinates |
+| `/api/transits` | POST | Calculate an experimental current-sky snapshot for a selected location |
 | `/api/chat` | POST | Validated Gemini/OpenAI chat completion |
 | `/api/saved-kundli` | GET | List the signed-in user's saved reports |
 | `/api/saved-kundli` | POST | Save a birth profile and chart report for the signed-in user |
@@ -132,6 +133,7 @@ GitHub Actions runs these checks on pushes and pull requests to `main`. Check th
 ## Accuracy, privacy, and production boundaries
 
 - The current engine uses Astronomy Engine, an approximate Lahiri ayanamsha formula, and a simplified mean-node formula. It is a calculation scaffold, not yet certified against an authoritative Jyotish ephemeris.
+- D9/D10 sign mapping, birth Panchang, simplified yoga candidates, and current transits are available as explicitly experimental previews. They are not full independent validation of the underlying chart.
 - Validate ascendant, planetary longitudes, historical timezone/DST cases, nakshatra/pada boundaries, Navamsa, and Vimshottari dasha boundaries against trusted reference charts before using it for paid readings.
 - Review dependency licences and suitability before commercial release. Astronomy accuracy alone does not make Jyotish interpretation scientifically validated.
 - Nominatim's public service has usage limits and attribution/policy requirements. For meaningful production traffic, use a compliant geocoding provider; do not treat process-local caching as durable rate limiting.
@@ -144,6 +146,7 @@ GitHub Actions runs these checks on pushes and pull requests to `main`. Check th
 - [Product specification](docs/PRODUCT_SPEC.md)
 - [Architecture and production boundaries](docs/ARCHITECTURE.md)
 - [Vercel deployment runbook](docs/DEPLOYMENT_VERCEL.md)
+- [Astrology accuracy and licensing decision](docs/ASTROLOGY_ACCURACY_AND_LICENSING.md)
 - [Google OAuth setup](docs/GOOGLE_OAUTH_SETUP.md)
 - [Security test plan](docs/SECURITY_TEST_PLAN.md)
 - [Operations runbook](docs/OPERATIONS_RUNBOOK.md)
