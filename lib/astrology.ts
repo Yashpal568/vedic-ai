@@ -177,6 +177,25 @@ function utcFromLocal(dateText: string, timeText: string, timezone: string): Dat
   if (!roundTripMatches) {
     throw new Error("This local birth time does not exist in " + timezone + " because of a daylight-saving time change. Choose a valid local time.");
   }
+  // During a fall-back transition, the same wall-clock time can refer to two UTC
+  // instants. Do not silently choose one without a user-selected offset.
+  const targetParts = [Number(ys), Number(mos), Number(ds), Number(hs), Number(mins), Number(secs)];
+  const matchesLocal = (candidate: Date) => {
+    const parts = Object.fromEntries(formatter.formatToParts(candidate).map((p) => [p.type, p.value]));
+    return [Number(parts.year), Number(parts.month), Number(parts.day), Number(parts.hour), Number(parts.minute), Number(parts.second)]
+      .every((value, index) => value === targetParts[index]);
+  };
+  let ambiguous = false;
+  for (let offsetMinutes = -180; offsetMinutes <= 180; offsetMinutes += 15) {
+    if (offsetMinutes === 0) continue;
+    if (matchesLocal(new Date(result.getTime() + offsetMinutes * 60_000))) {
+      ambiguous = true;
+      break;
+    }
+  }
+  if (ambiguous) {
+    throw new Error("This local birth time occurs twice in " + timezone + " because clocks move back. Choose the correct occurrence or provide a time that is not ambiguous.");
+  }
   return result;
 }
 
