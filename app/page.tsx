@@ -2,6 +2,7 @@
 
 import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
+import type { KundliReport } from "@/lib/astrology";
 import {
   ArrowDown, ArrowUp, AudioLines, BookOpen, CalendarDays, Check, ChevronDown,
   CircleHelp, Gem, History, Menu, MessageCircle, MoonStar, Orbit, Plus,
@@ -9,7 +10,8 @@ import {
 } from "lucide-react";
 
 type Message = { id: string; role: "user" | "assistant"; content: string };
-type BirthProfile = { name: string; date: string; time: string; place: string };
+type BirthProfile = { name: string; date: string; time: string; place: string; latitude?: number; longitude?: number; timezone?: string };
+type PlaceOption = { id: string; label: string; latitude: number; longitude: number; type: string; importance: number };
 
 const suggestions = [
   { title: "Understand my birth chart", description: "Explore your lagna, houses, and planetary placements.", prompt: "Help me understand my Vedic birth chart. What details do you need from me?", icon: Orbit },
@@ -26,6 +28,10 @@ export default function Home() {
   const [isBirthOpen, setIsBirthOpen] = useState(false);
   const [birth, setBirth] = useState<BirthProfile>({ name: "", date: "", time: "", place: "" });
   const [savedBirth, setSavedBirth] = useState<BirthProfile | null>(null);
+  const [chartReport, setChartReport] = useState<KundliReport | null>(null);
+  const [placeOptions, setPlaceOptions] = useState<PlaceOption[]>([]);
+  const [selectedPlace, setSelectedPlace] = useState<PlaceOption | null>(null);
+  const [isGeocoding, setIsGeocoding] = useState(false);
   const [historyItems, setHistoryItems] = useState<string[]>([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [toast, setToast] = useState("");
@@ -64,6 +70,7 @@ export default function Home() {
         body: JSON.stringify({
           messages: nextMessages.slice(-30).map(({ role, content }) => ({ role, content })),
           birthProfile: savedBirth || undefined,
+          chartContext: chartReport || undefined,
         }),
       });
       const data = await response.json();
@@ -82,37 +89,118 @@ export default function Home() {
     if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); sendMessage(); }
   }
 
+  async function searchPlaces() {
+    const query = birth.place.trim();
+    if (query.length < 2) return;
+    setIsGeocoding(true);
+    try {
+      const response = await fetch("/api/geocode", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Could not find that birthplace.");
+      const places = (data.places || []) as PlaceOption[];
+      setPlaceOptions(places);
+      if (places.length === 1) {
+        setSelectedPlace(places[0]);
+        setBirth((current) => ({ ...current, place: places[0].label }));
+      } else if (places.length === 0) {
+        setToast("No matching place found. Add city, region, and country.");
+      } else {
+        setToast("Choose the correct birthplace from the matching locations.");
+      }
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : "Birthplace lookup failed.");
+    } finally {
+      setIsGeocoding(false);
+    }
+  }
+
   async function submitBirth(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!birth.date || !birth.time || !birth.place.trim() || isLoading) return;
-    const profile = { ...birth, place: birth.place.trim() };
-    setSavedBirth(profile);
-    setIsBirthOpen(false);
-    const details = (profile.name.trim() ? "Name: " + profile.name.trim() + "\n" : "") +
-      "Date of birth: " + profile.date + "\nLocal birth time: " + profile.time + "\nBirthplace: " + profile.place;
-    const userMessage: Message = { id: makeId(), role: "user", content: "Please use these birth details for my kundli:\n" + details };
-    const nextMessages = [...messages, userMessage];
-    setMessages(nextMessages);
+    if (!birth.date || !birth.time || !birth.place.trim() || isLoading || isGeocoding) return;
+    let place = selectedPlace;
+    if (!place || place.label !== birth.place) {
+      setIsGeocoding(true);
+      try {
+        const response = await fetch("/api/geocode", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query: birth.place.trim() }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Could not find that birthplace.");
+        const places = (data.places || []) as PlaceOption[];
+        setPlaceOptions(places);
+        if (places.length !== 1) {
+          setToast(places.length ? "Choose the exact birthplace from the list before continuing." : "No matching place found. Include city, region, and country.");
+          return;
+        }
+        place = places[0];
+        setSelectedPlace(place);
+      } catch (error) {
+        setToast(error instanceof Error ? error.message : "Birthplace lookup failed.");
+        return;
+      } finally {
+        setIsGeocoding(false);
+      }
+    }
+    if (!place) return;
+
     setIsLoading(true);
+    const profile: BirthProfile = {
+      ...birth, place: place.label, latitude: place.latitude, longitude: place.longitude,
+    };
     try {
-      const response = await fetch("/api/chat", {
+      const chartResponse = await fetch("/api/kundli", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: nextMessages.map(({ role, content }) => ({ role, content })),
-          birthProfile: profile,
+          date: profile.date, time: profile.time, place: profile.place,
+          latitude: place.latitude, longitude: place.longitude,
         }),
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "The AI service is not available right now.");
-      setMessages((current) => [...current, { id: makeId(), role: "assistant", content: data.reply }]);
+      const chartData = await chartResponse.json();
+      if (!chartResponse.ok) throw new Error(chartData.error || "Kundli calculation failed.");
+      const report = chartData.report as KundliReport;
+      profile.timezone = report.birth.timezone;
+      setSavedBirth(profile);
+      setChartReport(report);
+      setIsBirthOpen(false);
+      const details = (profile.name.trim() ? "Name: " + profile.name.trim() + "\n" : "") +
+        "Date of birth: " + profile.date + "\nLocal birth time: " + profile.time +
+        "\nBirthplace: " + profile.place + "\nTimezone: " + report.birth.timezone;
+      const userMessage: Message = { id: makeId(), role: "user", content: "Please create and explain my Vedic kundli using these birth details:\n" + details };
+      const nextMessages = [...messages, userMessage];
+      setMessages(nextMessages);
+      try {
+        const aiResponse = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages: nextMessages.slice(-30).map(({ role, content }) => ({ role, content })),
+            birthProfile: profile,
+            chartContext: report,
+          }),
+        });
+        const aiData = await aiResponse.json();
+        if (!aiResponse.ok) throw new Error(aiData.error || "AI chat is not configured.");
+        setMessages((current) => [...current, { id: makeId(), role: "assistant", content: aiData.reply }]);
+      } catch {
+        setMessages((current) => [...current, {
+          id: makeId(), role: "assistant",
+          content: "Your chart has been calculated and is shown above. To enable personalised AI explanations and follow-up questions, configure GEMINI_API_KEY or OPENAI_API_KEY in the server environment. The chart engine currently uses an approximate Lahiri ayanamsha and should be validated against trusted reference charts before high-accuracy or commercial use.",
+        }]);
+      }
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Unable to reach the AI service.";
-      setMessages((current) => [...current, { id: makeId(), role: "assistant", content: message }]);
+      setToast(error instanceof Error ? error.message : "Kundli calculation failed. Please verify your details.");
     } finally {
       setIsLoading(false);
     }
   }
+
   return (
     <main className="app-shell">
       <aside className="sidebar">
@@ -223,9 +311,9 @@ export default function Home() {
               <label className="form-field full"><span className="form-label">Name <span style={{ color: "var(--quiet)", fontWeight: 400 }}>(optional)</span></span><input className="form-input" autoComplete="name" value={birth.name} onChange={(event) => setBirth({ ...birth, name: event.target.value })} placeholder="What should we call you?" /></label>
               <label className="form-field"><span className="form-label">Date of birth *</span><input className="form-input" type="date" required value={birth.date} onChange={(event) => setBirth({ ...birth, date: event.target.value })} /></label>
               <label className="form-field"><span className="form-label">Local birth time *</span><input className="form-input" type="time" required value={birth.time} onChange={(event) => setBirth({ ...birth, time: event.target.value })} /></label>
-              <label className="form-field full"><span className="form-label">Birthplace *</span><input className="form-input" required value={birth.place} onChange={(event) => setBirth({ ...birth, place: event.target.value })} placeholder="City, region, country (e.g. Jaipur, India)" /></label>
+              <label className="form-field full"><span className="form-label">Birthplace *</span><div className="place-search-row"><input className="form-input" required value={birth.place} onChange={(event) => { setBirth({ ...birth, place: event.target.value }); setSelectedPlace(null); setPlaceOptions([]); }} placeholder="City, region, country (e.g. Jaipur, India)" /><button type="button" className="secondary-button place-search-button" disabled={isGeocoding || birth.place.trim().length < 2} onClick={searchPlaces}>{isGeocoding ? "Searching…" : "Find place"}</button></div>{selectedPlace && <p className="place-selected"><Check size={12} /> Selected: {selectedPlace.label}</p>}{placeOptions.length > 1 && <div className="place-options">{placeOptions.map((option) => <button type="button" className={"place-option " + (selectedPlace?.id === option.id ? "chosen" : "")} key={option.id} onClick={() => { setSelectedPlace(option); setBirth({ ...birth, place: option.label }); setPlaceOptions([]); }}><Compass size={13}/><span>{option.label}</span>{selectedPlace?.id === option.id && <Check size={13}/>}</button>)}</div>}<span className="place-hint">Select the exact city/area so timezone and coordinates are resolved correctly.</span></label>
             </div>
-            <div className="assistant-note"><ShieldCheck size={14} style={{ flexShrink: 0, color: "var(--gold)", marginTop: 2 }} /><span>In this prototype, details remain in the current browser session and are not sent to a server. Persistent storage will require explicit configuration and privacy controls.</span></div>
+            <div className="assistant-note"><ShieldCheck size={14} style={{ flexShrink: 0, color: "var(--gold)", marginTop: 2 }} /><span>Birth details are sent to the chart service to calculate your kundli. This prototype does not save them to a database; add sign-in and storage configuration before using cloud history.</span></div>
             <div className="modal-actions"><button type="button" className="secondary-button" onClick={() => setIsBirthOpen(false)}>Cancel</button><button type="submit" className="primary-button">Save birth details <ArrowUp size={14} /></button></div>
           </form>
         </section>
