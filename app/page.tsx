@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import {
   ArrowRight, ArrowUpRight, Check, ChevronDown, Compass, Heart, Menu, MoonStar,
-  Orbit, ShieldCheck, Sparkles, Stars, Sun, X, MessageCircle, CalendarDays,
+  Orbit, ShieldCheck, Stars, Sun, X, MessageCircle,
 } from "lucide-react";
 
 const features = [
