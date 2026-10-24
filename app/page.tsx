@@ -3,6 +3,7 @@
 import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import Link from "next/link";
+import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import type { KundliReport } from "@/lib/astrology";
 import {
   ArrowDown, ArrowUp, AudioLines, BookOpen, CalendarDays, Check, ChevronDown,
@@ -27,6 +28,7 @@ export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isSignedIn, setIsSignedIn] = useState(false);
   const [isBirthOpen, setIsBirthOpen] = useState(false);
   const [birth, setBirth] = useState<BirthProfile>({ name: "", date: "", time: "", place: "" });
   const [savedBirth, setSavedBirth] = useState<BirthProfile | null>(null);
@@ -43,6 +45,15 @@ export default function Home() {
   const hasConversation = messages.length > 0;
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [messages]);
+  useEffect(() => {
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) return;
+    supabase.auth.getUser().then(({ data }) => setIsSignedIn(Boolean(data.user)));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsSignedIn(Boolean(session?.user));
+    });
+    return () => subscription.unsubscribe();
+  }, []);
   useEffect(() => {
     let active = true;
     fetch("/api/conversations")
@@ -268,6 +279,19 @@ export default function Home() {
   }
 
 
+  async function signOut() {
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) return;
+    const { error } = await supabase.auth.signOut();
+    if (error) setToast("Could not sign out. Please try again.");
+    else {
+      setIsSignedIn(false);
+      setHistoryItems([]);
+      setActiveConversationId(null);
+      setToast("You have signed out.");
+    }
+  }
+
   async function saveChartReport() {
     if (!chartReport || !savedBirth) return;
     try {
@@ -314,7 +338,7 @@ export default function Home() {
           </div>
           <div className="profile-row">
             <div className="avatar">{savedBirth?.name?.trim()?.[0]?.toUpperCase() || "G"}</div>
-            <div style={{ minWidth: 0 }}><div className="profile-name">{savedBirth?.name || "Guest explorer"}</div><div className="profile-caption">{savedBirth ? "Birth profile added · session only" : "Personal astrology workspace"}</div></div>
+            <div style={{ minWidth: 0 }}><div className="profile-name">{savedBirth?.name || "Guest explorer"}</div><div className="profile-caption">{isSignedIn ? "Signed in · private library" : savedBirth ? "Birth profile added · session only" : "Personal astrology workspace"}</div></div>
             <button className="icon-button" aria-label="Profile information" onClick={() => setToast("Account sign-in and cloud sync will be enabled with Supabase.")} style={{ marginLeft: "auto" }}><ChevronDown size={15} /></button>
           </div>
         </div>
@@ -336,7 +360,7 @@ export default function Home() {
             <div className="mode-pill"><span className="status-dot" /> Vedic AI <span style={{ color: "var(--quiet)" }}>· Preview</span></div>
           </div>
           <div className="topbar-actions">
-            <Link href="/login" className="topbar-link"><UserRound size={14}/> Sign in</Link>
+            {isSignedIn ? <button className="topbar-link" onClick={signOut}><UserRound size={14}/> Sign out</button> : <Link href="/login" className="topbar-link"><UserRound size={14}/> Sign in</Link>}
             <button className="topbar-link" onClick={() => setIsBirthOpen(true)}><UserRound size={14} /> {savedBirth ? "Edit birth details" : "Add birth details"}</button>
             <button className="icon-button" aria-label="Help and product status" onClick={() => setToast("Vedic AI is in early development. Real AI, calculations, sign-in and saved conversations are not connected yet.")}><CircleHelp size={17} /></button>
           </div>
