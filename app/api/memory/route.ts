@@ -29,6 +29,7 @@ export async function GET() {
 
 export async function PUT(request: Request) {
   const rate = await checkRateLimit(request, "user-memory-write", 10, 60_000);
+  if (!rate.available) return NextResponse.json({ error: "The shared rate-limiting service is unavailable. Configure migration 004 and the server-only service-role key, then retry." }, { status: 503 });
   if (!rate.allowed) return NextResponse.json({ error: "Too many memory updates. Please wait and try again." }, { status: 429, headers: { "Retry-After": String(rate.retryAfterSeconds) } });
   const auth = await getAuthenticatedClient();
   if (auth.response || !auth.supabase || !auth.user) return auth.response;
