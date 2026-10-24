@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     url.searchParams.set("limit", "5");
     url.searchParams.set("addressdetails", "1");
     const response = await fetch(url, {
-      headers: { "User-Agent": "VedicAI/0.1 (birthplace lookup; contact: repository owner)" },
+      headers: { "User-Agent": "VedicAI/0.1 (+https://github.com/Yashpal568/vedic-ai)" },
       signal: AbortSignal.timeout(8000),
       cache: "no-store",
     });
