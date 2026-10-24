@@ -40,6 +40,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const rate = await checkRateLimit(request, "saved-kundli-write", 10, 60_000);
+  if (!rate.available) return NextResponse.json({ error: "The shared rate-limiting service is unavailable. Configure migration 004 and the server-only service-role key, then retry." }, { status: 503 });
   if (!rate.allowed) return NextResponse.json({ error: "Too many save requests. Please wait and try again." }, { status: 429, headers: { "Retry-After": String(rate.retryAfterSeconds) } });
   const supabase = await createSupabaseServerClient();
   if (!supabase) return NextResponse.json({ error: "Supabase is not configured. Add the Supabase URL and anon key first." }, { status: 503 });
