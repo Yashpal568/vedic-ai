@@ -141,6 +141,8 @@ GitHub Actions runs these checks on pushes and pull requests to `main`. A green 
 - [Architecture and production boundaries](docs/ARCHITECTURE.md)
 - [Vercel deployment runbook](docs/DEPLOYMENT_VERCEL.md)
 - [Security and privacy checklist](docs/SECURITY_AND_PRIVACY.md)
+- [Privacy policy page](app/privacy/page.tsx)
+- [Terms of use page](app/terms/page.tsx)
 - [Supabase schema and RLS](supabase/migrations/202610240001_initial_schema.sql)
 
 ## Licence
