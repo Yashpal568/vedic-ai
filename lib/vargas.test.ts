@@ -27,7 +27,7 @@ describe("varga sign mapping", () => {
   });
 
   it("matches independent D10/Dashamsa reference outputs for supplied longitudes", () => {
-    for (const [name, longitude, _d9, d10] of referenceLongitudes) {
+    for (const [name, longitude, , d10] of referenceLongitudes) {
       expect(vargaSignIndex(longitude, 10), name).toBe(d10 - 1);
     }
   });
