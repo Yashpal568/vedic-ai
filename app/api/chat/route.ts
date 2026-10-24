@@ -34,18 +34,15 @@ async function callGemini(messages: Array<{ role: "user" | "assistant"; content:
   const context = birthProfile
     ? "\n\nUser-provided birth details (not yet calculated): " + JSON.stringify(birthProfile)
     : "";
-  const contents = [
-    { role: "user", parts: [{ text: systemInstruction + context }] },
-    { role: "model", parts: [{ text: "Understood. I will distinguish general Jyotish explanations from verified chart calculations." }] },
-    ...messages.map((message) => ({
-      role: message.role === "assistant" ? "model" : "user",
-      parts: [{ text: message.content }],
-    })),
-  ];
+  const contents = messages.map((message) => ({
+    role: message.role === "assistant" ? "model" : "user",
+    parts: [{ text: message.content }],
+  }));
   const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent?key=" + encodeURIComponent(key), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
+      systemInstruction: { parts: [{ text: systemInstruction + context }] },
       contents,
       generationConfig: { temperature: 0.45, maxOutputTokens: 1200 },
       safetySettings: [
