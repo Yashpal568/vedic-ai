@@ -40,7 +40,7 @@ Status key: **Implemented (needs deployment verification)**, **Partial**, **Not 
 
 - [x] **Printable report export** — chart/report pages open a print-ready report with browser `Print / Save as PDF`. A dedicated generated PDF file, Hindi font embedding, and page-break QA remain outstanding.
 - [ ] **D9/D10 and other divisional charts** — do not mark complete until the ephemeris/license decision and independent reference fixtures are approved; see `docs/ASTROLOGY_ACCURACY_AND_LICENSING.md`.
-- [ ] **Yoga rules** — implement deterministic rule definitions with cited Jyotish sources and false-positive/reference tests after the engine accuracy and rule-convention review.
+- [x] **Experimental yoga candidates (limited scope)** — deterministic heuristics for three candidate patterns have unit tests and are explicitly labelled experimental. **Not a full classical yoga engine**; citations, cancellation/strength rules, and independent Jyotish review remain pending.
 - [x] **Experimental birth Panchang and current transit preview (limited scope)** — birth tithi/paksha/yoga/karana/vara and a current-location transit snapshot are implemented with unit-tested Panchang formula boundaries. **Still not validated for production** until the ephemeris, timezone conventions, and full chart fixtures are approved.
 - [ ] **Subscriptions/paid access** — payment provider, server-side entitlements, refund and webhook verification.
 - [ ] **SEO/legal** — metadata, sitemap, robots, canonical URLs, privacy/terms/contact pages reviewed for launch.
