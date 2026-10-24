@@ -120,7 +120,51 @@ html{scroll-behavior:smooth;scroll-padding-top:84px}
 .birth-consent:focus-within{outline:2px solid var(--gold);outline-offset:2px}
 
 
-.birth-date-picker{position:relative;width:100%}.birth-date-control{position:relative;display:flex;align-items:center}.birth-date-display{padding-right:42px;cursor:pointer;font-variant-numeric:tabular-nums}.birth-date-display::placeholder{color:#77776c}.birth-date-toggle{position:absolute;right:7px;display:grid;place-items:center;width:30px;height:30px;border:0;border-radius:7px;background:transparent;color:#a6a394}.birth-date-toggle:hover,.birth-date-toggle[aria-expanded="true"]{color:var(--gold2);background:var(--wash)}.birth-calendar{position:absolute;z-index:75;top:calc(100% + 8px);left:0;width:min(320px,calc(100vw - 48px));padding:13px;border:1px solid rgba(237,229,208,.18);border-radius:14px;background:#20211d;box-shadow:0 20px 55px rgba(0,0,0,.55);color:var(--text)}.birth-calendar-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}.birth-calendar-nav{display:grid;place-items:center;flex:0 0 30px;width:30px;height:30px;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.025);color:#c8c5b7}.birth-calendar-nav:hover:not(:disabled){border-color:rgba(212,183,122,.35);color:var(--gold2)}.birth-calendar-nav:disabled{opacity:.3;cursor:not-allowed}.birth-calendar-selectors{display:flex;align-items:center;justify-content:center;gap:5px;min-width:0}.birth-calendar-selectors select{max-width:145px;padding:7px 6px;border:1px solid var(--line);border-radius:7px;background:#292a25;color:#f0ede3;font-size:12px;font-weight:600}.birth-calendar-selectors select:focus-visible{outline:2px solid var(--gold);outline-offset:2px}.birth-calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}.birth-calendar-weekdays{margin-bottom:5px}.birth-calendar-weekdays span{display:grid;place-items:center;height:26px;color:#89897e;font-size:10px;font-weight:600}.birth-calendar-day,.birth-calendar-empty{display:grid;place-items:center;min-width:0;aspect-ratio:1;border-radius:8px}.birth-calendar-day{border:1px solid transparent;background:transparent;color:#e2dfd4;font-size:12px}.birth-calendar-day:hover:not(:disabled){border-color:rgba(212,183,122,.4);background:var(--wash)}.birth-calendar-day.selected{background:var(--gold2);color:#1a1913;font-weight:700}.birth-calendar-day.today:not(.selected){border-color:rgba(212,183,122,.65);color:var(--gold2)}.birth-calendar-day:disabled{cursor:not-allowed;color:#55564e;opacity:.4}.birth-calendar-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);color:#77776d;font-size:10px}.birth-calendar-footer button{padding:5px 8px;border:1px solid rgba(212,183,122,.25);border-radius:7px;background:var(--wash);color:var(--gold2);font-size:11px}.birth-calendar-footer button:hover{background:rgba(212,183,122,.16)}@media(max-width:520px){.birth-calendar{width:min(320px,calc(100vw - 44px))}.birth-calendar-selectors select{max-width:130px}}
+.birth-date-picker{position:relative;width:100%;isolation:isolate}
+.birth-date-control{position:relative;display:flex;align-items:center}
+.birth-date-display{padding-right:46px;cursor:pointer;font-variant-numeric:tabular-nums;transition:border-color .2s ease,box-shadow .2s ease}
+.birth-date-display::placeholder{color:#77776c}
+.birth-date-display:focus{border-color:rgba(212,183,122,.6);box-shadow:0 0 0 3px rgba(212,183,122,.09)}
+.birth-date-toggle{position:absolute;right:7px;display:grid;place-items:center;width:32px;height:32px;border:1px solid transparent;border-radius:9px;background:transparent;color:#a6a394;transition:color .18s ease,background .18s ease,border-color .18s ease}
+.birth-date-toggle:hover,.birth-date-toggle[aria-expanded="true"]{color:var(--gold2);background:var(--wash);border-color:rgba(212,183,122,.16)}
+.birth-calendar{position:absolute;z-index:75;top:calc(100% + 12px);left:0;width:min(350px,calc(100vw - 40px));padding:17px;border:1px solid rgba(230,204,145,.2);border-radius:20px;background:radial-gradient(ellipse at 100% 0%,rgba(212,183,122,.09),transparent 42%),linear-gradient(145deg,#20211d 0%,#181915 100%);box-shadow:0 24px 70px rgba(0,0,0,.58),0 4px 18px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.035);color:var(--text);animation:birthCalendarIn .2s cubic-bezier(.2,.75,.25,1) both;transform-origin:top left;backdrop-filter:blur(18px)}
+@keyframes birthCalendarIn{from{opacity:0;transform:translateY(-7px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+.birth-calendar-topline{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 2px 12px;border-bottom:1px solid rgba(237,229,208,.07)}
+.birth-calendar-kicker{color:#d7c08e;font-size:9px;font-weight:750;letter-spacing:1.65px}
+.birth-calendar-zone{display:flex;align-items:center;gap:6px;color:#77786e;font-size:9px;font-weight:650;letter-spacing:1px}
+.birth-calendar-zone span{width:5px;height:5px;border-radius:50%;background:#9dbb9a;box-shadow:0 0 9px rgba(157,187,154,.5)}
+.birth-calendar-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:13px 0 15px}
+.birth-calendar-selectors{display:flex;align-items:center;gap:6px;min-width:0}
+.birth-calendar-selectors select{appearance:none;max-width:160px;padding:8px 27px 8px 10px;border:1px solid rgba(237,229,208,.09);border-radius:10px;background-color:rgba(255,255,255,.035);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='m2 3.5 3 3 3-3' fill='none' stroke='%23b6ad96' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center;color:#f1ecdd;font-size:13px;font-weight:700;letter-spacing:-.2px;cursor:pointer;transition:border-color .18s ease,background-color .18s ease}
+.birth-calendar-selectors select:hover{border-color:rgba(212,183,122,.3);background-color:rgba(212,183,122,.06)}
+.birth-calendar-selectors select:focus-visible{outline:2px solid rgba(212,183,122,.65);outline-offset:2px}
+.birth-calendar-selectors option{background:#20211d;color:#f1ecdd}
+.birth-calendar-navigation{display:flex;gap:5px}
+.birth-calendar-nav{display:grid;place-items:center;flex:0 0 31px;width:31px;height:31px;border:1px solid rgba(237,229,208,.1);border-radius:10px;background:rgba(255,255,255,.035);color:#c8c5b7;transition:transform .18s ease,border-color .18s ease,color .18s ease,background .18s ease}
+.birth-calendar-nav:hover:not(:disabled){transform:translateY(-1px);border-color:rgba(212,183,122,.36);background:rgba(212,183,122,.08);color:var(--gold2)}
+.birth-calendar-nav:disabled{opacity:.22;cursor:not-allowed}
+.birth-calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.birth-calendar-weekdays{margin-bottom:7px}
+.birth-calendar-weekdays span{display:grid;place-items:center;height:27px;color:#7f8075;font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase}
+.birth-calendar-days{animation:calendarDaysIn .18s ease both}
+@keyframes calendarDaysIn{from{opacity:.55;transform:translateY(2px)}to{opacity:1;transform:translateY(0)}}
+.birth-calendar-day,.birth-calendar-empty{display:grid;place-items:center;min-width:0;aspect-ratio:1;border-radius:11px}
+.birth-calendar-day{position:relative;border:1px solid transparent;background:transparent;color:#e1ded3;font-size:12px;font-weight:550;font-variant-numeric:tabular-nums;transition:background .16s ease,border-color .16s ease,color .16s ease,transform .16s ease}
+.birth-calendar-day:hover:not(:disabled){transform:translateY(-1px);border-color:rgba(212,183,122,.25);background:rgba(212,183,122,.1);color:#f5e4b7}
+.birth-calendar-day.selected{border-color:rgba(230,204,145,.95);background:linear-gradient(145deg,#ecd8a5,#c9a967);box-shadow:0 4px 13px rgba(212,183,122,.18),inset 0 1px 0 rgba(255,255,255,.3);color:#201c12;font-weight:800}
+.birth-calendar-day.today:not(.selected){border-color:rgba(212,183,122,.55);color:var(--gold2)}
+.birth-calendar-day.today:not(.selected)::after{position:absolute;bottom:4px;width:3px;height:3px;border-radius:50%;background:var(--gold2);content:""}
+.birth-calendar-day:focus-visible,.birth-calendar-today:focus-visible{outline:2px solid var(--gold2);outline-offset:2px}
+.birth-calendar-day:disabled{cursor:not-allowed;color:#53544b;opacity:.34}
+.birth-calendar-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:15px;padding:13px 1px 0;border-top:1px solid rgba(237,229,208,.09)}
+.birth-calendar-selected{display:flex;flex-direction:column;gap:4px;min-width:0}
+.birth-calendar-selected span{color:#77786e;font-size:8px;font-weight:750;letter-spacing:1.2px}
+.birth-calendar-selected strong{overflow:hidden;color:#eee7d5;font-size:12px;font-weight:650;font-variant-numeric:tabular-nums;text-overflow:ellipsis;white-space:nowrap}
+.birth-calendar-today{display:inline-flex;align-items:center;justify-content:center;gap:7px;flex-shrink:0;padding:9px 11px;border:1px solid rgba(212,183,122,.24);border-radius:10px;background:linear-gradient(135deg,rgba(212,183,122,.14),rgba(212,183,122,.06));color:var(--gold2);font-size:11px;font-weight:700;transition:border-color .18s ease,background .18s ease,transform .18s ease}
+.birth-calendar-today:hover{transform:translateY(-1px);border-color:rgba(212,183,122,.45);background:rgba(212,183,122,.16)}
+@media(prefers-reduced-motion:reduce){.birth-calendar,.birth-calendar-days{animation:none}.birth-calendar-day,.birth-calendar-nav,.birth-calendar-today{transition:none}}
+@media(max-width:520px){.birth-calendar{width:min(350px,calc(100vw - 36px));padding:14px;border-radius:17px}.birth-calendar-selectors select{max-width:140px}.birth-calendar-grid{gap:3px}.birth-calendar-day,.birth-calendar-empty{border-radius:9px}}
+
 
 
 .experimental-label{display:inline-flex;align-items:center;vertical-align:middle;margin-left:6px;padding:3px 6px;border:1px solid rgba(212,183,122,.22);border-radius:5px;color:var(--gold2);font-size:9px;font-weight:600;letter-spacing:.3px;text-transform:uppercase}
