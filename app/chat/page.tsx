@@ -24,6 +24,41 @@ const suggestions = [
 ];
 const makeId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
+function KundliDiagram({ report }: { report: KundliReport }) {
+  const houses = [
+    { house: 1, x: 200, y: 54 }, { house: 2, x: 105, y: 54 },
+    { house: 3, x: 52, y: 105 }, { house: 4, x: 52, y: 200 },
+    { house: 5, x: 52, y: 295 }, { house: 6, x: 105, y: 346 },
+    { house: 7, x: 200, y: 346 }, { house: 8, x: 295, y: 346 },
+    { house: 9, x: 348, y: 295 }, { house: 10, x: 348, y: 200 },
+    { house: 11, x: 348, y: 105 }, { house: 12, x: 295, y: 54 },
+  ];
+  const signs = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"];
+  return <div className="kundli-visual-wrap">
+    <div className="kundli-visual-heading"><div><span className="eyebrow-line" /> NORTH INDIAN · D1 RASHI CHART</div><span>Calculated positions</span></div>
+    <svg className="kundli-svg" viewBox="0 0 400 400" role="img" aria-label={"North Indian style Rashi chart for " + report.birth.place + ", " + report.ascendant.sign + " ascendant"}>
+      <rect x="1" y="1" width="398" height="398" rx="5" className="kundli-frame" />
+      <path d="M1 1 L399 399 M399 1 L1 399 M200 1 L1 200 L200 399 L399 200 Z" className="kundli-lines" />
+      <circle cx="200" cy="200" r="31" className="kundli-center-glow" />
+      <text x="200" y="194" textAnchor="middle" className="kundli-center-title">VEDIC AI</text>
+      <text x="200" y="211" textAnchor="middle" className="kundli-center-sub">RASHI · D1</text>
+      {houses.map(({ house, x, y }) => {
+        const sign = signs[(report.ascendant.signIndex + house - 1) % 12];
+        const occupants = report.planets.filter((planet) => planet.house === house);
+        const label = house === 1 ? "Lagna · 1" : "House " + house;
+        const max = 3;
+        return <g key={house} className={house === 1 ? "kundli-house kundli-lagna" : "kundli-house"}>
+          <text x={x} y={y - 15} textAnchor="middle" className="kundli-house-label">{label}</text>
+          <text x={x} y={y + 1} textAnchor="middle" className="kundli-sign">{sign}</text>
+          {occupants.slice(0, max).map((planet, index) => <text key={planet.name} x={x} y={y + 19 + index * 13} textAnchor="middle" className="kundli-planet">{planet.name}</text>)}
+          {occupants.length > max && <text x={x} y={y + 19 + max * 13} textAnchor="middle" className="kundli-planet">+{occupants.length - max}</text>}
+        </g>;
+      })}
+    </svg>
+    <p className="kundli-visual-caption">Planet labels are placed from the calculated whole-sign house positions. Verify this early calculation engine against a trusted Jyotish reference before relying on precise readings.</p>
+  </div>;
+}
+
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -135,6 +170,8 @@ export default function Home() {
   }
 
   async function persistConversation(allMessages: Message[], newMessages: Message[]) {
+    // Guest chats are intentionally session-only; do not send unauthenticated writes.
+    if (!isSignedIn) return;
     try {
       const response = await fetch("/api/conversations", {
         method: "POST",
@@ -392,7 +429,7 @@ export default function Home() {
           </div>
           <div className="topbar-actions">
             {isSignedIn ? <button className="topbar-link" onClick={signOut}><UserRound size={14}/> Sign out</button> : <Link href="/login" className="topbar-link"><UserRound size={14}/> Sign in</Link>}
-            <button className="topbar-link" onClick={() => setIsBirthOpen(true)}><UserRound size={14} /> {savedBirth ? "Edit birth details" : "Add birth details"}</button>
+            <button className="topbar-link" onClick={() => setIsBirthOpen(true)}><Orbit size={14} /> {savedBirth ? "Edit birth details" : "Add birth details"}</button>
             <button className="icon-button" aria-label="Help and product status" onClick={() => setToast("Vedic AI is an early preview. Astrology calculations need reference-chart validation; AI and saved history depend on configured services.")}><CircleHelp size={17} /></button>
           </div>
         </header>
@@ -423,6 +460,7 @@ export default function Home() {
               <div className="chart-panel-head"><div><div className="eyebrow"><span className="eyebrow-line" /> YOUR VEDIC BIRTH CHART</div><h2 className="chart-title">{chartReport.ascendant.sign} Ascendant <span>· {chartReport.birth.place.split(",").slice(0, 2).join(",")}</span></h2><p className="chart-subtitle">Lahiri sidereal · Whole-sign houses · {chartReport.birth.timezone}</p></div><button className="secondary-button chart-export" onClick={() => { const blob = new Blob([JSON.stringify(chartReport, null, 2)], { type: "application/json" }); const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.href = url; link.download = "vedic-ai-kundli.json"; link.click(); URL.revokeObjectURL(url); }}>Export chart <ArrowDown size={13}/></button><button className="primary-button chart-save" onClick={saveChartReport}>Save kundli <Check size={13}/></button></div>
               <div className="chart-stats"><div className="chart-stat"><span>Ascendant / Lagna</span><strong>{chartReport.ascendant.sign}</strong><small>{chartReport.ascendant.degreeInSign.toFixed(2)}° · {chartReport.ascendant.nakshatra}</small></div><div className="chart-stat"><span>Moon Nakshatra</span><strong>{chartReport.planets.find((planet) => planet.name === "Moon")?.nakshatra || "—"}</strong><small>Pada {chartReport.planets.find((planet) => planet.name === "Moon")?.nakshatraPada || "—"}</small></div><div className="chart-stat"><span>Current Mahadasha</span><strong>{chartReport.vimshottari.currentMahadasha.lord}</strong><small>{new Date(chartReport.vimshottari.currentMahadasha.start).toLocaleDateString()} – {new Date(chartReport.vimshottari.currentMahadasha.end).toLocaleDateString()}</small></div></div>
               <div className="chart-secondary-grid">
+                <KundliDiagram report={chartReport} />
                 <section className="chart-subpanel"><h3>Rashi chart · D1 whole-sign houses</h3><p className="chart-subcopy">House signs are derived from the calculated ascendant.</p><div className="house-grid">{Array.from({ length: 12 }, (_, index) => { const house = index + 1; const signs = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"]; const occupants = chartReport.planets.filter((planet) => planet.house === house); return <div className="house-cell" key={house}><span>HOUSE {house}</span><strong>{signs[(chartReport.ascendant.signIndex + house - 1) % 12]}</strong><small>{occupants.length ? occupants.map((planet) => planet.name).join(" · ") : "—"}</small></div>; })}</div></section>
                 <section className="chart-subpanel"><h3>Vimshottari mahadasha</h3><p className="chart-subcopy">Approximate period timeline derived from the Moon&apos;s nakshatra.</p><div className="dasha-list">{chartReport.vimshottari.periods.slice(0, 9).map((period, index) => <div className={"dasha-row " + (period.lord === chartReport.vimshottari.currentMahadasha.lord ? "current" : "")} key={period.lord + index}><span className="dasha-dot"/><div><strong>{period.lord}</strong><small>{new Date(period.start).toLocaleDateString()} – {new Date(period.end).toLocaleDateString()}</small></div><span className="dasha-years">{period.years}y</span></div>)}</div></section>
               </div>
