@@ -9,17 +9,20 @@ Vedic AI currently uses Astronomy Engine plus an approximate Lahiri ayanamsha an
 Independent Vedic calculation projects document Swiss Ephemeris as their astronomy engine, but licensing varies by integration. Some public projects use AGPL-3.0 and explicitly describe the source-disclosure/network-use obligations; Swiss Ephemeris also has a commercial licensing path. Do not copy AGPL engine code or add a network dependency without deciding whether Vedic AI will comply with the applicable license or buy an appropriate commercial license.
 
 Research references (review current terms before deciding):
-- [Swiss Ephemeris licensing overview](https://www.astro.com/swisseph/swephinfo_e.htm)
+- [Official Swiss Ephemeris licensing overview](https://www.astro.com/swisseph/swephinfo_e.htm) — the vendor says developers must choose AGPL or a Professional License before distributing software or activating a public service.
+- [Official Swiss Ephemeris price list](https://www.astro.com/swisseph/swephprice_e.htm) — currently lists the unlimited Professional Edition at CHF 700; confirm the live price and project terms before purchase.
 - [Vedic-calc documentation and license](https://atolat.github.io/vedic-calc/)
 - [Prajna Jyothi open-source license notes](https://jyothidecide.org/en/legal/licenses)
 - [Morphemeris API documentation](https://docs.morphemeris.com/) — a metered Swiss-Ephemeris-based API; check pricing, terms, data handling, SLA, and commercial use before integrating.
 
 ## Required decision before accuracy work
 
-Choose one of:
-1. **Commercial engine license** — license Swiss Ephemeris for the intended product and deploy a pinned, tested server-side implementation.
+Recommended for a closed-source commercial SaaS: **commercial engine license** — license Swiss Ephemeris for the intended product and deploy a pinned, tested server-side implementation. The official price list currently lists the unlimited Professional Edition at CHF 700, but confirm the current contract, project scope, and price with Astrodienst before purchase.
+
+Alternative paths:
+1. **AGPL-compatible product** — adopt an AGPL-compatible architecture and meet source, notice, and network-use obligations with legal review.
 2. **Commercially suitable API** — choose a vendor after reviewing its contract, privacy terms, rate limits, costs, data location, uptime, and support. Add a server-side adapter; never call the vendor directly from the browser with a secret key.
-3. **AGPL-compatible product** — adopt an AGPL-compatible architecture and meet source, notice, and network-use obligations with legal review.
+
 
 Do not make this decision by copying another application's implementation. It affects source-code obligations, operating cost, uptime, and whether birth data leaves Vedic AI's own infrastructure.
 
