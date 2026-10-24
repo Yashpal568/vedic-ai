@@ -30,7 +30,7 @@ function requestIdentity(request: Request) {
   // final address added by the hosting proxy rather than a caller-controlled first value.
   const realIp = request.headers.get("x-real-ip")?.trim();
   const forwarded = request.headers.get("x-forwarded-for")?.split(",").map((part) => part.trim()).filter(Boolean);
-  return realIp || forwarded?.at(-1) || "unknown";
+  return realIp || (forwarded && forwarded[forwarded.length - 1]) || "unknown";
 }
 
 /**
