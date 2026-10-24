@@ -18,7 +18,7 @@ Vedic AI is designed as a web-only product with a calm, premium workspace inspir
 - Ascendant, sign, degree, house, nakshatra/pada, Navamsa sign, retrograde estimate, and Vimshottari mahadasha timeline.
 - AI answers grounded in the generated chart payload when an AI key is configured.
 - Export calculated chart JSON and save reports to a signed-in Supabase account.
-- Supabase Auth with Google OAuth and passwordless email sign-in.
+- Supabase Auth with passwordless email sign-in; Google OAuth is intentionally deferred until provider credentials are ready.
 - Responsive desktop and mobile-web interface, keyboard-friendly composer, markdown responses, and explicit accuracy/privacy notes.
 
 ## Tech stack
@@ -98,8 +98,8 @@ See [`.env.example`](.env.example). Never commit `.env.local`, AI provider keys,
 2. Run [the schema migration](supabase/migrations/202610240001_initial_schema.sql) in Supabase SQL Editor.
 3. Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` to Vercel environment variables.
 4. In Supabase Auth URL configuration, set the Site URL to the production domain and allow `/auth/callback` for local and production sign-in.
-5. Configure Google OAuth by following [the Google OAuth setup guide](docs/GOOGLE_OAUTH_SETUP.md) if you want the **Continue with Google** option enabled.
-6. Test sign-in, account isolation, saving a kundli, and report retrieval before launch.
+5. Google OAuth is intentionally disabled for now; use passwordless email sign-in while Google Cloud credentials are unavailable. Configure it later using [the Google OAuth setup guide](docs/GOOGLE_OAUTH_SETUP.md).
+6. Confirm Supabase email delivery and callback URLs, then test sign-in, account isolation, saving a kundli, and report retrieval before launch.
 
 The migration enables Row Level Security. Do not disable RLS to fix a permissions error. Never expose a Supabase service-role/secret key to the browser.
 
