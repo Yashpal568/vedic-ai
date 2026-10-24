@@ -15,6 +15,7 @@ const schema = z.object({
     longitude: z.number().min(-180).max(180),
     timezone: z.string().min(1).max(100),
   }),
+  conversationId: z.string().uuid().optional(),
   report: z.object({
     engine: z.string(),
     engineVersion: z.string(),
@@ -42,7 +43,8 @@ export async function POST(request: Request) {
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) return NextResponse.json({ error: "Sign in before saving your kundli." }, { status: 401 });
   try {
-    const { profile, report } = schema.parse(await request.json());
+    const parsed = schema.parse(await request.json());
+    const { profile, report, conversationId } = parsed;
     const { data: birth, error: birthError } = await supabase.from("birth_profiles").insert({
       user_id: user.id,
       display_name: profile.name || null,
@@ -69,6 +71,10 @@ export async function POST(request: Request) {
     if (reportError || !saved) {
       await supabase.from("birth_profiles").delete().eq("id", birth.id).eq("user_id", user.id);
       return NextResponse.json({ error: "Could not save the kundli report. Please check the database migration and policies." }, { status: 500 });
+    }
+    if (conversationId) {
+      await supabase.from("conversations").update({ birth_profile_id: birth.id })
+        .eq("id", conversationId).eq("user_id", user.id);
     }
     return NextResponse.json({ saved: true, id: saved.id, createdAt: saved.created_at }, { status: 201 });
   } catch (error) {
