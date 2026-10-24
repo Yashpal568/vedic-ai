@@ -13,6 +13,7 @@ import {
 type Message = { id: string; role: "user" | "assistant"; content: string };
 type BirthProfile = { name: string; date: string; time: string; place: string; latitude?: number; longitude?: number; timezone?: string };
 type PlaceOption = { id: string; label: string; latitude: number; longitude: number; type: string; importance: number };
+type HistoryItem = { id: string; title: string; updated_at?: string };
 
 const suggestions = [
   { title: "Understand my birth chart", description: "Explore your lagna, houses, and planetary placements.", prompt: "Help me understand my Vedic birth chart. What details do you need from me?", icon: Orbit },
@@ -33,7 +34,8 @@ export default function Home() {
   const [placeOptions, setPlaceOptions] = useState<PlaceOption[]>([]);
   const [selectedPlace, setSelectedPlace] = useState<PlaceOption | null>(null);
   const [isGeocoding, setIsGeocoding] = useState(false);
-  const [historyItems, setHistoryItems] = useState<string[]>([]);
+  const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [toast, setToast] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -42,17 +44,74 @@ export default function Home() {
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [messages]);
   useEffect(() => {
+    let active = true;
+    fetch("/api/conversations")
+      .then(async (response) => response.ok ? response.json() : null)
+      .then((data) => { if (active && data?.conversations) setHistoryItems(data.conversations); })
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, []);
+  useEffect(() => {
     if (!toast) return;
     const timer = window.setTimeout(() => setToast(""), 3200);
     return () => window.clearTimeout(timer);
   }, [toast]);
 
   function startNewChat() {
-    const first = messages.find((message) => message.role === "user")?.content;
-    if (first) setHistoryItems((items) => [first.slice(0, 42), ...items].slice(0, 8));
     setMessages([]);
     setInput("");
+    setChartReport(null);
+    setActiveConversationId(null);
     setMobileMenuOpen(false);
+  }
+
+  async function loadConversation(id: string) {
+    try {
+      const response = await fetch("/api/conversations?id=" + encodeURIComponent(id));
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Could not load conversation.");
+      setMessages((data.messages || []).map((message: { id: string; role: "user" | "assistant"; content: string }) => ({
+        id: message.id, role: message.role, content: message.content,
+      })));
+      setActiveConversationId(id);
+      setChartReport(data.chartReport || null);
+      if (data.chartReport?.birth) {
+        setSavedBirth({
+          name: "",
+          date: data.chartReport.birth.date,
+          time: data.chartReport.birth.time,
+          place: data.chartReport.birth.place,
+          latitude: data.chartReport.birth.latitude,
+          longitude: data.chartReport.birth.longitude,
+          timezone: data.chartReport.birth.timezone,
+        });
+      }
+      setMobileMenuOpen(false);
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : "Could not load conversation.");
+    }
+  }
+
+  async function persistConversation(allMessages: Message[], newMessages: Message[]) {
+    try {
+      const response = await fetch("/api/conversations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: activeConversationId || undefined,
+          messages: (activeConversationId ? newMessages : allMessages).slice(-30).map(({ role, content }) => ({ role, content })),
+        }),
+      });
+      if (!response.ok) return;
+      const data = await response.json();
+      const conversation = data.conversation as HistoryItem | undefined;
+      if (conversation?.id) {
+        setActiveConversationId(conversation.id);
+        setHistoryItems((items) => [conversation, ...items.filter((item) => item.id !== conversation.id)].slice(0, 30));
+      }
+    } catch {
+      // Conversation persistence is optional until Supabase Auth is configured.
+    }
   }
 
   async function sendMessage(value?: string) {
@@ -76,7 +135,9 @@ export default function Home() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "The AI service is not available right now.");
-      setMessages((current) => [...current, { id: makeId(), role: "assistant", content: data.reply }]);
+      const assistantMessage: Message = { id: makeId(), role: "assistant", content: data.reply };
+      setMessages((current) => [...current, assistantMessage]);
+      await persistConversation([...nextMessages, assistantMessage], [userMessage, assistantMessage]);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unable to reach the AI service.";
       setMessages((current) => [...current, { id: makeId(), role: "assistant", content: message }]);
@@ -209,7 +270,7 @@ export default function Home() {
       const response = await fetch("/api/saved-kundli", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ profile: savedBirth, report: chartReport }),
+        body: JSON.stringify({ profile: savedBirth, report: chartReport, conversationId: activeConversationId || undefined }),
       });
       const data = await response.json();
       if (!response.ok) {
@@ -240,7 +301,7 @@ export default function Home() {
         <button className="side-link" onClick={() => { window.location.href = "/reports"; }}><BookOpen size={16} /> <span>Kundli & reports</span></button>
         <button className="side-link" onClick={() => setToast("Panchang and transit tools are on the product roadmap.")}><CalendarDays size={16} /> <span>Panchang & transits</span></button>
         <div className="side-label">Recent conversations</div>
-        {historyItems.length ? historyItems.map((item, index) => <button className="side-link" key={item + index} onClick={() => setToast("Conversation persistence will be enabled with Supabase.")}><History size={15} /><span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item}</span></button>) : <p className="history-empty">Your conversations will appear here as you explore your chart.</p>}
+        {historyItems.length ? historyItems.map((item) => <button className={"side-link " + (activeConversationId === item.id ? "active" : "")} key={item.id} onClick={() => loadConversation(item.id)}><History size={15} /><span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</span></button>) : <p className="history-empty">Sign in to save conversations and see them here.</p>}
         <div className="sidebar-bottom">
           <div className="plan-card">
             <div className="plan-top"><Gem size={14} /> YOUR COSMIC JOURNEY</div>
