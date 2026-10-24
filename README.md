@@ -115,6 +115,8 @@ The migration enables Row Level Security. Do not disable RLS to fix a permission
 | `/api/saved-kundli` | POST | Save a birth profile and chart report for the signed-in user |
 | `/api/saved-kundli?id=...` | DELETE | Delete a saved report owned by the signed-in user |
 | `/api/conversations` | GET/POST/DELETE | Load, save, and delete the signed-in user's chat history |
+| `/api/account-data` | GET/DELETE | Export or delete stored app data for the signed-in user |
+| `/api/account` | POST | Permanently delete the authenticated account (requires recent sign-in and server-only service-role key) |
 
 ## Quality checks
 
@@ -142,6 +144,9 @@ GitHub Actions runs these checks on pushes and pull requests to `main`. Check th
 - [Product specification](docs/PRODUCT_SPEC.md)
 - [Architecture and production boundaries](docs/ARCHITECTURE.md)
 - [Vercel deployment runbook](docs/DEPLOYMENT_VERCEL.md)
+- [Google OAuth setup](docs/GOOGLE_OAUTH_SETUP.md)
+- [Security test plan](docs/SECURITY_TEST_PLAN.md)
+- [Operations runbook](docs/OPERATIONS_RUNBOOK.md)
 - [Google OAuth setup](docs/GOOGLE_OAUTH_SETUP.md)
 - [Beta readiness checklist](docs/BETA_READINESS_CHECKLIST.md)
 - [Security and privacy checklist](docs/SECURITY_AND_PRIVACY.md)
