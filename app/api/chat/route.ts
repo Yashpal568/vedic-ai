@@ -60,7 +60,8 @@ async function callGemini(messages: Array<{ role: "user" | "assistant"; content:
   });
   if (!response.ok) {
     if (response.status === 429) throw new Error("AI_RATE_LIMITED");
-    throw new Error("AI_PROVIDER_ERROR");
+    console.error("[vedic-ai] Gemini request failed with HTTP", response.status);
+    throw new Error("AI_PROVIDER_ERROR_" + response.status);
   }
   const data = await response.json();
   const text = data?.candidates?.[0]?.content?.parts?.map((part: { text?: string }) => part.text || "").join("").trim();
@@ -90,7 +91,8 @@ async function callOpenAI(messages: Array<{ role: "user" | "assistant"; content:
   });
   if (!response.ok) {
     if (response.status === 429) throw new Error("AI_RATE_LIMITED");
-    throw new Error("AI_PROVIDER_ERROR");
+    console.error("[vedic-ai] OpenAI request failed with HTTP", response.status);
+    throw new Error("AI_PROVIDER_ERROR_" + response.status);
   }
   const data = await response.json();
   const text = data?.choices?.[0]?.message?.content?.trim();
@@ -128,6 +130,19 @@ export async function POST(request: Request) {
     if (code === "AI_EMPTY_RESPONSE") {
       return NextResponse.json({ error: "The AI provider returned an empty response. Please try again." }, { status: 502 });
     }
-    return NextResponse.json({ error: "The AI service could not complete this request. Please try again shortly." }, { status: 502 });
+    if (code.startsWith("AI_PROVIDER_ERROR_")) {
+      const providerStatus = Number(code.slice("AI_PROVIDER_ERROR_".length));
+      if (providerStatus === 400 || providerStatus === 404) {
+        return NextResponse.json({ error: "The configured AI model was rejected or not found. Check AI_PROVIDER and AI_MODEL in Vercel, then redeploy." }, { status: 502 });
+      }
+      if (providerStatus === 401 || providerStatus === 403) {
+        return NextResponse.json({ error: "The AI provider rejected the API key or project access. Verify GEMINI_API_KEY / OPENAI_API_KEY in Vercel and redeploy." }, { status: 502 });
+      }
+      if (providerStatus === 429) {
+        return NextResponse.json({ error: "The AI provider quota or rate limit has been reached. Check billing and usage for your AI project." }, { status: 429 });
+      }
+      return NextResponse.json({ error: "The AI provider returned HTTP " + providerStatus + ". Check the Vercel Runtime Logs and provider status, then try again." }, { status: 502 });
+    }
+    return NextResponse.json({ error: "The AI service could not complete this request. Check the Vercel Runtime Logs for the provider status and try again." }, { status: 502 });
   }
 }
