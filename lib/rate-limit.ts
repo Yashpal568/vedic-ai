@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 type Bucket = { count: number; resetAt: number };
-type RateLimitResult = { allowed: boolean; retryAfterSeconds: number; remaining: number; durable: boolean };
+type RateLimitResult = { allowed: boolean; retryAfterSeconds: number; remaining: number; durable: boolean; available: boolean };
 
 const buckets = new Map<string, Bucket>();
 
@@ -22,6 +22,7 @@ function fallbackLimit(key: string, limit: number, windowMs: number): RateLimitR
     retryAfterSeconds: Math.max(1, Math.ceil((bucket.resetAt - now) / 1000)),
     remaining: Math.max(0, limit - bucket.count),
     durable: false,
+    available: process.env.NODE_ENV !== "production",
   };
 }
 
@@ -67,6 +68,7 @@ export async function checkRateLimit(
             retryAfterSeconds: Number(result.retry_after_seconds) || windowSeconds,
             remaining: Number(result.remaining) || 0,
             durable: true,
+            available: true,
           };
         }
       } else {
