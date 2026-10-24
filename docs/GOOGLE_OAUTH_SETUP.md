@@ -1,3 +1,5 @@
+> **Current status:** Google sign-in is temporarily disabled in the login UI. Vedic AI continues to use Supabase Auth with passwordless email links. Follow this guide later when Google Cloud OAuth credentials are ready.
+
 # Vedic AI — Google OAuth setup
 
 The login page supports both Google OAuth and passwordless email links through Supabase Auth. Google OAuth requires one-time dashboard configuration; adding the button does not enable the provider automatically.
