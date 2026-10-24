@@ -6,7 +6,7 @@ import type { KundliReport } from "@/lib/astrology";
 import {
   ArrowDown, ArrowUp, AudioLines, BookOpen, CalendarDays, Check, ChevronDown,
   CircleHelp, Gem, History, Menu, MessageCircle, MoonStar, Orbit, Plus,
-  ShieldCheck, Sparkles, Stars, UserRound, X, BriefcaseBusiness, Heart,
+  ShieldCheck, Sparkles, Stars, UserRound, X, BriefcaseBusiness, Heart, Compass,
 } from "lucide-react";
 
 type Message = { id: string; role: "user" | "assistant"; content: string };
@@ -273,6 +273,12 @@ export default function Home() {
             })}</div>
             <div className="assistant-note" style={{ marginTop: 22 }}><ShieldCheck size={15} style={{ flexShrink: 0, color: "var(--gold)", marginTop: 1 }} /><span>For a personalised reading, add your birth date, exact local birth time, and birthplace. This preview won’t invent planetary placements; verified chart calculations will be connected in the next development phase.</span></div>
           </section> : <section className="chat-area" aria-live="polite">
+            {chartReport && <section className="chart-panel">
+              <div className="chart-panel-head"><div><div className="eyebrow"><span className="eyebrow-line" /> YOUR VEDIC BIRTH CHART</div><h2 className="chart-title">{chartReport.ascendant.sign} Ascendant <span>· {chartReport.birth.place.split(",").slice(0, 2).join(",")}</span></h2><p className="chart-subtitle">Lahiri sidereal · Whole-sign houses · {chartReport.birth.timezone}</p></div><button className="secondary-button chart-export" onClick={() => { const blob = new Blob([JSON.stringify(chartReport, null, 2)], { type: "application/json" }); const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.href = url; link.download = "vedic-ai-kundli.json"; link.click(); URL.revokeObjectURL(url); }}>Export chart <ArrowDown size={13}/></button></div>
+              <div className="chart-stats"><div className="chart-stat"><span>Ascendant / Lagna</span><strong>{chartReport.ascendant.sign}</strong><small>{chartReport.ascendant.degreeInSign.toFixed(2)}° · {chartReport.ascendant.nakshatra}</small></div><div className="chart-stat"><span>Moon Nakshatra</span><strong>{chartReport.planets.find((planet) => planet.name === "Moon")?.nakshatra || "—"}</strong><small>Pada {chartReport.planets.find((planet) => planet.name === "Moon")?.nakshatraPada || "—"}</small></div><div className="chart-stat"><span>Current Mahadasha</span><strong>{chartReport.vimshottari.currentMahadasha.lord}</strong><small>{new Date(chartReport.vimshottari.currentMahadasha.start).toLocaleDateString()} – {new Date(chartReport.vimshottari.currentMahadasha.end).toLocaleDateString()}</small></div></div>
+              <div className="chart-table-wrap"><table className="chart-table"><thead><tr><th>Graha</th><th>Rashi</th><th>Degree</th><th>House</th><th>Nakshatra</th><th>Navamsa</th><th>Status</th></tr></thead><tbody>{chartReport.planets.map((planet) => <tr key={planet.name}><td>{planet.name}</td><td>{planet.sign}</td><td>{planet.degreeInSign.toFixed(2)}°</td><td>{planet.house}</td><td>{planet.nakshatra} · {planet.nakshatraPada}</td><td>{planet.navamsaSign}</td><td>{planet.retrograde ? "Retrograde" : "Direct"}</td></tr>)}</tbody></table></div>
+              <p className="chart-disclaimer"><ShieldCheck size={13}/> {chartReport.disclaimer}</p>
+            </section>}
             {messages.map((message) => <div className={"message-row " + message.role} key={message.id}>
               {message.role === "assistant" && <div className="message-avatar"><MoonStar size={16} /></div>}
               {message.role === "assistant" ? <div className="message-content">
