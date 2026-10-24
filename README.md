@@ -112,12 +112,14 @@ The migration enables Row Level Security. Re-run policy tests after any schema c
 | `/api/chat` | POST | Validated Gemini/OpenAI chat completion |
 | `/api/saved-kundli` | GET | List the signed-in user's saved reports |
 | `/api/saved-kundli` | POST | Save a birth profile and chart report for the signed-in user |
+| `/api/saved-kundli?id=...` | DELETE | Delete a saved report owned by the signed-in user
 
 ## Quality checks
 
 ```bash
 npm run lint
 npm run typecheck
+npm test
 npm run build
 ```
 
@@ -137,6 +139,8 @@ GitHub Actions runs these checks on pushes and pull requests to `main`. A green 
 
 - [Product specification](docs/PRODUCT_SPEC.md)
 - [Architecture and production boundaries](docs/ARCHITECTURE.md)
+- [Vercel deployment runbook](docs/DEPLOYMENT_VERCEL.md)
+- [Security and privacy checklist](docs/SECURITY_AND_PRIVACY.md)
 - [Supabase schema and RLS](supabase/migrations/202610240001_initial_schema.sql)
 
 ## Licence
