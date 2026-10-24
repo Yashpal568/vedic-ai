@@ -107,7 +107,7 @@ async function callOpenAI(messages: Array<{ role: "user" | "assistant"; content:
 }
 
 export async function POST(request: Request) {
-  const rate = checkRateLimit(request, "chat", 20, 60_000);
+  const rate = await checkRateLimit(request, "chat", 20, 60_000);
   if (!rate.allowed) return NextResponse.json({ error: "Too many chat requests. Please wait a moment and try again." }, { status: 429, headers: { "Retry-After": String(rate.retryAfterSeconds) } });
   try {
     const body = requestSchema.parse(await request.json());
