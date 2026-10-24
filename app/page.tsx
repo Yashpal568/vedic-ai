@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
 import {
   ArrowDown, ArrowUp, AudioLines, BookOpen, CalendarDays, Check, ChevronDown,
   CircleHelp, Gem, History, Menu, MessageCircle, MoonStar, Orbit, Plus,
@@ -188,7 +189,7 @@ export default function Home() {
               {message.role === "assistant" && <div className="message-avatar"><MoonStar size={16} /></div>}
               {message.role === "assistant" ? <div className="message-content">
                 <div className="message-meta">VEDIC AI <span style={{ color: "#5f6057", margin: "0 5px" }}>·</span> ASTROLOGY COMPANION</div>
-                <div className="message-text">{message.content}</div>
+                <div className="message-text markdown-body"><ReactMarkdown>{message.content}</ReactMarkdown></div>
                 <div className="assistant-note"><Sparkles size={14} style={{ flexShrink: 0, color: "var(--gold)", marginTop: 2 }} /><span>Interpretations are intended for reflection and learning. Chart-based answers will be enabled once calculation and AI services are configured.</span></div>
               </div> : <div className="user-bubble">{message.content}</div>}
             </div>)}
