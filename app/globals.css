@@ -170,3 +170,5 @@ html{scroll-behavior:smooth;scroll-padding-top:84px}
 .experimental-label{display:inline-flex;align-items:center;vertical-align:middle;margin-left:6px;padding:3px 6px;border:1px solid rgba(212,183,122,.22);border-radius:5px;color:var(--gold2);font-size:9px;font-weight:600;letter-spacing:.3px;text-transform:uppercase}
 
 .spin-icon{animation:spin 1s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+
+.auth-email-intro{display:flex;align-items:center;gap:9px;margin:24px 0 16px;padding:12px 13px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.025);color:var(--text);font-size:12px;font-weight:650}.auth-email-intro>svg{color:var(--gold)}.auth-email-secure{margin-left:auto;padding:4px 7px;border:1px solid rgba(157,187,154,.18);border-radius:7px;background:rgba(157,187,154,.07);color:var(--green);font-size:9px;font-weight:650;letter-spacing:.2px}
