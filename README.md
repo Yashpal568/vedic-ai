@@ -100,7 +100,7 @@ See [`.env.example`](.env.example). Never commit `.env.local`, AI provider keys,
 4. In Supabase Auth URL configuration, allow the local callback `http://localhost:3000/auth/callback` and your production callback `https://YOUR_DOMAIN/auth/callback`.
 5. Test sign-in, user isolation, saving a kundli, and report retrieval before production.
 
-The migration enables Row Level Security. Re-run policy tests after any schema changes. The current UI saves a kundli report; full conversation-history sync is a subsequent implementation step.
+The migration enables Row Level Security. Re-run policy tests after any schema changes. Authenticated users can save kundli reports and conversation history. Verify Supabase Auth, RLS, and callback configuration in your deployment before relying on cloud persistence.
 
 ## API routes
 
