@@ -2,10 +2,14 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
 export async function GET(request: NextRequest) {
+  const requestUrl = new URL(request.url);
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
+  const oauthError = requestUrl.searchParams.get("error");
+  if (oauthError) {
+    return NextResponse.redirect(new URL("/login?error=oauth_denied", requestUrl.origin));
+  }
   if (!url || !key || !code) {
     return NextResponse.redirect(new URL("/login?error=auth_setup", requestUrl.origin));
   }
