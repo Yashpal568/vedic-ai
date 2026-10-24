@@ -237,7 +237,7 @@ export default function Home() {
         <div className="side-label">Your workspace</div>
         <button className="side-link active" onClick={startNewChat}><MessageCircle size={16} /> <span>Astrology chat</span></button>
         <button className="side-link" onClick={() => setIsBirthOpen(true)}><Orbit size={16} /> <span>My birth profile</span>{savedBirth && <Check size={13} style={{ marginLeft: "auto", color: "var(--green)" }} />}</button>
-        <button className="side-link" onClick={() => setToast("Kundli reports will be available after the calculation engine is connected.")}><BookOpen size={16} /> <span>Kundli & reports</span></button>
+        <button className="side-link" onClick={() => { window.location.href = "/reports"; }}><BookOpen size={16} /> <span>Kundli & reports</span></button>
         <button className="side-link" onClick={() => setToast("Panchang and transit tools are on the product roadmap.")}><CalendarDays size={16} /> <span>Panchang & transits</span></button>
         <div className="side-label">Recent conversations</div>
         {historyItems.length ? historyItems.map((item, index) => <button className="side-link" key={item + index} onClick={() => setToast("Conversation persistence will be enabled with Supabase.")}><History size={15} /><span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item}</span></button>) : <p className="history-empty">Your conversations will appear here as you explore your chart.</p>}
@@ -259,7 +259,7 @@ export default function Home() {
         <div className="modal-head"><div className="modal-title">Your workspace</div><button className="icon-button" onClick={() => setMobileMenuOpen(false)} aria-label="Close menu"><X size={17} /></button></div>
         <button className="side-link active" style={{ marginTop: 15 }} onClick={startNewChat}><MessageCircle size={16} /> Astrology chat</button>
         <button className="side-link" onClick={() => { setIsBirthOpen(true); setMobileMenuOpen(false); }}><Orbit size={16} /> My birth profile</button>
-        <button className="side-link" onClick={() => setToast("Kundli reports are on the roadmap.")}><BookOpen size={16} /> Kundli & reports</button>
+        <button className="side-link" onClick={() => { window.location.href = "/reports"; }}><BookOpen size={16} /> Kundli & reports</button>
         <button className="new-chat" onClick={startNewChat}><Plus size={16} /> New conversation</button>
       </div></div>}
 
