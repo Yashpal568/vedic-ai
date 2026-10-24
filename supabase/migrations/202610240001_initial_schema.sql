@@ -1,5 +1,6 @@
 -- Vedic AI initial relational schema
--- Apply with Supabase CLI after reviewing access policies for your deployment.
+-- Apply once in Supabase SQL Editor, or via Supabase CLI migrations.
+-- This file is safe to re-run: policies and triggers are replaced by name.
 create extension if not exists pgcrypto;
 
 create table if not exists public.profiles (
@@ -71,38 +72,54 @@ alter table public.conversations enable row level security;
 alter table public.chat_messages enable row level security;
 alter table public.kundli_reports enable row level security;
 
+drop policy if exists "Users can read their own profile" on public.profiles;
 create policy "Users can read their own profile" on public.profiles for select using (auth.uid() = id);
+drop policy if exists "Users can insert their own profile" on public.profiles;
 create policy "Users can insert their own profile" on public.profiles for insert with check (auth.uid() = id);
+drop policy if exists "Users can update their own profile" on public.profiles;
 create policy "Users can update their own profile" on public.profiles for update using (auth.uid() = id) with check (auth.uid() = id);
 
+drop policy if exists "Users manage their own birth profiles" on public.birth_profiles;
 create policy "Users manage their own birth profiles" on public.birth_profiles for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+drop policy if exists "Users manage their own conversations" on public.conversations;
 create policy "Users manage their own conversations" on public.conversations for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
 drop policy if exists "Users manage their own messages" on public.chat_messages;
+drop policy if exists "Users read their own messages" on public.chat_messages;
 create policy "Users read their own messages" on public.chat_messages for select
   using (auth.uid() = user_id and exists (select 1 from public.conversations c where c.id = conversation_id and c.user_id = auth.uid()));
+drop policy if exists "Users insert their own messages" on public.chat_messages;
 create policy "Users insert their own messages" on public.chat_messages for insert
   with check (auth.uid() = user_id and exists (select 1 from public.conversations c where c.id = conversation_id and c.user_id = auth.uid()));
+drop policy if exists "Users update their own messages" on public.chat_messages;
 create policy "Users update their own messages" on public.chat_messages for update
   using (auth.uid() = user_id and exists (select 1 from public.conversations c where c.id = conversation_id and c.user_id = auth.uid()))
   with check (auth.uid() = user_id and exists (select 1 from public.conversations c where c.id = conversation_id and c.user_id = auth.uid()));
+drop policy if exists "Users delete their own messages" on public.chat_messages;
 create policy "Users delete their own messages" on public.chat_messages for delete
   using (auth.uid() = user_id and exists (select 1 from public.conversations c where c.id = conversation_id and c.user_id = auth.uid()));
 
 drop policy if exists "Users manage their own kundli reports" on public.kundli_reports;
+drop policy if exists "Users read their own kundli reports" on public.kundli_reports;
 create policy "Users read their own kundli reports" on public.kundli_reports for select using (auth.uid() = user_id);
+drop policy if exists "Users insert their own kundli reports" on public.kundli_reports;
 create policy "Users insert their own kundli reports" on public.kundli_reports for insert
   with check (auth.uid() = user_id and exists (select 1 from public.birth_profiles b where b.id = birth_profile_id and b.user_id = auth.uid()));
+drop policy if exists "Users update their own kundli reports" on public.kundli_reports;
 create policy "Users update their own kundli reports" on public.kundli_reports for update
   using (auth.uid() = user_id) with check (auth.uid() = user_id and exists (select 1 from public.birth_profiles b where b.id = birth_profile_id and b.user_id = auth.uid()));
+drop policy if exists "Users delete their own kundli reports" on public.kundli_reports;
 create policy "Users delete their own kundli reports" on public.kundli_reports for delete using (auth.uid() = user_id);
 
 create or replace function public.set_updated_at()
-returns trigger language plpgsql as $
+returns trigger
+language plpgsql
+as $$
 begin
   new.updated_at = now();
   return new;
 end;
-$;
+$$;
 
 drop trigger if exists profiles_set_updated_at on public.profiles;
 create trigger profiles_set_updated_at before update on public.profiles for each row execute function public.set_updated_at();
@@ -111,5 +128,8 @@ create trigger birth_profiles_set_updated_at before update on public.birth_profi
 drop trigger if exists conversations_set_updated_at on public.conversations;
 create trigger conversations_set_updated_at before update on public.conversations for each row execute function public.set_updated_at();
 
--- Do not expose the Supabase service-role key to the browser.
--- Before production, add durable rate limiting, data export/deletion flows, and tests for every RLS policy.
+-- Security notes:
+-- * Never expose a Supabase service-role key to the browser.
+-- * RLS protects records by authenticated user ID; keep the policies enabled.
+-- * Add durable shared-store rate limiting, account export/deletion, retention controls,
+--   and automated RLS tests before scaling to a public production audience.
