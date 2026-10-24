@@ -14,7 +14,8 @@ export async function GET() {
           : process.env.GEMINI_API_KEY,
       ),
       supabaseConfigured: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
-      kundliEngineConfigured: false,
+      kundliEngineConfigured: true,
+      kundliEngineAccuracy: "early implementation; reference-chart validation required",
     },
     note: "Health status does not validate provider credentials or confirm calculation accuracy.",
   });
