@@ -198,13 +198,26 @@ function utcFromLocal(dateText: string, timeText: string, timezone: string): Dat
   return result;
 }
 
-export function calculateKundli(input: {
+type KundliInput = {
   date: string; time: string; timezone: string; place: string; latitude: number; longitude: number;
-}): KundliReport {
+};
+
+function validateCoordinates(input: Pick<KundliInput, "latitude" | "longitude">) {
   if (!Number.isFinite(input.latitude) || input.latitude < -90 || input.latitude > 90 || !Number.isFinite(input.longitude) || input.longitude < -180 || input.longitude > 180) {
     throw new Error("The selected birthplace coordinates are invalid.");
   }
-  const utc = utcFromLocal(input.date, input.time, input.timezone);
+}
+
+export function calculateKundli(input: KundliInput): KundliReport {
+  validateCoordinates(input);
+  return calculateKundliAtInstant(input, utcFromLocal(input.date, input.time, input.timezone));
+}
+
+/** Calculate a chart at a known UTC instant, used for current transits without ambiguous local-time conversion. */
+export function calculateKundliAtInstant(input: KundliInput, instant: Date): KundliReport {
+  validateCoordinates(input);
+  if (!Number.isFinite(instant.getTime())) throw new Error("A valid UTC instant is required.");
+  const utc = new Date(instant.getTime());
   const ayanamsha = lahiriAyanamsha(utc);
   const tropical = new Map<string, number>();
   for (const planet of PLANETS) tropical.set(planet.name, geocentricLongitude(planet.body, utc));
