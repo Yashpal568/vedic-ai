@@ -56,11 +56,22 @@ export default function Home() {
   }, []);
   useEffect(() => {
     let active = true;
-    fetch("/api/conversations")
-      .then(async (response) => response.ok ? response.json() : null)
-      .then((data) => { if (active && data?.conversations) setHistoryItems(data.conversations); })
-      .catch(() => undefined);
-    return () => { active = false; };
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) return;
+    const loadHistory = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (!active || !data.session) return;
+      const response = await fetch("/api/conversations");
+      if (!active || !response.ok) return;
+      const payload = await response.json();
+      if (payload?.conversations) setHistoryItems(payload.conversations);
+    };
+    void loadHistory().catch(() => undefined);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) { setHistoryItems([]); return; }
+      void loadHistory().catch(() => undefined);
+    });
+    return () => { active = false; subscription.unsubscribe(); };
   }, []);
   useEffect(() => {
     if (!toast) return;
@@ -193,7 +204,7 @@ export default function Home() {
         body: JSON.stringify({ query }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Could not find that birthplace.");
+      if (!response.ok) throw new Error(data.error || "Birthplace lookup is temporarily unavailable. Try again or include city, region, and country.");
       const places = (data.places || []) as PlaceOption[];
       setPlaceOptions(places);
       if (places.length === 1) {
@@ -382,7 +393,7 @@ export default function Home() {
           <div className="topbar-actions">
             {isSignedIn ? <button className="topbar-link" onClick={signOut}><UserRound size={14}/> Sign out</button> : <Link href="/login" className="topbar-link"><UserRound size={14}/> Sign in</Link>}
             <button className="topbar-link" onClick={() => setIsBirthOpen(true)}><UserRound size={14} /> {savedBirth ? "Edit birth details" : "Add birth details"}</button>
-            <button className="icon-button" aria-label="Help and product status" onClick={() => setToast("Vedic AI is in early development. Real AI, calculations, sign-in and saved conversations are not connected yet.")}><CircleHelp size={17} /></button>
+            <button className="icon-button" aria-label="Help and product status" onClick={() => setToast("Vedic AI is an early preview. Astrology calculations need reference-chart validation; AI and saved history depend on configured services.")}><CircleHelp size={17} /></button>
           </div>
         </header>
 
@@ -456,7 +467,7 @@ export default function Home() {
               <label className="form-field full"><span className="form-label">Name <span style={{ color: "var(--quiet)", fontWeight: 400 }}>(optional)</span></span><input className="form-input" autoComplete="name" value={birth.name} onChange={(event) => setBirth({ ...birth, name: event.target.value })} placeholder="What should we call you?" /></label>
               <label className="form-field"><span className="form-label">Date of birth *</span><input className="form-input" type="date" required value={birth.date} onChange={(event) => setBirth({ ...birth, date: event.target.value })} /></label>
               <label className="form-field"><span className="form-label">Local birth time *</span><input className="form-input" type="time" required value={birth.time} onChange={(event) => setBirth({ ...birth, time: event.target.value })} /></label>
-              <label className="form-field full"><span className="form-label">Birthplace *</span><div className="place-search-row"><input className="form-input" required value={birth.place} onChange={(event) => { setBirth({ ...birth, place: event.target.value }); setSelectedPlace(null); setPlaceOptions([]); }} placeholder="City, region, country (e.g. Jaipur, India)" /><button type="button" className="secondary-button place-search-button" disabled={isGeocoding || birth.place.trim().length < 2} onClick={searchPlaces}>{isGeocoding ? "Searching…" : "Find place"}</button></div>{selectedPlace && <p className="place-selected"><Check size={12} /> Selected: {selectedPlace.label}</p>}{placeOptions.length > 1 && <div className="place-options">{placeOptions.map((option) => <button type="button" className={"place-option " + (selectedPlace?.id === option.id ? "chosen" : "")} key={option.id} onClick={() => { setSelectedPlace(option); setBirth({ ...birth, place: option.label }); setPlaceOptions([]); }}><Compass size={13}/><span>{option.label}</span>{selectedPlace?.id === option.id && <Check size={13}/>}</button>)}</div>}<span className="place-hint">Select the exact city/area so timezone and coordinates are resolved correctly.</span><span className="place-attribution">Location data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap contributors</a>.</span></label>
+              <label className="form-field full"><span className="form-label">Birthplace *</span><div className="place-search-row"><input className="form-input" required value={birth.place} onChange={(event) => { setBirth({ ...birth, place: event.target.value }); setSelectedPlace(null); setPlaceOptions([]); }} placeholder="City, region, country (e.g. Jaipur, India)" /><button type="button" className="secondary-button place-search-button" disabled={isGeocoding || birth.place.trim().length < 2} onClick={searchPlaces}>{isGeocoding ? "Searching…" : "Find place"}</button></div>{selectedPlace && <p className="place-selected"><Check size={12} /> Selected: {selectedPlace.label}</p>}{placeOptions.length > 1 && <div className="place-options">{placeOptions.map((option) => <button type="button" className={"place-option " + (selectedPlace?.id === option.id ? "chosen" : "")} key={option.id} onClick={() => { setSelectedPlace(option); setBirth({ ...birth, place: option.label }); setPlaceOptions([]); }}><Compass size={13}/><span>{option.label}</span>{selectedPlace?.id === option.id && <Check size={13}/>}</button>)}</div>}<span className="place-hint">Enter at least 2 characters, tap Find place, then select the matching city/area so timezone and coordinates resolve correctly.</span><span className="place-attribution">Location data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap contributors</a>.</span></label>
             </div>
             <div className="assistant-note"><ShieldCheck size={14} style={{ flexShrink: 0, color: "var(--gold)", marginTop: 2 }} /><span>Birth details are sent to the chart service to calculate your kundli. This prototype does not save them to a database; add sign-in and storage configuration before using cloud history.</span></div>
             <div className="modal-actions"><button type="button" className="secondary-button" onClick={() => setIsBirthOpen(false)}>Cancel</button><button type="submit" className="primary-button">Save birth details <ArrowUp size={14} /></button></div>
