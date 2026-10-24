@@ -45,7 +45,7 @@ export async function GET() {
 }
 
 export async function DELETE(request: Request) {
-  const rate = checkRateLimit(request, "personal-data-delete", 3, 60 * 60 * 1000);
+  const rate = await checkRateLimit(request, "personal-data-delete", 3, 60 * 60 * 1000);
   if (!rate.allowed) return NextResponse.json({ error: "Too many data-deletion requests. Try again later." }, { status: 429 });
   const supabase = await createSupabaseServerClient();
   if (!supabase) return NextResponse.json({ error: "Supabase is not configured." }, { status: 503 });
