@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import tzlookup from "@photostructure/tz-lookup";
+import { calculateKundli } from "@/lib/astrology";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -108,6 +110,21 @@ export async function POST(request: Request) {
   if (!rate.allowed) return NextResponse.json({ error: "Too many chat requests. Please wait a moment and try again." }, { status: 429, headers: { "Retry-After": String(rate.retryAfterSeconds) } });
   try {
     const body = requestSchema.parse(await request.json());
+    // Never trust chart facts supplied by the browser. Recalculate on the server from
+    // the submitted birth inputs, deriving timezone from coordinates rather than trusting
+    // a client-provided timezone or planetary placements.
+    let trustedChartContext: Record<string, unknown> | undefined;
+    if (body.birthProfile?.date && body.birthProfile.time && body.birthProfile.latitude !== undefined && body.birthProfile.longitude !== undefined) {
+      const timezone = tzlookup(body.birthProfile.latitude, body.birthProfile.longitude);
+      trustedChartContext = calculateKundli({
+        date: body.birthProfile.date,
+        time: body.birthProfile.time,
+        place: body.birthProfile.place,
+        latitude: body.birthProfile.latitude,
+        longitude: body.birthProfile.longitude,
+        timezone,
+      }) as unknown as Record<string, unknown>;
+    }
     // Only read persistent memory from the authenticated server session; never trust client-supplied memory.
     let savedMemory = "";
     try {
@@ -124,9 +141,9 @@ export async function POST(request: Request) {
     }
     const provider = (process.env.AI_PROVIDER || "gemini").toLowerCase();
     const reply = provider === "openai"
-      ? await callOpenAI(body.messages, body.birthProfile, body.chartContext, savedMemory)
+      ? await callOpenAI(body.messages, body.birthProfile, trustedChartContext, savedMemory)
       : provider === "gemini"
-        ? await callGemini(body.messages, body.birthProfile, body.chartContext, savedMemory)
+        ? await callGemini(body.messages, body.birthProfile, trustedChartContext, savedMemory)
         : null;
 
     if (!reply) {
