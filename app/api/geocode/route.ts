@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     })).filter((place: Place) => place.label && Number.isFinite(place.latitude) && Number.isFinite(place.longitude));
     cache.set(key, { expires: Date.now() + 6 * 60 * 60 * 1000, places });
     return NextResponse.json({ places }, { headers: { "Cache-Control": "private, max-age=300" } });
-  } catch (error) {
+  } catch {
     if (error instanceof z.ZodError) return NextResponse.json({ error: "Enter a valid city or birthplace." }, { status: 400 });
     return NextResponse.json({ error: "Birthplace lookup failed. Please try again." }, { status: 502 });
   }
