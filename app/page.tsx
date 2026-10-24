@@ -249,12 +249,16 @@ export default function Home() {
         });
         const aiData = await aiResponse.json();
         if (!aiResponse.ok) throw new Error(aiData.error || "AI chat is not configured.");
-        setMessages((current) => [...current, { id: makeId(), role: "assistant", content: aiData.reply }]);
+        const assistantMessage: Message = { id: makeId(), role: "assistant", content: aiData.reply };
+        setMessages((current) => [...current, assistantMessage]);
+        await persistConversation([...nextMessages, assistantMessage], [userMessage, assistantMessage]);
       } catch {
-        setMessages((current) => [...current, {
+        const assistantMessage: Message = {
           id: makeId(), role: "assistant",
           content: "Your chart has been calculated and is shown above. To enable personalised AI explanations and follow-up questions, configure GEMINI_API_KEY or OPENAI_API_KEY in the server environment. The chart engine currently uses an approximate Lahiri ayanamsha and should be validated against trusted reference charts before high-accuracy or commercial use.",
-        }]);
+        };
+        setMessages((current) => [...current, assistantMessage]);
+        await persistConversation([...nextMessages, assistantMessage], [userMessage, assistantMessage]);
       }
     } catch (error) {
       setToast(error instanceof Error ? error.message : "Kundli calculation failed. Please verify your details.");
