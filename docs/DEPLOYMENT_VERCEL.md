@@ -21,7 +21,8 @@ Never paste API keys, passwords, Supabase service-role keys, or recovery codes i
    - [001 — initial schema](../supabase/migrations/202610240001_initial_schema.sql)
    - [002 — user-editable context memory](../supabase/migrations/202610240002_user_memory.sql)
    - [003 — persistence and security hardening](../supabase/migrations/202610240003_persistence_security_hardening.sql)
-5. Confirm each query succeeds. In **Table Editor**, check for `profiles`, `birth_profiles`, `conversations`, `chat_messages`, `kundli_reports`, and `user_memories`. The migrations enable Row Level Security (RLS); do not turn RLS off. Migration 003 also updates conversation recency when messages are saved and permits users to delete their own profile row.
+   - [004 — durable rate limits and account deletion](../supabase/migrations/202610240004_durable_limits_and_account_deletion.sql)
+5. Confirm each query succeeds. In **Table Editor**, check for `profiles`, `birth_profiles`, `conversations`, `chat_messages`, `kundli_reports`, `user_memories`, and `rate_limit_buckets`. The migrations enable Row Level Security (RLS); do not turn RLS off. Migration 003 updates conversation recency; migration 004 adds service-role-only durable rate-limit RPC support.
 6. Open **Project Settings → API** (or the project's API/Connect details). Copy:
    - Project URL → `NEXT_PUBLIC_SUPABASE_URL`
    - Public anon key / publishable key → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
@@ -71,6 +72,7 @@ Choose **one** provider. Never put the provider key in a variable beginning with
 | `AI_MODEL` | `gemini-2.5-flash` or `gpt-4.1-mini` | Optional |
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase Project URL | Required for accounts/saving |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase public anon/publishable key | Required for accounts/saving |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service-role secret | Required for shared rate limits and permanent account deletion; server-only |
 | `NEXT_PUBLIC_APP_URL` | Your actual Vercel URL, including `https://` | Recommended |
 
 For `NEXT_PUBLIC_APP_URL`, use the real production URL assigned by Vercel, for example `https://vedic-ai-your-team.vercel.app`. It is not a secret. Do not guess the Vercel subdomain—copy the URL from the Vercel project.
@@ -89,6 +91,7 @@ Open the deployed site on desktop and mobile and test these in order:
 - [ ] Generate a chart using test data you have permission to use. Check that the API returns a chart payload and the UI renders it.
 - [ ] Send a chat message. Confirm a real AI response (not a configuration/error message).
 - [ ] Open `/login`, request a magic link, open the email on the same browser/device, and confirm the callback signs you in.
+- [ ] Configure Google OAuth using [`docs/GOOGLE_OAUTH_SETUP.md`](./GOOGLE_OAUTH_SETUP.md), then test sign-in success, cancel/deny, and session persistence.
 - [ ] Save a kundli, open `/reports`, refresh the page, and confirm the report remains.
 - [ ] Save a conversation, reload, and confirm its history appears.
 - [ ] Sign out; protected save/history requests should require sign-in.
