@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { ArrowLeft, ArrowUpRight, BookOpen, CalendarDays, MoonStar, Orbit, ShieldCheck } from "lucide-react";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { KundliReport } from "@/lib/astrology";
+import ReportActions from "./report-actions";
 
 type SavedReport = {
   id: string;
@@ -39,7 +40,7 @@ export default async function ReportsPage() {
           return <article className="report-card" key={report.id}>
             <div className="report-card-top"><span className="report-icon"><Orbit size={17}/></span><span className="report-date"><CalendarDays size={12}/>{new Date(report.created_at).toLocaleDateString()}</span></div>
             <h2>{chart?.ascendant?.sign || "Vedic birth chart"} Ascendant</h2>
-            <p className="report-place">{chart?.birth?.place || "Birthplace not available"}</p>
+            <p className="report-place">{chart?.birth?.place || "Birthplace not available"}</p><ReportActions id={report.id} report={chart}/>
             <div className="report-details"><div><span>Moon nakshatra</span><strong>{chart?.planets?.find((planet) => planet.name === "Moon")?.nakshatra || "—"}</strong></div><div><span>Mahadasha at save</span><strong>{chart?.vimshottari?.currentMahadasha?.lord || "—"}</strong></div></div>
             <details className="report-payload"><summary>View planetary placements</summary><div className="chart-table-wrap"><table className="chart-table"><thead><tr><th>Graha</th><th>Rashi</th><th>House</th><th>Degree</th></tr></thead><tbody>{(chart?.planets || []).map((planet) => <tr key={planet.name}><td>{planet.name}</td><td>{planet.sign}</td><td>{planet.house}</td><td>{planet.degreeInSign.toFixed(2)}°</td></tr>)}</tbody></table></div><p className="chart-disclaimer"><ShieldCheck size={13}/>{chart?.disclaimer}</p><pre>{JSON.stringify(chart, null, 2)}</pre></details>
           </article>;
