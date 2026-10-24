@@ -22,6 +22,9 @@ describe("calculateKundli", () => {
     expect(report.planets.map((planet) => planet.name)).toEqual([
       "Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu",
     ]);
+    expect(report.panchang.experimental).toBe(true);
+    expect(report.panchang.tithi).toBeTruthy();
+    expect(Array.isArray(report.yogaCandidates)).toBe(true);
     for (const planet of report.planets) {
       expect(planet.longitude).toBeGreaterThanOrEqual(0);
       expect(planet.longitude).toBeLessThan(360);
@@ -32,6 +35,8 @@ describe("calculateKundli", () => {
       expect(planet.nakshatra).toBeTruthy();
       expect(planet.nakshatraPada).toBeGreaterThanOrEqual(1);
       expect(planet.nakshatraPada).toBeLessThanOrEqual(4);
+      expect(planet.navamsaSign).toBeTruthy();
+      expect(planet.dashamsaSign).toBeTruthy();
     }
   });
 
