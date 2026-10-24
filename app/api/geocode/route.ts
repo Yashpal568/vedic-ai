@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -9,6 +10,8 @@ type Place = { id: string; label: string; latitude: number; longitude: number; t
 const cache = new Map<string, { expires: number; places: Place[] }>();
 
 export async function POST(request: Request) {
+  const rate = checkRateLimit(request, "geocode", 8, 60_000);
+  if (!rate.allowed) return NextResponse.json({ error: "Too many birthplace searches. Please wait and try again." }, { status: 429, headers: { "Retry-After": String(rate.retryAfterSeconds) } });
   try {
     const { query } = schema.parse(await request.json());
     const key = query.toLocaleLowerCase();
