@@ -12,7 +12,7 @@ Status key: **Implemented (needs deployment verification)**, **Partial**, **Not 
 - [x] **DST nonexistent-time guard** — local date/time conversion now rejects a local time that fails exact timezone round-trip validation; tests cover a New York spring-forward gap and a valid post-transition time.
 - [x] **Saved report primitives** — save/list/delete endpoints and an authenticated reports page exist. End-to-end deployment verification remains outstanding.
 - [ ] **Reference-chart validation** — compare ascendant, planetary longitudes, Lahiri ayanamsha, and Rahu/Ketu against named, reproducible trusted reference fixtures. Do not claim validated accuracy until fixtures and tolerances are reviewed.
-- [ ] **Ambiguous DST fall-back times** — detect and present both possible instants or require explicit offset/choice; the current guard addresses nonexistent times but does not fully resolve repeated wall times.
+- [x] **Ambiguous DST fall-back times** — the calculation engine rejects repeated local wall times during a fall-back transition rather than silently choosing one instant; verify the UX presents the actionable error clearly in the deployed app.
 - [ ] **Nakshatra/Navamsa/Dasha fixtures** — test exact boundary values, D9 placements, dasha start/end and date boundaries against independent reference calculations.
 - [ ] **Chart-grounded AI regression tests** — add mocked-provider tests proving fabricated client chart values cannot influence answers, and that unsupported yogas/divisional charts are described as not computed.
 - [ ] **Save/retrieve reports E2E** — sign in, save, refresh, verify reports page, delete, and verify removal.
@@ -25,6 +25,7 @@ Status key: **Implemented (needs deployment verification)**, **Partial**, **Not 
 - [ ] **Durable shared rate limits** — current limiter is in-process and does not coordinate Vercel serverless instances. Add a shared store or edge limiter before public beta.
 - [ ] **Per-user AI quotas and concurrency limits** — provider spend alerts, request/user budgets, and concurrency controls remain outstanding.
 - [x] **Birth-data consent/disclosure** — birth details modal now explicitly requires consent before automatic AI interpretation and explains that details/chart are sent to the configured AI provider.
+- [x] **Google OAuth UI and callback handling** — the login page now offers Google OAuth through Supabase and handles provider cancellation/errors. **Blocked on dashboard setup:** configure the Google provider credentials and exact redirect allow-list using `docs/GOOGLE_OAUTH_SETUP.md`, then verify on the deployed domain.
 - [ ] **Retention policy and provider review** — define retention periods, deletion timing, AI provider terms, and geocoding provider policy.
 - [x] **Personal-data export** — authenticated `GET /api/account-data` exports stored Vedic AI data as JSON.
 - [x] **Delete saved personal data** — authenticated `DELETE /api/account-data` removes stored app data, subject to migrations/RLS. This does **not** delete the Supabase Auth account.
@@ -33,6 +34,8 @@ Status key: **Implemented (needs deployment verification)**, **Partial**, **Not 
 - [ ] **Monitoring/backups/recovery** — configure Vercel/Supabase logs, alerts, backup plan, and recovery drill.
 
 ## P2 — Features and production readiness
+
+- [ ] **Google OAuth deployment verification** — enable/configure the Google provider in Supabase, add the Google Cloud OAuth callback, configure app redirect allow-list, and test success/cancel/session persistence in production.
 
 - [ ] **PDF report generation** — include consistent chart facts, Hindi fonts, and tested page breaks.
 - [ ] **D9/D10 and other divisional charts** — implement only with validated independent fixtures.
