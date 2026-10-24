@@ -13,7 +13,7 @@ export function printKundliReport(report: KundliReport, reportId?: string) {
     "<tr><td>" + escapeHtml(planet.name) + "</td><td>" + escapeHtml(planet.sign) + "</td><td>" +
     escapeHtml(planet.degreeInSign.toFixed(4) + "°") + "</td><td>" + escapeHtml(planet.house) +
     "</td><td>" + escapeHtml(planet.nakshatra) + " · Pada " + escapeHtml(planet.nakshatraPada) +
-    "</td><td>" + escapeHtml(planet.navamsaSign) + "</td></tr>"
+    "</td><td>" + escapeHtml(planet.navamsaSign) + "</td><td>" + escapeHtml(planet.dashamsaSign) + "</td></tr>"
   ).join("");
   const dashaRows = report.vimshottari.periods.map((period) =>
     "<tr><td>" + escapeHtml(period.lord) + "</td><td>" + escapeHtml(period.start) +
@@ -25,7 +25,7 @@ export function printKundliReport(report: KundliReport, reportId?: string) {
   </style></head><body><div class="actions"><button onclick="window.print()">Print / Save as PDF</button><p class="muted">In the print dialog, choose “Save as PDF” as the destination.</p></div>
   <header><p class="muted">VEDIC AI · TRADITIONAL JYOTISH REPORT</p><h1>${escapeHtml(report.birth.place)}</h1><p>Birth date: ${escapeHtml(report.birth.date)} · Local time: ${escapeHtml(report.birth.time)} (${escapeHtml(report.birth.timezone)})</p><p class="muted">Generated: ${generated}${reportId ? " · Report ID: " + escapeHtml(reportId) : ""}</p></header>
   <div class="grid"><div class="card">Ascendant<strong>${escapeHtml(report.ascendant.sign)}</strong><p class="muted">${escapeHtml(report.ascendant.degreeInSign.toFixed(3))}° · ${escapeHtml(report.ascendant.nakshatra)}</p></div><div class="card">Moon nakshatra<strong>${escapeHtml(report.planets.find((p) => p.name === "Moon")?.nakshatra || "—")}</strong><p class="muted">Calculated placement</p></div><div class="card">Current Mahadasha<strong>${escapeHtml(report.vimshottari.currentMahadasha.lord)}</strong><p class="muted">${escapeHtml(report.vimshottari.currentMahadasha.start)} – ${escapeHtml(report.vimshottari.currentMahadasha.end)}</p></div></div>
-  <h2>Planetary positions</h2><table><thead><tr><th>Graha</th><th>Sign</th><th>Degree</th><th>House</th><th>Nakshatra</th><th>Navamsa sign</th></tr></thead><tbody>${planetRows}</tbody></table>
+  <h2>Planetary positions</h2><table><thead><tr><th>Graha</th><th>Sign</th><th>Degree</th><th>House</th><th>Nakshatra</th><th>D9 Navamsa</th><th>D10 Dashamsa</th></tr></thead><tbody>${planetRows}</tbody></table>
   <h2>Vimshottari periods (engine output)</h2><table><thead><tr><th>Mahadasha</th><th>Start</th><th>End</th><th>Years</th></tr></thead><tbody>${dashaRows}</tbody></table>
   <h2>Calculation details</h2><p>Ayanamsha: ${escapeHtml(report.ayanamsha.name)} (${escapeHtml(report.ayanamsha.degrees.toFixed(5))}°)</p><p>Zodiac: ${escapeHtml(report.zodiac)} · House system: ${escapeHtml(report.houseSystem)} · Engine: ${escapeHtml(report.engine)} ${escapeHtml(report.engineVersion)}</p>
   <footer><strong>Important limitation:</strong> ${escapeHtml(report.disclaimer)} This report reflects the application's current calculation engine and is not a guarantee of astrological accuracy or a substitute for professional advice. Verify all placements against a trusted reference before relying on them.</footer></body></html>`;
