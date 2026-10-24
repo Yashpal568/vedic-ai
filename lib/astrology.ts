@@ -1,4 +1,5 @@
 import { Body, Ecliptic, GeoVector, SiderealTime } from "astronomy-engine";
+import { vargaSignName } from "@/lib/vargas";
 
 export const SIGNS = [
   "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
@@ -44,6 +45,7 @@ export type PlanetPosition = {
   nakshatra: string;
   nakshatraPada: number;
   navamsaSign: string;
+  dashamsaSign: string;
   retrograde: boolean;
 };
 
@@ -90,13 +92,7 @@ function lunarDetails(longitude: number) {
 }
 
 function navamsaSign(longitude: number) {
-  const normalized = norm(longitude);
-  const signIndex = Math.floor(normalized / 30);
-  const segment = Math.min(8, Math.floor((normalized % 30) / (30 / 9)));
-  // Movable signs begin at themselves; fixed signs begin from the 9th; dual signs from the 5th.
-  const modality = signIndex % 3;
-  const start = modality === 0 ? signIndex : modality === 1 ? (signIndex + 8) % 12 : (signIndex + 4) % 12;
-  return SIGNS[(start + segment) % 12];
+  return vargaSignName(longitude, 9);
 }
 
 function ascendantLongitude(date: Date, latitude: number, longitude: number) {
@@ -137,7 +133,7 @@ function getPosition(name: string, longitude: number, house: number, retrograde 
     name, longitude: Number(normalized.toFixed(5)), sign: sign.sign, signIndex: sign.signIndex,
     degreeInSign: Number(sign.degreeInSign.toFixed(4)), house,
     nakshatra: lunar.nakshatra, nakshatraPada: lunar.nakshatraPada,
-    navamsaSign: navamsaSign(normalized), retrograde,
+    navamsaSign: navamsaSign(normalized), dashamsaSign: vargaSignName(normalized, 10), retrograde,
   };
 }
 
