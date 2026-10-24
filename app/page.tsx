@@ -8,7 +8,7 @@ import type { KundliReport } from "@/lib/astrology";
 import {
   ArrowDown, ArrowUp, AudioLines, BookOpen, CalendarDays, Check, ChevronDown,
   CircleHelp, Gem, History, Menu, MessageCircle, MoonStar, Orbit, Plus,
-  ShieldCheck, Sparkles, Stars, UserRound, X, BriefcaseBusiness, Heart, Compass,
+  ShieldCheck, Sparkles, Stars, UserRound, X, BriefcaseBusiness, Heart, Compass, Trash2,
 } from "lucide-react";
 
 type Message = { id: string; role: "user" | "assistant"; content: string };
@@ -96,10 +96,30 @@ export default function Home() {
           longitude: data.chartReport.birth.longitude,
           timezone: data.chartReport.birth.timezone,
         });
+      } else {
+        setSavedBirth(null);
       }
       setMobileMenuOpen(false);
     } catch (error) {
       setToast(error instanceof Error ? error.message : "Could not load conversation.");
+    }
+  }
+
+  async function deleteConversation(id: string) {
+    if (!window.confirm("Delete this conversation and its messages? This cannot be undone.")) return;
+    try {
+      const response = await fetch("/api/conversations?id=" + encodeURIComponent(id), { method: "DELETE" });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Could not delete conversation.");
+      setHistoryItems((items) => items.filter((item) => item.id !== id));
+      if (activeConversationId === id) {
+        setActiveConversationId(null);
+        setMessages([]);
+        setChartReport(null);
+      }
+      setToast("Conversation deleted.");
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : "Could not delete conversation.");
     }
   }
 
@@ -329,7 +349,7 @@ export default function Home() {
         <button className="side-link" onClick={() => { window.location.href = "/reports"; }}><BookOpen size={16} /> <span>Kundli & reports</span></button>
         <button className="side-link" onClick={() => setToast("Panchang and transit tools are on the product roadmap.")}><CalendarDays size={16} /> <span>Panchang & transits</span></button>
         <div className="side-label">Recent conversations</div>
-        {historyItems.length ? historyItems.map((item) => <button className={"side-link " + (activeConversationId === item.id ? "active" : "")} key={item.id} onClick={() => loadConversation(item.id)}><History size={15} /><span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</span></button>) : <p className="history-empty">Sign in to save conversations and see them here.</p>}
+        {historyItems.length ? historyItems.map((item) => <div className="history-item-row" key={item.id}><button className={"side-link history-item-open " + (activeConversationId === item.id ? "active" : "")} onClick={() => loadConversation(item.id)}><History size={15} /><span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</span></button><button className="history-delete" aria-label={"Delete " + item.title} onClick={() => deleteConversation(item.id)}><Trash2 size={13}/></button></div>) : <p className="history-empty">Sign in to save conversations and see them here.</p>}
         <div className="sidebar-bottom">
           <div className="plan-card">
             <div className="plan-top"><Gem size={14} /> YOUR COSMIC JOURNEY</div>
