@@ -1,5 +1,6 @@
 import { Body, Ecliptic, GeoVector, SiderealTime } from "astronomy-engine";
 import { vargaSignName } from "@/lib/vargas";
+import { calculateBirthPanchang, detectYogaCandidates, type BirthPanchang, type YogaCandidate } from "@/lib/vedic-features";
 
 export const SIGNS = [
   "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
@@ -58,6 +59,8 @@ export type KundliReport = {
   birth: { date: string; time: string; timezone: string; utc: string; place: string; latitude: number; longitude: number };
   ascendant: { longitude: number; sign: string; signIndex: number; degreeInSign: number; nakshatra: string; nakshatraPada: number };
   planets: PlanetPosition[];
+  panchang: BirthPanchang;
+  yogaCandidates: YogaCandidate[];
   vimshottari: { birthMahadasha: string; birthBalanceYears: number; currentMahadasha: { lord: string; start: string; end: string }; periods: { lord: string; start: string; end: string; years: number }[] };
   generatedAt: string;
   disclaimer: string;
@@ -240,6 +243,10 @@ export function calculateKundli(input: {
   }
   const currentPeriod = periods.find((period) => new Date(period.start) <= utc && new Date(period.end) > utc) || periods[0];
   const currentMahadasha = periods.find((period) => new Date(period.start) <= new Date() && new Date(period.end) > new Date()) || currentPeriod;
+  const sortedPlanets = planets.sort((a, b) => ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu"].indexOf(a.name) - ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu"].indexOf(b.name));
+  const sunPosition = sortedPlanets.find((planet) => planet.name === "Sun");
+  const moonPosition = sortedPlanets.find((planet) => planet.name === "Moon");
+  if (!sunPosition || !moonPosition) throw new Error("The chart engine did not produce the Sun and Moon positions required for Panchang.");
   return {
     engine: "Astronomy Engine + Vedic sidereal conversion",
     engineVersion: "astronomy-engine 2.1.x; Lahiri approximation v1",
@@ -247,7 +254,9 @@ export function calculateKundli(input: {
     zodiac: "sidereal", houseSystem: "whole_sign",
     birth: { date: input.date, time: input.time, timezone: input.timezone, utc: utc.toISOString(), place: input.place, latitude: input.latitude, longitude: input.longitude },
     ascendant: { longitude: Number(siderealAsc.toFixed(5)), sign: asc.sign, signIndex: asc.signIndex, degreeInSign: Number(asc.degreeInSign.toFixed(4)), nakshatra: ascNak.nakshatra, nakshatraPada: ascNak.nakshatraPada },
-    planets: planets.sort((a, b) => ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu"].indexOf(a.name) - ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu"].indexOf(b.name)),
+    planets: sortedPlanets,
+    panchang: calculateBirthPanchang(sunPosition.longitude, moonPosition.longitude, input.date),
+    yogaCandidates: detectYogaCandidates(sortedPlanets),
     vimshottari: { birthMahadasha: birthLord.lord, birthBalanceYears: Number(balanceYears.toFixed(3)), currentMahadasha: { lord: currentMahadasha.lord, start: currentMahadasha.start, end: currentMahadasha.end }, periods },
     generatedAt: new Date().toISOString(),
     disclaimer: "Astronomical positions use Astronomy Engine with an approximate Lahiri ayanamsha and simplified mean lunar-node formula. This is an early calculation engine and must be validated against trusted Jyotish reference charts before use for paid or high-accuracy readings.",
