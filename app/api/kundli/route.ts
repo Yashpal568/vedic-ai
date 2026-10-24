@@ -17,6 +17,7 @@ const schema = z.object({
 
 export async function POST(request: Request) {
   const rate = await checkRateLimit(request, "kundli", 15, 60_000);
+  if (!rate.available) return NextResponse.json({ error: "The shared rate-limiting service is unavailable. Configure migration 004 and the server-only service-role key, then retry." }, { status: 503 });
   if (!rate.allowed) return NextResponse.json({ error: "Too many chart calculations. Please wait and try again." }, { status: 429, headers: { "Retry-After": String(rate.retryAfterSeconds) } });
   try {
     const body = schema.parse(await request.json());
