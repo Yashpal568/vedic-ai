@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import { vargaSignIndex } from "./vargas";
 
 // Independent numerical reference outputs from the 1994 Delhi reference chart
-// published in librejyotish's reference_charts/fixtures.json. These tests validate
+// published in https://github.com/anhadlamba30/librejyotish/blob/main/tests/reference_charts/fixtures.json.
+// Only numerical longitude-to-varga results are used here; no engine code is copied.
+// These tests validate
 // the D9/D10 mapping from a supplied longitude; they do NOT validate this app's
 // ephemeris, ayanamsha, ascendant, or full chart calculations.
 const referenceLongitudes = [
