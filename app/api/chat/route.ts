@@ -13,8 +13,12 @@ const requestSchema = z.object({
     name: z.string().max(100).optional(),
     date: z.string().max(20),
     time: z.string().max(10),
-    place: z.string().max(200),
+    place: z.string().max(300),
+    latitude: z.number().optional(),
+    longitude: z.number().optional(),
+    timezone: z.string().max(100).optional(),
   }).optional(),
+  chartContext: z.record(z.string(), z.unknown()).optional(),
 });
 
 const systemInstruction = [
@@ -27,7 +31,7 @@ const systemInstruction = [
   "Do not claim you calculated a kundli unless structured chart data is explicitly included in the context.",
 ].join("\n");
 
-async function callGemini(messages: Array<{ role: "user" | "assistant"; content: string }>, birthProfile?: z.infer<typeof requestSchema>["birthProfile"]) {
+async function callGemini(messages: Array<{ role: "user" | "assistant"; content: string }>, birthProfile?: z.infer<typeof requestSchema>["birthProfile"], chartContext?: Record<string, unknown>) {
   const key = process.env.GEMINI_API_KEY;
   if (!key) throw new Error("AI_NOT_CONFIGURED");
   const model = process.env.AI_MODEL || "gemini-2.5-flash";
@@ -64,7 +68,7 @@ async function callGemini(messages: Array<{ role: "user" | "assistant"; content:
   return text as string;
 }
 
-async function callOpenAI(messages: Array<{ role: "user" | "assistant"; content: string }>, birthProfile?: z.infer<typeof requestSchema>["birthProfile"]) {
+async function callOpenAI(messages: Array<{ role: "user" | "assistant"; content: string }>, birthProfile?: z.infer<typeof requestSchema>["birthProfile"], chartContext?: Record<string, unknown>) {
   const key = process.env.OPENAI_API_KEY;
   if (!key) throw new Error("AI_NOT_CONFIGURED");
   const model = process.env.AI_MODEL || "gpt-4.1-mini";
@@ -100,9 +104,9 @@ export async function POST(request: Request) {
     const body = requestSchema.parse(await request.json());
     const provider = (process.env.AI_PROVIDER || "gemini").toLowerCase();
     const reply = provider === "openai"
-      ? await callOpenAI(body.messages, body.birthProfile)
+      ? await callOpenAI(body.messages, body.birthProfile, body.chartContext)
       : provider === "gemini"
-        ? await callGemini(body.messages, body.birthProfile)
+        ? await callGemini(body.messages, body.birthProfile, body.chartContext)
         : null;
 
     if (!reply) {
