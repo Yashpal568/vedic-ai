@@ -6,7 +6,7 @@ import Link from "next/link";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import type { KundliReport } from "@/lib/astrology";
 import {
-  ArrowDown, ArrowUp, AudioLines, BookOpen, CalendarDays, Check, ChevronDown,
+  ArrowDown, ArrowUp, AudioLines, BookOpen, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight,
   CircleHelp, Gem, History, Menu, MessageCircle, MoonStar, Orbit, Plus,
   ShieldCheck, Sparkles, Stars, UserRound, X, BriefcaseBusiness, Heart, Compass, Trash2,
 } from "lucide-react";
@@ -23,6 +23,92 @@ const suggestions = [
   { title: "Nakshatra & dasha", description: "Discover lunar mansions and planetary period systems.", prompt: "Explain nakshatras and Vimshottari dasha, and how they are calculated.", icon: Stars },
 ];
 const makeId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+
+function BirthDatePicker({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const today = new Date();
+  const selected = value ? new Date(value + "T12:00:00") : null;
+  const [open, setOpen] = useState(false);
+  const [viewYear, setViewYear] = useState(selected?.getFullYear() ?? today.getFullYear());
+  const [viewMonth, setViewMonth] = useState(selected?.getMonth() ?? today.getMonth());
+  const rootRef = useRef<HTMLDivElement>(null);
+  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const weekdayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const firstWeekday = (new Date(viewYear, viewMonth, 1).getDay() + 6) % 7;
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const calendarCells = Array.from({ length: Math.ceil((firstWeekday + daysInMonth) / 7) * 7 }, (_, index) => {
+    const day = index - firstWeekday + 1;
+    return day > 0 && day <= daysInMonth ? day : null;
+  });
+  const maxDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const years = Array.from({ length: maxDate.getFullYear() - 1899 }, (_, index) => maxDate.getFullYear() - index);
+  const displayValue = value ? (() => {
+    const [year, month, day] = value.split("-");
+    return day + "-" + month + "-" + year;
+  })() : "";
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (event: PointerEvent) => {
+      if (rootRef.current && !rootRef.current.contains(event.target as Node)) setOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
+  function shiftMonth(delta: number) {
+    const next = new Date(viewYear, viewMonth + delta, 1);
+    if (next.getFullYear() < 1900 || next > maxDate) return;
+    setViewYear(next.getFullYear());
+    setViewMonth(next.getMonth());
+  }
+
+  function chooseDay(day: number) {
+    const next = new Date(viewYear, viewMonth, day);
+    if (next > maxDate) return;
+    onChange([viewYear, String(viewMonth + 1).padStart(2, "0"), String(day).padStart(2, "0")].join("-"));
+    setOpen(false);
+  }
+
+  return <div className="birth-date-picker" ref={rootRef}>
+    <div className="birth-date-control">
+      <input className="form-input birth-date-display" type="text" value={displayValue} placeholder="DD-MM-YYYY" readOnly required aria-label="Date of birth" onClick={() => setOpen(true)} />
+      <button type="button" className="birth-date-toggle" aria-label={open ? "Close calendar" : "Open calendar"} aria-expanded={open} onClick={() => setOpen((current) => !current)}><CalendarDays size={16}/></button>
+    </div>
+    {open && <div className="birth-calendar" role="dialog" aria-label="Choose date of birth">
+      <div className="birth-calendar-heading">
+        <button type="button" className="birth-calendar-nav" aria-label="Previous month" disabled={viewYear === 1900 && viewMonth === 0} onClick={() => shiftMonth(-1)}><ChevronLeft size={17}/></button>
+        <div className="birth-calendar-selectors">
+          <select aria-label="Month" value={viewMonth} onChange={(event) => setViewMonth(Number(event.target.value))}>
+            {monthNames.map((month, index) => <option value={index} key={month}>{month}</option>)}
+          </select>
+          <select aria-label="Year" value={viewYear} onChange={(event) => { setViewYear(Number(event.target.value)); }}>
+            {years.map((year) => <option value={year} key={year}>{year}</option>)}
+          </select>
+        </div>
+        <button type="button" className="birth-calendar-nav" aria-label="Next month" disabled={viewYear === maxDate.getFullYear() && viewMonth >= maxDate.getMonth()} onClick={() => shiftMonth(1)}><ChevronRight size={17}/></button>
+      </div>
+      <div className="birth-calendar-grid birth-calendar-weekdays">{weekdayNames.map((day) => <span key={day}>{day}</span>)}</div>
+      <div className="birth-calendar-grid">
+        {calendarCells.map((day, index) => {
+          const isFuture = day !== null && new Date(viewYear, viewMonth, day) > maxDate;
+          const isSelected = day !== null && value === [viewYear, String(viewMonth + 1).padStart(2, "0"), String(day).padStart(2, "0")].join("-");
+          const isToday = day !== null && viewYear === today.getFullYear() && viewMonth === today.getMonth() && day === today.getDate();
+          return day === null
+            ? <span className="birth-calendar-empty" key={"empty-" + index} />
+            : <button type="button" key={day} disabled={isFuture} className={"birth-calendar-day" + (isSelected ? " selected" : "") + (isToday ? " today" : "")} aria-pressed={isSelected} onClick={() => chooseDay(day)}>{day}</button>;
+        })}
+      </div>
+      <div className="birth-calendar-footer"><button type="button" onClick={() => { setViewYear(today.getFullYear()); setViewMonth(today.getMonth()); chooseDay(today.getDate()); }}>Today</button><span>Future dates are unavailable</span></div>
+    </div>}
+  </div>;
+}
 
 function KundliDiagram({ report }: { report: KundliReport }) {
   const houses = [
@@ -592,7 +678,7 @@ export default function Home() {
           <form onSubmit={submitBirth}>
             <div className="form-grid">
               <label className="form-field full"><span className="form-label">Name <span style={{ color: "var(--quiet)", fontWeight: 400 }}>(optional)</span></span><input className="form-input" autoComplete="name" value={birth.name} onChange={(event) => setBirth({ ...birth, name: event.target.value })} placeholder="What should we call you?" /></label>
-              <label className="form-field"><span className="form-label">Date of birth *</span><input className="form-input" type="date" required value={birth.date} onChange={(event) => setBirth({ ...birth, date: event.target.value })} /></label>
+              <label className="form-field"><span className="form-label">Date of birth *</span><BirthDatePicker value={birth.date} onChange={(date) => setBirth((current) => ({ ...current, date }))} /></label>
               <label className="form-field"><span className="form-label">Local birth time *</span><input className="form-input" type="time" required value={birth.time} onChange={(event) => setBirth({ ...birth, time: event.target.value })} /></label>
               <label className="form-field full"><span className="form-label">Birthplace *</span><div className="place-search-row"><input className="form-input" required value={birth.place} onChange={(event) => { setBirth({ ...birth, place: event.target.value }); setSelectedPlace(null); setPlaceOptions([]); }} placeholder="City, region, country (e.g. Jaipur, India)" /><button type="button" className="secondary-button place-search-button" disabled={isGeocoding || birth.place.trim().length < 2} onClick={searchPlaces}>{isGeocoding ? "Searching…" : "Find place"}</button></div>{selectedPlace && <p className="place-selected"><Check size={12} /> Selected: {selectedPlace.label}</p>}{placeOptions.length > 1 && <div className="place-options">{placeOptions.map((option) => <button type="button" className={"place-option " + (selectedPlace?.id === option.id ? "chosen" : "")} key={option.id} onClick={() => { setSelectedPlace(option); setBirth({ ...birth, place: option.label }); setPlaceOptions([]); }}><Compass size={13}/><span>{option.label}</span>{selectedPlace?.id === option.id && <Check size={13}/>}</button>)}</div>}<span className="place-hint">Enter at least 2 characters, tap Find place, then select the matching city/area so timezone and coordinates resolve correctly.</span><span className="place-attribution">Location data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap contributors</a>.</span></label>
             </div>
