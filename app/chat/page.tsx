@@ -259,6 +259,7 @@ export default function Home() {
         setActiveConversationId(null);
         setMessages([]);
         setChartReport(null);
+        setTransitReport(null);
       }
       setToast("Conversation deleted.");
     } catch (error) {
@@ -524,6 +525,7 @@ export default function Home() {
       setHistoryItems([]);
       setMessages([]);
       setChartReport(null);
+      setTransitReport(null);
       setSavedBirth(null);
       setActiveConversationId(null);
       setIsMemoryOpen(false);
@@ -547,6 +549,7 @@ export default function Home() {
       setHistoryItems([]);
       setMessages([]);
       setChartReport(null);
+      setTransitReport(null);
       setSavedBirth(null);
       setActiveConversationId(null);
       setToast(data.message || "Saved personal data deleted.");
