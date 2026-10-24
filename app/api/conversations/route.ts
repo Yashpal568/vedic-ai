@@ -1,0 +1,80 @@
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+const schema = z.object({
+  id: z.string().uuid().optional(),
+  messages: z.array(z.object({
+    role: z.enum(["user", "assistant"]),
+    content: z.string().trim().min(1).max(12000),
+  })).min(1).max(30),
+});
+
+export async function GET(request: Request) {
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return NextResponse.json({ error: "Supabase is not configured." }, { status: 503 });
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) return NextResponse.json({ error: "Sign in to access saved conversations." }, { status: 401 });
+  const id = new URL(request.url).searchParams.get("id");
+  if (id) {
+    if (!z.string().uuid().safeParse(id).success) return NextResponse.json({ error: "Invalid conversation ID." }, { status: 400 });
+    const { data: conversation, error } = await supabase.from("conversations")
+      .select("id,title,birth_profile_id,created_at,updated_at").eq("id", id).eq("user_id", user.id).single();
+    if (error || !conversation) return NextResponse.json({ error: "Conversation not found." }, { status: 404 });
+    const { data: messages, error: messageError } = await supabase.from("chat_messages")
+      .select("id,role,content,created_at").eq("conversation_id", id).eq("user_id", user.id).order("created_at", { ascending: true }).limit(200);
+    if (messageError) return NextResponse.json({ error: "Could not load conversation messages." }, { status: 500 });
+    return NextResponse.json({ conversation, messages: messages || [] }, { headers: { "Cache-Control": "private, no-store" } });
+  }
+  const { data, error } = await supabase.from("conversations")
+    .select("id,title,created_at,updated_at").eq("user_id", user.id).order("updated_at", { ascending: false }).limit(30);
+  if (error) return NextResponse.json({ error: "Could not load saved conversations." }, { status: 500 });
+  return NextResponse.json({ conversations: data || [] }, { headers: { "Cache-Control": "private, no-store" } });
+}
+
+export async function POST(request: Request) {
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return NextResponse.json({ error: "Supabase is not configured." }, { status: 503 });
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) return NextResponse.json({ error: "Sign in to save conversations." }, { status: 401 });
+  try {
+    const body = schema.parse(await request.json());
+    let conversationId = body.id;
+    let created = false;
+    const firstUserText = body.messages.find((message) => message.role === "user")?.content || "New conversation";
+    const title = firstUserText.replace(/\s+/g, " ").slice(0, 64);
+    if (conversationId) {
+      const { data: owned, error } = await supabase.from("conversations").select("id")
+        .eq("id", conversationId).eq("user_id", user.id).single();
+      if (error || !owned) return NextResponse.json({ error: "Conversation not found." }, { status: 404 });
+    } else {
+      const { data: conversation, error } = await supabase.from("conversations").insert({
+        user_id: user.id, title,
+      }).select("id,title,created_at,updated_at").single();
+      if (error || !conversation) return NextResponse.json({ error: "Could not create conversation." }, { status: 500 });
+      conversationId = conversation.id;
+      created = true;
+    }
+
+    const rows = body.messages.map((message) => ({
+      conversation_id: conversationId,
+      user_id: user.id,
+      role: message.role,
+      content: message.content,
+    }));
+    const { error: insertError } = await supabase.from("chat_messages").insert(rows);
+    if (insertError) {
+      if (created) await supabase.from("conversations").delete().eq("id", conversationId).eq("user_id", user.id);
+      return NextResponse.json({ error: "Could not save conversation messages." }, { status: 500 });
+    }
+    const { data: conversation } = await supabase.from("conversations").select("id,title,created_at,updated_at")
+      .eq("id", conversationId).eq("user_id", user.id).single();
+    return NextResponse.json({ saved: true, conversation }, { status: created ? 201 : 200 });
+  } catch (error) {
+    if (error instanceof z.ZodError) return NextResponse.json({ error: "Invalid conversation payload." }, { status: 400 });
+    return NextResponse.json({ error: "Unable to save this conversation." }, { status: 500 });
+  }
+}
