@@ -122,10 +122,12 @@ export async function POST(request: Request) {
     }
     if (signedInUserId) {
       const hourlyQuota = await checkRateLimit(request, "ai-user-hour", 12, 60 * 60 * 1000, signedInUserId);
+      if (!hourlyQuota.available) return NextResponse.json({ error: "The shared rate-limiting service is unavailable. Please try again later." }, { status: 503 });
       if (!hourlyQuota.allowed) {
         return NextResponse.json({ error: "You've reached the hourly AI usage limit. Please try again later." }, { status: 429, headers: { "Retry-After": String(hourlyQuota.retryAfterSeconds) } });
       }
       const dailyQuota = await checkRateLimit(request, "ai-user-day", 40, 24 * 60 * 60 * 1000, signedInUserId);
+      if (!dailyQuota.available) return NextResponse.json({ error: "The shared rate-limiting service is unavailable. Please try again later." }, { status: 503 });
       if (!dailyQuota.allowed) {
         return NextResponse.json({ error: "You've reached today's AI usage limit. Please try again tomorrow." }, { status: 429, headers: { "Retry-After": String(dailyQuota.retryAfterSeconds) } });
       }
