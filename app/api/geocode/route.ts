@@ -72,7 +72,7 @@ async function searchPhoton(query: string): Promise<Place[]> {
 }
 
 export async function POST(request: Request) {
-  const rate = checkRateLimit(request, "geocode", 8, 60_000);
+  const rate = await checkRateLimit(request, "geocode", 8, 60_000);
   if (!rate.allowed) return NextResponse.json({ error: "Too many birthplace searches. Please wait and try again." }, { status: 429, headers: { "Retry-After": String(rate.retryAfterSeconds) } });
   try {
     const { query } = schema.parse(await request.json());
