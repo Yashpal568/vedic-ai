@@ -63,6 +63,14 @@ function BirthDatePicker({ value, onChange }: { value: string; onChange: (value:
     };
   }, [open]);
 
+  useEffect(() => {
+    if (!value) return;
+    const parsed = new Date(value + "T12:00:00");
+    if (Number.isNaN(parsed.getTime())) return;
+    setViewYear(parsed.getFullYear());
+    setViewMonth(parsed.getMonth());
+  }, [value]);
+
   function shiftMonth(delta: number) {
     const next = new Date(viewYear, viewMonth + delta, 1);
     if (next.getFullYear() < 1900 || next > maxDate) return;
@@ -82,9 +90,9 @@ function BirthDatePicker({ value, onChange }: { value: string; onChange: (value:
       <input className="form-input birth-date-display" type="text" value={displayValue} placeholder="DD-MM-YYYY" readOnly required aria-label="Date of birth" onClick={() => setOpen(true)} />
       <button type="button" className="birth-date-toggle" aria-label={open ? "Close calendar" : "Open calendar"} aria-expanded={open} onClick={() => setOpen((current) => !current)}><CalendarDays size={16}/></button>
     </div>
-    {open && <div className="birth-calendar" role="dialog" aria-label="Choose date of birth">
+    {open && <div className="birth-calendar" role="dialog" aria-label="Choose date of birth" aria-modal="false">
+      <div className="birth-calendar-topline"><span className="birth-calendar-kicker">BIRTH DETAILS</span><span className="birth-calendar-zone"><span /> LOCAL DATE</span></div>
       <div className="birth-calendar-heading">
-        <button type="button" className="birth-calendar-nav" aria-label="Previous month" disabled={viewYear === 1900 && viewMonth === 0} onClick={() => shiftMonth(-1)}><ChevronLeft size={17}/></button>
         <div className="birth-calendar-selectors">
           <select aria-label="Month" value={viewMonth} onChange={(event) => setViewMonth(Number(event.target.value))}>
             {monthNames.map((month, index) => <option value={index} key={month}>{month}</option>)}
@@ -93,21 +101,24 @@ function BirthDatePicker({ value, onChange }: { value: string; onChange: (value:
             {years.map((year) => <option value={year} key={year}>{year}</option>)}
           </select>
         </div>
-        <button type="button" className="birth-calendar-nav" aria-label="Next month" disabled={viewYear === maxDate.getFullYear() && viewMonth >= maxDate.getMonth()} onClick={() => shiftMonth(1)}><ChevronRight size={17}/></button>
+        <div className="birth-calendar-navigation">
+          <button type="button" className="birth-calendar-nav" aria-label="Previous month" disabled={viewYear === 1900 && viewMonth === 0} onClick={() => shiftMonth(-1)}><ChevronLeft size={17}/></button>
+          <button type="button" className="birth-calendar-nav" aria-label="Next month" disabled={viewYear === maxDate.getFullYear() && viewMonth >= maxDate.getMonth()} onClick={() => shiftMonth(1)}><ChevronRight size={17}/></button>
+        </div>
       </div>
       <div className="birth-calendar-grid birth-calendar-weekdays">{weekdayNames.map((day) => <span key={day}>{day}</span>)}</div>
-      <div className="birth-calendar-grid">
+      <div className="birth-calendar-grid birth-calendar-days" aria-live="polite">
         {calendarCells.map((day, index) => {
           const isFuture = day !== null && new Date(viewYear, viewMonth, day) > maxDate;
           const isSelected = day !== null && value === [viewYear, String(viewMonth + 1).padStart(2, "0"), String(day).padStart(2, "0")].join("-");
           const isToday = day !== null && viewYear === today.getFullYear() && viewMonth === today.getMonth() && day === today.getDate();
           return day === null
             ? <span className="birth-calendar-empty" key={"empty-" + index} />
-            : <button type="button" key={day} disabled={isFuture} className={"birth-calendar-day" + (isSelected ? " selected" : "") + (isToday ? " today" : "")} aria-pressed={isSelected} onClick={() => chooseDay(day)}>{day}</button>;
+            : <button type="button" key={day} disabled={isFuture} className={"birth-calendar-day" + (isSelected ? " selected" : "") + (isToday ? " today" : "")} aria-pressed={isSelected} aria-label={monthNames[viewMonth] + " " + day + ", " + viewYear + (isToday ? ", today" : "")} onClick={() => chooseDay(day)}>{day}</button>;
         })}
       </div>
-      <div className="birth-calendar-footer"><button type="button" onClick={() => { setViewYear(today.getFullYear()); setViewMonth(today.getMonth()); onChange([today.getFullYear(), String(today.getMonth() + 1).padStart(2, "0"), String(today.getDate()).padStart(2, "0")].join("-")); setOpen(false); }}>Today</button><span>Future dates are unavailable</span></div>
-    </div>}
+      <div className="birth-calendar-footer"><div className="birth-calendar-selected"><span>SELECTED DATE</span><strong>{displayValue || "Choose a date"}</strong></div><button type="button" className="birth-calendar-today" onClick={() => { setViewYear(today.getFullYear()); setViewMonth(today.getMonth()); onChange([today.getFullYear(), String(today.getMonth() + 1).padStart(2, "0"), String(today.getDate()).padStart(2, "0")].join("-")); setOpen(false); }}><CalendarDays size={13}/> Today</button></div>
+    </div>}}
   </div>;
 }
 
