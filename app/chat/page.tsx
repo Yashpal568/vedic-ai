@@ -118,7 +118,7 @@ function BirthDatePicker({ value, onChange }: { value: string; onChange: (value:
         })}
       </div>
       <div className="birth-calendar-footer"><div className="birth-calendar-selected"><span>SELECTED DATE</span><strong>{displayValue || "Choose a date"}</strong></div><button type="button" className="birth-calendar-today" onClick={() => { setViewYear(today.getFullYear()); setViewMonth(today.getMonth()); onChange([today.getFullYear(), String(today.getMonth() + 1).padStart(2, "0"), String(today.getDate()).padStart(2, "0")].join("-")); setOpen(false); }}><CalendarDays size={13}/> Today</button></div>
-    </div>}}
+    </div>}
   </div>;
 }
 
