@@ -172,7 +172,6 @@ export function calculateKundli(input: {
   const tropical = new Map<string, number>();
   for (const planet of PLANETS) tropical.set(planet.name, EclipticLongitude(planet.body, utc));
   const moonTropical = EclipticLongitude(Body.Moon, utc);
-  const sunTropical = EclipticLongitude(Body.Sun, utc);
   const siderealAsc = norm(ascendantLongitude(utc, input.latitude, input.longitude) - ayanamsha);
   const asc = signAt(siderealAsc);
   const ascNak = lunarDetails(siderealAsc);
