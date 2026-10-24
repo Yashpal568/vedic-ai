@@ -27,7 +27,14 @@ export async function GET(request: Request) {
     const { data: messages, error: messageError } = await supabase.from("chat_messages")
       .select("id,role,content,created_at").eq("conversation_id", id).eq("user_id", user.id).order("created_at", { ascending: true }).limit(200);
     if (messageError) return NextResponse.json({ error: "Could not load conversation messages." }, { status: 500 });
-    return NextResponse.json({ conversation, messages: messages || [] }, { headers: { "Cache-Control": "private, no-store" } });
+    let chartReport = null;
+    if (conversation.birth_profile_id) {
+      const { data: report } = await supabase.from("kundli_reports").select("calculation_payload")
+        .eq("birth_profile_id", conversation.birth_profile_id).eq("user_id", user.id)
+        .order("created_at", { ascending: false }).limit(1).maybeSingle();
+      chartReport = report?.calculation_payload || null;
+    }
+    return NextResponse.json({ conversation, messages: messages || [], chartReport }, { headers: { "Cache-Control": "private, no-store" } });
   }
   const { data, error } = await supabase.from("conversations")
     .select("id,title,created_at,updated_at").eq("user_id", user.id).order("updated_at", { ascending: false }).limit(30);
