@@ -62,7 +62,7 @@ export default function Home() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: nextMessages.map(({ role, content }) => ({ role, content })),
+          messages: nextMessages.slice(-30).map(({ role, content }) => ({ role, content })),
           birthProfile: savedBirth || undefined,
         }),
       });
