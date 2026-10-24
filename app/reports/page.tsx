@@ -33,7 +33,7 @@ export default async function ReportsPage() {
       <div className="eyebrow"><span className="eyebrow-line"/> YOUR PERSONAL LIBRARY</div>
       <h1 className="reports-title">Saved <span>kundlis.</span></h1>
       <p className="reports-description">Your birth charts, stored privately in your account.</p>
-      {error ? <div className="reports-alert">We couldn't load saved reports. Check the Supabase migration and Row Level Security policies.</div> :
+      {error ? <div className="reports-alert">We couldn&apos;t load saved reports. Check the Supabase migration and Row Level Security policies.</div> :
         reports.length === 0 ? <div className="reports-empty"><BookOpen size={25}/><h2>Your library is waiting.</h2><p>Calculate a birth chart, then select <strong>Save kundli</strong> to keep it here.</p><Link className="primary-button" href="/">Create your first kundli <ArrowUpRight size={14}/></Link></div> :
         <div className="reports-grid">{reports.map((report) => {
           const chart = report.calculation_payload;
