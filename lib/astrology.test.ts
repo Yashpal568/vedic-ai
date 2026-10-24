@@ -57,6 +57,18 @@ describe("calculateKundli", () => {
     })).toThrow(/does not exist.*daylight-saving/i);
   });
 
+  it("rejects an ambiguous local time during a daylight-saving fall-back", () => {
+    expect(() => calculateKundli({
+      ...input,
+      date: "2024-11-03",
+      time: "01:30",
+      timezone: "America/New_York",
+      place: "New York, USA",
+      latitude: 40.7128,
+      longitude: -74.006,
+    })).toThrow(/occurs twice.*clocks move back/i);
+  });
+
   it("round-trips valid local times after a daylight-saving transition", () => {
     const report = calculateKundli({
       ...input,
