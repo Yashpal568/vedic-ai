@@ -13,7 +13,7 @@ type SavedReport = {
   calculation_payload: KundliReport;
 };
 
-export const metadata = { title: "Saved Kundlis" };
+export const metadata = { title: "Saved Kundlis", robots: { index: false, follow: false } };
 
 export default async function ReportsPage() {
   const supabase = await createSupabaseServerClient();
