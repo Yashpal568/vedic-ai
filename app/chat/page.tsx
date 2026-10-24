@@ -400,6 +400,36 @@ export default function Home() {
     } finally { setMemorySaving(false); }
   }
 
+  function exportPersonalData() {
+    if (!isSignedIn) {
+      setToast("Sign in to export your saved data.");
+      window.location.href = "/login";
+      return;
+    }
+    window.location.href = "/api/account-data";
+  }
+
+  async function deletePersonalData() {
+    if (!window.confirm("Delete all saved Vedic AI personal data, including birth profiles, Kundli reports, conversations, messages, and saved memory? This cannot be undone. Your sign-in account will remain active.")) return;
+    setMemorySaving(true);
+    try {
+      const response = await fetch("/api/account-data", { method: "DELETE" });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Could not delete saved data.");
+      setMemoryText("");
+      setMemoryDraft("");
+      setHistoryItems([]);
+      setMessages([]);
+      setChartReport(null);
+      setSavedBirth(null);
+      setActiveConversationId(null);
+      setToast(data.message || "Saved personal data deleted.");
+      setIsMemoryOpen(false);
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : "Could not delete saved data.");
+    } finally { setMemorySaving(false); }
+  }
+
   async function signOut() {
     const supabase = getSupabaseBrowserClient();
     if (!supabase) return;
@@ -579,6 +609,10 @@ export default function Home() {
               <textarea className="form-input memory-textarea" rows={8} maxLength={6000} value={memoryDraft} onChange={(event) => setMemoryDraft(event.target.value)} placeholder={"Examples:\n• I prefer concise explanations in Hindi.\n• Explain astrology terms in simple language.\n• My preferred name is…"} />
             </label>
             <div className="assistant-note"><ShieldCheck size={14} style={{ flexShrink: 0, color: "var(--gold)", marginTop: 2 }} /><span>Memory is editable and can be deleted here. Save only information you are comfortable sending as context to your configured AI provider. Do not store passwords, payment details, or sensitive personal information.</span></div>
+            <div className="memory-data-actions">
+              <div><strong>Your saved data</strong><p>Export a copy or remove stored personal data from Vedic AI. Your sign-in account remains active.</p></div>
+              <div className="memory-data-buttons"><button type="button" className="secondary-button" onClick={exportPersonalData} disabled={memorySaving}>Export my data</button><button type="button" className="secondary-button danger-button" onClick={deletePersonalData} disabled={memorySaving}>Delete saved data</button></div>
+            </div>
             <div className="modal-actions"><button type="button" className="secondary-button" onClick={deleteMemory} disabled={memorySaving || !memoryText}>Delete memory</button><button type="button" className="secondary-button" onClick={() => { setMemoryDraft(memoryText); setIsMemoryOpen(false); }}>Cancel</button><button type="button" className="primary-button" onClick={saveMemory} disabled={memorySaving}>{memorySaving ? "Saving…" : "Save memory"} <Check size={14} /></button></div>
           </>}
         </section>
