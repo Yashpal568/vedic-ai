@@ -17,6 +17,7 @@ export async function POST(request: Request) {
   }
 
   const rate = await checkRateLimit(request, "auth-account-delete", 2, 60 * 60 * 1000);
+  if (!rate.available) return NextResponse.json({ error: "The shared rate-limiting service is unavailable. Configure migration 004 and the server-only service-role key, then retry." }, { status: 503 });
   if (!rate.allowed) {
     return NextResponse.json({ error: "Too many account deletion attempts. Try again later." }, { status: 429, headers: { "Retry-After": String(rate.retryAfterSeconds) } });
   }
