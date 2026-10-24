@@ -1,57 +1,117 @@
-# Vedic AI — Your Personal Vedic Astrology Companion
+# Vedic AI
 
-Vedic AI is a chat-first web platform for exploring traditional Vedic astrology through a thoughtful, modern AI experience. It is designed to combine a premium conversational interface with structured birth-chart calculations, clear explanations, and a user-controlled personal astrology profile.
+**A premium, chat-first Vedic astrology web platform.** Explore Jyotish concepts, calculate a sidereal birth chart, and ask follow-up questions grounded in structured chart data.
 
-> **Project status:** Early development. The current repository establishes the product foundation and interface direction. Birth-chart calculations, AI provider integration, authentication, and persistent storage must be configured and validated before production use.
+> **Build status:** Active MVP development. The chart calculation pipeline, AI adapter, Supabase auth scaffolding, and report-saving endpoints are being implemented. Do not treat the early chart engine as a validated professional ephemeris until the included calculation method has been compared with trusted reference charts.
 
-## Product vision
+## Product
 
-Create a polished, accessible web experience inspired by the simplicity of modern AI chat products and the depth of Vedic astrology. Users will be able to share birth details, generate a structured kundli, and ask follow-up questions without repeatedly entering the same context.
+Vedic AI is designed as a web-only product with a calm, premium workspace inspired by modern AI chat interfaces. It is not a mobile app or an astrologer marketplace.
 
-## Planned capabilities
+### Core experience
 
-- **Conversational AI astrologer** — chat-first workflow with conversation history and suggested questions.
-- **Birth profile** — date, local birth time, birthplace, coordinates, and timezone with confirmation before calculation.
-- **Vedic birth chart** — D1/Rashi chart, planetary longitudes, signs, houses, nakshatra and pada.
-- **Dasha and divisional charts** — phased support for Vimshottari dasha, Navamsa (D9), Dashamsa (D10), and additional vargas.
-- **Grounded interpretations** — AI explanations based on structured calculation output rather than invented planetary positions.
-- **Reports and saved readings** — planned PDF export, user accounts, and saved kundlis.
-- **Bilingual experience** — Hindi and English support planned.
+- Chat-first assistant with English/Hindi-aware system instructions and suggested prompts.
+- Birth profile using date, exact local birth time, and selected birthplace.
+- Birthplace search with coordinate selection and timezone lookup.
+- Vedic sidereal chart using whole-sign houses and a Lahiri ayanamsha approximation.
+- Nine grahas: Sun, Moon, Mars, Mercury, Jupiter, Venus, Saturn, Rahu, and Ketu.
+- Ascendant, sign, degree, house, nakshatra/pada, Navamsa sign, retrograde estimate, and Vimshottari mahadasha timeline.
+- AI answers grounded in the generated chart payload when an AI key is configured.
+- Export calculated chart JSON and save reports to a signed-in Supabase account.
+- Passwordless email sign-in scaffold using Supabase Auth.
+- Responsive desktop and mobile-web interface, keyboard-friendly composer, markdown responses, and explicit accuracy/privacy notes.
 
-## Technology direction
+## Tech stack
 
-- **Web:** Next.js App Router, React, TypeScript
-- **Styling:** Tailwind CSS with a custom premium design system
-- **AI:** Provider abstraction for Gemini or OpenAI, called only from server-side routes
-- **Data and auth:** Supabase (PostgreSQL, Auth, Row Level Security)
-- **Astrology calculations:** A dedicated, testable calculation engine with explicit sidereal/ayanamsha settings and a licensing review before commercial use
-- **Deployment:** Vercel for the web app; any calculation service will be deployed separately if its runtime or licensing requires it
+| Area | Technology |
+| --- | --- |
+| Web application | Next.js App Router, React, TypeScript |
+| Styling | Tailwind CSS v4 with custom CSS design system |
+| AI | Gemini or OpenAI, called from server routes only |
+| Astrology | Astronomy Engine + sidereal conversion logic |
+| Timezone | `tz-lookup` and IANA timezone conversion |
+| Birthplace lookup | OpenStreetMap Nominatim (subject to its usage policy) |
+| Auth and persistence | Supabase Auth, PostgreSQL, Row Level Security |
+| Deployment target | Vercel |
 
-## Design principles
+## Quick start
 
-- Premium, calm visual language: midnight navy, warm ivory, muted antique gold, and restrained celestial motifs.
-- Chat-first navigation with responsive sidebar and a focused conversation canvas.
-- Clear distinction between calculated astronomical data and interpretive astrological content.
-- Accessible contrast, keyboard-friendly controls, responsive layouts, and helpful empty/error states.
-- Never expose API secrets in client-side code or commit real credentials.
+**Requirements:** Node.js 20 or newer, npm, and (optionally) a Supabase project and an AI provider key.
 
-## Getting started
+1. Clone the repository and install packages.
 
-Requirements: Node.js 20.9+ and npm.
+   ```bash
+   git clone https://github.com/Yashpal568/vedic-ai.git
+   cd vedic-ai
+   npm install
+   ```
 
-```bash
-npm install
-cp .env.example .env.local
-npm run dev
-```
+2. Create a local environment file.
 
-Open [http://localhost:3000](http://localhost:3000).
+   ```bash
+   cp .env.example .env.local
+   ```
 
-The initial interface can be explored without provider credentials. AI, database persistence, and verified chart calculations will remain unavailable until their respective environment variables and services are configured.
+3. Configure at least one AI provider if you want live assistant replies:
+
+   ```env
+   AI_PROVIDER=gemini
+   GEMINI_API_KEY=your_server_side_key
+   AI_MODEL=gemini-2.5-flash
+   ```
+
+   Or choose OpenAI:
+
+   ```env
+   AI_PROVIDER=openai
+   OPENAI_API_KEY=your_server_side_key
+   AI_MODEL=gpt-4.1-mini
+   ```
+
+4. Start the development server.
+
+   ```bash
+   npm run dev
+   ```
+
+5. Open [http://localhost:3000](http://localhost:3000).
+
+Without an AI key, the chart calculation and JSON export can still be tried; AI responses show a configuration message. Supabase features require the public project URL/anon key, the migration below, and the correct Auth redirect URLs.
 
 ## Environment variables
 
-See `.env.example`. Keep all private keys server-side. Never prefix secrets with `NEXT_PUBLIC_`.
+See [`.env.example`](.env.example). Never commit `.env.local`, AI provider keys, or Supabase service-role keys. Only the public Supabase URL and anon key may use the `NEXT_PUBLIC_` prefix.
+
+| Variable | Required for | Notes |
+| --- | --- | --- |
+| `AI_PROVIDER` | AI chat | `gemini` or `openai` |
+| `GEMINI_API_KEY` | Gemini chat | Server-side secret |
+| `OPENAI_API_KEY` | OpenAI chat | Server-side secret |
+| `AI_MODEL` | Optional model override | Defaults depend on provider |
+| `NEXT_PUBLIC_SUPABASE_URL` | Auth and saved reports | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Auth and saved reports | Public anon/publishable key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Not used by the current routes | Keep server-only; never expose in browser |
+
+## Supabase setup
+
+1. Create a Supabase project.
+2. Run [`supabase/migrations/202610240001_initial_schema.sql`](supabase/migrations/202610240001_initial_schema.sql) in the Supabase SQL Editor.
+3. Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` to local/Vercel environments.
+4. In Supabase Auth URL configuration, allow the local callback `http://localhost:3000/auth/callback` and your production callback `https://YOUR_DOMAIN/auth/callback`.
+5. Test sign-in, user isolation, saving a kundli, and report retrieval before production.
+
+The migration enables Row Level Security. Re-run policy tests after any schema changes. The current UI saves a kundli report; full conversation-history sync is a subsequent implementation step.
+
+## API routes
+
+| Route | Method | Purpose |
+| --- | --- | --- |
+| `/api/health` | GET | App/integration readiness snapshot |
+| `/api/geocode` | POST | Search and return candidate birthplaces |
+| `/api/kundli` | POST | Calculate chart payload from date/time/coordinates |
+| `/api/chat` | POST | Validated Gemini/OpenAI chat completion |
+| `/api/saved-kundli` | GET | List the signed-in user's saved reports |
+| `/api/saved-kundli` | POST | Save a birth profile and chart report for the signed-in user |
 
 ## Quality checks
 
@@ -61,21 +121,24 @@ npm run typecheck
 npm run build
 ```
 
-## Important accuracy and licensing notes
+GitHub Actions runs these checks on pushes and pull requests to `main`. A green run is required before describing the latest code as build-verified.
 
-Vedic AI is an informational and educational astrology product, not a substitute for professional medical, legal, financial, or mental-health advice. Predictions should not be presented as guaranteed facts. Birth time, timezone history, location coordinates, calculation settings, and engine version can affect results and should be recorded for reproducibility.
+## Accuracy, privacy, and production boundaries
 
-Before using Swiss Ephemeris or another ephemeris in a public or commercial service, review the applicable license and distribution terms. Do not ship an unverified calculation engine as production-accurate.
+- The current engine uses Astronomy Engine, an approximate Lahiri ayanamsha formula, and a simplified mean-node formula. It is a calculation scaffold, not yet certified against an authoritative Jyotish ephemeris.
+- Validate ascendant, planetary longitudes, historical timezone/DST cases, nakshatra/pada boundaries, Navamsa, and Vimshottari dasha boundaries against trusted reference charts before using it for paid readings.
+- Review the Astronomy Engine and other dependency licences and suitability before commercial release. Do not assume astronomy accuracy alone makes Jyotish interpretation scientifically validated.
+- Nominatim's public service has usage limits and attribution/policy requirements. For meaningful production traffic, use a compliant geocoding provider or self-hosted service; don't treat process-local caching as a durable rate limiter.
+- Add durable edge/shared-store rate limiting, abuse controls, provider quotas, observability, backups, account deletion/export, retention controls, and accessibility/security testing before public launch.
+- Birth details are sensitive personal data. The unauthenticated calculation endpoint processes them to produce a chart but does not intentionally persist them. Saving is only available through authenticated Supabase routes.
+- Astrology is a cultural/traditional interpretive system, not a substitute for medical, legal, financial, or mental-health professionals.
 
-## Roadmap
+## Project documentation
 
-1. Premium chat UI and accessible responsive shell.
-2. Server-side AI provider adapter with rate limits and safe error handling.
-3. Birth-profile form and location/timezone validation.
-4. Calculation engine integration and reference-chart tests.
-5. Supabase schema, authentication, and row-level access policies.
-6. Dasha, divisional charts, report export, and deployment hardening.
+- [Product specification](docs/PRODUCT_SPEC.md)
+- [Architecture and production boundaries](docs/ARCHITECTURE.md)
+- [Supabase schema and RLS](supabase/migrations/202610240001_initial_schema.sql)
 
-## License
+## Licence
 
-No license has been selected yet. Until a license is added, all rights are reserved by the repository owner. Review third-party dependencies and ephemeris licensing before public distribution.
+No project-level open-source licence has been added yet. Do not assume the repository is open source for reuse until the owner chooses and adds a licence.
