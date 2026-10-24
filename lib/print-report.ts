@@ -1,9 +1,11 @@
 import type { KundliReport } from "@/lib/astrology";
 
+const htmlEntities: Record<string, string> = {
+  "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+};
+
 function escapeHtml(value: unknown): string {
-  return String(value ?? "").replace(/[&<>"']/g, (char) => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
-  })[char] || char);
+  return String(value ?? "").replace(/[&<>"']/g, (char) => htmlEntities[char] || char);
 }
 
 export function printKundliReport(report: KundliReport, reportId?: string) {
