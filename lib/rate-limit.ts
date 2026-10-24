@@ -1,14 +1,12 @@
+import { createHash } from "node:crypto";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
+
 type Bucket = { count: number; resetAt: number };
+type RateLimitResult = { allowed: boolean; retryAfterSeconds: number; remaining: number; durable: boolean };
+
 const buckets = new Map<string, Bucket>();
 
-/**
- * Best-effort per-instance abuse guard. Serverless instances do not share memory;
- * production deployments should replace this with a durable edge/shared-store limiter.
- */
-export function checkRateLimit(request: Request, scope: string, limit: number, windowMs: number) {
-  const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-  const ip = forwarded || request.headers.get("x-real-ip") || "unknown";
-  const key = scope + ":" + ip;
+function fallbackLimit(key: string, limit: number, windowMs: number): RateLimitResult {
   const now = Date.now();
   let bucket = buckets.get(key);
   if (!bucket || bucket.resetAt <= now) {
@@ -23,5 +21,61 @@ export function checkRateLimit(request: Request, scope: string, limit: number, w
     allowed: bucket.count <= limit,
     retryAfterSeconds: Math.max(1, Math.ceil((bucket.resetAt - now) / 1000)),
     remaining: Math.max(0, limit - bucket.count),
+    durable: false,
   };
+}
+
+function requestIdentity(request: Request) {
+  // Prefer the platform-provided single IP header. For forwarded chains, use the
+  // final address added by the hosting proxy rather than a caller-controlled first value.
+  const realIp = request.headers.get("x-real-ip")?.trim();
+  const forwarded = request.headers.get("x-forwarded-for")?.split(",").map((part) => part.trim()).filter(Boolean);
+  return realIp || forwarded?.at(-1) || "unknown";
+}
+
+/**
+ * Shared Postgres-backed limiter. Raw IPs and user IDs are never stored in the table;
+ * the RPC receives only a SHA-256 digest of scope + identity.
+ *
+ * Requires migration 004 and server-only SUPABASE_SERVICE_ROLE_KEY in production.
+ * A process-local fallback keeps local development usable, but is not production-grade.
+ */
+export async function checkRateLimit(
+  request: Request,
+  scope: string,
+  limit: number,
+  windowMs: number,
+  identity?: string,
+): Promise<RateLimitResult> {
+  const keyMaterial = scope + ":" + (identity || requestIdentity(request));
+  const bucketKey = createHash("sha256").update(keyMaterial).digest("hex");
+  const admin = getSupabaseAdminClient();
+  const windowSeconds = Math.max(1, Math.ceil(windowMs / 1000));
+
+  if (admin) {
+    try {
+      const { data, error } = await admin.rpc("consume_rate_limit", {
+        p_bucket_key: bucketKey,
+        p_limit: limit,
+        p_window_seconds: windowSeconds,
+      });
+      if (!error) {
+        const result = Array.isArray(data) ? data[0] : data;
+        if (result && typeof result.allowed === "boolean") {
+          return {
+            allowed: result.allowed,
+            retryAfterSeconds: Number(result.retry_after_seconds) || windowSeconds,
+            remaining: Number(result.remaining) || 0,
+            durable: true,
+          };
+        }
+      } else {
+        console.error("[vedic-ai] Durable rate limiter unavailable; using process-local fallback.", error.message);
+      }
+    } catch (error) {
+      console.error("[vedic-ai] Durable rate limiter request failed; using process-local fallback.", error);
+    }
+  }
+
+  return fallbackLimit(bucketKey, limit, windowMs);
 }
