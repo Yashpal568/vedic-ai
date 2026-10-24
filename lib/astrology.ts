@@ -1,4 +1,4 @@
-import { Body, EclipticLongitude, SiderealTime } from "astronomy-engine";
+import { Body, Ecliptic, GeoVector, SiderealTime } from "astronomy-engine";
 
 export const SIGNS = [
   "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
@@ -60,6 +60,11 @@ export type KundliReport = {
   generatedAt: string;
   disclaimer: string;
 };
+
+function geocentricLongitude(body: Body, date: Date): number {
+  // Use the Earth-centred apparent position, not Astronomy Engine's heliocentric EclipticLongitude.
+  return Ecliptic(GeoVector(body, date, true)).elon;
+}
 
 const norm = (degrees: number) => ((degrees % 360) + 360) % 360;
 const wrap180 = (degrees: number) => ((degrees + 540) % 360) - 180;
@@ -170,15 +175,15 @@ export function calculateKundli(input: {
   const utc = utcFromLocal(input.date, input.time, input.timezone);
   const ayanamsha = lahiriAyanamsha(utc);
   const tropical = new Map<string, number>();
-  for (const planet of PLANETS) tropical.set(planet.name, EclipticLongitude(planet.body, utc));
-  const moonTropical = EclipticLongitude(Body.Moon, utc);
+  for (const planet of PLANETS) tropical.set(planet.name, geocentricLongitude(planet.body, utc));
+  const moonTropical = geocentricLongitude(Body.Moon, utc);
   const siderealAsc = norm(ascendantLongitude(utc, input.latitude, input.longitude) - ayanamsha);
   const asc = signAt(siderealAsc);
   const ascNak = lunarDetails(siderealAsc);
   const planets: PlanetPosition[] = [];
   for (const planet of PLANETS) {
     const current = tropical.get(planet.name)!;
-    const yesterday = EclipticLongitude(planet.body, new Date(utc.getTime() - 86400000));
+    const yesterday = geocentricLongitude(planet.body, new Date(utc.getTime() - 86400000));
     const sidereal = norm(current - ayanamsha);
     const sign = signAt(sidereal);
     planets.push(getPosition(planet.name, sidereal, (sign.signIndex - asc.signIndex + 12) % 12 + 1, wrap180(current - yesterday) < 0));
