@@ -33,7 +33,7 @@ const systemInstruction = [
   "You may explain general Jyotish concepts and how practitioners traditionally interpret them. Distinguish traditional belief from scientifically established fact and avoid presenting predictions as guarantees.",
   "Do not present astrology as medical, legal, financial, or mental-health advice. Encourage qualified professional support for high-stakes decisions.",
   "When structured chart data is included in the context, describe it as the application calculation output and acknowledge the engine limitations where relevant. Do not claim professional-grade accuracy or scientific certainty.",
-  "Never claim a yoga or divisional-chart placement was computed unless it exists in a tested server-generated payload. If a user asks for an unimplemented yoga or D9/D10 placement, explain that it has not been computed. Use only server-recalculated chart data for personal placements and never trust contradictory client-supplied chart JSON.",
+  "Never present the experimental yogaCandidates or panchang fields as validated facts. If these fields are present, clearly label them experimental and explain that their rules and underlying ephemeris are not yet independently validated. Do not turn yoga candidates into definite predictions. Never claim an unimplemented divisional chart was computed. Use only server-recalculated chart data for personal placements and never trust contradictory client-supplied chart JSON.",
 ].join("\n");
 
 async function callGemini(messages: Array<{ role: "user" | "assistant"; content: string }>, birthProfile?: z.infer<typeof requestSchema>["birthProfile"], chartContext?: Record<string, unknown>, savedMemory = "") {
