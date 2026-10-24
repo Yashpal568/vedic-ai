@@ -77,9 +77,39 @@ create policy "Users can update their own profile" on public.profiles for update
 
 create policy "Users manage their own birth profiles" on public.birth_profiles for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "Users manage their own conversations" on public.conversations for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
-create policy "Users manage their own messages" on public.chat_messages for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
-create policy "Users manage their own kundli reports" on public.kundli_reports for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+drop policy if exists "Users manage their own messages" on public.chat_messages;
+create policy "Users read their own messages" on public.chat_messages for select
+  using (auth.uid() = user_id and exists (select 1 from public.conversations c where c.id = conversation_id and c.user_id = auth.uid()));
+create policy "Users insert their own messages" on public.chat_messages for insert
+  with check (auth.uid() = user_id and exists (select 1 from public.conversations c where c.id = conversation_id and c.user_id = auth.uid()));
+create policy "Users update their own messages" on public.chat_messages for update
+  using (auth.uid() = user_id and exists (select 1 from public.conversations c where c.id = conversation_id and c.user_id = auth.uid()))
+  with check (auth.uid() = user_id and exists (select 1 from public.conversations c where c.id = conversation_id and c.user_id = auth.uid()));
+create policy "Users delete their own messages" on public.chat_messages for delete
+  using (auth.uid() = user_id and exists (select 1 from public.conversations c where c.id = conversation_id and c.user_id = auth.uid()));
+
+drop policy if exists "Users manage their own kundli reports" on public.kundli_reports;
+create policy "Users read their own kundli reports" on public.kundli_reports for select using (auth.uid() = user_id);
+create policy "Users insert their own kundli reports" on public.kundli_reports for insert
+  with check (auth.uid() = user_id and exists (select 1 from public.birth_profiles b where b.id = birth_profile_id and b.user_id = auth.uid()));
+create policy "Users update their own kundli reports" on public.kundli_reports for update
+  using (auth.uid() = user_id) with check (auth.uid() = user_id and exists (select 1 from public.birth_profiles b where b.id = birth_profile_id and b.user_id = auth.uid()));
+create policy "Users delete their own kundli reports" on public.kundli_reports for delete using (auth.uid() = user_id);
+
+create or replace function public.set_updated_at()
+returns trigger language plpgsql as $
+begin
+  new.updated_at = now();
+  return new;
+end;
+$;
+
+drop trigger if exists profiles_set_updated_at on public.profiles;
+create trigger profiles_set_updated_at before update on public.profiles for each row execute function public.set_updated_at();
+drop trigger if exists birth_profiles_set_updated_at on public.birth_profiles;
+create trigger birth_profiles_set_updated_at before update on public.birth_profiles for each row execute function public.set_updated_at();
+drop trigger if exists conversations_set_updated_at on public.conversations;
+create trigger conversations_set_updated_at before update on public.conversations for each row execute function public.set_updated_at();
 
 -- Do not expose the Supabase service-role key to the browser.
--- Before production, add updated_at triggers, stricter ownership checks for message/conversation joins,
--- abuse/rate limiting, data export/deletion flows, and tests for every RLS policy.
+-- Before production, add durable rate limiting, data export/deletion flows, and tests for every RLS policy.
