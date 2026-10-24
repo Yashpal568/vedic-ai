@@ -10,7 +10,7 @@ This is the exact setup for the repository `Yashpal568/vedic-ai`. The app is a N
 - One AI provider key: Google Gemini **or** OpenAI. Gemini is the configured default.
 - A phone/browser for testing the magic-link email and mobile layout.
 
-Never paste API keys, passwords, Supabase service-role keys, or recovery codes into GitHub issues, source files, or chat. Enter secrets directly into the provider/Vercel dashboards.
+Never paste API keys, passwords, Supabase service-role keys, or recovery codes into GitHub issues, source files, or chat. Enter secrets directly into the provider/Vercel dashboards. The service-role key must not have a `NEXT_PUBLIC_` prefix and must only be read by server-side modules.
 
 ## 1. Prepare Supabase (database + sign-in)
 
@@ -94,6 +94,9 @@ Open the deployed site on desktop and mobile and test these in order:
 - [ ] Sign out; protected save/history requests should require sign-in.
 - [ ] If practical, create a second test account and verify it cannot read the first account's reports or conversations.
 - [ ] Check mobile navigation, keyboard use, long Hindi text, and browser console/network errors.
+- [ ] Run [`supabase/tests/rls_audit.sql`](../supabase/tests/rls_audit.sql) in Supabase SQL Editor after all migrations.
+- [ ] Complete the two-account ownership tests in [`docs/SECURITY_TEST_PLAN.md`](./SECURITY_TEST_PLAN.md).
+- [ ] Test account deletion using a disposable test account; verify Auth user and all cascading app records are removed.
 - [ ] Check the Vercel function logs for failed requests and the AI provider dashboard for usage.
 
 ## 5. Optional custom domain
