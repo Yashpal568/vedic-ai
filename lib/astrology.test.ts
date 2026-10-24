@@ -45,6 +45,31 @@ describe("calculateKundli", () => {
     expect(report.vimshottari.currentMahadasha.lord).toBeTruthy();
   });
 
+  it("rejects a nonexistent local time during a daylight-saving spring-forward gap", () => {
+    expect(() => calculateKundli({
+      ...input,
+      date: "2024-03-10",
+      time: "02:30",
+      timezone: "America/New_York",
+      place: "New York, USA",
+      latitude: 40.7128,
+      longitude: -74.006,
+    })).toThrow(/does not exist.*daylight-saving/i);
+  });
+
+  it("round-trips valid local times after a daylight-saving transition", () => {
+    const report = calculateKundli({
+      ...input,
+      date: "2024-03-10",
+      time: "03:30",
+      timezone: "America/New_York",
+      place: "New York, USA",
+      latitude: 40.7128,
+      longitude: -74.006,
+    });
+    expect(report.birth.utc).toBe("2024-03-10T07:30:00.000Z");
+  });
+
   it("rejects invalid coordinates instead of silently producing a chart", () => {
     expect(() => calculateKundli({ ...input, latitude: 100 })).toThrow(/coordinates are invalid/i);
   });
