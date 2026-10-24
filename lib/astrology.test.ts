@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calculateKundli } from "@/lib/astrology";
+import { calculateKundli } from "./astrology";
 
 describe("calculateKundli", () => {
   const input = {
