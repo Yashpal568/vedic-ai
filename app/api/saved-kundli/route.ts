@@ -76,3 +76,21 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unable to save this kundli report." }, { status: 500 });
   }
 }
+
+export async function DELETE(request: Request) {
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return NextResponse.json({ error: "Supabase is not configured." }, { status: 503 });
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) return NextResponse.json({ error: "Sign in to delete saved kundlis." }, { status: 401 });
+  const id = new URL(request.url).searchParams.get("id");
+  if (!id || !z.string().uuid().safeParse(id).success) return NextResponse.json({ error: "A valid report ID is required." }, { status: 400 });
+
+  const { data: report, error: findError } = await supabase.from("kundli_reports")
+    .select("id, birth_profile_id").eq("id", id).eq("user_id", user.id).single();
+  if (findError || !report) return NextResponse.json({ error: "Saved kundli not found." }, { status: 404 });
+  const { error: deleteError } = await supabase.from("kundli_reports").delete().eq("id", id).eq("user_id", user.id);
+  if (deleteError) return NextResponse.json({ error: "Could not delete this report." }, { status: 500 });
+  const { count } = await supabase.from("kundli_reports").select("id", { count: "exact", head: true }).eq("birth_profile_id", report.birth_profile_id);
+  if (!count) await supabase.from("birth_profiles").delete().eq("id", report.birth_profile_id).eq("user_id", user.id);
+  return NextResponse.json({ deleted: true });
+}
