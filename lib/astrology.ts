@@ -163,6 +163,20 @@ function utcFromLocal(dateText: string, timeText: string, timezone: string): Dat
   }
   const result = new Date(guess);
   if (!Number.isFinite(result.getTime())) throw new Error("Could not resolve the local birth time.");
+  // Iterative offset conversion alone can silently normalize nonexistent wall times
+  // during a DST spring-forward gap. Verify the resolved instant round-trips to the
+  // exact local date and time the user entered.
+  const resolved = Object.fromEntries(formatter.formatToParts(result).map((p) => [p.type, p.value]));
+  const roundTripMatches =
+    Number(resolved.year) === Number(ys) &&
+    Number(resolved.month) === Number(mos) &&
+    Number(resolved.day) === Number(ds) &&
+    Number(resolved.hour) === Number(hs) &&
+    Number(resolved.minute) === Number(mins) &&
+    Number(resolved.second) === Number(secs);
+  if (!roundTripMatches) {
+    throw new Error("This local birth time does not exist in " + timezone + " because of a daylight-saving time change. Choose a valid local time.");
+  }
   return result;
 }
 
