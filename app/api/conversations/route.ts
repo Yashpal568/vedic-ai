@@ -18,7 +18,13 @@ export async function GET(request: Request) {
   const supabase = await createSupabaseServerClient();
   if (!supabase) return NextResponse.json({ error: "Supabase is not configured." }, { status: 503 });
   const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) return NextResponse.json({ error: "Sign in to access saved conversations." }, { status: 401 });
+  // Guest users have no saved history. Return an empty collection for the history list;
+  // detail reads still require authentication and never reveal another user's records.
+  if (authError || !user) {
+    const id = new URL(request.url).searchParams.get("id");
+    if (!id) return NextResponse.json({ conversations: [] }, { headers: { "Cache-Control": "private, no-store" } });
+    return NextResponse.json({ error: "Sign in to access saved conversations." }, { status: 401 });
+  }
   const id = new URL(request.url).searchParams.get("id");
   if (id) {
     if (!z.string().uuid().safeParse(id).success) return NextResponse.json({ error: "Invalid conversation ID." }, { status: 400 });
