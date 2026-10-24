@@ -35,9 +35,8 @@ async function callGemini(messages: Array<{ role: "user" | "assistant"; content:
   const key = process.env.GEMINI_API_KEY;
   if (!key) throw new Error("AI_NOT_CONFIGURED");
   const model = process.env.AI_MODEL || "gemini-2.5-flash";
-  const context = birthProfile
-    ? "\n\nUser-provided birth details (not yet calculated): " + JSON.stringify(birthProfile)
-    : "";
+  const context = (birthProfile ? "\n\nUser-provided birth details: " + JSON.stringify(birthProfile) : "") +
+    (chartContext ? "\n\nCalculated chart payload from the application engine: " + JSON.stringify(chartContext) : "\n\nNo calculated chart payload is available. Do not claim personal placements.");
   const contents = messages.map((message) => ({
     role: message.role === "assistant" ? "model" : "user",
     parts: [{ text: message.content }],
@@ -72,9 +71,8 @@ async function callOpenAI(messages: Array<{ role: "user" | "assistant"; content:
   const key = process.env.OPENAI_API_KEY;
   if (!key) throw new Error("AI_NOT_CONFIGURED");
   const model = process.env.AI_MODEL || "gpt-4.1-mini";
-  const context = birthProfile
-    ? "\n\nUser-provided birth details (not yet calculated): " + JSON.stringify(birthProfile)
-    : "";
+  const context = (birthProfile ? "\n\nUser-provided birth details: " + JSON.stringify(birthProfile) : "") +
+    (chartContext ? "\n\nCalculated chart payload from the application engine: " + JSON.stringify(chartContext) : "\n\nNo calculated chart payload is available. Do not claim personal placements.");
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: "Bearer " + key },
