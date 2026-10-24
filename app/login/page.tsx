@@ -37,7 +37,7 @@ export default function LoginPage() {
       {!sent ? <>
         <div className="eyebrow" style={{ marginTop: 35 }}><span className="eyebrow-line"/> YOUR PERSONAL ASTROLOGY SPACE</div>
         <h1 className="auth-title">Your journey,<br/><span>all in one place.</span></h1>
-        <p className="auth-copy">Sign in to save your birth profile and keep your kundli reports and conversations together.</p>
+        <p className="auth-copy">Sign in to save your kundli reports and keep your conversations in a private account library.</p>
         <form onSubmit={submit} className="auth-form">
           <label className="form-field"><span className="form-label">Email address</span><input className="form-input" type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com"/></label>
           {error && <p className="auth-error" role="alert">{error}</p>}
