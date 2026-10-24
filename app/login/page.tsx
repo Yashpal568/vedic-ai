@@ -8,7 +8,6 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
-  const [googleBusy, setGoogleBusy] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
 
@@ -19,30 +18,10 @@ export default function LoginPage() {
     const messages: Record<string, string> = {
       auth_setup: "Sign-in could not be completed. Check the Supabase Auth configuration and try again.",
       auth_callback: "The sign-in link could not be verified or has expired. Please try signing in again.",
-      oauth_denied: "Google sign-in was cancelled or denied. You can try again or use email instead.",
     };
     setError(messages[code] || "Sign-in could not be completed. Please try again.");
     window.history.replaceState({}, "", window.location.pathname);
   }, []);
-
-  async function signInWithGoogle() {
-    setGoogleBusy(true);
-    setError("");
-    const supabase = getSupabaseBrowserClient();
-    if (!supabase) {
-      setError("Authentication is not configured yet. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your deployment environment.");
-      setGoogleBusy(false);
-      return;
-    }
-    const { error: authError } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: window.location.origin + "/auth/callback" },
-    });
-    if (authError) {
-      setError("Google sign-in could not start. Check that Google is enabled in Supabase Auth, then try again.");
-      setGoogleBusy(false);
-    }
-  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -71,15 +50,11 @@ export default function LoginPage() {
         <div className="eyebrow" style={{ marginTop: 35 }}><span className="eyebrow-line"/> YOUR PERSONAL ASTROLOGY SPACE</div>
         <h1 className="auth-title">Your journey,<br/><span>all in one place.</span></h1>
         <p className="auth-copy">Sign in to save your kundli reports and keep your conversations in a private account library.</p>
-        <button className="auth-google" type="button" onClick={signInWithGoogle} disabled={googleBusy || busy}>
-          <span className="google-g" aria-hidden="true">G</span>
-          {googleBusy ? "Connecting to Google…" : "Continue with Google"}
-        </button>
-        <div className="auth-divider"><span>or continue with email</span></div>
+        <div className="auth-email-intro"><Mail size={17}/><span>Email sign-in</span><span className="auth-email-secure">Secure link</span></div>
         <form onSubmit={submit} className="auth-form">
           <label className="form-field"><span className="form-label">Email address</span><input className="form-input" type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com"/></label>
           {error && <p className="auth-error" role="alert">{error}</p>}
-          <button className="primary-button auth-submit" type="submit" disabled={busy || googleBusy}>{busy ? "Sending secure link…" : "Continue with email"} <ArrowUpRight size={15}/></button>
+          <button className="primary-button auth-submit" type="submit" disabled={busy}>{busy ? "Sending secure link…" : "Send secure sign-in link"} <ArrowUpRight size={15}/></button>
         </form>
         <p className="auth-privacy"><ShieldCheck size={14}/> Secure sign-in powered by Supabase Auth.</p>
       </> : <div className="auth-success">
