@@ -28,7 +28,7 @@ export async function GET() {
 }
 
 export async function PUT(request: Request) {
-  const rate = checkRateLimit(request, "user-memory-write", 10, 60_000);
+  const rate = await checkRateLimit(request, "user-memory-write", 10, 60_000);
   if (!rate.allowed) return NextResponse.json({ error: "Too many memory updates. Please wait and try again." }, { status: 429, headers: { "Retry-After": String(rate.retryAfterSeconds) } });
   const auth = await getAuthenticatedClient();
   if (auth.response || !auth.supabase || !auth.user) return auth.response;
@@ -47,8 +47,8 @@ export async function PUT(request: Request) {
   }
 }
 
-export async function DELETE() {
-  const rate = checkRateLimit(new Request("https://memory.local"), "user-memory-delete", 5, 60_000);
+export async function DELETE(request: Request) {
+  const rate = await checkRateLimit(request, "user-memory-delete", 5, 60_000);
   if (!rate.allowed) return NextResponse.json({ error: "Too many memory deletion requests. Please wait and try again." }, { status: 429 });
   const auth = await getAuthenticatedClient();
   if (auth.response || !auth.supabase || !auth.user) return auth.response;
