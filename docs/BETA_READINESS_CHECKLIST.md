@@ -22,29 +22,29 @@ Status key: **Implemented (needs deployment verification)**, **Partial**, **Not 
 ## P1 — Security, privacy, and cost
 
 - [ ] **RLS audit with two real test accounts** — policy presence is not proof; execute read/write/update/delete and forged-ID tests for every table.
-- [ ] **Durable shared rate limits** — current limiter is in-process and does not coordinate Vercel serverless instances. Add a shared store or edge limiter before public beta.
-- [ ] **Per-user AI quotas and concurrency limits** — provider spend alerts, request/user budgets, and concurrency controls remain outstanding.
+- [x] **Durable shared rate limits (code)** — migration 004 adds a service-role-only atomic Postgres RPC and the API helper hashes identities before storage. **Still blocked on applying migration 004, setting `SUPABASE_SERVICE_ROLE_KEY`, and verifying shared behavior on the deployed environment.** The process-local fallback is not production-grade.
+- [x] **Per-user AI request quotas (code)** — signed-in chat is capped at 12 requests/hour and 40/day, and total submitted chat context is capped at 24,000 characters. **Still requires migration 004/service-role configuration and deployed verification.** Monetary spend alerts and concurrent in-flight request limits remain outstanding.
 - [x] **Birth-data consent/disclosure** — birth details modal now explicitly requires consent before automatic AI interpretation and explains that details/chart are sent to the configured AI provider.
 - [x] **Google OAuth UI and callback handling** — the login page now offers Google OAuth through Supabase and handles provider cancellation/errors. **Blocked on dashboard setup:** configure the Google provider credentials and exact redirect allow-list using `docs/GOOGLE_OAUTH_SETUP.md`, then verify on the deployed domain.
 - [ ] **Retention policy and provider review** — define retention periods, deletion timing, AI provider terms, and geocoding provider policy.
 - [x] **Personal-data export** — authenticated `GET /api/account-data` exports stored Vedic AI data as JSON.
 - [x] **Delete saved personal data** — authenticated `DELETE /api/account-data` removes stored app data, subject to migrations/RLS. This does **not** delete the Supabase Auth account.
-- [ ] **Full auth-account deletion** — needs a verified account deletion workflow/provider admin capability and clear confirmation; no service-role key may be exposed to the browser.
+- [x] **Full auth-account deletion (code)** — `POST /api/account` requires a recent sign-in, exact confirmation phrase, same-origin request, rate limit, and server-only Supabase Admin API. **Still requires service-role configuration and disposable-account cascade/session tests.**
 - [ ] **Secret/dependency scanning** — enable repository secret scanning and dependency alerts; review and remediate findings.
-- [ ] **Monitoring/backups/recovery** — configure Vercel/Supabase logs, alerts, backup plan, and recovery drill.
+- [x] **Monitoring/backups/recovery runbook** — documented in `docs/OPERATIONS_RUNBOOK.md`. **Dashboard alerts, actual backup plan, and restore drill remain operator actions.**
 
 ## P2 — Features and production readiness
 
-- [ ] **Google OAuth deployment verification** — enable/configure the Google provider in Supabase, add the Google Cloud OAuth callback, configure app redirect allow-list, and test success/cancel/session persistence in production.
+- [ ] **Google OAuth deployment verification** — code and setup guide are present; enable/configure the provider in Supabase and Google Cloud, add exact redirect allow-lists, and test success/cancel/session persistence on the deployed domain. This requires dashboard access.
 
-- [ ] **PDF report generation** — include consistent chart facts, Hindi fonts, and tested page breaks.
-- [ ] **D9/D10 and other divisional charts** — implement only with validated independent fixtures.
-- [ ] **Yoga rules** — explicit rule definitions, references, and false-positive tests.
-- [ ] **Panchang/transits** — only after validated timezone/location/date calculations.
+- [x] **Printable report export** — chart/report pages open a print-ready report with browser `Print / Save as PDF`. A dedicated generated PDF file, Hindi font embedding, and page-break QA remain outstanding.
+- [ ] **D9/D10 and other divisional charts** — do not mark complete until the ephemeris/license decision and independent reference fixtures are approved; see `docs/ASTROLOGY_ACCURACY_AND_LICENSING.md`.
+- [ ] **Yoga rules** — implement deterministic rule definitions with cited Jyotish sources and false-positive/reference tests after the engine accuracy and rule-convention review.
+- [ ] **Panchang/transits** — only after validated timezone/location/date calculations and explicit ayanamsha/astronomical conventions.
 - [ ] **Subscriptions/paid access** — payment provider, server-side entitlements, refund and webhook verification.
 - [ ] **SEO/legal** — metadata, sitemap, robots, canonical URLs, privacy/terms/contact pages reviewed for launch.
-- [ ] **Automated end-to-end journey** — login → birth details → chart → AI → save → reload → delete.
-- [ ] **Commercial release review** — dependencies, licenses/attribution, provider terms, privacy/legal requirements.
+- [ ] **Automated end-to-end journey** — login → birth details → chart → AI → save → reload → delete. Print-to-PDF is implemented, but end-to-end browser tests are not yet executed.
+- [ ] **Commercial release review** — dependencies, licenses/attribution, provider terms, privacy/legal requirements. Include the ephemeris engine decision before enabling advanced astrology features.
 
 ## Required Supabase migrations
 
