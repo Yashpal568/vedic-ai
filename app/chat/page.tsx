@@ -352,7 +352,7 @@ export default function Home() {
   }
 
   function submitMessage(event: FormEvent<HTMLFormElement>) { event.preventDefault(); sendMessage(); }
-  function toggleVoiceInput() {
+  async function toggleVoiceInput() {
     if (voiceListening) {
       try { recognitionRef.current?.stop(); } catch {}
       setVoiceListening(false);
@@ -369,10 +369,16 @@ export default function Home() {
       return;
     }
     try {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setToast("This browser cannot request microphone access. Update Chrome and check Android microphone permissions.");
+        return;
+      }
+      const permissionStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      permissionStream.getTracks().forEach((track) => track.stop());
       const recognition = new Recognition();
       const browserLanguage = (navigator.language || "").toLowerCase();
       recognition.lang = browserLanguage.startsWith("hi") ? "hi-IN" : browserLanguage.startsWith("en") ? "en-IN" : (navigator.language || "en-IN");
-      recognition.interimResults = true;
+      recognition.interimResults = false;
       recognition.continuous = true;
       recognition.onresult = (event) => {
         const parts: string[] = [];
@@ -759,6 +765,8 @@ export default function Home() {
           <div className="side-label">Workspace</div>
           <button className="side-link active" onClick={() => setMobileMenuOpen(false)}><MessageCircle size={16} /> Astrology chat</button>
           <button className="side-link" onClick={() => { setIsBirthOpen(true); setMobileMenuOpen(false); }}><Orbit size={16} /> My birth profile</button>
+          <button className="side-link" onClick={() => { setMobileMenuOpen(false); window.location.href = "/palm-reading"; }}><Sparkles size={16} /> Palm reading</button>
+          <button className="side-link" onClick={() => { setMobileMenuOpen(false); window.location.href = "/profile"; }}><UserRound size={16} /> My profile</button>
           <button className="side-link" onClick={() => { setMobileMenuOpen(false); window.location.href = "/reports"; }}><BookOpen size={16} /> Kundli & reports</button>
           <button className="side-link" onClick={() => { openMemory(); setMobileMenuOpen(false); }}><ShieldCheck size={16} /> Saved memory</button>
           <div className="side-label mobile-history-label">All conversations <span>{historyItems.length}</span></div>
