@@ -7,6 +7,8 @@ import { calculateKundli } from "@/lib/astrology";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+// Allow enough time for the upstream model and database-backed limits to respond.
+export const maxDuration = 60;
 
 const requestSchema = z.object({
   messages: z.array(z.object({
@@ -47,9 +49,9 @@ async function callGemini(messages: Array<{ role: "user" | "assistant"; content:
     role: message.role === "assistant" ? "model" : "user",
     parts: [{ text: message.content }],
   }));
-  const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent?key=" + encodeURIComponent(key), {
+  const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "x-goog-api-key": key },
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: systemInstruction + context }] },
       contents,
@@ -65,7 +67,14 @@ async function callGemini(messages: Array<{ role: "user" | "assistant"; content:
   });
   if (!response.ok) {
     if (response.status === 429) throw new Error("AI_RATE_LIMITED");
-    console.error("[vedic-ai] Gemini request failed with HTTP", response.status);
+    const providerError = await response.json().catch(() => null) as { error?: { message?: string; status?: string } } | null;
+    // Log only provider status/error text; never log the API key or user prompt.
+    console.error("[vedic-ai] Gemini request failed", {
+      httpStatus: response.status,
+      providerStatus: providerError?.error?.status || "unknown",
+      message: providerError?.error?.message || "No provider error message returned",
+      model,
+    });
     throw new Error("AI_PROVIDER_ERROR_" + response.status);
   }
   const data = await response.json();
@@ -193,13 +202,21 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "The configured AI model was rejected or not found. Check AI_PROVIDER and AI_MODEL in Vercel, then redeploy." }, { status: 502 });
       }
       if (providerStatus === 401 || providerStatus === 403) {
-        return NextResponse.json({ error: "The AI provider rejected the API key or project access. Verify GEMINI_API_KEY / OPENAI_API_KEY in Vercel and redeploy." }, { status: 502 });
+        return NextResponse.json({ error: "Gemini/OpenAI denied API access. Check that the key is valid and the selected project/model is eligible. For Gemini free tier, check AI Studio project status and free-tier availability; adding billing is only necessary if Google requires it for this project." }, { status: 502 });
       }
       if (providerStatus === 429) {
-        return NextResponse.json({ error: "The AI provider quota or rate limit has been reached. Check billing and usage for your AI project." }, { status: 429 });
+        return NextResponse.json({ error: "The AI provider quota or rate limit has been reached. Check AI Studio → Usage and rate limits. Wait for the quota to reset; payment is not automatically required unless your project needs paid-tier access." }, { status: 429 });
       }
-      return NextResponse.json({ error: "The AI provider returned HTTP " + providerStatus + ". Check the Vercel Runtime Logs and provider status, then try again." }, { status: 502 });
+      if (providerStatus === 500 || providerStatus === 502 || providerStatus === 503 || providerStatus === 504) {
+        return NextResponse.json({ error: "The AI provider is temporarily failing or overloaded (HTTP " + providerStatus + "). Please retry in a minute. If it persists, check Vercel Runtime Logs and Google AI Studio status." }, { status: 503 });
+      }
+      return NextResponse.json({ error: "The AI provider returned HTTP " + providerStatus + ". Check the API key, model name, and Vercel Runtime Logs." }, { status: 502 });
     }
-    return NextResponse.json({ error: "The AI service could not complete this request. Check the Vercel Runtime Logs for the provider status and try again." }, { status: 502 });
+    if (error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError")) {
+      console.error("[vedic-ai] AI provider request timed out.");
+      return NextResponse.json({ error: "The AI provider took too long to respond. Please retry; if it keeps happening, check the provider quota and Vercel Runtime Logs." }, { status: 504 });
+    }
+    console.error("[vedic-ai] Chat route failed unexpectedly", error instanceof Error ? { name: error.name, message: error.message } : { error: "Unknown error" });
+    return NextResponse.json({ error: "The AI service could not complete this request. Check the Vercel Runtime Logs for the exact failure and try again." }, { status: 502 });
   }
 }
