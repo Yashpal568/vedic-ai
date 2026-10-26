@@ -582,8 +582,13 @@ export default function Home() {
     else {
       setIsSignedIn(false);
       setHistoryItems([]);
+      setMessages([]);
+      setChartReport(null);
+      setTransitReport(null);
+      setSavedBirth(null);
       setActiveConversationId(null);
-      setToast("You have signed out.");
+      setToast("You have signed out securely.");
+      window.location.href = "/login";
     }
   }
 
@@ -662,13 +667,36 @@ export default function Home() {
         </div>
       </aside>
 
-      {mobileMenuOpen && <div className="modal-backdrop" onClick={() => setMobileMenuOpen(false)}><div className="modal" onClick={(event) => event.stopPropagation()}>
-        <div className="modal-head"><div className="modal-title">Your workspace</div><button className="icon-button" onClick={() => setMobileMenuOpen(false)} aria-label="Close menu"><X size={17} /></button></div>
-        <button className="side-link active" style={{ marginTop: 15 }} onClick={startNewChat}><MessageCircle size={16} /> Astrology chat</button>
-        <button className="side-link" onClick={() => { setIsBirthOpen(true); setMobileMenuOpen(false); }}><Orbit size={16} /> My birth profile</button>
-        <button className="side-link" onClick={() => { window.location.href = "/reports"; }}><BookOpen size={16} /> Kundli & reports</button>
-        <button className="new-chat" onClick={startNewChat}><Plus size={16} /> New conversation</button>
-      </div></div>}
+      {mobileMenuOpen && <div className="mobile-nav-backdrop" onClick={() => setMobileMenuOpen(false)}>
+        <aside className="mobile-nav-drawer" aria-label="Mobile navigation" onClick={(event) => event.stopPropagation()}>
+          <div className="mobile-nav-head">
+            <button className="brand" onClick={() => { startNewChat(); setMobileMenuOpen(false); }} aria-label="Vedic AI home" style={{ border: 0, background: "transparent", textAlign: "left", color: "inherit", padding: 0 }}>
+              <span className="brand-mark"><MoonStar size={19} /></span><span><span className="brand-name" style={{ display: "block" }}>vedic<span style={{ color: "var(--gold)" }}>.</span>ai</span><span className="brand-sub" style={{ display: "block" }}>Your Jyotish space</span></span>
+            </button>
+            <button className="icon-button" onClick={() => setMobileMenuOpen(false)} aria-label="Close navigation"><X size={18} /></button>
+          </div>
+          <button className="new-chat mobile-drawer-new" onClick={() => { startNewChat(); setMobileMenuOpen(false); }}><Plus size={16} /> New conversation</button>
+          <div className="side-label">Workspace</div>
+          <button className="side-link active" onClick={() => setMobileMenuOpen(false)}><MessageCircle size={16} /> Astrology chat</button>
+          <button className="side-link" onClick={() => { setIsBirthOpen(true); setMobileMenuOpen(false); }}><Orbit size={16} /> My birth profile</button>
+          <button className="side-link" onClick={() => { setMobileMenuOpen(false); window.location.href = "/reports"; }}><BookOpen size={16} /> Kundli & reports</button>
+          <button className="side-link" onClick={() => { openMemory(); setMobileMenuOpen(false); }}><ShieldCheck size={16} /> Saved memory</button>
+          <div className="side-label mobile-history-label">All conversations <span>{historyItems.length}</span></div>
+          <div className="mobile-history-list">
+            {historyItems.length ? historyItems.map((item) => <div className="history-item-row" key={item.id}>
+              <button className={"side-link history-item-open " + (activeConversationId === item.id ? "active" : "")} onClick={() => { loadConversation(item.id); setMobileMenuOpen(false); }}><History size={15} /><span>{item.title}</span></button>
+              <button className="history-delete" aria-label={"Delete " + item.title} onClick={() => deleteConversation(item.id)}><Trash2 size={13}/></button>
+            </div>) : <p className="history-empty">{isSignedIn ? "Your saved conversations will appear here." : "Sign in to sync conversations across devices."}</p>}
+          </div>
+          <div className="mobile-nav-bottom">
+            <div className="profile-row">
+              <div className="avatar">{savedBirth?.name?.trim()?.[0]?.toUpperCase() || "G"}</div>
+              <div style={{ minWidth: 0, flex: 1 }}><div className="profile-name">{savedBirth?.name || "Guest explorer"}</div><div className="profile-caption">{isSignedIn ? "Signed in · private library" : "Guest session"}</div></div>
+            </div>
+            {isSignedIn ? <button className="mobile-signout-button" onClick={() => { setMobileMenuOpen(false); void signOut(); }}><UserRound size={16} /> Sign out securely</button> : <Link className="mobile-signout-button" href="/login" onClick={() => setMobileMenuOpen(false)}><UserRound size={16} /> Sign in to sync history</Link>}
+          </div>
+        </aside>
+      </div>}
 
       <section className="main-panel">
         <header className="topbar">
