@@ -31,6 +31,7 @@ Never paste API keys, passwords, Supabase service-role keys, or recovery codes i
    - Site URL: the Vercel production URL after you know it, for example `https://vedic-ai-your-team.vercel.app`.
    - Redirect URLs: add `http://localhost:3000/auth/callback` for local development, the exact Vercel production callback `https://YOUR-VERCEL-DOMAIN/auth/callback`, and the Vercel preview callback pattern only if you intend to test sign-in on previews. Replace the placeholder with your real domain.
 8. In **Authentication → Providers**, ensure Email is enabled. The app uses passwordless email/magic-link sign-in. Check your email provider settings and spam folder when testing.
+9. Apply the premium confirmation/magic-link email HTML from [`SUPABASE_BRANDED_EMAIL_TEMPLATE.md`](./SUPABASE_BRANDED_EMAIL_TEMPLATE.md). For production, `NEXT_PUBLIC_APP_URL` and Supabase **Site URL** must be the actual public HTTPS Vercel domain, not localhost. Request a fresh email after changing redirects; old links retain their original destination.
 
 The SQL migration is designed to be rerunnable. If Supabase reports an SQL error, stop and fix that error before continuing; do not disable RLS as a workaround.
 
