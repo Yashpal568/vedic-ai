@@ -80,10 +80,15 @@ export async function checkRateLimit(
           };
         }
       } else {
-        console.error("[vedic-ai] Durable rate limiter unavailable; using process-local fallback.", error.message);
+        console.error("[vedic-ai] Durable rate limiter unavailable; using process-local fallback.", {
+          message: error.message,
+          code: (error as { code?: string }).code,
+          details: (error as { details?: string }).details,
+          hint: (error as { hint?: string }).hint,
+        });
       }
     } catch (error) {
-      console.error("[vedic-ai] Durable rate limiter request failed; using process-local fallback.", error);
+      console.error("[vedic-ai] Durable rate limiter request failed; using process-local fallback.", error instanceof Error ? { name: error.name, message: error.message } : { error: "Unknown RPC failure" });
     }
   }
 
