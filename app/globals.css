@@ -1366,3 +1366,101 @@ html{scroll-behavior:smooth;scroll-padding-top:84px}
 @media(max-width:800px){.auth-shell-premium:before{background-position:center;background-size:cover;opacity:.85}.auth-shell-premium:after{opacity:.42}.auth-shell-premium>.auth-back{margin:0 0 20px;padding:8px 0}.auth-engine-status{display:none}.auth-story-visual{display:none!important}.auth-card-premium{background:linear-gradient(145deg,rgba(10,13,23,.9),rgba(7,10,20,.9));border-color:rgba(215,221,240,.18);box-shadow:0 24px 70px rgba(0,0,0,.4)}}
 @media(max-width:420px){.auth-card-premium{border-radius:20px}}
 @media(prefers-reduced-motion:reduce){.auth-shell-premium:after,.auth-engine-status>span{animation:none!important}}
+
+
+/* Mobile Stitch auth polish: preserve the celestial image and use one consistent glass surface. */
+@media (max-width: 800px) {
+  .auth-shell-premium {
+    min-height: 100svh;
+    padding: 18px 16px 14px;
+    background: #060814 !important;
+  }
+  .auth-shell-premium:before {
+    position: fixed;
+    inset: 0;
+    background:
+      linear-gradient(180deg, rgba(5, 8, 19, .38) 0%, rgba(5, 8, 19, .56) 48%, rgba(5, 8, 19, .76) 100%),
+      radial-gradient(ellipse at 82% 18%, rgba(201, 124, 57, .18), transparent 42%),
+      url("https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=1400&q=85") center / cover no-repeat;
+    transform: none;
+    opacity: 1;
+  }
+  .auth-shell-premium:after {
+    position: fixed;
+    inset: 0;
+    background-size: 420px 420px;
+    opacity: .42;
+  }
+  .auth-shell-premium > .auth-back {
+    position: relative;
+    top: auto;
+    left: auto;
+    align-self: flex-start;
+    margin: 0 0 12px;
+  }
+  .auth-layout {
+    width: min(100%, 470px);
+    flex: 1 0 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0;
+    padding: 12px 0 18px;
+  }
+  .auth-story-visual {
+    display: none !important;
+  }
+  .auth-card-premium {
+    width: 100%;
+    max-width: 470px;
+    margin: 0 auto;
+    padding: clamp(23px, 6vw, 32px);
+    border: 1px solid rgba(224, 230, 246, .19);
+    border-radius: 23px;
+    background: linear-gradient(145deg, rgba(10, 15, 30, .78), rgba(7, 11, 24, .82)) !important;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, .38), inset 0 1px 0 rgba(255, 255, 255, .07);
+    -webkit-backdrop-filter: blur(24px) saturate(125%);
+    backdrop-filter: blur(24px) saturate(125%);
+  }
+  .auth-card-premium:before {
+    background: radial-gradient(ellipse at 90% 0%, rgba(224, 165, 84, .12), transparent 44%) !important;
+  }
+  .auth-card-premium:after {
+    background: linear-gradient(145deg, rgba(8, 12, 23, .12), rgba(6, 9, 18, .2)) !important;
+  }
+  .auth-mobile-mark {
+    margin-bottom: 20px;
+  }
+  .auth-card-premium .auth-step-label {
+    margin-top: 0;
+  }
+  .auth-card-premium .auth-title {
+    font-size: clamp(33px, 8vw, 40px);
+    line-height: 1.12;
+  }
+  .auth-card-premium .auth-copy {
+    color: rgba(225, 231, 243, .78);
+  }
+  .auth-mode-switch {
+    background: rgba(5, 9, 20, .56);
+  }
+  .auth-card-premium .auth-email-input {
+    background: rgba(5, 9, 20, .65);
+  }
+  .auth-footer-premium {
+    text-align: center;
+    padding: 6px 4px 0;
+  }
+}
+@media (max-width: 420px) {
+  .auth-shell-premium {
+    padding: 14px 12px 12px;
+  }
+  .auth-layout {
+    padding: 8px 0 14px;
+  }
+  .auth-card-premium {
+    padding: 23px 18px;
+    border-radius: 20px;
+  }
+}
