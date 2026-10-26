@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { getSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getSupabaseAdminClient } from "./supabase/admin";
 
 type Bucket = { count: number; resetAt: number };
 type RateLimitResult = { allowed: boolean; retryAfterSeconds: number; remaining: number; durable: boolean; available: boolean };
