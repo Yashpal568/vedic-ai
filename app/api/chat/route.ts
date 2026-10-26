@@ -49,7 +49,8 @@ async function callGemini(messages: Array<{ role: "user" | "assistant"; content:
     role: message.role === "assistant" ? "model" : "user",
     parts: [{ text: message.content }],
   }));
-  const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent", {
+  const requestUrl = "https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent";
+  const requestOptions: RequestInit = {
     method: "POST",
     headers: { "Content-Type": "application/json", "x-goog-api-key": key },
     body: JSON.stringify({
@@ -63,8 +64,24 @@ async function callGemini(messages: Array<{ role: "user" | "assistant"; content:
         { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
       ],
     }),
-    signal: AbortSignal.timeout(25000),
-  });
+  };
+
+  // Gemini may briefly return 5xx while a model is overloaded. Retry only transient
+  // upstream failures; do not retry quota, authentication, or invalid-request errors.
+  let response: Response;
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      response = await fetch(requestUrl, { ...requestOptions, signal: AbortSignal.timeout(25000) });
+    } catch (error) {
+      if (attempt >= 2 || !(error instanceof Error) || (error.name !== "TimeoutError" && error.name !== "AbortError")) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
+      continue;
+    }
+    if (![500, 502, 503, 504].includes(response.status) || attempt >= 2) break;
+    console.warn("[vedic-ai] Gemini transient upstream error; retrying", { httpStatus: response.status, model, attempt: attempt + 1 });
+    await response.body?.cancel().catch(() => undefined);
+    await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
+  }
   if (!response.ok) {
     if (response.status === 429) throw new Error("AI_RATE_LIMITED");
     const providerError = await response.json().catch(() => null) as { error?: { message?: string; status?: string } } | null;
