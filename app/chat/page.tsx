@@ -18,10 +18,10 @@ type PlaceOption = { id: string; label: string; latitude: number; longitude: num
 type HistoryItem = { id: string; title: string; updated_at?: string };
 
 const suggestions = [
-  { title: "Understand my birth chart", description: "Explore your lagna, houses, and planetary placements.", prompt: "Help me understand my Vedic birth chart. What details do you need from me?", icon: Orbit },
-  { title: "Career & life direction", description: "Learn how career themes are read in traditional Jyotish.", prompt: "Explain how Vedic astrology traditionally examines career and life direction.", icon: BriefcaseBusiness },
-  { title: "Love & relationships", description: "Explore traditional relationship indicators in a chart.", prompt: "Which houses and planetary placements are traditionally considered for relationships?", icon: Heart },
-  { title: "Nakshatra & dasha", description: "Discover lunar mansions and planetary period systems.", prompt: "Explain nakshatras and Vimshottari dasha, and how they are calculated.", icon: Stars },
+  { title: "Understand my birth chart", description: "Read my own lagna, houses, and planetary placements.", prompt: "Give me a personalised reading of my calculated Vedic birth chart. Explain my Lagna, Moon sign, key planetary placements, and what cannot be concluded from the available data.", icon: Orbit },
+  { title: "Career & life direction", description: "Analyse career indicators in my own chart.", prompt: "Analyse career and work themes from my calculated birth chart. Examine the 10th house and lord, 6th house, 2nd and 11th houses, Lagna and lord, and current Vimshottari dasha only where calculated data supports it. Explain the chart facts behind each interpretation; do not give generic advice as if it came from my chart.", icon: BriefcaseBusiness },
+  { title: "Love & relationships", description: "Explore relationship themes from my own chart.", prompt: "Analyse traditional relationship themes in my calculated birth chart using the 7th house and lord, Venus, Moon, and Navamsa only if validated data is available. Separate calculated facts from symbolic interpretation and do not guarantee events.", icon: Heart },
+  { title: "Nakshatra & dasha", description: "Interpret my calculated Moon nakshatra and dasha.", prompt: "Explain my calculated Moon nakshatra, pada, and Vimshottari dasha timeline. Use only values present in my calculated chart; do not invent placements or dates.", icon: Stars },
 ];
 const makeId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
@@ -310,6 +310,14 @@ export default function Home() {
   async function sendMessage(value?: string) {
     const trimmed = (value === undefined ? input : value).trim();
     if (!trimmed || isLoading) return;
+    // Personal questions must not receive generic text disguised as a chart reading.
+    const personalIntent = /\\b(my|mine|me|personal|personalised|personalized|meri|mera|mere|mujhe|career|job|profession|marriage|shaadi|relationship|love life|future|kundli|birth chart|nakshatra|dasha|promotion|business prospects)\\b/i.test(trimmed);
+    if ((!savedBirth || !chartReport) && personalIntent) {
+      setPendingPrompt(trimmed);
+      setIsBirthOpen(true);
+      setToast("For a personal reading, add your date of birth, exact local birth time, and birthplace first. I won't guess your chart.");
+      return;
+    }
     const userMessage: Message = { id: makeId(), role: "user", content: trimmed };
     const nextMessages = [...messages, userMessage];
     setMessages(nextMessages);
