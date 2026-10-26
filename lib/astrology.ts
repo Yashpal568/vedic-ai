@@ -1,5 +1,5 @@
 import { Body, Ecliptic, GeoVector, SiderealTime } from "astronomy-engine";
-import { vargaSignName } from "@/lib/vargas";
+import { vargaSignName } from "./vargas";
 import { calculateBirthPanchang, detectYogaCandidates, type BirthPanchang, type YogaCandidate } from "@/lib/vedic-features";
 
 export const SIGNS = [
