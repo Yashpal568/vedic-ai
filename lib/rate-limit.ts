@@ -55,7 +55,15 @@ export async function checkRateLimit(
 
   if (admin) {
     try {
-      const { data, error } = await admin.rpc("consume_rate_limit", {
+      // The generated Supabase Database type may lag behind migration 004.
+      // Narrow this one RPC call locally until database types are regenerated.
+      const consumeRateLimit = (admin as unknown as {
+        rpc: (functionName: string, args: Record<string, string | number>) => Promise<{
+          data: unknown;
+          error: { message: string } | null;
+        }>;
+      }).rpc;
+      const { data, error } = await consumeRateLimit("consume_rate_limit", {
         p_bucket_key: bucketKey,
         p_limit: limit,
         p_window_seconds: windowSeconds,
