@@ -124,22 +124,26 @@ export default function LoginPage() {
     <main className="auth-shell auth-shell-premium">
       <Link href="/" className="auth-back"><ArrowLeft size={15} /> <span>Back to Vedic AI</span></Link>
       <div className="auth-layout">
-        <section className="auth-story" aria-label="About Vedic AI">
+        <section className="auth-story auth-story-visual" aria-label="About Vedic AI">
           <Link href="/" className="auth-brand">
             <span className="brand-mark"><MoonStar size={21} /></span>
             <span><span className="brand-name">vedic<span style={{ color: "var(--gold)" }}>.</span>ai</span><span className="auth-brand-caption">ANCIENT INSIGHT, REIMAGINED</span></span>
           </Link>
-          <div className="auth-story-content">
-            <div className="auth-story-kicker"><Sparkles size={14} /> YOUR PERSONAL JYOTISH SPACE</div>
-            <h1 className="auth-story-title">A little more<br /><em>clarity for your</em><br />cosmic journey.</h1>
-            <p className="auth-story-copy">A thoughtful space to explore your birth chart, revisit conversations and keep your saved reports together.</p>
-            <div className="auth-benefits">
-              <div><span><ShieldCheck size={17} /></span><div><strong>Private by design</strong><small>Your personal workspace is tied to your account.</small></div></div>
-              <div><span><Sparkles size={17} /></span><div><strong>Your journey, saved</strong><small>Return to your conversations and reports.</small></div></div>
-              <div><span><LockKeyhole size={17} /></span><div><strong>No password to remember</strong><small>Use a one-time secure link sent to your inbox.</small></div></div>
+          <div className="auth-artwork">
+            <div className="auth-artwork-image" role="img" aria-label="A luminous cosmic nebula beneath a field of stars" />
+            <div className="auth-artwork-shade" />
+            <div className="auth-artwork-stars" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /></div>
+            <div className="auth-artwork-orbit auth-artwork-orbit-one" aria-hidden="true" />
+            <div className="auth-artwork-orbit auth-artwork-orbit-two" aria-hidden="true" />
+            <div className="auth-artwork-copy">
+              <div className="auth-story-kicker"><Sparkles size={14} /> YOUR PERSONAL JYOTISH SPACE</div>
+              <h1 className="auth-story-title">Find your place<br />in the <em>stars.</em></h1>
+              <p className="auth-story-copy">Explore your birth chart, uncover timeless Jyotish perspectives, and bring your personal journey into focus.</p>
+              <div className="auth-artwork-note"><span><MoonStar size={17} /></span><span><strong>A more personal cosmic journey</strong><small>Your charts, reflections, and conversations—together in one private space.</small></span></div>
             </div>
+            <div className="auth-artwork-badge"><span className="auth-artwork-badge-icon"><Sparkles size={15} /></span><span><strong>Made for your journey</strong><small>Thoughtful. Personal. Private.</small></span></div>
           </div>
-          <p className="auth-story-foot">Traditional Jyotish, explored with curiosity—not certainty.</p>
+          <p className="auth-story-foot"><span className="auth-story-foot-line" /> Traditional Jyotish, explored with curiosity—not certainty.</p>
         </section>
 
         <section className="auth-card auth-card-premium">
