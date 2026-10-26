@@ -7,7 +7,7 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import type { KundliReport } from "@/lib/astrology";
 import { printKundliReport } from "@/lib/print-report";
 import {
-  ArrowDown, ArrowUp, AudioLines, BookOpen, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight,
+  ArrowDown, ArrowUp, AudioLines, Mic, MicOff, BookOpen, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight,
   CircleHelp, Gem, History, Menu, MessageCircle, MoonStar, Orbit, Plus,
   ShieldCheck, Sparkles, Stars, UserRound, X, BriefcaseBusiness, Heart, Compass, Trash2, RefreshCw,
 } from "lucide-react";
@@ -16,6 +16,8 @@ type Message = { id: string; role: "user" | "assistant"; content: string };
 type BirthProfile = { name: string; date: string; time: string; place: string; latitude?: number; longitude?: number; timezone?: string };
 type PlaceOption = { id: string; label: string; latitude: number; longitude: number; type: string; importance: number };
 type HistoryItem = { id: string; title: string; updated_at?: string };
+type VoiceRecognition = { lang: string; interimResults: boolean; continuous: boolean; onresult: ((event: { resultIndex: number; results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null; onerror: (() => void) | null; onend: (() => void) | null; start: () => void; stop: () => void };
+type VoiceWindow = Window & { SpeechRecognition?: new () => VoiceRecognition; webkitSpeechRecognition?: new () => VoiceRecognition };
 
 const suggestions = [
   { title: "Understand my birth chart", description: "Read my own lagna, houses, and planetary placements.", prompt: "Give me a personalised reading of my calculated Vedic birth chart. Explain my Lagna, Moon sign, key planetary placements, and what cannot be concluded from the available data.", icon: Orbit },
@@ -164,6 +166,7 @@ function KundliDiagram({ report }: { report: KundliReport }) {
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const [voiceListening, setVoiceListening] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [isBirthOpen, setIsBirthOpen] = useState(false);
@@ -187,6 +190,7 @@ export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [toast, setToast] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const recognitionRef = useRef<VoiceRecognition | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const hasConversation = messages.length > 0;
 
@@ -348,6 +352,44 @@ export default function Home() {
   }
 
   function submitMessage(event: FormEvent<HTMLFormElement>) { event.preventDefault(); sendMessage(); }
+  function toggleVoiceInput() {
+    if (voiceListening) {
+      recognitionRef.current?.stop();
+      setVoiceListening(false);
+      return;
+    }
+    const browserWindow = window as VoiceWindow;
+    const Recognition = browserWindow.SpeechRecognition || browserWindow.webkitSpeechRecognition;
+    if (!Recognition) {
+      setToast("Voice typing is not supported by this browser. Try the latest Chrome or use your keyboard microphone.");
+      return;
+    }
+    try {
+      const recognition = new Recognition();
+      recognition.lang = navigator.language || "en-IN";
+      recognition.interimResults = true;
+      recognition.continuous = false;
+      recognition.onresult = (event) => {
+        const transcript = Array.from({ length: event.results.length }, (_, index) => event.results[index]?.[0]?.transcript || "").join(" ").trim();
+        if (transcript) setInput((current) => current.trim() ? current.trim() + " " + transcript : transcript);
+      };
+      recognition.onerror = () => {
+        setVoiceListening(false);
+        setToast("Microphone input stopped. Check browser microphone permission and try again.");
+      };
+      recognition.onend = () => {
+        setVoiceListening(false);
+        recognitionRef.current = null;
+      };
+      recognitionRef.current = recognition;
+      recognition.start();
+      setVoiceListening(true);
+      setToast("Listening… speak now. Your words will appear in the message box.");
+    } catch {
+      setVoiceListening(false);
+      setToast("Could not start voice typing. Please allow microphone access in your browser.");
+    }
+  }
   function onComposerKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
     if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); sendMessage(); }
   }
@@ -719,12 +761,12 @@ export default function Home() {
           <div className="topbar-left">
             <button className="icon-button mobile-menu" onClick={() => setMobileMenuOpen(true)} aria-label="Open menu"><Menu size={18} /></button>
             <div className="mobile-brand"><span className="brand-mark"><MoonStar size={17} /></span><span className="brand-name">vedic<span style={{ color: "var(--gold)" }}>.</span>ai</span></div>
-            <div className="mode-pill"><span className="status-dot" /> Vedic AI <span style={{ color: "var(--quiet)" }}>· Preview</span></div>
+            <div className="mode-pill" aria-label="Vedic AI preview status"><span className="status-dot" /> <span className="mode-pill-name">Vedic AI</span> <span className="mode-pill-preview" style={{ color: "var(--quiet)" }}>· Preview</span></div>
           </div>
           <div className="topbar-actions">
             {isSignedIn ? <button className="topbar-link" onClick={signOut}><UserRound size={14}/> Sign out</button> : <Link href="/login" className="topbar-link"><UserRound size={14}/> Sign in</Link>}
-            <button className="topbar-link" onClick={openMemory}><BookOpen size={14} /> Memory</button>
-            <button className="topbar-link" onClick={() => setIsBirthOpen(true)}><Orbit size={14} /> {savedBirth ? "Edit birth details" : "Add birth details"}</button>
+            <button className="topbar-link" title="Saved memory" aria-label="Saved memory" onClick={openMemory}><BookOpen size={14} /><span>Memory</span></button>
+            <button className="topbar-link" title={savedBirth ? "Edit birth details" : "Add birth details"} aria-label={savedBirth ? "Edit birth details" : "Add birth details"} onClick={() => setIsBirthOpen(true)}><Orbit size={14} /><span>{savedBirth ? "Edit birth details" : "Add birth details"}</span></button>
             <button className="icon-button" aria-label="Help and product status" onClick={() => setToast("Vedic AI is an early preview. Astrology calculations need reference-chart validation; AI and saved history depend on configured services.")}><CircleHelp size={17} /></button>
           </div>
         </header>
@@ -796,7 +838,7 @@ export default function Home() {
             <textarea ref={textareaRef} value={input} onChange={(event) => { setInput(event.target.value); event.target.style.height = "auto"; event.target.style.height = Math.min(event.target.scrollHeight, 150) + "px"; }} onKeyDown={onComposerKeyDown} placeholder="Ask about your kundli, planets, nakshatras, or Jyotish…" rows={1} aria-label="Message Vedic AI" />
             <div className="composer-bottom"><div className="composer-tools">
               <button type="button" className="tool-button" onClick={() => setIsBirthOpen(true)}><Plus size={15} /><span>{savedBirth ? "Birth profile added" : "Add birth details"}</span></button>
-              <button type="button" className="tool-button" onClick={() => setToast("Voice input is planned for a later release.")}><AudioLines size={15} /><span>Voice</span></button>
+              <button type="button" className={"tool-button voice-input-button" + (voiceListening ? " is-listening" : "")} onClick={toggleVoiceInput} aria-label={voiceListening ? "Stop voice typing" : "Start voice typing"} title={voiceListening ? "Stop voice typing" : "Speak to type"}><span className="voice-input-icon">{voiceListening ? <MicOff size={16} /> : <Mic size={16} />}</span><span>{voiceListening ? "Listening…" : "Speak"}</span></button>
             </div><button type="submit" className="send-button" aria-label="Send message" disabled={!input.trim() || isLoading}><ArrowUp size={17} /></button></div>
           </form>
           <p className="footer-note">Vedic AI can make mistakes. Astrological interpretations are traditional perspectives, not certainties. <span className="footer-separator">·</span> <Link href="/privacy">Privacy</Link> <span className="footer-separator">·</span> <Link href="/terms">Terms</Link></p>
