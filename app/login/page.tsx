@@ -123,6 +123,7 @@ export default function LoginPage() {
   return (
     <main className="auth-shell auth-shell-premium">
       <Link href="/" className="auth-back"><ArrowLeft size={15} /> <span>Back to Vedic AI</span></Link>
+      <div className="auth-engine-status" aria-label="Vedic AI service status"><span /> COSMIC ENGINE V2.4</div>
       <div className="auth-layout">
         <section className="auth-story auth-story-visual" aria-label="About Vedic AI">
           <Link href="/" className="auth-brand">
@@ -139,13 +140,14 @@ export default function LoginPage() {
               <div className="auth-story-kicker"><Sparkles size={14} /> YOUR PERSONAL JYOTISH SPACE</div>
               <h1 className="auth-story-title">Find your place<br />in the <em>stars.</em></h1>
               <p className="auth-story-copy">Explore your birth chart, uncover timeless Jyotish perspectives, and bring your personal journey into focus.</p>
+              <div className="auth-artwork-badge"><span className="auth-artwork-badge-icon"><Sparkles size={15} /></span><span><strong>Made for your journey</strong><small>Thoughtful. Personal. Private.</small></span></div>
               <div className="auth-feature-tiles">
                 <article className="auth-feature-tile"><span><Sparkles size={19}/></span><strong>Personalized<br/>Birth Charts</strong><small>Deep, meaningful insights</small></article>
                 <article className="auth-feature-tile"><span><Orbit size={19}/></span><strong>Guided<br/>Reflections</strong><small>Clarity for your journey</small></article>
                 <article className="auth-feature-tile"><span><ShieldCheck size={19}/></span><strong>Private &amp; Secure</strong><small>Your data stays yours</small></article>
               </div>
             </div>
-            <div className="auth-artwork-badge"><span className="auth-artwork-badge-icon"><Sparkles size={15} /></span><span><strong>Made for your journey</strong><small>Thoughtful. Personal. Private.</small></span></div>
+            
           </div>
           <p className="auth-story-foot"><span className="auth-story-foot-line" /> Traditional Jyotish, explored with curiosity—not certainty.</p>
         </section>
