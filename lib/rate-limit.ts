@@ -22,7 +22,9 @@ function fallbackLimit(key: string, limit: number, windowMs: number): RateLimitR
     retryAfterSeconds: Math.max(1, Math.ceil((bucket.resetAt - now) / 1000)),
     remaining: Math.max(0, limit - bucket.count),
     durable: false,
-    available: process.env.NODE_ENV !== "production",
+    // Fail open to a bounded per-instance limiter when Supabase is unavailable.
+    // This keeps chat usable during database/quota incidents; it is not globally durable. 
+    available: true,
   };
 }
 
@@ -50,11 +52,14 @@ export async function checkRateLimit(
 ): Promise<RateLimitResult> {
   const keyMaterial = scope + ":" + (identity || requestIdentity(request));
   const bucketKey = createHash("sha256").update(keyMaterial).digest("hex");
-  const admin = getSupabaseAdminClient();
   const windowSeconds = Math.max(1, Math.ceil(windowMs / 1000));
 
-  if (admin) {
-    try {
+  try {
+    const admin = getSupabaseAdminClient();
+    if (!admin) {
+      console.warn("[vedic-ai] Supabase admin credentials are missing; using bounded in-memory rate limiting.");
+      return fallbackLimit(bucketKey, limit, windowMs);
+    }
       // The generated Supabase Database type may lag behind migration 004.
       // Narrow this one RPC call locally until database types are regenerated.
       const consumeRateLimit = (admin as unknown as {
@@ -87,9 +92,8 @@ export async function checkRateLimit(
           hint: (error as { hint?: string }).hint,
         });
       }
-    } catch (error) {
-      console.error("[vedic-ai] Durable rate limiter request failed; using process-local fallback.", error instanceof Error ? { name: error.name, message: error.message } : { error: "Unknown RPC failure" });
-    }
+  } catch (error) {
+    console.error("[vedic-ai] Durable rate limiter failed; using bounded in-memory fallback.", error instanceof Error ? { name: error.name, message: error.message } : { error: "Unknown RPC failure" });
   }
 
   return fallbackLimit(bucketKey, limit, windowMs);
