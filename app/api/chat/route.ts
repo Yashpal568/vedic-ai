@@ -28,6 +28,18 @@ const requestSchema = z.object({
   chartContext: z.record(z.string(), z.unknown()).optional(),
 });
 
+function needsPersonalChart(message: string): boolean {
+  const value = message.toLowerCase().replace(/[’']/g, "'");
+  const patterns = [
+    /\bmy (career|job|marriage|relationship|love life|future|kundli|birth chart|finances|wealth)\b/,
+    /\b(meri|mere|mera) (career|job|shaadi|shadi|relationship|love life|kundli|future|naukri|paisa|paise)\b/,
+    /\b(career|job|shaadi|shadi|marriage|love life|future) (kaisa|kaisi|kab|when|will i|mere liye)\b/,
+    /\b(when will i get (a )?job|will i get married|will i find love|what does my chart say)\b/,
+    /\b(personal(ized)? (career|relationship|marriage|kundli) reading)\b/,
+  ];
+  return patterns.some((pattern) => pattern.test(value));
+}
+
 const systemInstruction = [
   "You are Vedic AI, a careful, deeply knowledgeable guide to traditional Vedic astrology (Jyotish), not a fortune-telling certainty machine.",
   "Respond in the user's language and script where practical. For Hindi, use natural Hindi/Hinglish matching the user. Explain Sanskrit/Jyotish terms in plain language.",
@@ -242,6 +254,14 @@ export async function POST(request: Request) {
         timezone,
       }) as unknown as Record<string, unknown>;
     }
+    // Hard gate: personal readings must not silently fall back to generic house/planet explanations.
+    const latestUserMessage = [...body.messages].reverse().find((message) => message.role === "user")?.content || "";
+    if (!trustedChartContext && needsPersonalChart(latestUserMessage)) {
+      return NextResponse.json({
+        reply: "I can help with a personalized Jyotish-style reading, but I don't have a verified birth chart for you yet. Please add your date of birth, exact local birth time, and birthplace (city/region/country). I'll calculate the chart first and clearly separate calculated placements from traditional interpretation. If your birth time is unknown, tell me that rather than guessing."
+      });
+    }
+
     // Only read persistent memory from the authenticated server session; never trust client-supplied memory.
     let savedMemory = "";
     try {
