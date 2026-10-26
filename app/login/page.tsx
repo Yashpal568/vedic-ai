@@ -111,7 +111,7 @@ export default function LoginPage() {
             <div className="auth-mobile-mark"><span className="brand-mark"><MoonStar size={20} /></span><span className="brand-name">vedic<span style={{ color: "var(--gold)" }}>.</span>ai</span></div>
             <div className="auth-step-label">WELCOME BACK</div>
             <h2 className="auth-title">Your space<br /><span>is waiting.</span></h2>
-            <p className="auth-copy">Enter your email and we'll send you a secure sign-in button. No password needed.</p>
+            <p className="auth-copy">Enter your email and we&apos;ll send you a secure sign-in button. No password needed.</p>
             <div className="auth-email-intro"><span className="auth-email-icon"><Mail size={17} /></span><span><strong>Email sign-in</strong><small>Private, passwordless access</small></span><span className="auth-email-secure"><LockKeyhole size={12} /> Secure</span></div>
             <form onSubmit={submit} className="auth-form">
               <label className="form-field"><span className="form-label">Email address</span><input className="form-input auth-email-input" type="email" autoComplete="email" inputMode="email" required maxLength={254} value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" /></label>
@@ -120,7 +120,7 @@ export default function LoginPage() {
                 {busy ? "Sending secure link…" : "Email me a sign-in link"} {!busy && <ArrowRight size={16} />}
               </button>
             </form>
-            <p className="auth-privacy"><ShieldCheck size={15} /> We’ll only use your email to sign you in.</p>
+            <p className="auth-privacy"><ShieldCheck size={15} /> We&apos;ll only use your email to sign you in.</p>
             <div className="auth-card-divider"><span>SAFE & SIMPLE</span></div>
             <p className="auth-fineprint">By continuing, you agree to our <Link href="/terms">Terms</Link> and <Link href="/privacy">Privacy Policy</Link>.</p>
           </> : <div className="auth-success auth-success-premium">
@@ -128,7 +128,7 @@ export default function LoginPage() {
             <div className="auth-step-label">ONE LAST STEP</div>
             <h2 className="auth-title">Check your<br /><span>inbox.</span></h2>
             <p className="auth-copy">A sign-in email is on its way to <strong>{email.trim()}</strong>. Open it and tap the <strong>Confirm email address</strong> button to securely return to Vedic AI.</p>
-            <div className="auth-inbox-tip"><Mail size={17} /><span>Can't find it? Check your spam or promotions folder. The link may expire, so use the newest email.</span></div>
+            <div className="auth-inbox-tip"><Mail size={17} /><span>Can&apos;t find it? Check your spam or promotions folder. The link may expire, so use the newest email.</span></div>
             <button className="primary-button auth-submit" onClick={() => { void sendLink(); }} disabled={busy || resendSeconds > 0}>
               {busy ? "Sending secure link…" : resendSeconds > 0 ? `Send another link in ${resendSeconds}s` : "Send another sign-in link"} <ArrowRight size={15} />
             </button>
