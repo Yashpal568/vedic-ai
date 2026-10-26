@@ -128,8 +128,16 @@ export async function POST(request: Request) {
     const sessionClient = await createSupabaseServerClient();
     let signedInUserId: string | null = null;
     if (sessionClient) {
-      const { data: { user } } = await sessionClient.auth.getUser();
-      signedInUserId = user?.id || null;
+      try {
+        const authResult = await sessionClient.auth.getUser();
+        signedInUserId = authResult.data?.user?.id || null;
+        if (authResult.error) {
+          console.warn("[vedic-ai] Supabase session lookup unavailable; continuing with IP-based limits.");
+        }
+      } catch {
+        // Chat is public-capable; an auth/session outage must not prevent guest chat.
+        console.warn("[vedic-ai] Supabase session lookup failed; continuing with IP-based limits.");
+      }
     }
     if (signedInUserId) {
       const hourlyQuota = await checkRateLimit(request, "ai-user-hour", 12, 60 * 60 * 1000, signedInUserId);
