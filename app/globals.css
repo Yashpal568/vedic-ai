@@ -1629,3 +1629,102 @@ html{scroll-behavior:smooth;scroll-padding-top:84px}
   .auth-story-visual .auth-feature-tile small { font-size: 8px; }
   .auth-card-premium { padding: 22px 17px; border-radius: 20px; }
 }
+
+
+/* Premium responsive conversation workspace + accessible mobile navigation drawer */
+.app-shell{background:radial-gradient(ellipse at 78% -8%,rgba(212,183,122,.075),transparent 32%),var(--bg)}
+.sidebar{position:relative;z-index:2;background:linear-gradient(180deg,#151612 0%,#11120f 100%)}
+.sidebar .side-link{transition:background .2s ease,border-color .2s ease,transform .2s ease}
+.sidebar .side-link:hover{transform:translateX(2px)}
+.topbar{position:sticky;top:0;z-index:10;background:rgba(16,17,15,.82)}
+.mode-pill{white-space:nowrap}
+.content-scroll{min-height:0}
+.welcome-wrap{animation:vedic-rise-in .55s cubic-bezier(.2,.75,.25,1) both}
+.prompt-card{animation:vedic-rise-in .45s ease both}
+.prompt-card:nth-child(2){animation-delay:55ms}.prompt-card:nth-child(3){animation-delay:110ms}.prompt-card:nth-child(4){animation-delay:165ms}
+.message-row{animation:vedic-message-in .28s ease-out both}
+.message-avatar{flex-shrink:0}
+.user-bubble,.message-content{overflow-wrap:anywhere}
+.kundli-visual-wrap{animation:vedic-rise-in .4s ease-out both}
+.kundli-svg{filter:drop-shadow(0 10px 24px rgba(0,0,0,.15));width:100%;height:auto}
+.kundli-frame{fill:rgba(212,183,122,.025);stroke:rgba(212,183,122,.5)}
+.kundli-lines{fill:none;stroke:rgba(212,183,122,.65);stroke-width:1.2}
+.kundli-center-glow{fill:rgba(212,183,122,.1);stroke:rgba(212,183,122,.24)}
+.kundli-center-title{fill:var(--gold2);font-weight:700;font-size:10px;letter-spacing:1px}
+.kundli-center-sub{fill:var(--muted);font-size:7px;letter-spacing:1px}
+.kundli-house-label{fill:var(--quiet);font-size:8px}
+.kundli-sign{fill:var(--gold2);font-size:10px;font-weight:600}
+.kundli-planet{fill:var(--text);font-size:9px}
+.kundli-lagna .kundli-house-label{fill:var(--gold2);font-weight:700}
+@keyframes vedic-rise-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes vedic-message-in{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+.mobile-nav-backdrop{position:fixed;inset:0;z-index:70;display:flex;justify-content:flex-start;background:rgba(3,5,7,.62);backdrop-filter:blur(7px);animation:vedic-fade-in .18s ease both}
+.mobile-nav-drawer{width:min(88vw,350px);height:100%;display:flex;flex-direction:column;overflow:hidden;padding:20px 15px max(16px,env(safe-area-inset-bottom));background:linear-gradient(180deg,#191a16,#11120f);border-right:1px solid rgba(212,183,122,.2);box-shadow:25px 0 70px rgba(0,0,0,.4);animation:vedic-drawer-in .25s cubic-bezier(.2,.8,.2,1) both}
+.mobile-nav-head{display:flex;align-items:center;justify-content:space-between;padding:2px 7px 18px;border-bottom:1px solid var(--line)}
+.mobile-drawer-new{margin-top:18px}
+.mobile-history-label{display:flex;align-items:center;justify-content:space-between}
+.mobile-history-label span{display:grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border-radius:7px;color:var(--gold2);background:var(--wash);font-size:10px}
+.mobile-history-list{min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-right:2px}
+.mobile-history-list .history-item-row{margin:2px 0}
+.mobile-history-list .history-item-open{min-width:0}
+.mobile-history-list .history-item-open span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mobile-nav-bottom{margin-top:auto;padding-top:12px;border-top:1px solid var(--line)}
+.mobile-nav-bottom .profile-row{border:0;padding:4px 5px 12px}
+.mobile-signout-button{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:43px;border:1px solid rgba(224,162,154,.2);border-radius:11px;color:#e6b2aa;background:rgba(224,162,154,.055);text-decoration:none;font-size:12px;transition:background .2s,border-color .2s}
+.mobile-signout-button:hover{background:rgba(224,162,154,.1);border-color:rgba(224,162,154,.36)}
+@keyframes vedic-fade-in{from{opacity:0}to{opacity:1}}
+@keyframes vedic-drawer-in{from{opacity:.7;transform:translateX(-18px)}to{opacity:1;transform:translateX(0)}}
+@media(min-width:681px){
+  .mobile-nav-backdrop{display:none}
+  .sidebar{overflow-y:auto;overscroll-behavior:contain}
+  .sidebar-bottom{padding-top:14px}
+  .topbar-actions .topbar-link{min-height:36px}
+}
+@media(max-width:680px){
+  .app-shell{min-height:100svh}
+  .main-panel{min-height:100svh;min-width:0}
+  .topbar{padding:0 12px;gap:8px}
+  .topbar-left{min-width:0;gap:8px}
+  .mobile-brand{flex-shrink:0}
+  .mode-pill{max-width:108px;overflow:hidden;text-overflow:ellipsis}
+  .topbar-actions{gap:5px}
+  .topbar-actions .topbar-link{width:37px;height:37px;min-width:37px;justify-content:center;padding:0;border-radius:11px;font-size:0;gap:0}
+  .topbar-actions .topbar-link svg{width:16px;height:16px}
+  .topbar-actions .icon-button{width:34px;height:34px}
+  .welcome-wrap{width:100%;padding:34px 17px 24px}
+  .hero-title{font-size:clamp(32px,8.8vw,43px);line-height:1.13}
+  .hero-copy{line-height:1.75}
+  .prompt-grid{grid-template-columns:1fr}
+  .prompt-card{min-height:72px}
+  .chat-area{padding:20px 13px 12px}
+  .message-row{gap:9px}
+  .message-content{min-width:0}
+  .message-text{font-size:13px;line-height:1.8}
+  .user-bubble{max-width:88%;font-size:13px;line-height:1.7}
+  .chat-footer{padding:10px 10px max(9px,env(safe-area-inset-bottom))}
+  .composer-wrap{width:100%}
+  .composer{width:100%}
+  .footer-note{text-align:center;line-height:1.65}
+  .chart-panel{padding:14px;border-radius:15px}
+  .chart-panel-head{gap:10px}
+  .chart-panel-head>div:first-child{min-width:0}
+  .chart-title{font-size:19px;line-height:1.35}
+  .chart-stats{grid-template-columns:1fr;gap:8px}
+  .chart-secondary-grid{grid-template-columns:minmax(0,1fr)}
+  .kundli-visual-wrap{min-width:0;padding:12px}
+  .kundli-svg{max-width:100%;margin:0 auto;display:block}
+  .chart-table-wrap{max-width:100%;overflow-x:auto}
+  .chart-table{min-width:650px}
+}
+@media(max-width:380px){
+  .topbar{padding-inline:8px}
+  .mobile-brand .brand-name{font-size:12px}
+  .mode-pill{max-width:86px;font-size:9px}
+  .topbar-actions{gap:3px}
+  .topbar-actions .topbar-link{width:33px;height:33px;min-width:33px}
+  .welcome-wrap{padding-inline:14px}
+}
+@media(prefers-reduced-motion:reduce){
+  .welcome-wrap,.prompt-card,.message-row,.kundli-visual-wrap,.mobile-nav-backdrop,.mobile-nav-drawer{animation:none!important}
+  .sidebar .side-link,.mobile-signout-button{transition:none!important}
+}
