@@ -38,44 +38,50 @@ export default function LoginPage() {
     return () => window.clearTimeout(timer);
   }, [resendSeconds]);
 
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function sendLink() {
     if (busy || resendSeconds > 0) return;
     setBusy(true);
     setError("");
-    const supabase = getSupabaseBrowserClient();
-    if (!supabase) {
-      setError("Secure sign-in is not configured. Please contact the site administrator.");
-      setBusy(false);
-      return;
-    }
-    // Local development may use localhost. Deployed builds must send links back to
-    // the configured public application URL, never to a developer's localhost.
-    const configuredUrl = process.env.NEXT_PUBLIC_APP_URL;
-    const appBase = process.env.NODE_ENV === "development"
-      ? window.location.origin
-      : (configuredUrl || window.location.origin);
-    let emailRedirectTo: string;
     try {
-      const parsed = new URL(appBase);
-      if (parsed.protocol !== "https:" && parsed.hostname !== "localhost") throw new Error("Invalid app URL");
-      emailRedirectTo = new URL("/auth/callback", parsed.origin).toString();
+      const supabase = getSupabaseBrowserClient();
+      if (!supabase) {
+        setError("Secure sign-in is not configured. Please contact the site administrator.");
+        return;
+      }
+      // Local development may use localhost. Deployed builds use the configured public URL.
+      const configuredUrl = process.env.NEXT_PUBLIC_APP_URL;
+      const appBase = process.env.NODE_ENV === "development"
+        ? window.location.origin
+        : (configuredUrl || window.location.origin);
+      let emailRedirectTo: string;
+      try {
+        const parsed = new URL(appBase);
+        if (parsed.protocol !== "https:" && parsed.hostname !== "localhost") throw new Error("Invalid app URL");
+        emailRedirectTo = new URL("/auth/callback", parsed.origin).toString();
+      } catch {
+        setError("The sign-in destination is misconfigured. Please contact the site administrator.");
+        return;
+      }
+      const { error: authError } = await supabase.auth.signInWithOtp({
+        email: email.trim(),
+        options: { emailRedirectTo, shouldCreateUser: true },
+      });
+      if (authError) {
+        setError("We couldn't send the secure link. Please check your email address and try again.");
+      } else {
+        setSent(true);
+        setResendSeconds(30);
+      }
     } catch {
-      setError("The sign-in destination is misconfigured. Please contact the site administrator.");
+      setError("A network issue prevented us from sending the email. Please try again.");
+    } finally {
       setBusy(false);
-      return;
     }
-    const { error: authError } = await supabase.auth.signInWithOtp({
-      email: email.trim(),
-      options: { emailRedirectTo, shouldCreateUser: true },
-    });
-    if (authError) {
-      setError("We couldn't send the secure link. Please check your email address and try again.");
-    } else {
-      setSent(true);
-      setResendSeconds(30);
-    }
-    setBusy(false);
+  }
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    await sendLink();
   }
 
   return (
@@ -123,8 +129,8 @@ export default function LoginPage() {
             <h2 className="auth-title">Check your<br /><span>inbox.</span></h2>
             <p className="auth-copy">A sign-in email is on its way to <strong>{email.trim()}</strong>. Open it and tap the <strong>Confirm email address</strong> button to securely return to Vedic AI.</p>
             <div className="auth-inbox-tip"><Mail size={17} /><span>Can't find it? Check your spam or promotions folder. The link may expire, so use the newest email.</span></div>
-            <button className="primary-button auth-submit" onClick={() => { setSent(false); setError(""); }} disabled={resendSeconds > 0}>
-              {resendSeconds > 0 ? `Send another link in ${resendSeconds}s` : "Send another sign-in link"} <ArrowRight size={15} />
+            <button className="primary-button auth-submit" onClick={() => { void sendLink(); }} disabled={busy || resendSeconds > 0}>
+              {busy ? "Sending secure link…" : resendSeconds > 0 ? `Send another link in ${resendSeconds}s` : "Send another sign-in link"} <ArrowRight size={15} />
             </button>
             <button className="auth-change-email" onClick={() => { setSent(false); setError(""); setResendSeconds(0); }}>Use a different email</button>
             {error && <p className="auth-error" role="alert">{error}</p>}
