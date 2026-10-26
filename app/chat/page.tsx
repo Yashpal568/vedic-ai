@@ -176,6 +176,7 @@ export default function Home() {
   const [birth, setBirth] = useState<BirthProfile>({ name: "", date: "", time: "", place: "" });
   const [savedBirth, setSavedBirth] = useState<BirthProfile | null>(null);
   const [chartReport, setChartReport] = useState<KundliReport | null>(null);
+  const [pendingPrompt, setPendingPrompt] = useState<string>("");
   const [transitReport, setTransitReport] = useState<KundliReport | null>(null);
   const [transitLoading, setTransitLoading] = useState(false);
   const [placeOptions, setPlaceOptions] = useState<PlaceOption[]>([]);
@@ -431,7 +432,14 @@ export default function Home() {
       const details = (profile.name.trim() ? "Name: " + profile.name.trim() + "\n" : "") +
         "Date of birth: " + profile.date + "\nLocal birth time: " + profile.time +
         "\nBirthplace: " + profile.place + "\nTimezone: " + report.birth.timezone;
-      const userMessage: Message = { id: makeId(), role: "user", content: "Please create and explain my Vedic kundli using these birth details:\n" + details };
+      const requestedFocus = pendingPrompt.trim();
+      const userMessage: Message = {
+        id: makeId(),
+        role: "user",
+        content: requestedFocus
+          ? "Use my newly calculated birth chart to answer this personal question: " + requestedFocus + "\n\nBirth details verified for this session:\n" + details + "\n\nFirst state the relevant calculated chart facts, then explain the traditional Jyotish interpretation. If the chart engine does not calculate a required factor reliably, disclose that limitation rather than guessing."
+          : "Please create and explain my Vedic kundli using these birth details:\n" + details,
+      };
       const nextMessages = [...messages, userMessage];
       setMessages(nextMessages);
       try {
@@ -728,7 +736,15 @@ export default function Home() {
             <div className="quick-label">A good place to begin</div>
             <div className="prompt-grid">{suggestions.map((item) => {
               const Icon = item.icon;
-              return <button className="prompt-card" key={item.title} onClick={() => sendMessage(item.prompt)}>
+              return <button className="prompt-card" key={item.title} onClick={() => {
+                 if (!savedBirth || !chartReport) {
+                   setPendingPrompt(item.prompt);
+                   setIsBirthOpen(true);
+                   setToast("For a personal reading, add your birth date, exact time, and birthplace first.");
+                 } else {
+                   void sendMessage(item.prompt);
+                 }
+               }}>
                 <span className="prompt-icon"><Icon size={16} strokeWidth={1.7} /></span>
                 <span><span className="prompt-title" style={{ display: "block" }}>{item.title}</span><span className="prompt-description" style={{ display: "block" }}>{item.description}</span></span>
               </button>;
