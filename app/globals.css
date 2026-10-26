@@ -728,3 +728,62 @@ html{scroll-behavior:smooth;scroll-padding-top:84px}
 @media(prefers-reduced-motion:reduce){
   .auth-feature-tile,.auth-google-arrow,.auth-card-premium{transition:none}
 }
+
+
+/* Responsive hotfix: keep late desktop reference rules from overriding mobile grid */
+@media(max-width:800px){
+  html,body{width:100%;min-width:0;overflow-x:hidden}
+  .auth-shell-premium{
+    display:flex;width:100%;max-width:100%;min-width:0;
+    height:auto;min-height:100dvh;overflow-x:hidden;overflow-y:visible;
+    padding:16px 16px 26px;box-sizing:border-box;
+  }
+  .auth-shell-premium>.auth-back{
+    position:relative;top:auto;left:auto;align-self:flex-start;
+    width:auto;max-width:100%;margin:0 0 20px;flex:0 0 auto;
+  }
+  .auth-layout{
+    display:flex!important;flex:1 0 auto;flex-direction:column;
+    align-items:stretch;justify-content:center;
+    width:100%!important;max-width:100%!important;min-width:0;
+    height:auto;min-height:0;margin:0;padding:0;gap:0;
+    grid-template-columns:minmax(0,1fr)!important;
+    box-sizing:border-box;
+  }
+  .auth-story-visual{display:none!important}
+  .auth-card-premium{
+    display:block;position:relative;align-self:center;justify-self:auto;
+    width:100%!important;min-width:0;max-width:500px;
+    margin:0 auto;padding:clamp(22px,5.5vw,30px);
+    box-sizing:border-box;border-radius:21px;overflow:hidden;
+  }
+  .auth-card-premium:before,.auth-card-premium:after{position:absolute;inset:0;max-width:100%;pointer-events:none}
+  .auth-card-brand{width:100%;min-width:0}
+  .auth-card-premium .auth-title{font-size:clamp(32px,8.2vw,40px);line-height:1.08;letter-spacing:-1.4px;overflow-wrap:normal}
+  .auth-card-premium .auth-copy{font-size:13px;line-height:1.7}
+  .auth-mode-switch{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);width:100%;min-width:0}
+  .auth-mode-switch button{min-width:0;padding-inline:6px;white-space:normal}
+  .auth-google-button{width:100%;min-width:0;grid-template-columns:24px minmax(0,1fr) 18px;gap:8px;padding-inline:12px;box-sizing:border-box}
+  .auth-google-button>span:nth-child(2){min-width:0;text-align:center;white-space:normal}
+  .auth-card-divider{display:flex;align-items:center;gap:10px;width:100%;min-width:0;white-space:nowrap;font-size:8px;letter-spacing:1.1px}
+  .auth-card-divider:before,.auth-card-divider:after{content:"";display:block;flex:1;min-width:8px;height:1px}
+  .auth-card-premium .auth-form,.auth-card-premium .form-field,.auth-email-wrap{width:100%;min-width:0}
+  .auth-card-premium .auth-email-input{width:100%;min-width:0;box-sizing:border-box}
+  .auth-card-premium .auth-submit{width:100%;min-width:0;white-space:normal;padding-inline:10px}
+  .auth-card-premium .auth-privacy,.auth-card-premium .auth-fineprint{text-align:center;line-height:1.7}
+  .auth-footer-premium{
+    position:relative;right:auto;bottom:auto;align-self:center;
+    width:100%;max-width:500px;margin:16px auto 0;padding:0;
+    display:flex;flex-wrap:wrap;justify-content:center;gap:7px;
+    text-align:center;line-height:1.6;box-sizing:border-box;
+  }
+}
+@media(max-width:380px){
+  .auth-shell-premium{padding-inline:12px}
+  .auth-card-premium{padding:21px 16px}
+  .auth-card-brand{gap:9px}
+  .auth-card-brand strong{font-size:16px}
+  .auth-card-premium .auth-title{font-size:31px}
+  .auth-google-button{font-size:11px}
+  .auth-card-divider{letter-spacing:.7px;font-size:7px}
+}
