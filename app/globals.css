@@ -1323,3 +1323,46 @@ html{scroll-behavior:smooth;scroll-padding-top:84px}
 @media(max-width:420px){
   .auth-shell-premium>.auth-back{margin-bottom:13px;font-size:10px}
 }
+
+
+/* Stitch premium auth design — full-bleed celestial backdrop + glass portal */
+.auth-shell-premium{isolation:isolate;background:#060814!important;color:#f1f3f8}
+.auth-shell-premium:before{display:block!important;position:fixed;z-index:-2;inset:0;pointer-events:none;content:"";background:radial-gradient(ellipse at 55% 48%,rgba(25,94,165,.38),transparent 48%),radial-gradient(ellipse at 82% 22%,rgba(179,99,48,.24),transparent 42%),radial-gradient(ellipse at 16% 74%,rgba(37,55,118,.24),transparent 43%),linear-gradient(rgba(5,8,18,.36),rgba(5,8,18,.52)),url("https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=2400&q=90") center/cover no-repeat;transform:scale(1.015)}
+.auth-shell-premium:after{content:"";position:fixed;z-index:-1;inset:0;pointer-events:none;background-image:radial-gradient(1px 1px at 12% 17%,rgba(255,255,255,.8) 99%,transparent),radial-gradient(1.5px 1.5px at 31% 61%,rgba(245,218,167,.85) 99%,transparent),radial-gradient(1px 1px at 48% 13%,rgba(255,255,255,.8) 99%,transparent),radial-gradient(1px 1px at 73% 32%,rgba(255,255,255,.75) 99%,transparent),radial-gradient(1.5px 1.5px at 91% 76%,rgba(245,218,167,.75) 99%,transparent);background-size:520px 520px;opacity:.65;animation:stitch-stars-drift 45s linear infinite}
+.auth-story-visual{background:transparent!important}
+.auth-story-visual:before,.auth-story-visual:after{display:none!important}
+.auth-story-visual>.auth-brand{margin-top:14px!important}
+.auth-story-visual .auth-artwork{background:transparent!important}
+.auth-story-visual .auth-artwork-copy{padding-bottom:0}
+.auth-story-visual .auth-artwork-copy .auth-story-title{font-family:Inter,Manrope,sans-serif;font-weight:300;font-size:clamp(48px,5.1vw,76px);letter-spacing:-3.4px;line-height:1.02}
+.auth-story-visual .auth-artwork-copy .auth-story-title em{font-family:"Playfair Display",Georgia,serif;font-style:italic;font-weight:500;background:linear-gradient(105deg,#fff0b9,#e7b958 72%,#f9dc8b);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 28px rgba(243,210,142,.14)}
+.auth-story-visual .auth-artwork-copy .auth-story-copy{color:rgba(226,233,245,.8);font-size:clamp(14px,1.15vw,17px);line-height:1.8}
+.auth-story-visual .auth-artwork-badge{position:relative;inset:auto;display:inline-flex;align-self:flex-start;margin-top:27px;padding:11px 15px;border:1px solid rgba(226,216,192,.16);border-radius:15px;background:rgba(9,14,27,.62);backdrop-filter:blur(18px);box-shadow:0 12px 32px rgba(0,0,0,.16);transition:transform .25s,border-color .25s}
+.auth-story-visual .auth-artwork-badge:hover{transform:translateY(-2px);border-color:rgba(236,194,121,.42)}
+.auth-story-visual .auth-artwork-badge-icon{width:34px;height:34px;flex:0 0 34px;border-radius:11px}
+.auth-story-visual .auth-feature-tiles{margin-top:28px}
+.auth-feature-tile{background:linear-gradient(145deg,rgba(11,17,31,.72),rgba(8,12,23,.58));border-color:rgba(214,222,241,.15)}
+.auth-feature-tile>span{border-radius:12px;background:rgba(255,255,255,.045);border-color:rgba(235,198,126,.42)}
+.auth-shell-premium>.auth-back{top:24px;left:clamp(22px,3.8vw,58px);padding:8px 0;border:0;border-radius:0;background:transparent;backdrop-filter:none;color:rgba(226,232,244,.82);font-size:12px}
+.auth-shell-premium>.auth-back:hover{background:transparent;border-color:transparent;transform:translateX(-3px);color:#ffe1a4}
+.auth-shell-premium>.auth-back svg{color:rgba(226,232,244,.72)}
+.auth-engine-status{position:absolute;z-index:7;top:29px;right:clamp(22px,4vw,60px);display:flex;align-items:center;gap:9px;color:rgba(183,197,220,.7);font-size:10px;font-weight:650;letter-spacing:1.25px}
+.auth-engine-status>span{width:7px;height:7px;border-radius:50%;background:#39d6a0;box-shadow:0 0 12px rgba(57,214,160,.72);animation:stitch-status-pulse 2.2s ease-in-out infinite}
+.auth-card-premium{border-color:rgba(215,221,240,.17);background:linear-gradient(145deg,rgba(10,13,23,.88),rgba(7,10,20,.84));box-shadow:0 28px 85px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.07);backdrop-filter:blur(28px) saturate(130%)}
+.auth-card-premium:before{background-image:radial-gradient(ellipse at 90% 0%,rgba(224,165,84,.12),transparent 43%);opacity:1}
+.auth-card-premium:after{background:linear-gradient(145deg,rgba(8,12,23,.28),rgba(6,9,18,.68))}
+.auth-card-brand{margin-bottom:26px}
+.auth-card-brand>.brand-mark{border-color:rgba(229,184,105,.42);background:rgba(255,255,255,.045);color:#f3d28e;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
+.auth-card-premium .auth-title{font-weight:600}
+.auth-card-premium .auth-copy{color:rgba(221,226,239,.73)}
+.auth-mode-switch{background:rgba(7,11,22,.68);border-color:rgba(214,222,241,.12)}
+.auth-google-button{grid-template-columns:24px 1fr 22px}
+.auth-google-button .google-logo{background:#fff}
+.auth-card-premium .auth-submit{color:#11111a;background:linear-gradient(110deg,#d8a951,#f0cb7a 52%,#d8a951)}
+.auth-card-premium .auth-fineprint a{color:#f1cd80}
+.auth-footer-premium{color:rgba(194,203,222,.62)}
+@keyframes stitch-stars-drift{from{transform:translate3d(0,0,0)}to{transform:translate3d(-30px,20px,0)}}
+@keyframes stitch-status-pulse{0%,100%{opacity:.72;box-shadow:0 0 7px rgba(57,214,160,.5)}50%{opacity:1;box-shadow:0 0 15px rgba(57,214,160,.9)}}
+@media(max-width:800px){.auth-shell-premium:before{background-position:center;background-size:cover;opacity:.85}.auth-shell-premium:after{opacity:.42}.auth-shell-premium>.auth-back{margin:0 0 20px;padding:8px 0}.auth-engine-status{display:none}.auth-story-visual{display:none!important}.auth-card-premium{background:linear-gradient(145deg,rgba(10,13,23,.9),rgba(7,10,20,.9));border-color:rgba(215,221,240,.18);box-shadow:0 24px 70px rgba(0,0,0,.4)}}
+@media(max-width:420px){.auth-card-premium{border-radius:20px}}
+@media(prefers-reduced-motion:reduce){.auth-shell-premium:after,.auth-engine-status>span{animation:none!important}}
