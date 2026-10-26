@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
-import { ArrowLeft, ArrowRight, CheckCircle2, LockKeyhole, Mail, MoonStar, ShieldCheck, Sparkles, UserRound } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, LockKeyhole, Mail, MoonStar, ShieldCheck, Sparkles } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 export default function LoginPage() {
