@@ -189,12 +189,54 @@ export default function Home() {
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [toast, setToast] = useState("");
+  const [notificationPromptOpen, setNotificationPromptOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<VoiceRecognition | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const hasConversation = messages.length > 0;
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [messages]);
+  useEffect(() => {
+    if (typeof window === "undefined" || !("Notification" in window)) return;
+    if (Notification.permission === "default" && !window.sessionStorage.getItem("vedic-notification-prompt-dismissed")) setNotificationPromptOpen(true);
+  }, []);
+
+  async function enableNotifications() {
+    if (!("Notification" in window)) {
+      setToast("This browser does not support web notifications. Try updating Chrome or installing the site as an app.");
+      setNotificationPromptOpen(false);
+      return;
+    }
+    if (!window.isSecureContext) {
+      setToast("Notifications require a secure HTTPS connection.");
+      setNotificationPromptOpen(false);
+      return;
+    }
+    if (Notification.permission === "granted") {
+      setToast("Notifications are already enabled for this site.");
+      setNotificationPromptOpen(false);
+      return;
+    }
+    if (Notification.permission === "denied") {
+      setToast("Notifications are blocked in browser settings. Tap the site controls beside the address bar → Permissions → Notifications → Allow, then reload.");
+      setNotificationPromptOpen(false);
+      return;
+    }
+    try {
+      const permission = await Notification.requestPermission();
+      setNotificationPromptOpen(false);
+      window.sessionStorage.setItem("vedic-notification-prompt-dismissed", "1");
+      setToast(permission === "granted" ? "Notifications enabled for this browser." : permission === "denied" ? "Notifications were blocked. Enable them from this site's browser permissions." : "No permission was selected. You can enable notifications from the bell button later.");
+    } catch {
+      setToast("Could not request notification permission. Check this site's browser permissions and try again.");
+      setNotificationPromptOpen(false);
+    }
+  }
+
+  function dismissNotificationPrompt() {
+    setNotificationPromptOpen(false);
+    try { window.sessionStorage.setItem("vedic-notification-prompt-dismissed", "1"); } catch { /* storage may be disabled */ }
+  }
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
     if (!supabase) return;
@@ -801,6 +843,7 @@ export default function Home() {
             {isSignedIn ? <button className="topbar-link" onClick={signOut}><UserRound size={14}/> Sign out</button> : <Link href="/login" className="topbar-link"><UserRound size={14}/> Sign in</Link>}
             <button className="topbar-link" title="Saved memory" aria-label="Saved memory" onClick={openMemory}><BookOpen size={14} /><span>Memory</span></button>
             <button className="topbar-link" title={savedBirth ? "Edit birth details" : "Add birth details"} aria-label={savedBirth ? "Edit birth details" : "Add birth details"} onClick={() => setIsBirthOpen(true)}><Orbit size={14} /><span>{savedBirth ? "Edit birth details" : "Add birth details"}</span></button>
+            <button className="icon-button" aria-label="Enable notifications" title="Notification settings" onClick={() => { if (typeof Notification !== "undefined" && Notification.permission === "granted") setToast("Notifications are already enabled for this browser."); else setNotificationPromptOpen(true); }}><span aria-hidden="true">♧</span></button>
             <button className="icon-button" aria-label="Help and product status" onClick={() => setToast("Vedic AI is an early preview. Astrology calculations need reference-chart validation; AI and saved history depend on configured services.")}><CircleHelp size={17} /></button>
           </div>
         </header>
@@ -878,6 +921,8 @@ export default function Home() {
           <p className="footer-note">Vedic AI can make mistakes. Astrological interpretations are traditional perspectives, not certainties. <span className="footer-separator">·</span> <Link href="/privacy">Privacy</Link> <span className="footer-separator">·</span> <Link href="/terms">Terms</Link></p>
         </div></footer>
       </section>
+
+      {notificationPromptOpen && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) dismissNotificationPrompt(); }}><section className="modal" role="dialog" aria-modal="true" aria-labelledby="notification-modal-title"><div className="modal-head"><div><div className="eyebrow"><span className="eyebrow-line" /> STAY IN THE LOOP</div><h2 className="modal-title" id="notification-modal-title" style={{ margin: "12px 0 0" }}>Enable notifications</h2><p className="modal-copy">Get helpful updates from Vedic AI in this browser. You can change this permission anytime in your browser settings.</p></div><button className="icon-button" onClick={dismissNotificationPrompt} aria-label="Close notification prompt"><X size={17}/></button></div><div className="assistant-note"><ShieldCheck size={15} style={{ flexShrink: 0, color: "var(--gold)" }}/><span>Your browser will show its own permission prompt after you tap Enable. Vedic AI cannot grant permission on your behalf.</span></div><div className="modal-actions"><button type="button" className="secondary-button" onClick={dismissNotificationPrompt}>Not now</button><button type="button" className="primary-button" onClick={() => { void enableNotifications(); }}>Enable notifications <Check size={14}/></button></div></section></div>}
 
       {toast && <div role="status" style={{ position: "fixed", zIndex: 80, bottom: 85, left: "50%", transform: "translateX(-50%)", width: "max-content", maxWidth: "calc(100vw - 32px)", padding: "12px 16px", border: "1px solid var(--line2)", borderRadius: 12, color: "var(--text)", background: "#25261f", boxShadow: "0 12px 40px #0005", fontSize: 12, lineHeight: 1.6 }}>{toast}</div>}
 
