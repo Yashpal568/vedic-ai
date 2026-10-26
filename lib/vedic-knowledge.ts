@@ -33,6 +33,12 @@ const KNOWLEDGE: VedicKnowledgeEntry[] = [
     content: "Traditional broad significations: Sun—identity, authority, vitality and responsibility; Moon—mind, habits, care and receptivity; Mars—drive, courage, conflict and action; Mercury—learning, speech, analysis and trade; Jupiter—wisdom, teaching, growth and counsel; Venus—relationships, art, pleasure and agreement; Saturn—discipline, delay, endurance, labour and structure; Rahu—amplification, appetite, novelty and unconventional paths; Ketu—detachment, reduction, inwardness and specialized focus. Interpret only with sign, house, lordship, dignity, aspects, conjunctions and dasha context. Rahu/Ketu are nodes, not physical planets.",
   },
   {
+    id: "reading-evidence-protocol",
+    title: "Personal reading evidence protocol",
+    topics: ["personal reading", "career", "job", "marriage", "relationship", "money", "birth profile", "accuracy"],
+    content: "A personalised interpretation requires the actual server-calculated chart payload, not merely birth details. State exact calculated placements first, then explain the traditional interpretation. For career, assess the 10th house and lord, 6th house, 2nd and 11th houses, Lagna and lord, and dasha context only when computed. Do not invent dignity, aspects, yogas, D10 placements or exact event timing. The current app engine uses Astronomy Engine positions and an approximate Lahiri ayanamsha and has not been independently validated against trusted reference charts; disclose this when precision matters. If a factor is absent or not validated, say so rather than substituting a generic prediction.",
+  },
+  {
     id: "career",
     title: "Career and vocation analysis",
     topics: ["career", "job", "profession", "business", "work", "promotion", "employment", "10th house", "sixth house", "tenth house"],
