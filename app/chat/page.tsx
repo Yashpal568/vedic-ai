@@ -311,7 +311,7 @@ export default function Home() {
     const trimmed = (value === undefined ? input : value).trim();
     if (!trimmed || isLoading) return;
     // Personal questions must not receive generic text disguised as a chart reading.
-    const personalIntent = /\b(my|mine|me|personal|personalised|personalized|meri|mera|mere|mujhe|career|job|profession|marriage|shaadi|relationship|love life|future|kundli|birth chart|nakshatra|dasha|promotion|business prospects)\b/i.test(trimmed);
+    const personalIntent = /\b(my career|my job|my profession|my marriage|my relationship|my future|my kundli|my birth chart|my nakshatra|my dasha|my promotion|my business|personal reading|personalised reading|personalized reading|meri kundli|mera career|meri job|meri shaadi|mera bhavishya|mujhe job|mujhe career|career prediction|job prediction|marriage prediction|relationship prediction|when will i get a job|will i get married|will i get a job)\b/i.test(trimmed);
     if ((!savedBirth || !chartReport) && personalIntent) {
       setPendingPrompt(trimmed);
       setIsBirthOpen(true);
