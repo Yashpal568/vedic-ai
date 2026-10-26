@@ -16,7 +16,7 @@ type Message = { id: string; role: "user" | "assistant"; content: string };
 type BirthProfile = { name: string; date: string; time: string; place: string; latitude?: number; longitude?: number; timezone?: string };
 type PlaceOption = { id: string; label: string; latitude: number; longitude: number; type: string; importance: number };
 type HistoryItem = { id: string; title: string; updated_at?: string };
-type VoiceRecognition = { lang: string; interimResults: boolean; continuous: boolean; onresult: ((event: { resultIndex: number; results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null; onerror: (() => void) | null; onend: (() => void) | null; start: () => void; stop: () => void };
+type VoiceRecognition = { lang: string; interimResults: boolean; continuous: boolean; onresult: ((event: { resultIndex: number; results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null; onerror: ((event: { error?: string }) => void) | null; onend: (() => void) | null; start: () => void; stop: () => void; abort?: () => void };
 type VoiceWindow = Window & { SpeechRecognition?: new () => VoiceRecognition; webkitSpeechRecognition?: new () => VoiceRecognition };
 
 const suggestions = [
@@ -354,28 +354,47 @@ export default function Home() {
   function submitMessage(event: FormEvent<HTMLFormElement>) { event.preventDefault(); sendMessage(); }
   function toggleVoiceInput() {
     if (voiceListening) {
-      recognitionRef.current?.stop();
+      try { recognitionRef.current?.stop(); } catch {}
       setVoiceListening(false);
+      return;
+    }
+    if (typeof window === "undefined" || !window.isSecureContext) {
+      setToast("Voice typing needs a secure HTTPS page. Open Vedic AI using its https:// address.");
       return;
     }
     const browserWindow = window as VoiceWindow;
     const Recognition = browserWindow.SpeechRecognition || browserWindow.webkitSpeechRecognition;
     if (!Recognition) {
-      setToast("Voice typing is not supported by this browser. Try the latest Chrome or use your keyboard microphone.");
+      setToast("This browser does not expose speech recognition. Update Chrome, allow microphone access for this site, or use your keyboard's microphone.");
       return;
     }
     try {
       const recognition = new Recognition();
-      recognition.lang = navigator.language || "en-IN";
+      const browserLanguage = (navigator.language || "").toLowerCase();
+      recognition.lang = browserLanguage.startsWith("hi") ? "hi-IN" : browserLanguage.startsWith("en") ? "en-IN" : (navigator.language || "en-IN");
       recognition.interimResults = true;
-      recognition.continuous = false;
+      recognition.continuous = true;
       recognition.onresult = (event) => {
-        const transcript = Array.from({ length: event.results.length }, (_, index) => event.results[index]?.[0]?.transcript || "").join(" ").trim();
-        if (transcript) setInput((current) => current.trim() ? current.trim() + " " + transcript : transcript);
+        const parts: string[] = [];
+        for (let index = event.resultIndex; index < event.results.length; index++) {
+          const result = event.results[index];
+          if (result?.[0]?.transcript) parts.push(result[0].transcript);
+        }
+        const transcript = parts.join(" ").trim();
+        if (transcript) setInput((current) => current.trim() ? current.trimEnd() + " " + transcript : transcript);
       };
-      recognition.onerror = () => {
+      recognition.onerror = (event) => {
         setVoiceListening(false);
-        setToast("Microphone input stopped. Check browser microphone permission and try again.");
+        recognitionRef.current = null;
+        const messages: Record<string, string> = {
+          "not-allowed": "Microphone permission is blocked. Tap the lock/site-settings icon in Chrome → Permissions → Microphone → Allow, then reload.",
+          "service-not-allowed": "Speech recognition is blocked by the browser or network. Try Chrome with microphone permission enabled.",
+          "audio-capture": "No microphone was detected. Check your phone's microphone and Android app/site permissions.",
+          "no-speech": "I didn't hear speech. Tap the microphone and speak a little louder.",
+          "network": "Speech recognition needs a working network connection. Check internet and try again.",
+          "aborted": "Voice typing was stopped.",
+        };
+        setToast(messages[event?.error || ""] || "Voice typing failed (" + (event?.error || "unknown error") + "). Check Chrome microphone permission and try again.");
       };
       recognition.onend = () => {
         setVoiceListening(false);
@@ -384,10 +403,11 @@ export default function Home() {
       recognitionRef.current = recognition;
       recognition.start();
       setVoiceListening(true);
-      setToast("Listening… speak now. Your words will appear in the message box.");
-    } catch {
+      setToast("Listening… speak now. Your words will be added to the message box.");
+    } catch (error) {
       setVoiceListening(false);
-      setToast("Could not start voice typing. Please allow microphone access in your browser.");
+      recognitionRef.current = null;
+      setToast(error instanceof Error ? "Could not start voice typing: " + error.message : "Could not start voice typing. Check browser microphone permission.");
     }
   }
   function onComposerKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
@@ -708,7 +728,9 @@ export default function Home() {
         <button className="side-link active" onClick={startNewChat}><MessageCircle size={16} /> <span>Astrology chat</span></button>
         <button className="side-link" onClick={() => setIsBirthOpen(true)}><Orbit size={16} /> <span>My birth profile</span>{savedBirth && <Check size={13} style={{ marginLeft: "auto", color: "var(--green)" }} />}</button>
         <button className="side-link" onClick={() => { window.location.href = "/reports"; }}><BookOpen size={16} /> <span>Kundli & reports</span></button>
-        <button className="side-link" onClick={() => setToast("Panchang and transit tools are on the product roadmap.")}><CalendarDays size={16} /> <span>Panchang & transits</span></button>
+        <button className="side-link" onClick={() => { window.location.href = "/palm-reading"; }}><Sparkles size={16} /> <span>Palm reading</span></button>
+          <button className="side-link" onClick={() => { window.location.href = "/profile"; }}><UserRound size={16} /> <span>My profile</span></button>
+          <button className="side-link" onClick={() => setToast("Panchang and transit tools are on the product roadmap.")}><CalendarDays size={16} /> <span>Panchang & transits</span></button>
         <div className="side-label">Recent conversations</div>
         {historyItems.length ? historyItems.map((item) => <div className="history-item-row" key={item.id}><button className={"side-link history-item-open " + (activeConversationId === item.id ? "active" : "")} onClick={() => loadConversation(item.id)}><History size={15} /><span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</span></button><button className="history-delete" aria-label={"Delete " + item.title} onClick={() => deleteConversation(item.id)}><Trash2 size={13}/></button></div>) : <p className="history-empty">Sign in to save conversations and see them here.</p>}
         <div className="sidebar-bottom">
@@ -720,7 +742,7 @@ export default function Home() {
           <div className="profile-row">
             <div className="avatar">{savedBirth?.name?.trim()?.[0]?.toUpperCase() || "G"}</div>
             <div style={{ minWidth: 0 }}><div className="profile-name">{savedBirth?.name || "Guest explorer"}</div><div className="profile-caption">{isSignedIn ? "Signed in · private library" : savedBirth ? "Birth profile added · session only" : "Personal astrology workspace"}</div></div>
-            <button className="icon-button" aria-label="Profile information" onClick={() => setToast("Account sign-in and cloud sync will be enabled with Supabase.")} style={{ marginLeft: "auto" }}><ChevronDown size={15} /></button>
+            <button className="icon-button" aria-label="Open profile" onClick={() => { window.location.href = "/profile"; }} style={{ marginLeft: "auto" }}><ChevronDown size={15} /></button>
           </div>
         </div>
       </aside>
