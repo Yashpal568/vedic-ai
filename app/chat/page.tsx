@@ -369,12 +369,9 @@ export default function Home() {
       return;
     }
     try {
-      if (!navigator.mediaDevices?.getUserMedia) {
-        setToast("This browser cannot request microphone access. Update Chrome and check Android microphone permissions.");
-        return;
-      }
-      const permissionStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      permissionStream.getTracks().forEach((track) => track.stop());
+      // Let the browser's SpeechRecognition request its own microphone permission.
+      // A separate getUserMedia preflight can fail on Android Chrome even when
+      // speech recognition itself is supported, and was blocking voice typing.
       const recognition = new Recognition();
       const browserLanguage = (navigator.language || "").toLowerCase();
       recognition.lang = browserLanguage.startsWith("hi") ? "hi-IN" : browserLanguage.startsWith("en") ? "en-IN" : (navigator.language || "en-IN");
@@ -413,7 +410,14 @@ export default function Home() {
     } catch (error) {
       setVoiceListening(false);
       recognitionRef.current = null;
-      setToast(error instanceof Error ? "Could not start voice typing: " + error.message : "Could not start voice typing. Check browser microphone permission.");
+      const err = error as DOMException;
+      if (err?.name === "NotAllowedError" || err?.name === "SecurityError") {
+        setToast("Microphone access is blocked for this site. In Android Chrome, tap the site controls beside the address → Permissions → Microphone → Allow, then reload this page. Also check Android Settings → Apps → Chrome → Permissions → Microphone.");
+      } else if (err?.name === "NotFoundError") {
+        setToast("No microphone was found. Check your phone's microphone and try again.");
+      } else {
+        setToast("Could not start voice typing (" + (err?.name || "unknown error") + "). Allow microphone access for vedic-ai-psi.vercel.app, reload, and try again.");
+      }
     }
   }
   function onComposerKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
