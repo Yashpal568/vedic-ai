@@ -116,10 +116,12 @@ async function callOpenAI(messages: Array<{ role: "user" | "assistant"; content:
 }
 
 export async function POST(request: Request) {
-  const rate = await checkRateLimit(request, "chat", 20, 60_000);
-  if (!rate.available) return NextResponse.json({ error: "The shared rate-limiting service is unavailable. Configure migration 004 and the server-only service-role key, then retry." }, { status: 503 });
-  if (!rate.allowed) return NextResponse.json({ error: "Too many chat requests. Please wait a moment and try again." }, { status: 429, headers: { "Retry-After": String(rate.retryAfterSeconds) } });
   try {
+    // Keep rate-limit initialization inside the handler's error boundary so a bad
+    // Supabase service key/configuration returns JSON instead of an unhandled 502.
+    const rate = await checkRateLimit(request, "chat", 20, 60_000);
+    if (!rate.available) return NextResponse.json({ error: "The shared rate-limiting service is unavailable. Run migrations 001-004 and configure the server-only SUPABASE_SERVICE_ROLE_KEY in Vercel, then redeploy." }, { status: 503 });
+    if (!rate.allowed) return NextResponse.json({ error: "Too many chat requests. Please wait a moment and try again." }, { status: 429, headers: { "Retry-After": String(rate.retryAfterSeconds) } });
     const body = requestSchema.parse(await request.json());
     // Apply account-level AI budgets in addition to the shared IP request limit.
     // These are request-count budgets; configure provider billing alerts for monetary caps.
