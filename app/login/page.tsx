@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
-import { ArrowLeft, ArrowRight, CheckCircle2, LockKeyhole, Mail, MoonStar, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, LockKeyhole, Mail, MoonStar, ShieldCheck, Sparkles, Orbit, Compass } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 export default function LoginPage() {
@@ -132,14 +132,18 @@ export default function LoginPage() {
           <div className="auth-artwork">
             <div className="auth-artwork-image" role="img" aria-label="A luminous cosmic nebula beneath a field of stars" />
             <div className="auth-artwork-shade" />
-            <div className="auth-artwork-stars" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /></div>
+            <div className="auth-artwork-stars" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /></div>
             <div className="auth-artwork-orbit auth-artwork-orbit-one" aria-hidden="true" />
             <div className="auth-artwork-orbit auth-artwork-orbit-two" aria-hidden="true" />
             <div className="auth-artwork-copy">
               <div className="auth-story-kicker"><Sparkles size={14} /> YOUR PERSONAL JYOTISH SPACE</div>
               <h1 className="auth-story-title">Find your place<br />in the <em>stars.</em></h1>
               <p className="auth-story-copy">Explore your birth chart, uncover timeless Jyotish perspectives, and bring your personal journey into focus.</p>
-              <div className="auth-artwork-note"><span><MoonStar size={17} /></span><span><strong>A more personal cosmic journey</strong><small>Your charts, reflections, and conversations—together in one private space.</small></span></div>
+              <div className="auth-feature-tiles">
+                <article className="auth-feature-tile"><span><Sparkles size={19}/></span><strong>Personalized<br/>Birth Charts</strong><small>Deep, meaningful insights</small></article>
+                <article className="auth-feature-tile"><span><Orbit size={19}/></span><strong>Guided<br/>Reflections</strong><small>Clarity for your journey</small></article>
+                <article className="auth-feature-tile"><span><ShieldCheck size={19}/></span><strong>Private &amp; Secure</strong><small>Your data stays yours</small></article>
+              </div>
             </div>
             <div className="auth-artwork-badge"><span className="auth-artwork-badge-icon"><Sparkles size={15} /></span><span><strong>Made for your journey</strong><small>Thoughtful. Personal. Private.</small></span></div>
           </div>
@@ -149,19 +153,20 @@ export default function LoginPage() {
         <section className="auth-card auth-card-premium">
           {!sent ? <>
             <div className="auth-mobile-mark"><span className="brand-mark"><MoonStar size={20} /></span><span className="brand-name">vedic<span style={{ color: "var(--gold)" }}>.</span>ai</span></div>
+            <div className="auth-card-brand"><span className="brand-mark"><MoonStar size={19}/></span><span><strong>vedic<span>.</span>ai</strong><small>{mode === "signin" ? "WELCOME BACK" : "YOUR JOURNEY STARTS HERE"}</small></span></div>
             <div className="auth-step-label">{mode === "signin" ? "WELCOME BACK" : "YOUR JOURNEY STARTS HERE"}</div>
-            <h2 className="auth-title">{mode === "signin" ? <>Your space<br /><span>is waiting.</span></> : <>Create your<br /><span>personal space.</span></>}</h2>
-            <p className="auth-copy">{mode === "signin" ? "Sign in to return to your saved conversations and kundli reports." : "Create your account to save your conversations and keep your Jyotish journey together."}</p>
+            <h2 className="auth-title">{mode === "signin" ? <>Welcome back<br /><span>to your space.</span></> : <>Begin your<br /><span>cosmic journey.</span></>}</h2>
+            <p className="auth-copy">{mode === "signin" ? "Sign in to continue your journey and access your saved conversations, charts, and insights." : "Create your account to save your conversations and keep your Jyotish journey together."}</p>
             <div className="auth-mode-switch" role="tablist" aria-label="Account access">
               <button type="button" role="tab" aria-selected={mode === "signin"} className={mode === "signin" ? "active" : ""} onClick={() => { setMode("signin"); setError(""); }}>Sign in</button>
               <button type="button" role="tab" aria-selected={mode === "signup"} className={mode === "signup" ? "active" : ""} onClick={() => { setMode("signup"); setError(""); }}>Create account</button>
             </div>
             <button type="button" className="auth-google-button" onClick={() => { void continueWithGoogle(); }} disabled={busy}>
-              <span className="google-logo" aria-hidden="true"><svg viewBox="0 0 48 48" focusable="false"><path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.6c3.9-3.6 6.1-8.8 6.1-15Z"/><path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.9l-6.6-5.1c-1.8 1.2-4 1.9-6.9 1.9-5.3 0-9.8-3.6-11.4-8.4H5.8v5.2A20 20 0 0 0 24 44Z"/><path fill="#FBBC05" d="M12.6 27.5a12 12 0 0 1 0-7v-5.2H5.8a20 20 0 0 0 0 17.4l6.8-5.2Z"/><path fill="#EA4335" d="M24 12.1c3 0 5.7 1 7.8 3.1l5.8-5.8C34.1 6.1 29.5 4 24 4A20 20 0 0 0 5.8 15.3l6.8 5.2C14.2 15.7 18.7 12.1 24 12.1Z"/></svg></span><span>{busy ? "Connecting…" : "Continue with Google"}</span>
+              <span className="google-logo" aria-hidden="true"><svg viewBox="0 0 48 48" focusable="false"><path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.6c3.9-3.6 6.1-8.8 6.1-15Z"/><path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.9l-6.6-5.1c-1.8 1.2-4 1.9-6.9 1.9-5.3 0-9.8-3.6-11.4-8.4H5.8v5.2A20 20 0 0 0 24 44Z"/><path fill="#FBBC05" d="M12.6 27.5a12 12 0 0 1 0-7v-5.2H5.8a20 20 0 0 0 0 17.4l6.8-5.2Z"/><path fill="#EA4335" d="M24 12.1c3 0 5.7 1 7.8 3.1l5.8-5.8C34.1 6.1 29.5 4 24 4A20 20 0 0 0 5.8 15.3l6.8 5.2C14.2 15.7 18.7 12.1 24 12.1Z"/></svg></span><span>{busy ? "Connecting…" : "Continue with Google"}</span><ArrowRight className="auth-google-arrow" size={17}/>
             </button>
             <div className="auth-card-divider"><span>OR CONTINUE WITH EMAIL</span></div>
             <form onSubmit={submit} className="auth-form">
-              <label className="form-field"><span className="form-label">Email address</span><input className="form-input auth-email-input" type="email" autoComplete="email" inputMode="email" required maxLength={254} value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" /></label>
+              <label className="form-field auth-email-field"><span className="form-label">Email address</span><span className="auth-email-wrap"><Mail size={17} aria-hidden="true"/><input className="form-input auth-email-input" type="email" autoComplete="email" inputMode="email" required maxLength={254} value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" /></span></label>
               {error && <p className="auth-error" role="alert">{error}</p>}
               <button className="primary-button auth-submit" type="submit" disabled={busy || resendSeconds > 0}>
                 {busy ? "Sending secure link…" : mode === "signup" ? "Create account with email" : "Email me a sign-in link"} {!busy && <ArrowRight size={16} />}
