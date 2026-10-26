@@ -1728,3 +1728,39 @@ html{scroll-behavior:smooth;scroll-padding-top:84px}
   .welcome-wrap,.prompt-card,.message-row,.kundli-visual-wrap,.mobile-nav-backdrop,.mobile-nav-drawer{animation:none!important}
   .sidebar .side-link,.mobile-signout-button{transition:none!important}
 }
+
+
+/* Chat composer voice input + clean responsive top navigation */
+.voice-input-button { gap: 7px; }
+.voice-input-icon { display: inline-flex; align-items: center; justify-content: center; }
+.voice-input-button.is-listening { color: #f4d28b; border-color: rgba(244,210,139,.42); background: rgba(244,210,139,.09); }
+.voice-input-button.is-listening .voice-input-icon { animation: voice-pulse 1.15s ease-in-out infinite; }
+@keyframes voice-pulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.18); opacity: .65; } }
+.topbar-link { white-space: nowrap; }
+.topbar-link span { display: inline; }
+@media (max-width: 680px) {
+  .topbar { gap: 8px; padding: 0 12px; min-height: 64px; }
+  .topbar-left { flex: 1 1 auto; min-width: 0; gap: 8px; }
+  .mobile-brand { flex: 0 0 auto; gap: 7px; }
+  .mobile-brand .brand-name { white-space: nowrap; }
+  .mode-pill { display: none; }
+  .topbar-actions { flex: 0 0 auto; gap: 6px; }
+  .topbar-actions .topbar-link { display: inline-grid; place-items: center; width: 36px; min-width: 36px; height: 36px; padding: 0; border-radius: 11px; font-size: 0; }
+  .topbar-actions .topbar-link span { display: none; }
+  .topbar-actions .topbar-link svg { width: 16px; height: 16px; }
+  .topbar-actions .icon-button { width: 34px; height: 36px; }
+  .composer-tools { gap: 5px; }
+  .composer .tool-button { min-height: 34px; padding: 7px 9px; }
+  .composer .voice-input-button { min-width: 36px; justify-content: center; }
+  .composer .voice-input-button span:not(.voice-input-icon) { display: none; }
+  .composer .voice-input-button .voice-input-icon { display: inline-flex; }
+}
+@media (max-width: 380px) {
+  .topbar { padding-inline: 9px; gap: 5px; }
+  .mobile-brand { gap: 5px; }
+  .mobile-brand .brand-mark { width: 28px; height: 28px; }
+  .mobile-brand .brand-name { font-size: 12px; }
+  .topbar-actions { gap: 4px; }
+  .topbar-actions .topbar-link { width: 33px; min-width: 33px; height: 34px; }
+  .topbar-actions .icon-button { width: 29px; }
+}
