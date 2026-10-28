@@ -1,0 +1,146 @@
+/* Vedic AI — shared light theme. Activated by html[data-theme="light"]. */
+html[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f7f5ef; --panel: #fffefa; --raised: #f0ede4;
+  --line: rgba(50, 45, 32, .10); --line2: rgba(50, 45, 32, .16);
+  --text: #25271f; --muted: #66685f; --quiet: #77796f;
+  --gold: #9b7737; --gold2: #b18a43; --wash: rgba(177,138,67,.11); --green: #477b55;
+}
+html[data-theme="light"] body { background:#f7f5ef; color:#25271f; }
+html[data-theme="light"] ::selection { background:#ead8ad; color:#25271f; }
+
+/* Shared header: one shape and spacing across feature pages */
+.site-header {
+  position:sticky; top:0; z-index:40; display:flex; align-items:center; justify-content:space-between;
+  gap:16px; min-height:72px; padding:12px clamp(18px,4vw,40px);
+  border-bottom:1px solid var(--line); background:color-mix(in srgb, var(--bg) 90%, transparent);
+  backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+}
+.site-header-left,.site-header-actions { display:flex; align-items:center; gap:14px; min-width:0; }
+.site-header-brand { display:inline-flex; align-items:center; gap:10px; text-decoration:none; color:var(--text); white-space:nowrap; }
+.site-header-brand strong { font:800 17px Manrope,sans-serif; letter-spacing:-.5px; }
+.site-header-brand strong span { color:var(--gold2); }
+.site-header-mark { display:grid; place-items:center; width:38px; height:38px; border:1px solid color-mix(in srgb,var(--gold2) 38%,transparent); border-radius:13px; background:var(--wash); color:var(--gold2); }
+.site-header-section { position:absolute; left:50%; transform:translateX(-50%); color:var(--muted); font-size:10px; font-weight:700; letter-spacing:1.7px; text-transform:uppercase; white-space:nowrap; }
+.site-header-back { color:var(--muted); font-size:12px; text-decoration:none; white-space:nowrap; }
+.site-header-back:hover,.site-header-profile:hover { color:var(--gold); }
+.site-theme-toggle,.site-header-profile { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:38px; padding:8px 11px; border:1px solid var(--line2); border-radius:11px; background:var(--panel); color:var(--text); text-decoration:none; font-size:11px; font-weight:600; white-space:nowrap; }
+.site-theme-toggle:hover,.site-header-profile:hover { border-color:color-mix(in srgb,var(--gold2) 55%,var(--line2)); background:var(--wash); }
+html[data-theme="light"] .site-header { background:rgba(250,249,245,.91); }
+html[data-theme="light"] .site-header-mark { background:linear-gradient(145deg,#f8edcf,#fffaf0); }
+html[data-theme="light"] .site-theme-toggle,html[data-theme="light"] .site-header-profile { background:#fffefa; }
+
+/* Feature pages */
+html[data-theme="light"] .palm-shell,
+html[data-theme="light"] .panchang-shell,
+html[data-theme="light"] .profile-shell {
+  color:#28291f !important; background:#f7f5ef !important;
+  background-image:radial-gradient(ellipse at 85% 0%,rgba(213,184,119,.18),transparent 38%),linear-gradient(180deg,#fbfaf6,#f5f2e9) !important;
+}
+html[data-theme="light"] .palm-header,html[data-theme="light"] .panchang-header,html[data-theme="light"] .profile-header {
+  display:none !important;
+}
+html[data-theme="light"] .palm-content,html[data-theme="light"] .panchang-content,html[data-theme="light"] .profile-content { color:#28291f !important; }
+html[data-theme="light"] .palm-kicker,html[data-theme="light"] .panchang-kicker,html[data-theme="light"] .profile-eyebrow { color:#927039 !important; }
+html[data-theme="light"] .palm-content h1,html[data-theme="light"] .panchang-content h1,html[data-theme="light"] .profile-content h1 { color:#24251f !important; }
+html[data-theme="light"] .palm-content h1 em,html[data-theme="light"] .panchang-content h1 em,html[data-theme="light"] .profile-content h1 em { color:#9a783c !important; }
+html[data-theme="light"] .palm-intro,html[data-theme="light"] .panchang-intro,html[data-theme="light"] .profile-lead { color:#62645d !important; }
+html[data-theme="light"] .palm-upload-card,html[data-theme="light"] .palm-guidance,html[data-theme="light"] .palm-result,
+html[data-theme="light"] .panchang-controls,html[data-theme="light"] .panchang-timing-card,html[data-theme="light"] .panchang-fact-card,
+html[data-theme="light"] .profile-card {
+  background:rgba(255,254,250,.92) !important; border-color:#e2ddd0 !important;
+  box-shadow:0 12px 34px rgba(54,45,24,.045) !important; color:#292a22 !important;
+}
+html[data-theme="light"] .palm-card-title,html[data-theme="light"] .palm-guidance h2,html[data-theme="light"] .palm-result h2,
+html[data-theme="light"] .palm-field-label,html[data-theme="light"] .panchang-field>span,
+html[data-theme="light"] .panchang-card-title,html[data-theme="light"] .panchang-fact-label,
+html[data-theme="light"] .panchang-result-heading h2,html[data-theme="light"] .panchang-window-list strong,
+html[data-theme="light"] .profile-card strong { color:#292a22 !important; }
+html[data-theme="light"] .palm-dropzone { background:#fbfaf5 !important; border-color:#d7cdb6 !important; color:#292a22 !important; }
+html[data-theme="light"] .palm-dropzone>span:not(.palm-upload-icon):not(.palm-choose),html[data-theme="light"] .palm-note,
+html[data-theme="light"] .palm-guidance li,html[data-theme="light"] .panchang-selected-location,
+html[data-theme="light"] .panchang-result-heading p,html[data-theme="light"] .panchang-fact-card small,
+html[data-theme="light"] .panchang-window-list small,html[data-theme="light"] .panchang-method-note,
+html[data-theme="light"] .profile-privacy { color:#6d6b61 !important; }
+html[data-theme="light"] .palm-dropzone>span.palm-upload-icon,html[data-theme="light"] .palm-guidance-icon,
+html[data-theme="light"] .palm-fact-icon,html[data-theme="light"] .panchang-fact-icon {
+  color:#9b7737 !important; background:#f5ecd8 !important;
+}
+html[data-theme="light"] .palm-hand-options button,html[data-theme="light"] .palm-content textarea,
+html[data-theme="light"] .panchang-field input,html[data-theme="light"] .profile-form input,
+html[data-theme="light"] .profile-form textarea {
+  color:#292a22 !important; background:#fffefa !important; border-color:#dcd6c8 !important;
+}
+html[data-theme="light"] .palm-hand-options button.selected { background:#f5ecd8 !important; border-color:#b99757 !important; color:#725522 !important; }
+html[data-theme="light"] .palm-analyse-button,html[data-theme="light"] .palm-choose,html[data-theme="light"] .panchang-calculate-button,
+html[data-theme="light"] .profile-save { color:#29251b !important; background:linear-gradient(135deg,#e9d39c,#d4b16b) !important; border-color:#cfac62 !important; }
+html[data-theme="light"] .panchang-search-button,html[data-theme="light"] .panchang-place-results button,
+html[data-theme="light"] .profile-photo-link { color:#765b2d !important; background:#fffaf0 !important; border-color:#dcd0b3 !important; }
+html[data-theme="light"] .panchang-live-pill { color:#326b43 !important; background:#e7f3e7 !important; border-color:#c5e0c8 !important; }
+html[data-theme="light"] .panchang-window-list>div,html[data-theme="light"] .panchang-rashi-grid>div,
+html[data-theme="light"] .panchang-sun-grid>div { background:#faf8f1 !important; border-color:#e6e0d2 !important; }
+html[data-theme="light"] .panchang-sun-grid span,html[data-theme="light"] .panchang-rashi-grid span,
+html[data-theme="light"] .panchang-window-list span { color:#777368 !important; }
+html[data-theme="light"] .panchang-sun-grid strong,html[data-theme="light"] .panchang-rashi-grid strong { color:#28291f !important; }
+html[data-theme="light"] .profile-form label { color:#484940 !important; }
+html[data-theme="light"] .profile-avatar { background:#f4ead2 !important; color:#8c6c34 !important; }
+
+/* Chat workspace follows the same light palette, including every conversation state. */
+html[data-theme="light"] .app-shell { background:#f7f5ef !important; color:#25271f !important; }
+html[data-theme="light"] .app-shell .sidebar,html[data-theme="light"] .app-shell .topbar {
+  background:rgba(250,249,245,.96) !important; border-color:#e4dfd3 !important;
+}
+html[data-theme="light"] .app-shell .side-link,html[data-theme="light"] .app-shell .profile-row,
+html[data-theme="light"] .app-shell .sidebar-bottom { color:#4f5148 !important; }
+html[data-theme="light"] .app-shell .main-panel { background:#f7f5ef !important; color:#25271f !important; }
+html[data-theme="light"] .app-shell .content-scroll { background:transparent !important; }
+html[data-theme="light"] .app-shell .hero-title,html[data-theme="light"] .app-shell .chart-title,
+html[data-theme="light"] .app-shell .markdown-body h1,html[data-theme="light"] .app-shell .markdown-body h2,
+html[data-theme="light"] .app-shell .markdown-body h3 { color:#28291f !important; }
+html[data-theme="light"] .app-shell .hero-title .gold,html[data-theme="light"] .app-shell .chart-title span { color:#9b7737 !important; }
+html[data-theme="light"] .app-shell .hero-copy,html[data-theme="light"] .app-shell .prompt-description,
+html[data-theme="light"] .app-shell .quick-label,html[data-theme="light"] .app-shell .message-meta,
+html[data-theme="light"] .app-shell .message-text,html[data-theme="light"] .app-shell .chart-subtitle,
+html[data-theme="light"] .app-shell .chart-table td { color:#55584f !important; }
+html[data-theme="light"] .app-shell .prompt-card,html[data-theme="light"] .app-shell .chart-panel,
+html[data-theme="light"] .app-shell .chart-stat,html[data-theme="light"] .app-shell .composer,
+html[data-theme="light"] .app-shell .modal,html[data-theme="light"] .app-shell .report-card {
+  background:#fffefa !important; color:#28291f !important; border-color:#e1dccf !important; box-shadow:0 10px 28px rgba(50,43,26,.05) !important;
+}
+html[data-theme="light"] .app-shell .composer textarea,html[data-theme="light"] .app-shell .form-input { color:#28291f !important; background:#fffefa !important; }
+html[data-theme="light"] .app-shell .composer textarea::placeholder,html[data-theme="light"] .app-shell .form-input::placeholder { color:#858477 !important; }
+html[data-theme="light"] .app-shell .form-label,html[data-theme="light"] .app-shell .modal-copy,
+html[data-theme="light"] .app-shell .chart-stat span,html[data-theme="light"] .app-shell .chart-stat small,
+html[data-theme="light"] .app-shell .chart-table th { color:#5f6158 !important; }
+html[data-theme="light"] .app-shell .chart-table th { background:#f4f0e6 !important; }
+html[data-theme="light"] .app-shell .chart-table td { border-color:#e5dfd1 !important; }
+html[data-theme="light"] .app-shell .topbar-link,html[data-theme="light"] .app-shell .icon-button,
+html[data-theme="light"] .app-shell .tool-button,html[data-theme="light"] .app-shell .secondary-button,
+html[data-theme="light"] .app-shell .side-link.active { color:#494b42 !important; background:#fffefa !important; border-color:#e2ddd0 !important; }
+html[data-theme="light"] .app-shell .user-bubble { background:#f2e8d2 !important; color:#302a1d !important; border-color:#e1d2ae !important; }
+html[data-theme="light"] .app-shell .message-avatar { background:#f6edd9 !important; color:#8f6e32 !important; }
+html[data-theme="light"] .app-shell .primary-button,html[data-theme="light"] .app-shell .send-button { background:linear-gradient(135deg,#e9d39c,#d4b16b) !important; color:#2d281b !important; }
+html[data-theme="light"] .app-shell .chat-footer { background:linear-gradient(180deg,rgba(247,245,239,0),#f7f5ef 40%) !important; }
+html[data-theme="light"] .app-shell .footer-note { color:#74756b !important; }
+
+/* Persistent mobile navigation is shared on every app screen. */
+.mobile-bottom-nav { z-index:60 !important; }
+html[data-theme="light"] .mobile-bottom-nav {
+  background:rgba(250,249,245,.96) !important; border-top:1px solid #e2ddd0 !important;
+  box-shadow:0 -8px 28px rgba(47,39,22,.055) !important; backdrop-filter:blur(18px);
+}
+html[data-theme="light"] .mobile-bottom-nav-item { color:#77796f !important; }
+html[data-theme="light"] .mobile-bottom-nav-item.active { color:#987338 !important; }
+html[data-theme="light"] .mobile-bottom-nav-item.active svg { color:#987338 !important; }
+html[data-theme="light"] .mobile-bottom-nav-item:focus-visible { outline:2px solid #b18a43; outline-offset:-3px; }
+
+@media(max-width:680px) {
+  .site-header { min-height:62px; padding:9px 14px; gap:8px; }
+  .site-header-left,.site-header-actions { gap:8px; }
+  .site-header-brand { gap:7px; }
+  .site-header-brand strong { font-size:15px; }
+  .site-header-mark { width:32px; height:32px; border-radius:10px; }
+  .site-header-section { display:none; }
+  .site-header-back { display:none; }
+  .site-theme-toggle,.site-header-profile { min-height:35px; padding:7px 9px; gap:5px; font-size:10px; }
+}
