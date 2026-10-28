@@ -18,34 +18,56 @@ export async function POST(request: Request) {
     const mimeType = match[1];
     const base64 = match[2];
     if (base64.length > 6_500_000) return NextResponse.json({ error: "Image is too large. Please upload a photo under 4 MB." }, { status: 413 });
-    const key = process.env.GEMINI_API_KEY;
-    if (!key) return NextResponse.json({ error: "Palm reading is not configured yet. The site owner must add GEMINI_API_KEY." }, { status: 503 });
-    const model = process.env.GEMINI_MODEL || process.env.AI_MODEL || "gemini-3.8-flash";
-    const prompt = [
-      "You are a cautious assistant explaining traditional palmistry as a cultural/reflective practice, not a scientifically validated way to predict facts or the future.",
-      "FIRST assess image quality. If the palm is not clearly visible, too small, blurry, overexposed, cropped, obscured, or the major lines cannot be distinguished, return ONLY JSON: {\"clear\":false,\"reason\":\"specific short reason\",\"reading\":\"\"}. Do not guess or attempt a reading.",
-      "If clear enough, return ONLY valid JSON: {\"clear\":true,\"reason\":\"\",\"reading\":\"...\"}.",
-      "For a clear image, describe only visible features and distinguish visual observations from traditional interpretations. Do not claim medical diagnosis, lifespan, death, exact marriage/job/wealth dates, identity, personality certainty, or guaranteed outcomes. Never invent lines hidden by the photo. If one line is uncertain, say so.",
-      "Offer a balanced, non-fatalistic reading: heart line, head line, life line, fate line only when visible; palm shape/fingers only when adequately shown; say which features are not assessable. Explain that the life line is not a lifespan measure. Keep it clear and useful.",
-      "Hand indicated by user: " + body.hand + ". User's question: " + (body.question || "Give a cautious overview of visible major palm lines.") + ".",
-      "If the hand is reversed, unclear, or a line cannot confidently be distinguished, do not infer. The output must be JSON only."
-    ].join("\n");
-    const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-goog-api-key": key },
-      body: JSON.stringify({
-        contents: [{ role: "user", parts: [{ text: prompt }, { inline_data: { mime_type: mimeType, data: base64 } }] }],
-        generationConfig: { temperature: 0.2, responseMimeType: "application/json", maxOutputTokens: 1200 }
-      }),
-      signal: AbortSignal.timeout(35_000),
-    });
-    if (!response.ok) {
-      const upstream = await response.json().catch(() => ({}));
-      console.error("[palm-reading] provider status:", response.status, "code:", upstream?.error?.status || "unknown");
-      return NextResponse.json({ error: response.status === 429 ? "Palm-reading service is at its current usage limit. Please try later." : "Palm-reading service could not process this image right now." }, { status: response.status === 429 ? 429 : 502 });
+    const provider = (process.env.AI_PROVIDER || "gemini").toLowerCase();
+    const useGroqVision = provider === "groq" || (!process.env.GEMINI_API_KEY && Boolean(process.env.GROQ_API_KEY));
+    let response: Response;
+    if (useGroqVision) {
+      const key = process.env.GROQ_API_KEY;
+      if (!key) return NextResponse.json({ error: "Palm reading needs GROQ_API_KEY or GEMINI_API_KEY configured on the server." }, { status: 503 });
+      const model = process.env.PALM_GROQ_MODEL || "qwen/qwen3.8-27b";
+      response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + key },
+        body: JSON.stringify({
+          model,
+          messages: [{ role: "user", content: [
+            { type: "text", text: prompt },
+            { type: "image_url", image_url: { url: "data:" + mimeType + ";base64," + base64 } }
+          ] }],
+          temperature: 0.2,
+          max_completion_tokens: 1200,
+          response_format: { type: "json_object" }
+        }),
+        signal: AbortSignal.timeout(35_000),
+      });
+      if (!response.ok) {
+        const upstream = await response.json().catch(() => ({}));
+        console.error("[palm-reading] Groq vision provider status:", response.status, "code:", upstream?.error?.code || "unknown", "model:", model);
+        return NextResponse.json({ error: response.status === 429 ? "Palm-reading AI has reached its usage limit. Please try later." : response.status === 401 || response.status === 403 ? "Groq rejected the API key. Check GROQ_API_KEY in Vercel Production." : "Palm-reading AI could not process this image. Check the configured vision model and try again." }, { status: response.status === 429 ? 429 : 502 });
+      }
+    } else {
+      const key = process.env.GEMINI_API_KEY;
+      if (!key) return NextResponse.json({ error: "Palm reading needs GEMINI_API_KEY or GROQ_API_KEY configured on the server." }, { status: 503 });
+      const model = process.env.PALM_GEMINI_MODEL || process.env.GEMINI_MODEL || process.env.AI_MODEL || "gemini-3.8-flash";
+      response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+        body: JSON.stringify({
+          contents: [{ role: "user", parts: [{ text: prompt }, { inline_data: { mime_type: mimeType, data: base64 } }] }],
+          generationConfig: { temperature: 0.2, responseMimeType: "application/json", maxOutputTokens: 1200 }
+        }),
+        signal: AbortSignal.timeout(35_000),
+      });
+      if (!response.ok) {
+        const upstream = await response.json().catch(() => ({}));
+        console.error("[palm-reading] Gemini provider status:", response.status, "code:", upstream?.error?.status || "unknown", "model:", model);
+        return NextResponse.json({ error: response.status === 429 ? "Palm-reading service is at its current usage limit. Please try later." : response.status === 401 || response.status === 403 ? "Gemini rejected API access. Check GEMINI_API_KEY and model access in Google AI Studio." : "Palm-reading service could not process this image right now." }, { status: response.status === 429 ? 429 : 502 });
+      }
     }
     const data = await response.json();
-    const raw = data?.candidates?.[0]?.content?.parts?.map((part: { text?: string }) => part.text || "").join("") || "";
+    const raw = useGroqVision
+      ? data?.choices?.[0]?.message?.content || ""
+      : data?.candidates?.[0]?.content?.parts?.map((part: { text?: string }) => part.text || "").join("") || "";
     let result: { clear?: boolean; reason?: string; reading?: string };
     try {
       result = JSON.parse(raw.replace(/^\s*```json\s*/i, "").replace(/\s*```\s*$/, ""));
