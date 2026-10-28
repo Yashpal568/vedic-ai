@@ -8,7 +8,7 @@ import { CalendarDays, Hand, House, MessageCircle, Orbit } from "lucide-react";
 const items = [
   { label: "Home", href: "/chat", Icon: House, key: "home" },
   { label: "Kundli", href: "/chat?openBirth=1", Icon: Orbit, key: "kundli" },
-  { label: "AI Chat", href: "/chat#chat-input", Icon: MessageCircle, key: "chat" },
+  { label: "Astrology Chat", href: "/chat#chat-input", Icon: MessageCircle, key: "chat" },
   { label: "Palmistry", href: "/palm-reading", Icon: Hand, key: "palm" },
   { label: "Panchang", href: "/panchang", Icon: CalendarDays, key: "panchang" },
 ];
