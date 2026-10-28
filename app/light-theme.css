@@ -313,3 +313,35 @@ html[data-theme="light"] .site-drawer-status { background:#4d9568; }
 html[data-theme="light"] .mobile-nav-drawer { background:linear-gradient(180deg,#fffefa,#f5f2e9) !important; color:#282d38 !important; border-right-color:#e2ddd0 !important; }
 html[data-theme="light"] .mobile-nav-drawer .side-link { color:#555b66 !important; }
 html[data-theme="light"] .mobile-nav-drawer .side-link.active { color:#795a21 !important; background:#f8f0df !important; border-color:#e4d3ac !important; }
+
+
+/* Shared drawer content, used by the landing page and all feature-page headers. */
+.shared-navigation-backdrop { z-index:1000 !important; }
+.shared-navigation-drawer { z-index:1001 !important; }
+.shared-navigation-head .sidebar-brand-premium { display:flex; align-items:center; gap:11px; min-width:0; color:inherit; text-decoration:none; }
+.shared-navigation-head .sidebar-brand-copy { display:flex; flex-direction:column; gap:4px; min-width:0; }
+.shared-navigation-head .sidebar-brand-line { display:flex; align-items:center; }
+.shared-navigation-head .brand-name { font-size:18px; font-weight:800; letter-spacing:-.5px; }
+.shared-navigation-head .brand-sub { color:#9299a8; font-size:9px; letter-spacing:1.7px; text-transform:uppercase; }
+.shared-navigation-head .icon-button { display:grid; flex:0 0 40px; place-items:center; width:40px; height:40px; }
+.shared-navigation-drawer .mobile-drawer-new { display:flex; align-items:center; gap:10px; min-height:49px; padding:0 15px; text-decoration:none; }
+.shared-navigation-arrow { margin-left:auto; color:#9299a8; font-size:21px; }
+.shared-navigation-links { display:flex; flex-direction:column; gap:5px; }
+.shared-navigation-link { display:flex !important; align-items:center; min-height:64px; gap:11px !important; padding:9px 10px !important; text-decoration:none; }
+.shared-navigation-icon { display:grid; flex:0 0 42px; width:42px; height:42px; place-items:center; border:1px solid rgba(255,255,255,.1); border-radius:12px; background:rgba(255,255,255,.035); color:#dfc17d; }
+.shared-navigation-copy { display:flex; flex:1; min-width:0; flex-direction:column; gap:4px; }
+.shared-navigation-copy strong { font-size:13px; font-weight:650; }
+.shared-navigation-copy small { color:#9299a8; font-size:10px; line-height:1.35; white-space:normal; }
+.shared-navigation-footer { display:flex; align-items:center; gap:9px; margin-top:auto; padding:24px 7px 3px; color:#9299a8; font-size:11px; }
+.shared-navigation-footer>span { width:9px; height:9px; border-radius:50%; background:#6ebd91; box-shadow:0 0 0 5px rgba(110,189,145,.09); }
+html[data-theme="light"] .shared-navigation-head { border-bottom-color:#e6e0d2 !important; }
+html[data-theme="light"] .shared-navigation-head .brand-sub,
+html[data-theme="light"] .shared-navigation-copy small,
+html[data-theme="light"] .shared-navigation-arrow,
+html[data-theme="light"] .shared-navigation-footer { color:#73766e !important; }
+html[data-theme="light"] .shared-navigation-drawer .icon-button { color:#3e4652 !important; border-color:#e2ddd0 !important; background:#fff !important; }
+html[data-theme="light"] .shared-navigation-drawer .mobile-drawer-new { color:#78591f !important; background:#f8f0de !important; border-color:#e2d2ae !important; }
+html[data-theme="light"] .shared-navigation-link { color:#555b66 !important; }
+html[data-theme="light"] .shared-navigation-link:hover { background:#f4f0e6 !important; }
+html[data-theme="light"] .shared-navigation-link.active { color:#795a21 !important; background:#f8f0df !important; border-color:#e4d3ac !important; }
+html[data-theme="light"] .shared-navigation-icon { color:#987338 !important; background:#fffaf0 !important; border-color:#e7ddc7 !important; }
