@@ -433,6 +433,13 @@ export default function Home() {
           if (Array.isArray(parsed?.messages)) loadedMessages = parsed.messages.filter((message) =>
             (message.role === "user" || message.role === "assistant") && typeof message.content === "string" && message.content.trim()
           );
+          if (!loadedMessages.length) {
+            const pendingRaw = window.localStorage.getItem("vedic-pending-chat-v1");
+            const pending = pendingRaw ? JSON.parse(pendingRaw) as { conversationId?: string | null; messages?: Message[] } : null;
+            if (pending?.conversationId === id && Array.isArray(pending.messages)) loadedMessages = pending.messages.filter((message) =>
+              (message.role === "user" || message.role === "assistant") && typeof message.content === "string" && message.content.trim()
+            );
+          }
         } catch {}
       }
       if (requestId !== conversationLoadRequestRef.current) return;
