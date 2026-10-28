@@ -3,21 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import AppNavigationDrawer from "@/components/app-navigation-drawer";
 import {
-  BookOpen, CalendarDays, Hand, House, LogOut, Menu, MessageCircle, MoonStar, Orbit, Sun, UserRound, X,
+  LogOut, Menu, MoonStar, Sun, UserRound, X,
 } from "lucide-react";
 
 type Props = { section?: string; backHref?: string; backLabel?: string; onSignOut?: () => void };
 
-const appLinks = [
-  { label: "Home", href: "/chat", Icon: House, key: "home", detail: "Your astrology workspace" },
-  { label: "Kundli", href: "/chat?openBirth=1", Icon: Orbit, key: "kundli", detail: "Birth chart and details" },
-  { label: "AI Chat", href: "/chat#chat-input", Icon: MessageCircle, key: "chat", detail: "Ask your Jyotish questions" },
-  { label: "Palmistry", href: "/palm-reading", Icon: Hand, key: "palm", detail: "Explore visible palm lines" },
-  { label: "Panchang", href: "/panchang", Icon: CalendarDays, key: "panchang", detail: "Daily almanac and timings" },
-  { label: "Saved Kundlis & reports", href: "/reports", Icon: BookOpen, key: "reports", detail: "Your saved birth charts" },
-  { label: "My profile", href: "/profile", Icon: UserRound, key: "profile", detail: "Your account settings" },
-];
+
 
 export default function SiteHeader({ section, backHref, backLabel = "Back to chat", onSignOut }: Props) {
   const pathname = usePathname();
@@ -78,19 +71,6 @@ export default function SiteHeader({ section, backHref, backLabel = "Back to cha
         {onSignOut ? <button type="button" className="site-header-profile" onClick={onSignOut}><LogOut size={15}/><span>Sign out</span></button> : <Link href="/profile" className="site-header-profile"><UserRound size={15}/><span>My profile</span></Link>}
       </div>
     </header>
-    {drawerOpen && <>
-      <button type="button" className="site-drawer-backdrop" aria-label="Close navigation menu" onClick={() => setDrawerOpen(false)}/>
-      <aside className="site-navigation-drawer" aria-label="App navigation">
-        <div className="site-drawer-heading"><span className="site-header-mark"><MoonStar size={19}/></span><div><strong>vedic<span>.</span>ai</strong><small>Your Jyotish space</small></div><button type="button" aria-label="Close menu" onClick={() => setDrawerOpen(false)}><X size={18}/></button></div>
-        <Link href="/chat" className="site-drawer-new" onClick={() => setDrawerOpen(false)}><MessageCircle size={16}/> Open AI workspace <span>↗</span></Link>
-        <div className="site-drawer-label">WORKSPACE</div>
-        <nav className="site-drawer-links" aria-label="Workspace pages">
-          {appLinks.map(({ label, href, Icon, key, detail }) => <Link key={key} href={href} onClick={() => setDrawerOpen(false)} className={"site-drawer-link" + (activeKey === key ? " active" : "")} aria-current={activeKey === key ? "page" : undefined}>
-            <span className="site-drawer-icon"><Icon size={18}/></span><span className="site-drawer-copy"><strong>{label}</strong><small>{detail}</small></span><span className="site-drawer-arrow">›</span>
-          </Link>)}
-        </nav>
-        <div className="site-drawer-footer"><span className="site-drawer-status"/><span>Vedic AI · Astrology companion</span></div>
-      </aside>
-    </>}
+    <AppNavigationDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
   </>;
 }
