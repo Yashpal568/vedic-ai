@@ -1855,3 +1855,69 @@ html{scroll-behavior:smooth;scroll-padding-top:84px}
   .profile-avatar{width:38px;height:38px;flex-basis:38px;border-radius:13px}
   .sidebar-bottom .profile-row,.mobile-menu-panel .profile-row{padding:10px 8px}
 }
+
+
+/* Global interaction polish: consistent, smooth motion across the entire Vedic AI app. */
+:root {
+  --motion-fast: 160ms;
+  --motion-base: 240ms;
+  --motion-slow: 340ms;
+  --motion-ease: cubic-bezier(.22, 1, .36, 1);
+}
+html { scroll-behavior: smooth; }
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  a, button, [role="button"], input, textarea, select, summary,
+  .prompt-card, .report-card, .chart-stat, .history-item-open,
+  .topbar-link, .tool-button, .auth-feature-tile, .palm-upload-card,
+  .profile-card, .new-chat, .composer, .auth-card-premium {
+    transition:
+      color var(--motion-base) var(--motion-ease),
+      background-color var(--motion-base) var(--motion-ease),
+      border-color var(--motion-base) var(--motion-ease),
+      box-shadow var(--motion-base) var(--motion-ease),
+      opacity var(--motion-base) var(--motion-ease),
+      transform var(--motion-base) var(--motion-ease),
+      filter var(--motion-base) var(--motion-ease);
+  }
+  button:not(:disabled):active, [role="button"]:active, .topbar-link:active,
+  .tool-button:active, .prompt-card:active {
+    transform: scale(.975);
+  }
+  a:focus-visible, button:focus-visible, [role="button"]:focus-visible,
+  input:focus-visible, textarea:focus-visible, select:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--gold2) 78%, transparent);
+    outline-offset: 3px;
+  }
+}
+/* Animate surfaces when they mount/open; keep this independent from app logic. */
+@keyframes surface-enter {
+  from { opacity: 0; transform: translateY(9px) scale(.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes menu-enter {
+  from { opacity: 0; transform: translateY(-7px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+[role="dialog"], [role="alertdialog"], [data-state="open"][role="menu"],
+.modal, .modal-content, .popover, .dropdown-menu,
+.mobile-menu-panel.open, .mobile-menu-panel[aria-hidden="false"],
+.history-panel, .profile-card, .palm-result, .auth-success {
+  animation: surface-enter var(--motion-slow) var(--motion-ease) both;
+}
+.sidebar, .mobile-menu-panel {
+  transition: transform var(--motion-slow) var(--motion-ease),
+              opacity var(--motion-base) var(--motion-ease),
+              visibility var(--motion-base) var(--motion-ease);
+}
+.toast, [role="status"], [role="alert"] {
+  animation: surface-enter 220ms var(--motion-ease) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto !important; }
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
