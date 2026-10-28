@@ -3468,27 +3468,46 @@ body:has(.app-shell[data-theme="light"]) {
 }
 
 
-/* Chat screen polish based on the supplied conversational HTML reference. */
+/* Stitch-inspired dark cosmic background for the actual chat workspace. Keep the artwork behind content, never inside a nested colored card. */
 .app-shell .main-panel{position:relative;isolation:isolate;background-color:var(--bg)}
 .app-shell:not([data-theme="light"]) .main-panel{
+  background-color:#060814;
   background-image:
-    linear-gradient(180deg,rgba(10,12,22,.78) 0%,rgba(10,12,22,.84) 38%,rgba(10,12,22,.91) 76%,#10110f 100%),
-    url("https://lh3.googleusercontent.com/aida-public/AB6AXuD74e0LVVlimK7dA0xRkh2UPnM_JMkaevOOUIPkEFhX34KrqDxZ1rbH0a1OE_v2l5td6xZd2IQdMgdessEfGixa2txOFy4QP5s5LHLZ8yOAvuGmeZHH1MWlmm6q_6yKsmhTRqOyd57Nukx-sTEpb8qko_1kNV9PoZznjjnafhZe0US5S_8VyLg2g10oEwjvZTcBYidsa397F4Z1sr_111-Gu2ZtvXl7uzz-ZyU7xjSj");
+    radial-gradient(ellipse at 62% 32%,rgba(42,108,192,.32) 0%,rgba(20,60,120,.17) 24%,transparent 58%),
+    radial-gradient(ellipse at 78% 22%,rgba(220,130,48,.22) 0%,rgba(160,75,20,.10) 22%,transparent 48%),
+    radial-gradient(ellipse at 18% 70%,rgba(28,45,95,.25) 0%,transparent 50%),
+    radial-gradient(ellipse at 50% 50%,#080d1e 0%,#04060d 100%);
   background-size:cover;
-  background-position:center top;
+  background-position:center;
   background-attachment:fixed;
 }
-.app-shell:not([data-theme="light"]) .content-scroll{background:linear-gradient(180deg,rgba(12,14,24,.1),rgba(12,14,24,.16))}
-.app-shell:not([data-theme="light"]) .topbar{background:rgba(12,14,23,.78);backdrop-filter:blur(22px)}
-.app-shell:not([data-theme="light"]) .welcome-wrap{position:relative}
-.app-shell:not([data-theme="light"]) .prompt-card{background:rgba(19,21,32,.62);backdrop-filter:blur(14px);border-color:rgba(222,202,155,.15)}
-.app-shell:not([data-theme="light"]) .assistant-note{background:rgba(22,23,32,.62);backdrop-filter:blur(14px)}
-.app-shell:not([data-theme="light"]) .user-bubble{background:rgba(37,39,49,.82);backdrop-filter:blur(14px)}
-.app-shell:not([data-theme="light"]) .message-text{ text-shadow:0 1px 12px rgba(0,0,0,.18)}
-.app-shell:not([data-theme="light"]) .composer{background:rgba(20,22,31,.88);backdrop-filter:blur(22px);border-color:rgba(222,202,155,.22)}
-.app-shell[data-theme="light"] .main-panel{background:radial-gradient(ellipse at 75% 0%,rgba(190,164,103,.09),transparent 40%),var(--bg);background-image:none}
-@media(max-width:680px){
- .app-shell:not([data-theme="light"]) .main-panel{background-attachment:scroll;background-position:center top;background-size:auto 100dvh}
- .app-shell:not([data-theme="light"]) .content-scroll{background:rgba(12,14,24,.12)}
- .app-shell:not([data-theme="light"]) .chat-footer{background:linear-gradient(180deg,rgba(16,17,15,0),rgba(16,17,15,.9) 28%,#10110f 100%)}
+.app-shell:not([data-theme="light"]) .main-panel:before{
+  content:"";
+  position:fixed;
+  z-index:-1;
+  inset:0;
+  pointer-events:none;
+  opacity:.52;
+  background-image:
+    radial-gradient(1px 1px at 15% 20%,rgba(255,255,255,.88) 100%,transparent),
+    radial-gradient(1.5px 1.5px at 28% 45%,rgba(255,255,255,.72) 100%,transparent),
+    radial-gradient(1px 1px at 64% 14%,rgba(255,225,180,.82) 100%,transparent),
+    radial-gradient(1px 1px at 82% 68%,rgba(255,255,255,.72) 100%,transparent),
+    radial-gradient(1.5px 1.5px at 91% 33%,rgba(255,225,180,.68) 100%,transparent);
+  background-size:430px 430px,570px 570px,490px 490px,620px 620px,530px 530px;
+  animation:vedic-cosmic-drift 65s linear infinite;
 }
+.app-shell:not([data-theme="light"]) .content-scroll{background:linear-gradient(180deg,rgba(8,10,19,.08),rgba(8,10,19,.20))}
+.app-shell:not([data-theme="light"]) .topbar{background:rgba(7,10,20,.72);backdrop-filter:blur(22px) saturate(130%)}
+.app-shell:not([data-theme="light"]) .prompt-card{background:rgba(13,17,27,.58);backdrop-filter:blur(16px);border-color:rgba(222,202,155,.15)}
+.app-shell:not([data-theme="light"]) .assistant-note{background:rgba(13,17,27,.62);backdrop-filter:blur(14px)}
+.app-shell:not([data-theme="light"]) .user-bubble{background:rgba(37,39,49,.76);backdrop-filter:blur(14px)}
+.app-shell:not([data-theme="light"]) .composer{background:rgba(10,14,26,.78);backdrop-filter:blur(22px);border-color:rgba(222,202,155,.22)}
+.app-shell[data-theme="light"] .main-panel{background:radial-gradient(ellipse at 75% 0%,rgba(190,164,103,.09),transparent 40%),var(--bg);background-image:none}
+@keyframes vedic-cosmic-drift{from{transform:translate3d(0,0,0)}to{transform:translate3d(-18px,12px,0)}}
+@media(max-width:680px){
+ .app-shell:not([data-theme="light"]) .main-panel{background-attachment:scroll;background-position:center top;background-size:cover}
+ .app-shell:not([data-theme="light"]) .content-scroll{background:rgba(8,10,19,.10)}
+ .app-shell:not([data-theme="light"]) .chat-footer{background:linear-gradient(180deg,rgba(6,8,20,0),rgba(6,8,20,.88) 28%,#060814 100%)}
+}
+@media(prefers-reduced-motion:reduce){.app-shell:not([data-theme="light"]) .main-panel:before{animation:none}}
