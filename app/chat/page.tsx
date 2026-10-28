@@ -866,7 +866,7 @@ export default function Home() {
       <aside className="sidebar">
         <button className="brand sidebar-brand-premium" onClick={startNewChat} aria-label="Vedic AI home" style={{ border: 0, background: "transparent", textAlign: "left", color: "inherit" }}>
           <span className="brand-mark"><MoonStar size={21} strokeWidth={1.6} /></span>
-          <span className="sidebar-brand-copy"><span className="sidebar-brand-line"><span className="brand-name">vedic<span style={{ color: "var(--gold)" }}>.</span>ai</span><span className="sidebar-pro-badge">PRO</span></span><span className="brand-sub">Your Jyotish space</span></span>
+          <span className="sidebar-brand-copy"><span className="sidebar-brand-line"><span className="brand-name">vedic<span style={{ color: "var(--gold)" }}>.</span>ai</span></span><span className="brand-sub">Your Jyotish space</span></span>
         </button>
         <button className="new-chat sidebar-new-chat" onClick={startNewChat}><Plus size={17} /> <span>New conversation</span></button>
         <div className="side-label sidebar-workspace-label"><span>Workspace</span><span className="sidebar-tool-count">6 Tools</span></div>
@@ -900,7 +900,7 @@ export default function Home() {
         <aside className="mobile-nav-drawer" aria-label="Mobile navigation" onClick={(event) => event.stopPropagation()}>
           <div className="mobile-nav-head">
             <button className="brand sidebar-brand-premium" onClick={() => { startNewChat(); setMobileMenuOpen(false); }} aria-label="Vedic AI home" style={{ border: 0, background: "transparent", textAlign: "left", color: "inherit", padding: 0 }}>
-              <span className="brand-mark"><MoonStar size={21} /></span><span className="sidebar-brand-copy"><span className="sidebar-brand-line"><span className="brand-name">vedic<span style={{ color: "var(--gold)" }}>.</span>ai</span><span className="sidebar-pro-badge">PRO</span></span><span className="brand-sub">Your Jyotish space</span></span>
+              <span className="brand-mark"><MoonStar size={21} /></span><span className="sidebar-brand-copy"><span className="sidebar-brand-line"><span className="brand-name">vedic<span style={{ color: "var(--gold)" }}>.</span>ai</span></span><span className="brand-sub">Your Jyotish space</span></span>
             </button>
             <button className="icon-button" onClick={() => setMobileMenuOpen(false)} aria-label="Close navigation"><X size={18} /></button>
           </div>
