@@ -2507,3 +2507,125 @@ html { scroll-behavior: smooth; }
 @media(prefers-reduced-motion:reduce) {
  .cosmic-home-feature,.cosmic-home-orbit { animation:none!important; }
 }
+
+
+/* UX fix: stable side navigation while its conversation list scrolls; polished light theme. */
+@media (min-width: 681px) {
+  .app-shell { min-height: 100dvh; overflow: clip; }
+  .app-shell > .sidebar {
+    position: sticky;
+    top: 0;
+    height: 100dvh;
+    min-height: 0;
+    align-self: flex-start;
+    overflow: hidden;
+    overscroll-behavior: contain;
+  }
+  .sidebar > :not(.sidebar-bottom):not(.sidebar-history):not(.history-list) { flex-shrink: 0; }
+  .sidebar .history-list,
+  .sidebar .sidebar-history,
+  .sidebar .conversation-list,
+  .sidebar .all-conversations-list {
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .sidebar-bottom { flex: 0 0 auto; margin-top: auto; }
+}
+.mobile-nav-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw;
+  height: 100dvh;
+  min-height: 100dvh;
+  align-items: stretch;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+.mobile-nav-drawer {
+  position: relative;
+  height: 100%;
+  height: 100dvh;
+  max-height: 100dvh;
+  min-height: 0;
+  flex: 0 0 min(88vw, 350px);
+  box-sizing: border-box;
+  overflow: hidden;
+  overscroll-behavior: contain;
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
+.mobile-nav-drawer > * { min-width: 0; }
+.mobile-history-list { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+.mobile-nav-bottom { flex: 0 0 auto; }
+@media (max-width: 680px) {
+  .mobile-nav-drawer { width: min(88vw, 350px); }
+  .mobile-nav-backdrop { z-index: 999; }
+}
+
+/* Complete, cohesive light palette for the conversation workspace and its navigation. */
+.app-shell[data-theme="light"] {
+  --bg: #f7f7fa;
+  --panel: #ffffff;
+  --raised: #f0f2f6;
+  --line: rgba(31, 41, 55, .08);
+  --line2: rgba(31, 41, 55, .14);
+  --text: #202638;
+  --muted: #596174;
+  --quiet: #7a8292;
+  --gold: #a47b2e;
+  --gold2: #79591f;
+  --wash: rgba(164, 123, 46, .09);
+  background: #f7f7fa;
+  color: #202638;
+}
+.app-shell[data-theme="light"] .sidebar,
+.app-shell[data-theme="light"] .mobile-nav-drawer {
+  background: linear-gradient(180deg, #ffffff 0%, #f6f7fb 100%);
+  border-color: #e5e8f0;
+  color: #202638;
+}
+.app-shell[data-theme="light"] .sidebar-bottom,
+.app-shell[data-theme="light"] .mobile-nav-bottom,
+.app-shell[data-theme="light"] .mobile-nav-head { border-color: #e5e8f0; }
+.app-shell[data-theme="light"] .mobile-nav-backdrop { background: rgba(22, 28, 42, .34); }
+.app-shell[data-theme="light"] .mobile-nav-drawer .side-link,
+.app-shell[data-theme="light"] .mobile-nav-drawer button,
+.app-shell[data-theme="light"] .mobile-nav-drawer a { color: #596174; }
+.app-shell[data-theme="light"] .mobile-nav-drawer .side-link.active,
+.app-shell[data-theme="light"] .mobile-nav-drawer .side-link:hover {
+  background: #eef1f7;
+  color: #202638;
+  border-color: #e1e5ee;
+}
+.app-shell[data-theme="light"] .history-item-open,
+.app-shell[data-theme="light"] .history-item-open span { color: #4c5568; }
+.app-shell[data-theme="light"] .history-item-row:hover { background: #f0f2f7; border-radius: 10px; }
+.app-shell[data-theme="light"] .welcome-wrap { color: #202638; }
+.app-shell[data-theme="light"] .prompt-card,
+.app-shell[data-theme="light"] .report-card,
+.app-shell[data-theme="light"] .chart-panel,
+.app-shell[data-theme="light"] .chart-subpanel {
+  background: rgba(255,255,255,.94);
+  border-color: #e4e7ef;
+  box-shadow: 0 8px 28px rgba(29, 39, 60, .045);
+}
+.app-shell[data-theme="light"] .prompt-card h3,
+.app-shell[data-theme="light"] .prompt-card strong,
+.app-shell[data-theme="light"] .chart-title,
+.app-shell[data-theme="light"] .report-card h2 { color: #252c3d; }
+.app-shell[data-theme="light"] .prompt-card p,
+.app-shell[data-theme="light"] .report-place,
+.app-shell[data-theme="light"] .chart-subcopy { color: #687083; }
+.app-shell[data-theme="light"] .message-content { color: #252c3d; }
+.app-shell[data-theme="light"] .assistant-bubble { background: #fff; border-color: #e5e8ef; }
+.app-shell[data-theme="light"] .mobile-nav-drawer .new-chat,
+.app-shell[data-theme="light"] .mobile-nav-drawer .mobile-drawer-new {
+  background: #fff;
+  color: #252c3d;
+  border-color: #e0e4ec;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mobile-nav-drawer { animation: none !important; }
+  .sidebar .side-link { transition: none !important; }
+}
