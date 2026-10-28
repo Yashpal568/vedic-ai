@@ -16,14 +16,16 @@ const items = [
 export default function MobileBottomNav() {
   const pathname = usePathname();
   const [openBirth, setOpenBirth] = useState(false);
+  const [chatHash, setChatHash] = useState(false);
   useEffect(() => {
     setOpenBirth(typeof window !== "undefined" && new URLSearchParams(window.location.search).get("openBirth") === "1");
+    setChatHash(typeof window !== "undefined" && window.location.hash === "#chat-input");
   }, [pathname]);
 
   const active = pathname === "/panchang" ? "panchang"
     : pathname === "/palm-reading" ? "palm"
     : pathname === "/profile" ? "profile"
-    : pathname === "/chat" ? (openBirth ? "kundli" : (typeof window !== "undefined" && window.location.hash === "#chat-input" ? "chat" : "home"))
+    : pathname === "/chat" ? (openBirth ? "kundli" : (chatHash ? "chat" : "home"))
     : "home";
 
   return <nav className="mobile-bottom-nav" aria-label="Primary navigation">
@@ -33,6 +35,10 @@ export default function MobileBottomNav() {
       className={"mobile-bottom-nav-item" + (active === key ? " active" : "")}
       aria-label={label}
       aria-current={active === key ? "page" : undefined}
+      onClick={(event) => {
+        if (pathname === "/chat" && key === "kundli") { event.preventDefault(); window.location.href = "/chat?openBirth=1"; }
+        if (pathname === "/chat" && key === "home") { event.preventDefault(); window.location.href = "/chat?home=1"; }
+      }}
     >
       <Icon size={19} strokeWidth={1.8} />
       <span>{label}</span>
