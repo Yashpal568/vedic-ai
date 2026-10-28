@@ -2945,3 +2945,177 @@ html { scroll-behavior: smooth; }
   .app-shell .modal .modal-actions button { min-width: 0; padding-inline: 9px; font-size: 11px; }
   .app-shell .cosmic-home-feature-art { min-height: 230px; }
 }
+
+
+/* Vedic AI refinement: compact birth-details modal, single-line composer typography, and reusable skeleton primitives. */
+.app-shell .modal-backdrop {
+  padding: 20px;
+  backdrop-filter: blur(12px) saturate(112%);
+  background: rgba(4, 6, 11, .72);
+}
+.app-shell .modal[aria-labelledby="birth-modal-title"] {
+  width: min(100%, 540px);
+  max-height: min(88dvh, 780px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: clamp(20px, 3vw, 28px);
+  border: 1px solid rgba(222, 195, 135, .2);
+  border-radius: 22px;
+  background: linear-gradient(155deg, rgba(25, 28, 39, .98), rgba(14, 17, 26, .99));
+  box-shadow: 0 32px 100px rgba(0,0,0,.48), inset 0 1px 0 rgba(255,255,255,.045);
+  animation: birth-modal-enter .24s cubic-bezier(.2,.75,.25,1) both;
+}
+.app-shell #birth-modal-title {
+  max-width: 430px;
+  font-size: clamp(27px, 4vw, 35px) !important;
+  line-height: 1.12;
+  letter-spacing: -1.35px;
+  text-wrap: balance;
+}
+.app-shell .modal[aria-labelledby="birth-modal-title"] > div:first-child {
+  align-items: flex-start;
+  gap: 16px;
+}
+.app-shell .modal[aria-labelledby="birth-modal-title"] .form-grid {
+  gap: 15px;
+}
+.app-shell .modal[aria-labelledby="birth-modal-title"] .form-label {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: .01em;
+}
+.app-shell .modal[aria-labelledby="birth-modal-title"] .form-input,
+.app-shell .modal[aria-labelledby="birth-modal-title"] .birth-date-display,
+.app-shell .modal[aria-labelledby="birth-modal-title"] input[type="time"] {
+  min-height: 48px;
+  height: 48px;
+  box-sizing: border-box;
+  padding: 0 14px;
+  line-height: 48px;
+  font-size: 14px;
+  letter-spacing: 0;
+  border-radius: 12px;
+  background: rgba(7, 10, 18, .58);
+  border-color: rgba(218, 223, 239, .15);
+  transition: border-color .18s ease, background .18s ease, box-shadow .18s ease;
+}
+.app-shell .modal[aria-labelledby="birth-modal-title"] .form-input:focus,
+.app-shell .modal[aria-labelledby="birth-modal-title"] .birth-date-display:focus {
+  border-color: rgba(226, 190, 119, .72);
+  background: rgba(8, 12, 22, .86);
+  box-shadow: 0 0 0 3px rgba(226, 190, 119, .1);
+}
+.app-shell .modal[aria-labelledby="birth-modal-title"] .place-search-row {
+  gap: 8px;
+}
+.app-shell .modal[aria-labelledby="birth-modal-title"] .place-search-button {
+  min-height: 46px;
+  white-space: nowrap;
+}
+.app-shell .modal[aria-labelledby="birth-modal-title"] .place-hint,
+.app-shell .modal[aria-labelledby="birth-modal-title"] .place-attribution {
+  display: block;
+  margin-top: 9px;
+  font-size: 10px;
+  line-height: 1.55;
+  color: rgba(205, 210, 224, .62);
+}
+.app-shell .modal[aria-labelledby="birth-modal-title"] .assistant-note,
+.app-shell .modal[aria-labelledby="birth-modal-title"] .birth-consent {
+  font-size: 11px;
+  line-height: 1.65;
+  border-radius: 12px;
+}
+.app-shell .modal[aria-labelledby="birth-modal-title"] .modal-actions {
+  gap: 10px;
+  margin-top: 18px;
+}
+.app-shell .modal[aria-labelledby="birth-modal-title"] .modal-actions button {
+  min-height: 45px;
+  border-radius: 12px;
+  transition: transform .18s ease, filter .18s ease, border-color .18s ease;
+}
+.app-shell .modal[aria-labelledby="birth-modal-title"] .modal-actions button:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.07);
+}
+.app-shell .composer textarea,
+.app-shell .composer input,
+.app-shell .chat-composer textarea,
+.app-shell .chat-composer input {
+  line-height: 1.45;
+  font-family: inherit;
+  font-size: 14px;
+  letter-spacing: 0;
+  font-kerning: normal;
+  text-rendering: optimizeLegibility;
+  vertical-align: middle;
+}
+.app-shell .composer textarea,
+.app-shell .chat-composer textarea {
+  padding-top: 7px;
+  padding-bottom: 7px;
+  min-height: 28px;
+  align-self: center;
+  overflow-wrap: anywhere;
+}
+.app-shell .composer textarea::placeholder,
+.app-shell .chat-composer textarea::placeholder {
+  line-height: 1.45;
+  opacity: .72;
+}
+@keyframes birth-modal-enter {
+  from { opacity: 0; transform: translateY(9px) scale(.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Reusable shimmer primitives for async content surfaces; respects reduced-motion preferences. */
+.skeleton {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  color: transparent !important;
+  border-radius: 9px;
+  background: rgba(151, 160, 180, .12) !important;
+  border-color: transparent !important;
+  pointer-events: none;
+}
+.skeleton::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(220, 225, 238, .11), transparent);
+  animation: vedic-skeleton-shimmer 1.35s ease-in-out infinite;
+}
+.skeleton-text { height: 12px; max-width: 100%; margin: 8px 0; }
+.skeleton-title { height: 22px; max-width: 70%; margin: 10px 0 14px; }
+.skeleton-avatar { width: 38px; height: 38px; flex: 0 0 38px; border-radius: 50%; }
+.skeleton-card { min-height: 100px; border-radius: 15px; }
+.skeleton-button { min-height: 42px; border-radius: 11px; }
+@keyframes vedic-skeleton-shimmer { 100% { transform: translateX(100%); } }
+@media (max-width: 680px) {
+  .app-shell .modal-backdrop { padding: 12px; }
+  .app-shell .modal[aria-labelledby="birth-modal-title"] {
+    width: min(100%, 430px);
+    max-height: 86dvh;
+    padding: 20px 17px;
+    border-radius: 19px;
+  }
+  .app-shell #birth-modal-title { font-size: 28px !important; }
+  .app-shell .modal[aria-labelledby="birth-modal-title"] .form-grid { gap: 13px; }
+  .app-shell .modal[aria-labelledby="birth-modal-title"] .form-input,
+  .app-shell .modal[aria-labelledby="birth-modal-title"] .birth-date-display {
+    min-height: 45px;
+    height: 45px;
+    line-height: 45px;
+    font-size: 13px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after { animation: none; }
+  .app-shell .modal[aria-labelledby="birth-modal-title"] { animation: none; }
+  .app-shell .modal[aria-labelledby="birth-modal-title"] .modal-actions button { transition: none; }
+}
