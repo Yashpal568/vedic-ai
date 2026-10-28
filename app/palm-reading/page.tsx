@@ -2,6 +2,7 @@
 
 import { ChangeEvent, useRef, useState } from "react";
 import Link from "next/link";
+import MobileBottomNav from "@/components/mobile-bottom-nav";
 import { ArrowLeft, Camera, ImagePlus, LoaderCircle, MoonStar, RefreshCw, Sparkles, Upload, X } from "lucide-react";
 
 export default function PalmReadingPage() {
@@ -74,5 +75,6 @@ export default function PalmReadingPage() {
       </div>
       {reading && <section className="palm-result"><div className="palm-result-kicker"><Sparkles size={14}/> YOUR READING</div><h2>What is visible in your palm</h2><div className="palm-reading-text">{reading}</div><p className="palm-note">This is a cautious interpretation of visible features and traditional symbolism—not a factual guarantee about your life.</p></section>}
     </section>
+    <MobileBottomNav />
   </main>;
 }
