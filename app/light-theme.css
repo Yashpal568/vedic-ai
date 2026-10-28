@@ -144,3 +144,16 @@ html[data-theme="light"] .mobile-bottom-nav-item:focus-visible { outline:2px sol
   .site-header-back { display:none; }
   .site-theme-toggle,.site-header-profile { min-height:35px; padding:7px 9px; gap:5px; font-size:10px; }
 }
+
+/* Brand and theme controls keep the chat header visually aligned with feature pages. */
+.chat-header-brand { display:flex; align-items:center; gap:9px; color:var(--text); white-space:nowrap; }
+.chat-header-brand .brand-mark { display:grid; place-items:center; width:36px; height:36px; border-radius:12px; }
+.chat-header-brand .brand-name { font:800 15px Manrope,sans-serif; letter-spacing:-.45px; }
+.topbar-theme-toggle { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:36px; padding:8px 11px; border:1px solid var(--line2); border-radius:11px; color:var(--text); background:var(--panel); font-size:11px; font-weight:600; }
+.topbar-theme-toggle:hover { border-color:color-mix(in srgb,var(--gold2) 55%,var(--line2)); background:var(--wash); }
+html[data-theme="light"] .app-shell .topbar-theme-toggle { color:#494b42 !important; background:#fffefa !important; border-color:#e2ddd0 !important; }
+@media(max-width:680px) {
+  .chat-header-brand { display:flex; gap:7px; }
+  .chat-header-brand .brand-mark { width:32px; height:32px; }
+  .chat-header-brand .brand-name { font-size:13px; }
+}
