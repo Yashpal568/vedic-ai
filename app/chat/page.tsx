@@ -888,7 +888,10 @@ export default function Home() {
             <div className="avatar">{savedBirth?.name?.trim()?.[0]?.toUpperCase() || "G"}</div>
             {accountAvatar ? <img className="profile-avatar" src={accountAvatar} alt="" /> : <span className="profile-avatar profile-avatar-fallback"><UserRound size={17} /></span>}
             <div style={{ minWidth: 0 }}><div className="profile-name">{isSignedIn ? (accountName || "My profile") : (savedBirth?.name || "Guest explorer")}</div><div className="profile-caption">{isSignedIn ? (accountEmail || "Signed in · private library") : savedBirth ? "Birth profile added · session only" : "Personal astrology workspace"}</div></div>
-            <button className="icon-button" aria-label="Open profile" onClick={() => { window.location.href = "/profile"; }} style={{ marginLeft: "auto" }}><ChevronDown size={15} /></button>
+            <div className="sidebar-profile-actions">
+              {isSignedIn && <span className="sidebar-google-mark" title="Account connected">G</span>}
+              {isSignedIn ? <button className="sidebar-logout" aria-label="Sign out" title="Sign out" onClick={() => { void signOut(); }}><LogOut size={16} /></button> : <Link className="sidebar-logout" href="/login" aria-label="Sign in" title="Sign in"><LogOut size={16} /></Link>}
+            </div>
           </div>
         </div>
       </aside>
@@ -896,8 +899,8 @@ export default function Home() {
       {mobileMenuOpen && <div className="mobile-nav-backdrop" onClick={() => setMobileMenuOpen(false)}>
         <aside className="mobile-nav-drawer" aria-label="Mobile navigation" onClick={(event) => event.stopPropagation()}>
           <div className="mobile-nav-head">
-            <button className="brand" onClick={() => { startNewChat(); setMobileMenuOpen(false); }} aria-label="Vedic AI home" style={{ border: 0, background: "transparent", textAlign: "left", color: "inherit", padding: 0 }}>
-              <span className="brand-mark"><MoonStar size={19} /></span><span><span className="brand-name" style={{ display: "block" }}>vedic<span style={{ color: "var(--gold)" }}>.</span>ai</span><span className="brand-sub" style={{ display: "block" }}>Your Jyotish space</span></span>
+            <button className="brand sidebar-brand-premium" onClick={() => { startNewChat(); setMobileMenuOpen(false); }} aria-label="Vedic AI home" style={{ border: 0, background: "transparent", textAlign: "left", color: "inherit", padding: 0 }}>
+              <span className="brand-mark"><MoonStar size={21} /></span><span className="sidebar-brand-copy"><span className="sidebar-brand-line"><span className="brand-name">vedic<span style={{ color: "var(--gold)" }}>.</span>ai</span><span className="sidebar-pro-badge">PRO</span></span><span className="brand-sub">Your Jyotish space</span></span>
             </button>
             <button className="icon-button" onClick={() => setMobileMenuOpen(false)} aria-label="Close navigation"><X size={18} /></button>
           </div>
