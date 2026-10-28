@@ -35,8 +35,8 @@ function chartSvg(report: KundliReport): string {
   }).join("");
   return `<svg class="kundli-chart" viewBox="0 0 400 400" role="img" aria-label="North Indian style birth chart">
     <rect x="1" y="1" width="398" height="398" rx="5" fill="#fffdf7" stroke="#b68d45" stroke-width="2"/>
-    <path d="M1 1 L399 399 M399 1 L1 399 M200 1 L399 200 L200 399 L1 200 Z" fill="none" stroke="#b68d45" stroke-width="1.4"/>
-    <path d="M1 1 L200 200 L399 1 M1 399 L200 200 L399 399" fill="none" stroke="#b68d45" stroke-width="1.4"/>
+    <path d="M200 1 L399 200 L200 399 L1 200 Z" fill="none" stroke="#b68d45" stroke-width="1.4"/>
+    <path d="M1 1 L200 200 M399 1 L200 200 M1 399 L200 200 M399 399 L200 200" fill="none" stroke="#b68d45" stroke-width="1.4"/>
     <circle cx="200" cy="200" r="34" fill="#f6edd9" stroke="#e5d4ae"/>
     <text x="200" y="196" class="center">JANMA</text><text x="200" y="212" class="center">KUNDLI</text>
     ${houseContents}
