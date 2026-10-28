@@ -917,11 +917,15 @@ export default function Home() {
             <div className="mode-pill" aria-label="Vedic AI preview status"><span className="status-dot" /> <span className="mode-pill-name">Vedic AI</span> <span className="mode-pill-preview" style={{ color: "var(--quiet)" }}>· Preview</span></div>
           </div>
           <div className="topbar-actions">
-            {isSignedIn ? <button className="topbar-link" onClick={signOut}><UserRound size={14}/> Sign out</button> : <Link href="/login" className="topbar-link"><UserRound size={14}/> Sign in</Link>}
+            <button className="topbar-theme-toggle" type="button" onClick={() => setTheme((current) => current === "dark" ? "light" : "dark")} aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} title={theme === "dark" ? "Light mode" : "Dark mode"}>
+              {theme === "dark" ? <Sun size={17} /> : <MoonStar size={17} />}
+              <span>{theme === "dark" ? "Light" : "Dark"}</span>
+            </button>
+            {isSignedIn ? <button className="topbar-link" onClick={signOut} title="Sign out securely" aria-label="Sign out securely"><UserRound size={14}/> <span>Sign out</span></button> : <Link href="/login" className="topbar-link" title="Sign in" aria-label="Sign in"><UserRound size={14}/> <span>Sign in</span></Link>}
             <button className="topbar-link" title="Saved memory" aria-label="Saved memory" onClick={openMemory}><BookOpen size={14} /><span>Memory</span></button>
-            <button className="topbar-link" title={savedBirth ? "Edit birth details" : "Add birth details"} aria-label={savedBirth ? "Edit birth details" : "Add birth details"} onClick={() => setIsBirthOpen(true)}><Orbit size={14} /><span>{savedBirth ? "Edit birth details" : "Add birth details"}</span></button>
-            <button className="icon-button" aria-label="Enable notifications" title="Notification settings" onClick={() => { if (typeof Notification !== "undefined" && Notification.permission === "granted") setToast("Notifications are already enabled for this browser."); else setNotificationPromptOpen(true); }}><span aria-hidden="true">♧</span></button>
-            <button className="icon-button" aria-label="Help and product status" onClick={() => setToast("Vedic AI is an early preview. Astrology calculations need reference-chart validation; AI and saved history depend on configured services.")}><CircleHelp size={17} /></button>
+            <button className="topbar-link" title={savedBirth ? "Edit birth details" : "Add birth details"} aria-label={savedBirth ? "Edit birth details" : "Add birth details"} onClick={() => setIsBirthOpen(true)}><Orbit size={14} /><span>{savedBirth ? "Birth profile" : "Birth details"}</span></button>
+            <button className="icon-button topbar-notifications" aria-label="Enable notifications" title="Notification settings" onClick={() => { if (typeof Notification !== "undefined" && Notification.permission === "granted") setToast("Notifications are already enabled for this browser."); else setNotificationPromptOpen(true); }}><span aria-hidden="true">♧</span></button>
+            <button className="icon-button topbar-help" aria-label="Help and product status" title="Help & status" onClick={() => setToast("Vedic AI is an early preview. Astrology calculations need reference-chart validation; AI and saved history depend on configured services.")}><CircleHelp size={17} /></button>
           </div>
         </header>
 
