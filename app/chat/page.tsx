@@ -9,7 +9,7 @@ import type { KundliReport } from "@/lib/astrology";
 import { printKundliReport } from "@/lib/print-report";
 import {
   ArrowDown, ArrowUp, AudioLines, Mic, MicOff, BookOpen, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight,
-  CircleHelp, Gem, History, Menu, MessageCircle, MoonStar, Orbit, Plus, Sun,
+  CircleHelp, Gem, History, LogOut, Menu, MessageCircle, MoonStar, Orbit, Plus, Sun,
   ShieldCheck, Sparkles, Stars, UserRound, X, BriefcaseBusiness, Heart, Compass, Trash2, RefreshCw,
 } from "lucide-react";
 
@@ -922,7 +922,7 @@ export default function Home() {
               {accountAvatar ? <img className="profile-avatar" src={accountAvatar} alt="" /> : <span className="profile-avatar profile-avatar-fallback"><UserRound size={17} /></span>}
               <div style={{ minWidth: 0, flex: 1 }}><div className="profile-name">{isSignedIn ? (accountName || "My profile") : (savedBirth?.name || "Guest explorer")}</div><div className="profile-caption">{isSignedIn ? (accountEmail || "Signed in · private library") : "Guest session"}</div></div>
             </div>
-            {isSignedIn ? <button className="mobile-signout-button" onClick={() => { setMobileMenuOpen(false); void signOut(); }}><UserRound size={16} /> Sign out securely</button> : <Link className="mobile-signout-button" href="/login" onClick={() => setMobileMenuOpen(false)}><UserRound size={16} /> Sign in to sync history</Link>}
+            {isSignedIn ? <button className="mobile-signout-button" onClick={() => { setMobileMenuOpen(false); void signOut(); }} title="Sign out" aria-label="Sign out"><LogOut size={18} /></button> : <Link className="mobile-signout-button" href="/login" onClick={() => setMobileMenuOpen(false)} title="Sign in to sync history" aria-label="Sign in to sync history"><UserRound size={18} /></Link>}
           </div>
         </aside>
       </div>}
@@ -939,7 +939,7 @@ export default function Home() {
               {theme === "dark" ? <Sun size={17} /> : <MoonStar size={17} />}
               <span>{theme === "dark" ? "Light" : "Dark"}</span>
             </button>
-            {isSignedIn ? <button className="topbar-link" onClick={signOut} title="Sign out securely" aria-label="Sign out securely"><UserRound size={14}/> <span>Sign out</span></button> : <Link href="/login" className="topbar-link" title="Sign in" aria-label="Sign in"><UserRound size={14}/> <span>Sign in</span></Link>}
+            {isSignedIn ? <button className="topbar-link topbar-signout-icon" onClick={signOut} title="Sign out" aria-label="Sign out"><LogOut size={17} /></button> : <Link href="/login" className="topbar-link" title="Sign in" aria-label="Sign in"><UserRound size={14}/> <span>Sign in</span></Link>}
             <button className="topbar-link" title="Saved memory" aria-label="Saved memory" onClick={openMemory}><BookOpen size={14} /><span>Memory</span></button>
             <button className="topbar-link" title={savedBirth ? "Edit birth details" : "Add birth details"} aria-label={savedBirth ? "Edit birth details" : "Add birth details"} onClick={() => setIsBirthOpen(true)}><Orbit size={14} /><span>{savedBirth ? "Birth profile" : "Birth details"}</span></button>
             <button className="icon-button topbar-notifications" aria-label="Enable notifications" title="Notification settings" onClick={() => { if (typeof Notification !== "undefined" && Notification.permission === "granted") setToast("Notifications are already enabled for this browser."); else setNotificationPromptOpen(true); }}><span aria-hidden="true">♧</span></button>
