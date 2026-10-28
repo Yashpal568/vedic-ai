@@ -219,7 +219,14 @@ function StreamingMarkdown({ content }: { content: string }) {
 
 export default function Home() {
   useEffect(() => {
-    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("openBirth") === "1") setIsBirthOpen(true);
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("openBirth") === "1") setIsBirthOpen(true);
+      if (params.get("home") === "1") {
+        startNewChat();
+        window.history.replaceState(null, "", "/chat");
+      }
+    }
   }, []);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -1009,7 +1016,7 @@ export default function Home() {
             <div className="home-engine-status">
               <span className="home-engine-mark"><MoonStar size={17}/></span>
               <div className="home-engine-copy">
-                <strong><i/> PARASHARA ENGINE · VEDIC JYOTISH</strong>
+                <strong><i/> VEDIC CHART ENGINE · SIDEREAL CALCULATION</strong>
                 <span>{chartReport?.planets.find((planet) => planet.name === "Moon")?.nakshatra ? "Moon in " + chartReport.planets.find((planet) => planet.name === "Moon")?.nakshatra + " Nakshatra" : "Add birth details for your personal chart"}</span>
               </div>
               <button type="button" className="home-sessions-button" onClick={() => setMobileMenuOpen(true)}><History size={14}/> Sessions</button>
