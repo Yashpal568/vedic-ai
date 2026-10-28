@@ -464,3 +464,22 @@ html[data-theme="light"] body .mobile-nav-drawer.shared-navigation-drawer .side-
 html[data-theme="light"] body .mobile-nav-drawer.shared-navigation-drawer .shared-navigation-icon { color:#987338 !important; background:#fffaf0 !important; border-color:#e7ddc7 !important; }
 html[data-theme="light"] body .mobile-nav-drawer.shared-navigation-drawer .shared-navigation-copy strong { color:inherit !important; }
 html body .mobile-bottom-nav .mobile-bottom-nav-item span { font-size:clamp(8px,2.35vw,10px) !important; letter-spacing:-.15px !important; white-space:nowrap !important; }
+
+
+/* Plain-language planet cards at the end of the on-screen Kundli report. */
+.kundli-planet-summary-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:12px 0 20px; }
+.kundli-planet-summary-card { min-width:0; padding:13px; border:1px solid rgba(190,197,211,.16); border-radius:13px; background:rgba(255,255,255,.025); break-inside:avoid; }
+.kundli-planet-summary-top { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px; padding-bottom:8px; border-bottom:1px solid rgba(190,197,211,.12); }
+.kundli-planet-summary-top strong { color:var(--gold,#dfc17d); font-size:13px; }
+.kundli-planet-summary-top span { color:var(--quiet,#969eae); font-size:11px; }
+.kundli-planet-summary-card p { margin:8px 0 0; color:var(--text,#e7e8ed); font-size:12px; line-height:1.65; }
+.kundli-planet-summary-card small { display:block; margin-top:8px; color:var(--quiet,#969eae); font-size:10px; }
+.kundli-house-summary-heading { margin-top:22px; }
+.kundli-house-summary-heading p { color:var(--quiet,#969eae); font-size:12px; line-height:1.6; }
+html[data-theme="light"] .kundli-planet-summary-card { background:#fffefa !important; border-color:#e2ddd0 !important; }
+html[data-theme="light"] .kundli-planet-summary-top { border-bottom-color:#e8e2d6 !important; }
+html[data-theme="light"] .kundli-planet-summary-top span,
+html[data-theme="light"] .kundli-planet-summary-card small,
+html[data-theme="light"] .kundli-house-summary-heading p { color:#73766e !important; }
+html[data-theme="light"] .kundli-planet-summary-card p { color:#424a54 !important; }
+@media (max-width:620px) { .kundli-planet-summary-grid { grid-template-columns:1fr; } }
