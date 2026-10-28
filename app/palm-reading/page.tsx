@@ -3,6 +3,7 @@
 import { ChangeEvent, useRef, useState } from "react";
 import Link from "next/link";
 import MobileBottomNav from "@/components/mobile-bottom-nav";
+import SiteHeader from "@/components/site-header";
 import { ArrowLeft, Camera, ImagePlus, LoaderCircle, MoonStar, RefreshCw, Sparkles, Upload, X } from "lucide-react";
 
 export default function PalmReadingPage() {
@@ -41,11 +42,7 @@ export default function PalmReadingPage() {
   }
 
   return <main className="palm-shell">
-    <header className="palm-header">
-      <Link href="/chat" className="palm-back"><ArrowLeft size={16}/> Back to chat</Link>
-      <Link href="/chat" className="palm-brand"><span className="brand-mark"><MoonStar size={19}/></span><strong>vedic<span>.</span>ai</strong></Link>
-      <Link href="/profile" className="palm-profile">My profile</Link>
-    </header>
+    <SiteHeader section="Traditional Palmistry" backHref="/chat" />
     <section className="palm-content">
       <div className="palm-kicker"><Sparkles size={14}/> TRADITIONAL PALMISTRY · IMAGE-BASED</div>
       <h1>Read the lines.<br/><em>Keep perspective.</em></h1>
