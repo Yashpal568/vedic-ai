@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import "./light-mode-fix.css";
+import "./light-theme.css";
+import ThemeSync from "@/components/theme-sync";
 
 export const metadata: Metadata = {
   title: { default: "Vedic AI — Your Personal Vedic Astrology Companion", template: "%s | Vedic AI" },
@@ -19,5 +21,5 @@ export const metadata: Metadata = {
 export const viewport: Viewport = { themeColor: "#10110f", colorScheme: "dark" };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body>{children}</body></html>;
+  return <html lang="en"><body><ThemeSync />{children}</body></html>;
 }
