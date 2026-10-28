@@ -37,7 +37,7 @@ export default function AppNavigationDrawer({ open, onClose, extraContent, onHom
       <Link href="/chat" className="new-chat mobile-drawer-new" onClick={(event) => { if (onWorkspace) { event.preventDefault(); onWorkspace(); } onClose(); }}><MessageCircle size={16}/> Open AI workspace <span className="shared-navigation-arrow">↗</span></Link>
       <div className="side-label">Workspace</div>
       <nav className="shared-navigation-links" aria-label="Workspace pages">
-        {links.map(({ label, href, Icon, key, detail }) => <Link key={key} href={href} onClick={onClose} className={"side-link shared-navigation-link" + (activeKey === key ? " active" : "")} aria-current={activeKey === key ? "page" : undefined} onClick={(event) => { if (key === "home" && onHome) { event.preventDefault(); onHome(); } if (key === "kundli" && onKundli) { event.preventDefault(); onKundli(); } onClose(); }}>
+        {links.map(({ label, href, Icon, key, detail }) => <Link key={key} href={href} className={"side-link shared-navigation-link" + (activeKey === key ? " active" : "")} aria-current={activeKey === key ? "page" : undefined} onClick={(event) => { if (key === "home" && onHome) { event.preventDefault(); onHome(); } if (key === "kundli" && onKundli) { event.preventDefault(); onKundli(); } onClose(); }}>
           <span className="shared-navigation-icon"><Icon size={18}/></span><span className="shared-navigation-copy"><strong>{label}</strong><small>{detail}</small></span><span className="shared-navigation-arrow">›</span>
         </Link>)}
       </nav>
