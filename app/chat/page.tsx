@@ -6,6 +6,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Link from "next/link";
 import MobileBottomNav from "@/components/mobile-bottom-nav";
+import AppNavigationDrawer from "@/components/app-navigation-drawer";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import type { KundliReport } from "@/lib/astrology";
 import { printKundliReport } from "@/lib/print-report";
@@ -1023,40 +1024,32 @@ export default function Home() {
         </div>
       </aside>
 
-      {mobileMenuOpen && <div className="mobile-nav-backdrop" onClick={() => setMobileMenuOpen(false)}>
-        <aside className="mobile-nav-drawer" aria-label="Mobile navigation" onClick={(event) => event.stopPropagation()}>
-          <div className="mobile-nav-head">
-            <button className="brand sidebar-brand-premium" onClick={() => { startNewChat(); setMobileMenuOpen(false); }} aria-label="Vedic AI home" style={{ border: 0, background: "transparent", textAlign: "left", color: "inherit", padding: 0 }}>
-              <span className="brand-mark"><MoonStar size={21} /></span><span className="sidebar-brand-copy"><span className="sidebar-brand-line"><span className="brand-name">vedic<span style={{ color: "var(--gold)" }}>.</span>ai</span></span><span className="brand-sub">Your Jyotish space</span></span>
-            </button>
-            <button className="icon-button" onClick={() => setMobileMenuOpen(false)} aria-label="Close navigation"><X size={18} /></button>
-          </div>
-          <button className="new-chat mobile-drawer-new" onClick={() => { startNewChat(); setMobileMenuOpen(false); }}><Plus size={16} /> New conversation</button>
-          <div className="side-label">Workspace</div>
-          <button className="side-link active" onClick={() => { startNewChat(); setMobileMenuOpen(false); }}><House size={16} /> Home</button>
-          <button className="side-link" onClick={() => { setIsBirthOpen(true); setMobileMenuOpen(false); }}><Orbit size={16} /> Kundli & birth details</button>
-          <button className="side-link" onClick={() => { setMobileMenuOpen(false); document.getElementById("chat-input")?.focus(); }}><MessageCircle size={16} /> AI Chat</button>
-          <button className="side-link" onClick={() => { setMobileMenuOpen(false); window.location.href = "/palm-reading"; }}><Hand size={16} /> Palmistry</button>
-          <button className="side-link" onClick={() => { setMobileMenuOpen(false); window.location.href = "/panchang"; }}><CalendarDays size={16} /> Panchang</button>
-          <button className="side-link" onClick={() => { setMobileMenuOpen(false); window.location.href = "/profile"; }}><UserRound size={16} /> My profile</button>
-          <button className="side-link" onClick={() => { setMobileMenuOpen(false); window.location.href = "/reports"; }}><BookOpen size={16} /> Saved Kundlis & reports</button>
-          <button className="side-link" onClick={() => { openMemory(); setMobileMenuOpen(false); }}><ShieldCheck size={16} /> Saved memory</button>
-          <div className="side-label mobile-history-label">All conversations <span>{historyItems.length}</span></div>
-          <div className="mobile-history-list">
-            {historyItems.length ? historyItems.map((item) => <div className="history-item-row" key={item.id}>
-              <button type="button" className={"side-link history-item-open " + (activeConversationId === item.id ? "active" : "")} onClick={() => { void loadConversation(item.id); setMobileMenuOpen(false); }} disabled={loadingConversationId === item.id}><History size={15} /><span>{loadingConversationId === item.id ? "Opening…" : item.title}</span></button>
-              <button type="button" className="history-delete" aria-label={"Delete " + item.title} title={"Delete " + item.title} onClick={() => requestDeleteConversation(item.id)}><Trash2 size={15}/></button>
-            </div>) : <p className="history-empty">{isSignedIn ? "Your saved conversations will appear here." : "Sign in to sync conversations across devices."}</p>}
-          </div>
-          <div className="mobile-nav-bottom">
-            <div className="profile-row">
-              {accountAvatar ? <img className="profile-avatar" src={accountAvatar} alt="" /> : <span className="profile-avatar profile-avatar-fallback">{(accountName || savedBirth?.name || (isSignedIn ? accountEmail : "Guest explorer") || "G").trim().charAt(0).toUpperCase()}</span>}
-              <div style={{ minWidth: 0, flex: 1 }}><div className="profile-name">{isSignedIn ? (accountName || "My profile") : (savedBirth?.name || "Guest explorer")}</div><div className="profile-caption">{isSignedIn ? (accountEmail || "Signed in · private library") : "Guest session"}</div></div>
+      <AppNavigationDrawer
+        open={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+        onHome={startNewChat}
+        onWorkspace={startNewChat}
+        onKundli={() => setIsBirthOpen(true)}
+        extraContent={
+          <>
+            <button className="side-link shared-memory-link" onClick={() => { openMemory(); setMobileMenuOpen(false); }}><ShieldCheck size={16}/> Saved memory</button>
+            <div className="side-label mobile-history-label">All conversations <span>{historyItems.length}</span></div>
+            <div className="mobile-history-list shared-navigation-history">
+              {historyItems.length ? historyItems.map((item) => <div className="history-item-row" key={item.id}>
+                <button type="button" className={"side-link history-item-open " + (activeConversationId === item.id ? "active" : "")} onClick={() => { void loadConversation(item.id); setMobileMenuOpen(false); }} disabled={loadingConversationId === item.id}><History size={15}/><span>{loadingConversationId === item.id ? "Opening…" : item.title}</span></button>
+                <button type="button" className="history-delete" aria-label={"Delete " + item.title} title={"Delete " + item.title} onClick={() => { requestDeleteConversation(item.id); setMobileMenuOpen(false); }}><Trash2 size={15}/></button>
+              </div>) : <p className="history-empty">{isSignedIn ? "Your saved conversations will appear here." : "Sign in to sync conversations across devices."}</p>}
             </div>
-            {isSignedIn ? <button className="mobile-signout-button" onClick={() => { setMobileMenuOpen(false); void signOut(); }} title="Sign out" aria-label="Sign out"><LogOut size={18} /></button> : <Link className="mobile-signout-button" href="/login" onClick={() => setMobileMenuOpen(false)} title="Sign in to sync history" aria-label="Sign in to sync history"><UserRound size={18} /></Link>}
-          </div>
-        </aside>
-      </div>}
+            <div className="mobile-nav-bottom shared-navigation-account">
+              <div className="profile-row">
+                {accountAvatar ? <img className="profile-avatar" src={accountAvatar} alt="" /> : <span className="profile-avatar profile-avatar-fallback">{(accountName || savedBirth?.name || (isSignedIn ? accountEmail : "Guest explorer") || "G").trim().charAt(0).toUpperCase()}</span>}
+                <div style={{ minWidth: 0, flex: 1 }}><div className="profile-name">{isSignedIn ? (accountName || "My profile") : (savedBirth?.name || "Guest explorer")}</div><div className="profile-caption">{isSignedIn ? (accountEmail || "Signed in · private library") : "Guest session"}</div></div>
+              </div>
+              {isSignedIn ? <button className="mobile-signout-button" onClick={() => { setMobileMenuOpen(false); void signOut(); }} title="Sign out" aria-label="Sign out"><LogOut size={18}/></button> : <Link className="mobile-signout-button" href="/login" onClick={() => setMobileMenuOpen(false)} title="Sign in to sync history" aria-label="Sign in to sync history"><UserRound size={18}/></Link>}
+            </div>
+          </>
+        }
+      />
 
       <section className="main-panel">
         <header className="topbar">
