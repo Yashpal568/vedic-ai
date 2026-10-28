@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import {
   BookOpen, CalendarDays, Hand, House, MessageCircle, MoonStar, Orbit, UserRound, X,
@@ -16,7 +17,7 @@ const links = [
   { label: "My profile", href: "/profile", Icon: UserRound, key: "profile", detail: "Your account settings" },
 ];
 
-export default function AppNavigationDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
+export default function AppNavigationDrawer({ open, onClose, extraContent, onHome, onKundli, onWorkspace }: { open: boolean; onClose: () => void; extraContent?: ReactNode; onHome?: () => void; onKundli?: () => void; onWorkspace?: () => void }) {
   const pathname = usePathname();
   if (!open) return null;
   const activeKey = pathname === "/panchang" ? "panchang"
@@ -33,13 +34,14 @@ export default function AppNavigationDrawer({ open, onClose }: { open: boolean; 
         </Link>
         <button type="button" className="icon-button" onClick={onClose} aria-label="Close navigation"><X size={18}/></button>
       </div>
-      <Link href="/chat" className="new-chat mobile-drawer-new" onClick={onClose}><MessageCircle size={16}/> Open AI workspace <span className="shared-navigation-arrow">↗</span></Link>
+      <Link href="/chat" className="new-chat mobile-drawer-new" onClick={(event) => { if (onWorkspace) { event.preventDefault(); onWorkspace(); } onClose(); }}><MessageCircle size={16}/> Open AI workspace <span className="shared-navigation-arrow">↗</span></Link>
       <div className="side-label">Workspace</div>
       <nav className="shared-navigation-links" aria-label="Workspace pages">
-        {links.map(({ label, href, Icon, key, detail }) => <Link key={key} href={href} onClick={onClose} className={"side-link shared-navigation-link" + (activeKey === key ? " active" : "")} aria-current={activeKey === key ? "page" : undefined}>
+        {links.map(({ label, href, Icon, key, detail }) => <Link key={key} href={href} onClick={onClose} className={"side-link shared-navigation-link" + (activeKey === key ? " active" : "")} aria-current={activeKey === key ? "page" : undefined} onClick={(event) => { if (key === "home" && onHome) { event.preventDefault(); onHome(); } if (key === "kundli" && onKundli) { event.preventDefault(); onKundli(); } onClose(); }}>
           <span className="shared-navigation-icon"><Icon size={18}/></span><span className="shared-navigation-copy"><strong>{label}</strong><small>{detail}</small></span><span className="shared-navigation-arrow">›</span>
         </Link>)}
       </nav>
+      {extraContent}
       <div className="shared-navigation-footer"><span/> Vedic AI · Astrology companion</div>
     </aside>
   </div>;
