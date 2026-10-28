@@ -1,10 +1,9 @@
 "use client";
 
 import { ChangeEvent, useRef, useState } from "react";
-import Link from "next/link";
 import MobileBottomNav from "@/components/mobile-bottom-nav";
 import SiteHeader from "@/components/site-header";
-import { ArrowLeft, Camera, ImagePlus, LoaderCircle, MoonStar, RefreshCw, Sparkles, Upload, X } from "lucide-react";
+import { Camera, ImagePlus, LoaderCircle, RefreshCw, Sparkles, Upload } from "lucide-react";
 
 export default function PalmReadingPage() {
   const [image, setImage] = useState<string>("");
