@@ -22,7 +22,7 @@ function localToday() {
 export default function PanchangPage() {
   const [date, setDate] = useState(localToday);
   const [placeQuery, setPlaceQuery] = useState("Rudrapur, Uttarakhand, India");
-  const [place, setPlace] = useState<Place>({ id: "rudrapur", label: "Rudrapur, Uttarakhand, India", latitude: 28.987, longitude: 79.414 });
+  const [place, setPlace] = useState<Place>({ id: "rudrapur", label: "Rudrapur, Uttarakhand, India", latitude: 28.987, longitude: 79.414, type: "city", importance: 1 });
   const [places, setPlaces] = useState<Place[]>([]);
   const [panchang, setPanchang] = useState<Panchang | null>(null);
   const [loading, setLoading] = useState(false);
