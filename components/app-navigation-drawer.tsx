@@ -10,7 +10,7 @@ import {
 const links = [
   { label: "Home", href: "/chat", Icon: House, key: "home", detail: "Your astrology workspace" },
   { label: "Kundli", href: "/chat?openBirth=1", Icon: Orbit, key: "kundli", detail: "Birth chart and details" },
-  { label: "AI Chat", href: "/chat#chat-input", Icon: MessageCircle, key: "chat", detail: "Ask your Jyotish questions" },
+  { label: "Astrology Chat", href: "/chat#chat-input", Icon: MessageCircle, key: "chat", detail: "Ask your Jyotish questions" },
   { label: "Palmistry", href: "/palm-reading", Icon: Hand, key: "palm", detail: "Explore visible palm lines" },
   { label: "Panchang", href: "/panchang", Icon: CalendarDays, key: "panchang", detail: "Daily almanac and timings" },
   { label: "Saved Kundlis & reports", href: "/reports", Icon: BookOpen, key: "reports", detail: "Your saved birth charts" },
@@ -34,7 +34,7 @@ export default function AppNavigationDrawer({ open, onClose, extraContent, onHom
         </Link>
         <button type="button" className="icon-button" onClick={onClose} aria-label="Close navigation"><X size={18}/></button>
       </div>
-      <Link href="/chat" className="new-chat mobile-drawer-new" onClick={(event) => { if (onWorkspace) { event.preventDefault(); onWorkspace(); } onClose(); }}><MessageCircle size={16}/> Open AI workspace <span className="shared-navigation-arrow">↗</span></Link>
+      <Link href="/chat" className="new-chat mobile-drawer-new" onClick={(event) => { if (onWorkspace) { event.preventDefault(); onWorkspace(); } onClose(); }}><MessageCircle size={16}/> Open Astrology Chat <span className="shared-navigation-arrow">↗</span></Link>
       <div className="side-label">Workspace</div>
       <nav className="shared-navigation-links" aria-label="Workspace pages">
         {links.map(({ label, href, Icon, key, detail }) => <Link key={key} href={href} className={"side-link shared-navigation-link" + (activeKey === key ? " active" : "")} aria-current={activeKey === key ? "page" : undefined} onClick={(event) => { if (key === "home" && onHome) { event.preventDefault(); onHome(); } if (key === "kundli" && onKundli) { event.preventDefault(); onKundli(); } onClose(); }}>
