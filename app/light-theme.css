@@ -345,3 +345,19 @@ html[data-theme="light"] .shared-navigation-link { color:#555b66 !important; }
 html[data-theme="light"] .shared-navigation-link:hover { background:#f4f0e6 !important; }
 html[data-theme="light"] .shared-navigation-link.active { color:#795a21 !important; background:#f8f0df !important; border-color:#e4d3ac !important; }
 html[data-theme="light"] .shared-navigation-icon { color:#987338 !important; background:#fffaf0 !important; border-color:#e7ddc7 !important; }
+
+
+/* The chat workspace now uses the same shared drawer; keep history/account extras
+   scrollable without changing the common navigation header or link geometry. */
+.shared-navigation-drawer { overflow-y:auto !important; overscroll-behavior:contain; }
+.shared-navigation-history { max-height:28vh; min-height:0; overflow-y:auto; overscroll-behavior:contain; margin-top:2px; padding-right:2px; }
+.shared-navigation-history .history-item-row { display:flex; align-items:center; gap:3px; padding:2px 0; }
+.shared-navigation-history .history-item-open { min-width:0; flex:1; min-height:40px; overflow:hidden; }
+.shared-navigation-history .history-item-open span { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.shared-navigation-history .history-delete { flex:0 0 30px; width:30px; height:34px; opacity:.75; }
+.shared-navigation-history .history-empty { padding:10px 8px; color:#9299a8; font-size:11px; line-height:1.6; }
+.shared-memory-link { margin-top:10px; }
+.shared-navigation-account { margin-top:16px; padding-top:12px; border-top:1px solid rgba(255,255,255,.08); }
+html[data-theme="light"] .shared-navigation-account { border-top-color:#e5e0d4 !important; }
+html[data-theme="light"] .shared-navigation-history .history-empty { color:#73766e !important; }
+html[data-theme="light"] .shared-navigation-history .history-delete { color:#858b98 !important; }
