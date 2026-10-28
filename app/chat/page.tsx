@@ -284,6 +284,24 @@ export default function Home() {
     try { window.localStorage.setItem("vedic-guest-chat-v1", JSON.stringify({ messages: messages.slice(-30) })); } catch {}
   }, [messages, isSignedIn]);
   useEffect(() => {
+    const refreshHistory = async () => {
+      if (!isSignedIn) return;
+      try {
+        const response = await fetch("/api/conversations", { cache: "no-store" });
+        if (!response.ok) return;
+        const payload = await response.json();
+        if (Array.isArray(payload?.conversations)) setHistoryItems(payload.conversations);
+      } catch {}
+    };
+    window.addEventListener("focus", refreshHistory);
+    window.addEventListener("online", refreshHistory);
+    return () => {
+      window.removeEventListener("focus", refreshHistory);
+      window.removeEventListener("online", refreshHistory);
+    };
+  }, [isSignedIn]);
+
+  useEffect(() => {
     let active = true;
     const supabase = getSupabaseBrowserClient();
     if (!supabase) return;
@@ -378,15 +396,35 @@ export default function Home() {
           messages: (activeConversationId ? newMessages : allMessages).slice(-30).map(({ role, content }) => ({ role, content })),
         }),
       });
-      if (!response.ok) return;
+      if (!response.ok) {
+        let detail = "Your reply arrived, but saving this conversation failed.";
+        try { const errorPayload = await response.json(); if (typeof errorPayload.error === "string") detail += " " + errorPayload.error; } catch {}
+        setToast(detail + " Keep this tab open and retry after checking your connection.");
+        try {
+          window.localStorage.setItem("vedic-pending-chat-v1", JSON.stringify({
+            conversationId: activeConversationId,
+            messages: (activeConversationId ? newMessages : allMessages).slice(-30).map(({ role, content }) => ({ role, content })),
+            savedAt: new Date().toISOString(),
+          }));
+        } catch {}
+        return;
+      }
       const data = await response.json();
+      try { window.localStorage.removeItem("vedic-pending-chat-v1"); } catch {}
       const conversation = data.conversation as HistoryItem | undefined;
       if (conversation?.id) {
         setActiveConversationId(conversation.id);
         setHistoryItems((items) => [conversation, ...items.filter((item) => item.id !== conversation.id)].slice(0, 30));
       }
     } catch {
-      // Conversation persistence is optional until Supabase Auth is configured.
+      setToast("Could not save this conversation because the network request failed. Your latest messages are kept locally on this device; please retry when online.");
+      try {
+        window.localStorage.setItem("vedic-pending-chat-v1", JSON.stringify({
+          conversationId: activeConversationId,
+          messages: (activeConversationId ? newMessages : allMessages).slice(-30).map(({ role, content }) => ({ role, content })),
+          savedAt: new Date().toISOString(),
+        }));
+      } catch {}
     }
   }
 
