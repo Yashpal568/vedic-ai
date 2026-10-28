@@ -1,7 +1,6 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import Link from "next/link";
 import { CalendarDays, Clock3, Compass, MapPin, MoonStar, Search, Sun, Sunrise, Sunset, Sparkles, LoaderCircle } from "lucide-react";
 import MobileBottomNav from "@/components/mobile-bottom-nav";
 import SiteHeader from "@/components/site-header";
