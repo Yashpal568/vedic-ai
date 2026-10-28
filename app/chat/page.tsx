@@ -170,6 +170,9 @@ export default function Home() {
   const [voiceListening, setVoiceListening] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSignedIn, setIsSignedIn] = useState(false);
+  const [accountName, setAccountName] = useState("");
+  const [accountEmail, setAccountEmail] = useState("");
+  const [accountAvatar, setAccountAvatar] = useState("");
   const [isBirthOpen, setIsBirthOpen] = useState(false);
   const [birthAiConsent, setBirthAiConsent] = useState(false);
   const [isMemoryOpen, setIsMemoryOpen] = useState(false);
@@ -244,12 +247,42 @@ export default function Home() {
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
     if (!supabase) return;
-    supabase.auth.getUser().then(({ data }) => setIsSignedIn(Boolean(data.user)));
+    const applyUser = (user: { email?: string; user_metadata?: Record<string, unknown> } | null) => {
+      setIsSignedIn(Boolean(user));
+      setAccountEmail(user?.email || "");
+      setAccountName(String(user?.user_metadata?.display_name || user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split("@")[0] || ""));
+      setAccountAvatar(String(user?.user_metadata?.avatar_url || user?.user_metadata?.picture || ""));
+    };
+    supabase.auth.getUser().then(({ data }) => applyUser(data.user));
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsSignedIn(Boolean(session?.user));
+      applyUser(session?.user || null);
+      if (session?.user) {
+        void (async () => {
+          try {
+            const raw = window.localStorage.getItem("vedic-guest-chat-v1");
+            if (!raw) return;
+            const guest = JSON.parse(raw) as { messages?: Message[] };
+            const guestMessages = (guest.messages || []).filter((m) => (m.role === "user" || m.role === "assistant") && typeof m.content === "string" && m.content.trim()).slice(-30);
+            if (!guestMessages.some((m) => m.role === "user")) return;
+            const response = await fetch("/api/conversations", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages: guestMessages.map(({ role, content }) => ({ role, content })) }) });
+            if (response.ok) {
+              window.localStorage.removeItem("vedic-guest-chat-v1");
+              const payload = await response.json();
+              if (payload.conversation?.id) {
+                setActiveConversationId(payload.conversation.id);
+                setHistoryItems((items) => [payload.conversation, ...items.filter((item) => item.id !== payload.conversation.id)].slice(0, 30));
+              }
+            }
+          } catch { /* keep local guest history if migration fails */ }
+        })();
+      }
     });
     return () => subscription.unsubscribe();
   }, []);
+  useEffect(() => {
+    if (isSignedIn || !messages.length) return;
+    try { window.localStorage.setItem("vedic-guest-chat-v1", JSON.stringify({ messages: messages.slice(-30) })); } catch {}
+  }, [messages, isSignedIn]);
   useEffect(() => {
     let active = true;
     const supabase = getSupabaseBrowserClient();
@@ -797,7 +830,8 @@ export default function Home() {
           </div>
           <div className="profile-row">
             <div className="avatar">{savedBirth?.name?.trim()?.[0]?.toUpperCase() || "G"}</div>
-            <div style={{ minWidth: 0 }}><div className="profile-name">{savedBirth?.name || "Guest explorer"}</div><div className="profile-caption">{isSignedIn ? "Signed in · private library" : savedBirth ? "Birth profile added · session only" : "Personal astrology workspace"}</div></div>
+            {accountAvatar ? <img className="profile-avatar" src={accountAvatar} alt="" /> : <span className="profile-avatar profile-avatar-fallback"><UserRound size={17} /></span>}
+            <div style={{ minWidth: 0 }}><div className="profile-name">{isSignedIn ? (accountName || "My profile") : (savedBirth?.name || "Guest explorer")}</div><div className="profile-caption">{isSignedIn ? (accountEmail || "Signed in · private library") : savedBirth ? "Birth profile added · session only" : "Personal astrology workspace"}</div></div>
             <button className="icon-button" aria-label="Open profile" onClick={() => { window.location.href = "/profile"; }} style={{ marginLeft: "auto" }}><ChevronDown size={15} /></button>
           </div>
         </div>
@@ -829,7 +863,8 @@ export default function Home() {
           <div className="mobile-nav-bottom">
             <div className="profile-row">
               <div className="avatar">{savedBirth?.name?.trim()?.[0]?.toUpperCase() || "G"}</div>
-              <div style={{ minWidth: 0, flex: 1 }}><div className="profile-name">{savedBirth?.name || "Guest explorer"}</div><div className="profile-caption">{isSignedIn ? "Signed in · private library" : "Guest session"}</div></div>
+              {accountAvatar ? <img className="profile-avatar" src={accountAvatar} alt="" /> : <span className="profile-avatar profile-avatar-fallback"><UserRound size={17} /></span>}
+              <div style={{ minWidth: 0, flex: 1 }}><div className="profile-name">{isSignedIn ? (accountName || "My profile") : (savedBirth?.name || "Guest explorer")}</div><div className="profile-caption">{isSignedIn ? (accountEmail || "Signed in · private library") : "Guest session"}</div></div>
             </div>
             {isSignedIn ? <button className="mobile-signout-button" onClick={() => { setMobileMenuOpen(false); void signOut(); }}><UserRound size={16} /> Sign out securely</button> : <Link className="mobile-signout-button" href="/login" onClick={() => setMobileMenuOpen(false)}><UserRound size={16} /> Sign in to sync history</Link>}
           </div>
