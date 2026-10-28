@@ -78,7 +78,7 @@ export default function ProfilePage() {
   if (loading) return <main className="profile-shell"><div className="profile-loading"><LoaderCircle className="palm-spin" size={20}/> Loading your profile…</div></main>;
 
   return <main className="profile-shell">
-    <SiteHeader section="Account profile" backHref="/chat" />
+    <SiteHeader section="Account profile" backHref="/chat" onSignOut={() => void signOut()} />
     <section className="profile-content">
       <div className="profile-eyebrow"><ShieldCheck size={14}/> YOUR PRIVATE SPACE</div><h1>My profile</h1><p className="profile-lead">Manage the details shown on your Vedic AI account. Your changes are saved to your signed-in profile.</p>
       <div className="profile-card">
