@@ -2398,3 +2398,15 @@ html { scroll-behavior: smooth; }
 .mobile-nav-drawer .mobile-nav-head .sidebar-brand-premium .brand-mark{width:42px;height:42px;flex:0 0 42px}
 .mobile-nav-drawer .mobile-nav-head .sidebar-brand-premium .brand-name{font-size:18px!important}
 .mobile-nav-drawer .mobile-nav-head .sidebar-brand-premium .brand-sub{font-size:9px!important;letter-spacing:1.75px}
+
+
+/* Two-step sign-in wizard review panel */
+.auth-review-step{animation:auth-step-enter .24s ease both}
+.auth-review-panel{display:flex;align-items:center;gap:13px;min-width:0;padding:15px;border:1px solid rgba(224,230,246,.16);border-radius:14px;background:rgba(255,255,255,.035)}
+.auth-review-icon{display:grid;place-items:center;flex:0 0 40px;width:40px;height:40px;border:1px solid rgba(239,205,128,.2);border-radius:12px;color:#f1cd80;background:rgba(239,205,128,.08)}
+.auth-review-panel>div{display:flex;flex-direction:column;gap:6px;min-width:0}
+.auth-review-panel strong{color:#f0eee8;font-size:14px;overflow-wrap:anywhere}
+.auth-review-step .auth-copy{margin:0}
+.auth-review-step .auth-change-email{align-self:center;margin-top:0}
+@keyframes auth-step-enter{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.auth-review-step{animation:none}}
