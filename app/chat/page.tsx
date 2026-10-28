@@ -982,49 +982,34 @@ export default function Home() {
         </header>
 
         <div className="content-scroll">
-          {!hasConversation ? <section className="welcome-wrap cosmic-home">
-            <div className="hero-heading-row cosmic-home-heading">
-              <div className="eyebrow"><span className="eyebrow-line" /> THE WISDOM OF JYOTISH, REIMAGINED <Sparkles size={13} /></div>
+          {!hasConversation ? <section className="welcome-wrap">
+            <div className="hero-heading-row">
+              <svg className="hero-orbit" viewBox="0 0 220 220" fill="none" aria-hidden="true">
+                <circle cx="110" cy="110" r="78" stroke="#d4b77a" strokeOpacity=".18" /><circle cx="110" cy="110" r="58" stroke="#d4b77a" strokeOpacity=".12" strokeDasharray="2 7" /><circle cx="110" cy="110" r="37" stroke="#d4b77a" strokeOpacity=".22" />
+                <ellipse cx="110" cy="110" rx="96" ry="38" transform="rotate(-36 110 110)" stroke="#d4b77a" strokeOpacity=".22" /><ellipse cx="110" cy="110" rx="96" ry="38" transform="rotate(54 110 110)" stroke="#d4b77a" strokeOpacity=".12" />
+                <circle cx="171" cy="57" r="4" fill="#e6cc91" /><circle cx="34" cy="126" r="3" fill="#d4b77a" /><path d="M110 80 L117 103 L140 110 L117 117 L110 140 L103 117 L80 110 L103 103 Z" fill="#d4b77a" fillOpacity=".8" /><circle cx="110" cy="110" r="5" fill="#f1dba5" />
+              </svg>
+              <div className="eyebrow"><span className="eyebrow-line" /> THE WISDOM OF JYOTISH, REIMAGINED</div>
               <h1 className="hero-title">Your stars have a story.<br /><span className="gold">Let’s explore it.</span></h1>
               <p className="hero-copy">A personal space to explore Vedic astrology with more clarity. Start with your birth chart, discover the language of the planets, and ask the questions that matter to you.</p>
             </div>
-            <section className="cosmic-home-feature" aria-label="Explore Vedic AI">
-              <div className="cosmic-home-feature-art" role="img" aria-label="A deep cosmic nebula and golden celestial geometry">
-                <div className="cosmic-home-feature-shade" />
-                <div className="cosmic-home-feature-copy">
-                  <span className="cosmic-home-feature-kicker"><Stars size={13}/> YOUR PERSONAL JYOTISH SPACE</span>
-                  <h2>Understand the patterns.<br/><span>Explore the meaning.</span></h2>
-                  <p>Start with your own birth details for a chart-based reading.</p>
-                  <button type="button" className="cosmic-home-feature-button" onClick={() => setIsBirthOpen(true)}>{savedBirth && chartReport ? "Review birth profile" : "Add birth details"} <ArrowUp size={15}/></button>
-                </div>
-                <div className="cosmic-home-orbit" aria-hidden="true"><span/><span/><span/></div>
-              </div>
-              <div className="cosmic-home-feature-foot">
-                <span><ShieldCheck size={14}/> Chart-aware when verified data is available</span>
-                <span className="cosmic-home-status"><span/> PERSONAL WORKSPACE</span>
-              </div>
-            </section>
-            <div className="cosmic-home-section-heading">
-              <div><div className="quick-label">A good place to begin</div><p>Choose a topic. We’ll use your calculated chart when available.</p></div>
-              <span className="cosmic-home-section-sparkle"><Sparkles size={17}/></span>
-            </div>
-            <div className="prompt-grid cosmic-home-prompts">{suggestions.map((item) => {
+            <div className="quick-label">A good place to begin</div>
+            <div className="prompt-grid">{suggestions.map((item) => {
               const Icon = item.icon;
-              return <button className="prompt-card cosmic-home-prompt" key={item.title} onClick={() => {
+              return <button className="prompt-card" key={item.title} onClick={() => {
                  if (!savedBirth || !chartReport) {
                    setPendingPrompt(item.prompt);
                    setIsBirthOpen(true);
-                   setToast("Add your date of birth, exact local birth time, and birthplace first for a personalised chart reading.");
+                   setToast("For a personal reading, add your birth date, exact time, and birthplace first.");
                  } else {
                    void sendMessage(item.prompt);
                  }
                }}>
-                <span className="prompt-icon"><Icon size={17} strokeWidth={1.7} /></span>
-                <span className="cosmic-home-prompt-copy"><span className="prompt-title" style={{ display: "block" }}>{item.title}</span><span className="prompt-description" style={{ display: "block" }}>{item.description}</span></span>
-                <span className="cosmic-home-prompt-arrow" aria-hidden="true"><ArrowUp size={14}/></span>
+                <span className="prompt-icon"><Icon size={16} strokeWidth={1.7} /></span>
+                <span><span className="prompt-title" style={{ display: "block" }}>{item.title}</span><span className="prompt-description" style={{ display: "block" }}>{item.description}</span></span>
               </button>;
             })}</div>
-            <div className="assistant-note cosmic-home-trust-note"><ShieldCheck size={15} style={{ flexShrink: 0, color: "var(--gold)", marginTop: 1 }} /><span>We won’t invent planetary placements. If birth details or validated chart data are missing, Vedic AI will ask for them and clearly separate calculated chart facts from traditional interpretation.</span></div>
+            <div className="assistant-note" style={{ marginTop: 22 }}><ShieldCheck size={15} style={{ flexShrink: 0, color: "var(--gold)", marginTop: 1 }} /><span>For a personalised reading, add your birth date, exact local birth time, and birthplace. This preview won’t invent planetary placements; verified chart calculations will be connected in the next development phase.</span></div>
           </section> : <section className="chat-area" aria-live="polite">
             {chartReport && <section className="chart-panel">
               <div className="chart-panel-head"><div><div className="eyebrow"><span className="eyebrow-line" /> YOUR VEDIC BIRTH CHART</div><h2 className="chart-title">{chartReport.ascendant.sign} Ascendant <span>· {chartReport.birth.place.split(",").slice(0, 2).join(",")}</span></h2><p className="chart-subtitle">Lahiri sidereal · Whole-sign houses · {chartReport.birth.timezone}</p></div><button className="secondary-button chart-export" onClick={() => { const blob = new Blob([JSON.stringify(chartReport, null, 2)], { type: "application/json" }); const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.href = url; link.download = "vedic-ai-kundli.json"; link.click(); URL.revokeObjectURL(url); }}>Export chart <ArrowDown size={13}/></button><button className="secondary-button chart-export" onClick={() => { try { printKundliReport(chartReport); } catch (error) { setToast(error instanceof Error ? error.message : "Could not open PDF preview."); } }}>Print / Save PDF</button><button className="primary-button chart-save" onClick={saveChartReport}>Save kundli <Check size={13}/></button><button className="secondary-button chart-export" onClick={loadCurrentTransits} disabled={transitLoading}>{transitLoading ? <RefreshCw size={13} className="spin-icon"/> : <Orbit size={13}/>} {transitLoading ? "Calculating…" : "Current transits"}</button></div>
