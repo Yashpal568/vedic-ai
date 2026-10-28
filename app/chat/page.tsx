@@ -10,7 +10,7 @@ import AppNavigationDrawer from "@/components/app-navigation-drawer";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import type { KundliReport } from "@/lib/astrology";
 import { printKundliReport } from "@/lib/print-report";
-import { buildKundliHouseSummary, buildKundliSimpleSummary } from "@/lib/kundli-summary";
+import { buildKundliHouseSummary, buildKundliPlanetSummary, buildKundliSimpleSummary } from "@/lib/kundli-summary";
 import {
   ArrowDown, ArrowUp, AudioLines, Mic, MicOff, BookOpen, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight,
   CircleHelp, Gem, Hand, History, House, LogOut, Menu, MessageCircle, MoonStar, Orbit, Plus, Sun,
@@ -1128,6 +1128,8 @@ export default function Home() {
               <section className="kundli-simple-summary" aria-labelledby="kundli-simple-summary-title">
                 <div className="kundli-summary-heading"><div><div className="eyebrow"><span className="eyebrow-line" /> YOUR CHART IN SIMPLE WORDS</div><h2 id="kundli-simple-summary-title">Your Kundli, explained simply</h2><p>Start here if astrology terms feel confusing. These are traditional interpretations, not guaranteed predictions.</p></div></div>
                 <div className="kundli-summary-points">{buildKundliSimpleSummary(chartReport).map((item, index) => <div className="kundli-summary-point" key={index}><span>{index + 1}</span><p>{item}</p></div>)}</div>
+                <div className="kundli-house-summary-heading"><h3>Each planet in simple words</h3><p>What the listed planet, sign and house traditionally represent. These are symbolic explanations, not guaranteed facts.</p></div>
+                <div className="kundli-planet-summary-grid">{buildKundliPlanetSummary(chartReport).map((planet) => <article className="kundli-planet-summary-card" key={planet.name}><div className="kundli-planet-summary-top"><strong>{planet.name}</strong><span>{planet.sign} · House {planet.house}</span></div><p>{planet.explanation}</p><small>Nakshatra: {planet.nakshatra}</small></article>)}</div>
                 <div className="kundli-house-summary-heading"><h3>All 12 houses in everyday language</h3><p>Each house represents an area of life. The sign and planets below come from this calculated chart.</p></div>
                 <div className="kundli-house-summary-grid">{buildKundliHouseSummary(chartReport).map((house) => <article className="kundli-house-summary-card" key={house.house}><div className="kundli-house-summary-top"><span>HOUSE {house.house}</span><strong>{house.sign}</strong></div><h4>{house.title}</h4><p>{house.explanation}</p><small>Planets: {house.planets.length ? house.planets.join(", ") : "No major planet listed"}</small></article>)}</div>
               </section>
