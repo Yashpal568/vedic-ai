@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Link from "next/link";
@@ -37,6 +38,7 @@ function BirthDatePicker({ value, onChange }: { value: string; onChange: (value:
   const [viewYear, setViewYear] = useState(selected?.getFullYear() ?? today.getFullYear());
   const [viewMonth, setViewMonth] = useState(selected?.getMonth() ?? today.getMonth());
   const rootRef = useRef<HTMLDivElement>(null);
+  const calendarRef = useRef<HTMLDivElement>(null);
   const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   const weekdayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const firstWeekday = (new Date(viewYear, viewMonth, 1).getDay() + 6) % 7;
@@ -55,7 +57,8 @@ function BirthDatePicker({ value, onChange }: { value: string; onChange: (value:
   useEffect(() => {
     if (!open) return;
     const onPointerDown = (event: PointerEvent) => {
-      if (rootRef.current && !rootRef.current.contains(event.target as Node)) setOpen(false);
+      if (rootRef.current?.contains(event.target as Node) || calendarRef.current?.contains(event.target as Node)) return;
+      setOpen(false);
     };
     const onKeyDown = (event: globalThis.KeyboardEvent) => {
       if (event.key === "Escape") setOpen(false);
@@ -90,12 +93,16 @@ function BirthDatePicker({ value, onChange }: { value: string; onChange: (value:
     setOpen(false);
   }
 
-  return <div className="birth-date-picker" ref={rootRef}>
+  return <><div className="birth-date-picker" ref={rootRef}>
     <div className="birth-date-control">
       <input className="form-input birth-date-display" type="text" value={displayValue} placeholder="DD-MM-YYYY" readOnly required aria-label="Date of birth" onClick={() => setOpen(true)} />
       <button type="button" className="birth-date-toggle" aria-label={open ? "Close calendar" : "Open calendar"} aria-expanded={open} onClick={() => setOpen((current) => !current)}><CalendarDays size={16}/></button>
     </div>
-    {open && <div className="birth-calendar" role="dialog" aria-label="Choose date of birth" aria-modal="false">
+
+  </div>
+    {open && typeof document !== "undefined" ? createPortal(
+      <div className="birth-calendar-layer" onPointerDown={(event) => { if (event.target === event.currentTarget) setOpen(false); }}>
+        <div className="birth-calendar" ref={calendarRef} role="dialog" aria-label="Choose date of birth" aria-modal="true" onPointerDown={(event) => event.stopPropagation()}>
       <div className="birth-calendar-topline"><span className="birth-calendar-kicker">BIRTH DETAILS</span><span className="birth-calendar-zone"><span /> LOCAL DATE</span></div>
       <div className="birth-calendar-heading">
         <div className="birth-calendar-selectors">
@@ -127,8 +134,11 @@ function BirthDatePicker({ value, onChange }: { value: string; onChange: (value:
         })}
       </div>
       <div className="birth-calendar-footer"><div className="birth-calendar-selected"><span>SELECTED DATE</span><strong>{displayValue || "Choose a date"}</strong></div><button type="button" className="birth-calendar-today" onClick={() => { setViewYear(today.getFullYear()); setViewMonth(today.getMonth()); onChange([today.getFullYear(), String(today.getMonth() + 1).padStart(2, "0"), String(today.getDate()).padStart(2, "0")].join("-")); setOpen(false); }}><CalendarDays size={13}/> Today</button></div>
-    </div>}
-  </div>;
+    </div>
+      </div>,
+      document.body
+    ) : null}
+  </>;
 }
 
 function KundliDiagram({ report }: { report: KundliReport }) {
