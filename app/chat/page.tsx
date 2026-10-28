@@ -9,7 +9,7 @@ import type { KundliReport } from "@/lib/astrology";
 import { printKundliReport } from "@/lib/print-report";
 import {
   ArrowDown, ArrowUp, AudioLines, Mic, MicOff, BookOpen, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight,
-  CircleHelp, Gem, History, Menu, MessageCircle, MoonStar, Orbit, Plus,
+  CircleHelp, Gem, History, Menu, MessageCircle, MoonStar, Orbit, Plus, Sun,
   ShieldCheck, Sparkles, Stars, UserRound, X, BriefcaseBusiness, Heart, Compass, Trash2, RefreshCw,
 } from "lucide-react";
 
@@ -189,6 +189,7 @@ export default function Home() {
   const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [toast, setToast] = useState("");
   const [notificationPromptOpen, setNotificationPromptOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -197,6 +198,8 @@ export default function Home() {
   const hasConversation = messages.length > 0;
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [messages]);
+  useEffect(() => { try { const saved = window.localStorage.getItem("vedic-chat-theme"); if (saved === "light" || saved === "dark") setTheme(saved); } catch {} }, []);
+  useEffect(() => { try { window.localStorage.setItem("vedic-chat-theme", theme); } catch {} }, [theme]);
   useEffect(() => {
     if (typeof window === "undefined" || !("Notification" in window)) return;
     if (Notification.permission === "default" && !window.sessionStorage.getItem("vedic-notification-prompt-dismissed")) setNotificationPromptOpen(true);
@@ -770,7 +773,7 @@ export default function Home() {
   }
 
   return (
-    <main className="app-shell">
+    <main className="app-shell" data-theme={theme}>
       <aside className="sidebar">
         <button className="brand" onClick={startNewChat} aria-label="Vedic AI home" style={{ border: 0, background: "transparent", textAlign: "left", color: "inherit" }}>
           <span className="brand-mark"><MoonStar size={19} strokeWidth={1.6} /></span>
