@@ -21,7 +21,7 @@ type Message = { id: string; role: "user" | "assistant"; content: string };
 type BirthProfile = { name: string; date: string; time: string; place: string; latitude?: number; longitude?: number; timezone?: string };
 type PlaceOption = { id: string; label: string; latitude: number; longitude: number; type: string; importance: number };
 type HistoryItem = { id: string; title: string; updated_at?: string };
-type VoiceRecognition = { lang: string; interimResults: boolean; continuous: boolean; onresult: ((event: { resultIndex: number; results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null; onerror: ((event: { error?: string }) => void) | null; onend: (() => void) | null; start: () => void; stop: () => void; abort?: () => void };
+type VoiceRecognition = { lang: string; interimResults: boolean; continuous: boolean; onresult: ((event: { resultIndex: number; results: ArrayLike<ArrayLike<{ transcript: string; isFinal?: boolean }>> }) => void) | null; onerror: ((event: { error?: string }) => void) | null; onend: (() => void) | null; start: () => void; stop: () => void; abort?: () => void };
 type VoiceWindow = Window & { SpeechRecognition?: new () => VoiceRecognition; webkitSpeechRecognition?: new () => VoiceRecognition };
 
 const suggestions = [
@@ -276,6 +276,7 @@ export default function Home() {
   const [notificationPromptOpen, setNotificationPromptOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
+  const speechRecognitionRef = useRef<VoiceRecognition | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -599,20 +600,78 @@ export default function Home() {
   function submitMessage(event: FormEvent<HTMLFormElement>) { event.preventDefault(); sendMessage(); }
   async function toggleVoiceInput() {
     if (voiceListening) {
-      try { recorderRef.current?.stop(); } catch {}
+      try {
+        if (speechRecognitionRef.current) speechRecognitionRef.current.stop();
+        else recorderRef.current?.stop();
+      } catch {}
       return;
     }
     if (typeof window === "undefined" || !window.isSecureContext) {
       setToast("Voice typing needs HTTPS. Open Vedic AI using its https:// address.");
       return;
     }
+
+    // Prefer Chrome's built-in speech-to-text on Android. This avoids a separate
+    // audio upload/transcription API for browsers that support Web Speech.
+    const voiceWindow = window as VoiceWindow;
+    const Recognition = voiceWindow.SpeechRecognition || voiceWindow.webkitSpeechRecognition;
+    if (Recognition) {
+      try {
+        const recognition = new Recognition();
+        speechRecognitionRef.current = recognition;
+        recognition.lang = "hi-IN";
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.onresult = (event) => {
+          const finalParts: string[] = [];
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const result = event.results[i];
+            if (result?.[0]?.transcript && result.isFinal) finalParts.push(result[0].transcript.trim());
+          }
+          const transcript = finalParts.join(" ").trim();
+          if (transcript) {
+            setInput((current) => current.trim() ? current.trimEnd() + " " + transcript : transcript);
+            setToast("Voice added to your message. Keep speaking or tap the microphone to finish.");
+          }
+        };
+        recognition.onerror = (event) => {
+          setVoiceListening(false);
+          speechRecognitionRef.current = null;
+          if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+            setToast("Microphone access is blocked. In Chrome, tap the site controls beside the address → Permissions → Microphone → Allow. Also enable Chrome in Android Settings → Apps → Chrome → Permissions → Microphone, then reload this page.");
+          } else if (event.error === "no-speech") {
+            setToast("I couldn't hear speech. Tap the microphone and speak clearly near your phone.");
+          } else if (event.error === "audio-capture") {
+            setToast("No microphone is available. Close apps using the microphone and check Android permissions.");
+          } else if (event.error !== "aborted") {
+            setToast("Voice typing couldn't start (" + event.error + "). Check your connection and microphone permission, then try again.");
+          }
+        };
+        recognition.onend = () => {
+          setVoiceListening(false);
+          speechRecognitionRef.current = null;
+        };
+        recognition.start();
+        setVoiceListening(true);
+        setToast("Listening… speak in Hindi or English. Your words will appear in the message box.");
+        return;
+      } catch (error) {
+        speechRecognitionRef.current = null;
+        setVoiceListening(false);
+        const err = error as DOMException;
+        if (err?.name === "NotAllowedError" || err?.name === "SecurityError") {
+          setToast("Microphone access is blocked. In Chrome, open site controls → Permissions → Microphone → Allow, then reload Vedic AI.");
+          return;
+        }
+        // If native recognition fails to initialize, continue to the recorder fallback below.
+      }
+    }
+
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
-      setToast("This browser cannot record voice here. Update Chrome or use your keyboard's microphone to dictate.");
+      setToast("Voice typing is not supported in this browser. Update Chrome and allow microphone access, or use your keyboard's microphone.");
       return;
     }
     try {
-      // Use the standard microphone + MediaRecorder path instead of browser SpeechRecognition.
-      // This records locally and sends the clip to our server transcription endpoint.
       const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
       mediaStreamRef.current = stream;
       audioChunksRef.current = [];
