@@ -3511,3 +3511,54 @@ body:has(.app-shell[data-theme="light"]) {
  .app-shell:not([data-theme="light"]) .chat-footer{background:linear-gradient(180deg,rgba(6,8,20,0),rgba(6,8,20,.88) 28%,#060814 100%)}
 }
 @media(prefers-reduced-motion:reduce){.app-shell:not([data-theme="light"]) .main-panel:before{animation:none}}
+
+
+/* Restore the cosmic photograph on the signed-in chat welcome screen (desktop + mobile).
+   Keep it behind the content with a dark overlay; do not replace it with a flat gradient. */
+.main-panel:has(.welcome-wrap) {
+  position: relative;
+  isolation: isolate;
+  background:
+    linear-gradient(90deg, rgba(8, 10, 17, .90) 0%, rgba(8, 10, 17, .76) 48%, rgba(8, 10, 17, .62) 100%),
+    linear-gradient(180deg, rgba(8, 10, 17, .28) 0%, rgba(8, 10, 17, .12) 38%, rgba(8, 10, 17, .72) 100%),
+    url("https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=2400&q=90") center 44% / cover no-repeat;
+  background-attachment: scroll;
+}
+.main-panel:has(.welcome-wrap) .content-scroll {
+  background: transparent;
+}
+.main-panel:has(.welcome-wrap) .welcome-wrap {
+  position: relative;
+  z-index: 1;
+}
+.main-panel:has(.welcome-wrap) .prompt-card {
+  background: rgba(13, 16, 25, .56);
+  border-color: rgba(226, 218, 199, .16);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+.main-panel:has(.welcome-wrap) .prompt-card:hover {
+  background: rgba(22, 25, 36, .72);
+  border-color: rgba(212, 183, 122, .38);
+}
+.main-panel:has(.welcome-wrap) .chat-footer {
+  background: linear-gradient(180deg, rgba(8, 10, 17, 0), rgba(8, 10, 17, .88) 30%);
+}
+.main-panel:has(.welcome-wrap) .composer {
+  background: rgba(15, 18, 28, .88);
+  border-color: rgba(226, 218, 199, .2);
+  -webkit-backdrop-filter: blur(18px) saturate(120%);
+  backdrop-filter: blur(18px) saturate(120%);
+}
+@media (max-width: 680px) {
+  .main-panel:has(.welcome-wrap) {
+    background-image:
+      linear-gradient(180deg, rgba(7, 10, 19, .44) 0%, rgba(7, 10, 19, .38) 35%, rgba(7, 10, 19, .74) 100%),
+      url("https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=1400&q=88");
+    background-position: center, 58% center;
+    background-size: cover, cover;
+  }
+  .main-panel:has(.welcome-wrap) .welcome-wrap {
+    padding-top: 44px;
+  }
+}
