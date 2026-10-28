@@ -3795,6 +3795,8 @@ body:has(.app-shell[data-theme="light"]) {
   .app-shell > .main-panel { width: 100%; min-height: 100dvh; padding-bottom: calc(82px + env(safe-area-inset-bottom, 0px)); }
   .topbar { padding-inline: 15px; }
   .mobile-menu { display: inline-grid !important; }
+  .mobile-brand { display: flex; align-items: center; gap: 8px; }
+  .topbar-notifications, .topbar-help { display: none !important; }
   .mobile-bottom-nav {
     position: fixed;
     z-index: 75;
