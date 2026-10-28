@@ -3599,3 +3599,75 @@ body:has(.app-shell[data-theme="light"]) {
   .topbar-actions .topbar-link { width: 32px; min-width: 32px; height: 32px; min-height: 32px; }
   .topbar-actions .icon-button { width: 29px; height: 29px; }
 }
+
+
+/* Final light-theme normalization: avoid inherited dark surfaces/text that made light mode look inverted. */
+.app-shell[data-theme="light"] {
+  color-scheme: light;
+  background: #f5f6f8 !important;
+  color: #202638 !important;
+}
+.app-shell[data-theme="light"] .main-panel,
+.app-shell[data-theme="light"] .chat-area,
+.app-shell[data-theme="light"] .chat-scroll,
+.app-shell[data-theme="light"] .welcome-wrap,
+.app-shell[data-theme="light"] .messages-wrap {
+  background-color: #f5f6f8 !important;
+  color: #202638 !important;
+}
+.app-shell[data-theme="light"] .sidebar,
+.app-shell[data-theme="light"] .mobile-menu-panel {
+  background: #ffffff !important;
+  color: #202638 !important;
+}
+.app-shell[data-theme="light"] .composer,
+.app-shell[data-theme="light"] .composer textarea,
+.app-shell[data-theme="light"] .composer input {
+  color: #202638 !important;
+  background: #ffffff !important;
+  border-color: #dfe3ea !important;
+}
+.app-shell[data-theme="light"] .composer textarea::placeholder,
+.app-shell[data-theme="light"] input::placeholder,
+.app-shell[data-theme="light"] textarea::placeholder {
+  color: #7b8494 !important;
+  opacity: 1;
+}
+.app-shell[data-theme="light"] .message-text,
+.app-shell[data-theme="light"] .markdown-body,
+.app-shell[data-theme="light"] .markdown-body p,
+.app-shell[data-theme="light"] .markdown-body li,
+.app-shell[data-theme="light"] .markdown-body blockquote,
+.app-shell[data-theme="light"] .markdown-body h1,
+.app-shell[data-theme="light"] .markdown-body h2,
+.app-shell[data-theme="light"] .markdown-body h3,
+.app-shell[data-theme="light"] .markdown-body strong,
+.app-shell[data-theme="light"] .message-meta,
+.app-shell[data-theme="light"] .side-label,
+.app-shell[data-theme="light"] .profile-name {
+  color: #252c3d !important;
+}
+.app-shell[data-theme="light"] .user-bubble {
+  color: #252c3d !important;
+  background: #e9edf4 !important;
+  border-color: #dce2ec !important;
+}
+.app-shell[data-theme="light"] .message-avatar,
+.app-shell[data-theme="light"] .tool-button,
+.app-shell[data-theme="light"] .icon-button {
+  color: #596174;
+  background: #ffffff;
+  border-color: #dfe3ea;
+}
+.app-shell[data-theme="light"] .modal,
+.app-shell[data-theme="light"] [role="dialog"],
+.app-shell[data-theme="light"] .birth-modal,
+.app-shell[data-theme="light"] .history-panel,
+.app-shell[data-theme="light"] .profile-card {
+  color: #252c3d;
+  background: #ffffff;
+  border-color: #dfe3ea;
+}
+@media (prefers-color-scheme: dark) {
+  .app-shell[data-theme="light"] { color-scheme: light; }
+}
