@@ -4348,3 +4348,56 @@ html[data-theme="light"] .profile-signout { color:#343842 !important; background
 html[data-theme="light"] .mobile-bottom-nav { color:#62666e !important; background:rgba(255,254,250,.97) !important; border-top-color:#e3dfd4 !important; }
 html[data-theme="light"] .mobile-bottom-nav-item { color:#6d7280 !important; }
 html[data-theme="light"] .mobile-bottom-nav-item.active { color:#876326 !important; }
+
+
+/* Birth-date picker: render as an opaque, viewport-level dialog so the modal fields
+   never show through it or cover its controls on small screens. */
+.birth-calendar-layer {
+  position:fixed; inset:0; z-index:10000; display:grid; place-items:center;
+  padding:16px; background:rgba(5,8,15,.66); -webkit-backdrop-filter:blur(5px); backdrop-filter:blur(5px);
+}
+.birth-calendar-layer .birth-calendar {
+  position:relative; inset:auto; z-index:auto; width:min(360px,100%);
+  max-height:calc(100dvh - 32px); overflow-y:auto; overscroll-behavior:contain;
+  padding:17px; border:1px solid rgba(230,204,145,.3); border-radius:20px;
+  background:#191c26; color:#f1ecdd;
+  box-shadow:0 28px 90px rgba(0,0,0,.48),inset 0 1px 0 rgba(255,255,255,.05);
+  transform-origin:center; -webkit-backdrop-filter:none; backdrop-filter:none;
+}
+.birth-calendar-layer .birth-calendar-selectors select { background-color:#242733; color:#f1ecdd; }
+.birth-calendar-layer .birth-calendar-selectors option { background:#242733; color:#f1ecdd; }
+.birth-calendar-layer .birth-calendar-nav { color:#e0d9c7; background:#252833; }
+.birth-calendar-layer .birth-calendar-weekdays span { color:#a7adbc; }
+.birth-calendar-layer .birth-calendar-day { color:#ece8df; }
+.birth-calendar-layer .birth-calendar-day:disabled { color:#8d91a0; }
+.birth-calendar-layer .birth-calendar-selected span,
+.birth-calendar-layer .birth-calendar-zone { color:#a9afbd; }
+.birth-calendar-layer .birth-calendar-selected strong { color:#f4ead2; }
+.birth-calendar-layer .birth-calendar-footer { border-top-color:rgba(237,229,208,.14); }
+html[data-theme="light"] .birth-calendar-layer { background:rgba(35,40,52,.38); }
+html[data-theme="light"] .birth-calendar-layer .birth-calendar {
+  color:#292d39; border-color:#e0d5bc; background:#fffefa;
+  box-shadow:0 28px 90px rgba(31,36,48,.25),inset 0 1px 0 #fff;
+}
+html[data-theme="light"] .birth-calendar-layer .birth-calendar-topline,
+html[data-theme="light"] .birth-calendar-layer .birth-calendar-footer { border-color:#e8e2d6; }
+html[data-theme="light"] .birth-calendar-layer .birth-calendar-kicker { color:#80612e; }
+html[data-theme="light"] .birth-calendar-layer .birth-calendar-zone,
+html[data-theme="light"] .birth-calendar-layer .birth-calendar-selected span { color:#737989; }
+html[data-theme="light"] .birth-calendar-layer .birth-calendar-selectors select {
+  color:#292d39; border-color:#e1ddd3; background-color:#f7f5ef;
+}
+html[data-theme="light"] .birth-calendar-layer .birth-calendar-selectors option { color:#292d39; background:#fffefa; }
+html[data-theme="light"] .birth-calendar-layer .birth-calendar-nav { color:#454b59; border-color:#e3ded3; background:#f7f5ef; }
+html[data-theme="light"] .birth-calendar-layer .birth-calendar-weekdays span { color:#747a88; }
+html[data-theme="light"] .birth-calendar-layer .birth-calendar-day { color:#343842; }
+html[data-theme="light"] .birth-calendar-layer .birth-calendar-day:hover:not(:disabled) { color:#74551d; background:#f8f0df; }
+html[data-theme="light"] .birth-calendar-layer .birth-calendar-day.today:not(.selected) { color:#805f22; }
+html[data-theme="light"] .birth-calendar-layer .birth-calendar-day:disabled { color:#9b9da4; }
+html[data-theme="light"] .birth-calendar-layer .birth-calendar-selected strong { color:#292d39; }
+html[data-theme="light"] .birth-calendar-layer .birth-calendar-today { color:#73551d; border-color:#e4d5b2; background:#fbf4e5; }
+@media(max-width:520px) {
+  .birth-calendar-layer { padding:12px; }
+  .birth-calendar-layer .birth-calendar { width:min(360px,100%); max-height:calc(100dvh - 24px); padding:14px; border-radius:17px; }
+  .birth-calendar-layer .birth-calendar-selectors select { max-width:min(140px,36vw); }
+}
