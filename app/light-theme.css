@@ -157,3 +157,36 @@ html[data-theme="light"] .app-shell .topbar-theme-toggle { color:#494b42 !import
   .chat-header-brand .brand-mark { width:32px; height:32px; }
   .chat-header-brand .brand-name { font-size:13px; }
 }
+
+/* Public, authentication, and saved-report routes use the same light surfaces. */
+html[data-theme="light"] .auth-shell,html[data-theme="light"] .reports-shell,html[data-theme="light"] .marketing-shell {
+  background:#f7f5ef !important; color:#28291f !important;
+  background-image:radial-gradient(ellipse at 80% 0%,rgba(213,184,119,.15),transparent 36%) !important;
+}
+html[data-theme="light"] .auth-card,html[data-theme="light"] .report-card,
+html[data-theme="light"] .marketing-feature-card,html[data-theme="light"] .marketing-step,
+html[data-theme="light"] .marketing-intro,html[data-theme="light"] .marketing-principles {
+  background:#fffefa !important; color:#28291f !important; border-color:#e2ddd0 !important;
+  box-shadow:0 12px 34px rgba(54,45,24,.045);
+}
+html[data-theme="light"] .auth-title,html[data-theme="light"] .reports-title,
+html[data-theme="light"] .marketing-shell h1,html[data-theme="light"] .marketing-shell h2,
+html[data-theme="light"] .marketing-shell h3,html[data-theme="light"] .report-card h2 { color:#28291f !important; }
+html[data-theme="light"] .auth-title span,html[data-theme="light"] .reports-title span,
+html[data-theme="light"] .marketing-shell em,html[data-theme="light"] .marketing-section-kicker,
+html[data-theme="light"] .marketing-feature-number { color:#9b7737 !important; }
+html[data-theme="light"] .auth-copy,html[data-theme="light"] .auth-back,
+html[data-theme="light"] .auth-privacy,html[data-theme="light"] .auth-footer,
+html[data-theme="light"] .reports-description,html[data-theme="light"] .report-place,
+html[data-theme="light"] .marketing-shell p,html[data-theme="light"] .marketing-nav-links a {
+  color:#62645b !important;
+}
+html[data-theme="light"] .auth-form input,html[data-theme="light"] .auth-form textarea,
+html[data-theme="light"] .marketing-shell input { color:#28291f !important; background:#fffefa !important; border-color:#dcd6c8 !important; }
+html[data-theme="light"] .marketing-nav { background:rgba(250,249,245,.94) !important; border-color:#e2ddd0 !important; }
+html[data-theme="light"] .marketing-brand-name,html[data-theme="light"] .marketing-brand { color:#28291f !important; }
+html[data-theme="light"] .marketing-nav-cta,html[data-theme="light"] .marketing-button-primary,
+html[data-theme="light"] .auth-submit { background:linear-gradient(135deg,#e9d39c,#d4b16b) !important; color:#29251b !important; }
+html[data-theme="light"] .marketing-button-secondary,html[data-theme="light"] .marketing-text-link {
+  color:#765b2d !important; border-color:#d9c89f !important;
+}
