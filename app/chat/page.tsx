@@ -21,7 +21,7 @@ type Message = { id: string; role: "user" | "assistant"; content: string };
 type BirthProfile = { name: string; date: string; time: string; place: string; latitude?: number; longitude?: number; timezone?: string };
 type PlaceOption = { id: string; label: string; latitude: number; longitude: number; type: string; importance: number };
 type HistoryItem = { id: string; title: string; updated_at?: string };
-type VoiceRecognition = { lang: string; interimResults: boolean; continuous: boolean; onresult: ((event: { resultIndex: number; results: ArrayLike<ArrayLike<{ transcript: string; isFinal?: boolean }>> }) => void) | null; onerror: ((event: { error?: string }) => void) | null; onend: (() => void) | null; start: () => void; stop: () => void; abort?: () => void };
+type VoiceRecognition = { lang: string; interimResults: boolean; continuous: boolean; onresult: ((event: { resultIndex: number; results: ArrayLike<{ isFinal: boolean; 0: { transcript: string } }> }) => void) | null; onerror: ((event: { error?: string }) => void) | null; onend: (() => void) | null; start: () => void; stop: () => void; abort?: () => void };
 type VoiceWindow = Window & { SpeechRecognition?: new () => VoiceRecognition; webkitSpeechRecognition?: new () => VoiceRecognition };
 
 const suggestions = [
