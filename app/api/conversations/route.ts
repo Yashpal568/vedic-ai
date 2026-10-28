@@ -87,6 +87,9 @@ export async function POST(request: Request) {
       if (created) await supabase.from("conversations").delete().eq("id", conversationId).eq("user_id", user.id);
       return NextResponse.json({ error: "Could not save conversation messages." }, { status: 500 });
     }
+    // Keep the conversation list ordered by most recently active chat, not just creation time.
+    await supabase.from("conversations").update({ updated_at: new Date().toISOString() })
+      .eq("id", conversationId).eq("user_id", user.id);
     const { data: conversation } = await supabase.from("conversations").select("id,title,created_at,updated_at")
       .eq("id", conversationId).eq("user_id", user.id).single();
     return NextResponse.json({ saved: true, conversation }, { status: created ? 201 : 200 });
