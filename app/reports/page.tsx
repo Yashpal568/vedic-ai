@@ -4,6 +4,8 @@ import { ArrowLeft, ArrowUpRight, BookOpen, CalendarDays, MoonStar, Orbit, Shiel
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { KundliReport } from "@/lib/astrology";
 import ReportActions from "./report-actions";
+import SiteHeader from "@/components/site-header";
+import MobileBottomNav from "@/components/mobile-bottom-nav";
 
 type SavedReport = {
   id: string;
@@ -28,7 +30,7 @@ export default async function ReportsPage() {
   const reports = (data || []) as unknown as SavedReport[];
 
   return <main className="reports-shell">
-    <header className="reports-header"><Link className="auth-back" href="/"><ArrowLeft size={15}/> Back to Vedic AI</Link><div className="auth-brand"><span className="brand-mark"><MoonStar size={19}/></span><span className="brand-name">vedic<span style={{ color: "var(--gold)" }}>.</span>ai</span></div></header>
+    <SiteHeader section="Saved Kundlis & Reports" backHref="/chat" />
     <section className="reports-content">
       <div className="eyebrow"><span className="eyebrow-line"/> YOUR PERSONAL LIBRARY</div>
       <h1 className="reports-title">Saved <span>kundlis.</span></h1>
@@ -46,5 +48,6 @@ export default async function ReportsPage() {
           </article>;
         })}</div>}
     </section>
+    <MobileBottomNav />
   </main>;
 }
