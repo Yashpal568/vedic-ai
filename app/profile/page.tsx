@@ -1,10 +1,9 @@
 "use client";
 
 import { ChangeEvent, useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import MobileBottomNav from "@/components/mobile-bottom-nav";
 import SiteHeader from "@/components/site-header";
-import { ArrowLeft, Camera, Check, LoaderCircle, LogOut, MoonStar, Save, ShieldCheck, UserRound } from "lucide-react";
+import { Camera, Check, LoaderCircle, Save, ShieldCheck, UserRound } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 export default function ProfilePage() {
