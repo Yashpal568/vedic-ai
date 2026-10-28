@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
-  CalendarDays, Hand, House, LogOut, Menu, MessageCircle, MoonStar, Orbit, Sun, UserRound, X,
+  BookOpen, CalendarDays, Hand, House, LogOut, Menu, MessageCircle, MoonStar, Orbit, Sun, UserRound, X,
 } from "lucide-react";
 
 type Props = { section?: string; backHref?: string; backLabel?: string; onSignOut?: () => void };
@@ -15,6 +15,7 @@ const appLinks = [
   { label: "AI Chat", href: "/chat#chat-input", Icon: MessageCircle, key: "chat", detail: "Ask your Jyotish questions" },
   { label: "Palmistry", href: "/palm-reading", Icon: Hand, key: "palm", detail: "Explore visible palm lines" },
   { label: "Panchang", href: "/panchang", Icon: CalendarDays, key: "panchang", detail: "Daily almanac and timings" },
+  { label: "Saved Kundlis & reports", href: "/reports", Icon: BookOpen, key: "reports", detail: "Your saved birth charts" },
   { label: "My profile", href: "/profile", Icon: UserRound, key: "profile", detail: "Your account settings" },
 ];
 
@@ -54,6 +55,7 @@ export default function SiteHeader({ section, backHref, backLabel = "Back to cha
   const activeKey = pathname === "/panchang" ? "panchang"
     : pathname === "/palm-reading" ? "palm"
     : pathname === "/profile" ? "profile"
+    : pathname === "/reports" ? "reports"
     : "home";
 
   return <>
