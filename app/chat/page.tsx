@@ -10,7 +10,7 @@ import type { KundliReport } from "@/lib/astrology";
 import { printKundliReport } from "@/lib/print-report";
 import {
   ArrowDown, ArrowUp, AudioLines, Mic, MicOff, BookOpen, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight,
-  CircleHelp, Gem, History, LogOut, Menu, MessageCircle, MoonStar, Orbit, Plus, Sun,
+  CircleHelp, Gem, Hand, History, House, LogOut, Menu, MessageCircle, MoonStar, Orbit, Plus, Sun,
   ShieldCheck, Sparkles, Stars, UserRound, X, BriefcaseBusiness, Heart, Compass, Trash2, RefreshCw,
 } from "lucide-react";
 
