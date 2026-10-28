@@ -193,3 +193,123 @@ html[data-theme="light"] .marketing-button-secondary,html[data-theme="light"] .m
 
 /* The shared brand replaces the old duplicate preview pill in the chat header. */
 .app-shell .topbar .mode-pill { display:none !important; }
+
+
+/* Keep the public landing page readable when the persisted app preference is light.
+   The cosmic artwork stays subtle, while the page surface and typography follow light mode. */
+html[data-theme="light"] .marketing-nav {
+  background:rgba(250,249,245,.96) !important;
+  border-bottom-color:#e3ddcf !important;
+  box-shadow:0 4px 18px rgba(48,42,28,.035);
+}
+html[data-theme="light"] .marketing-menu-toggle {
+  color:#292a22 !important; background:#fffefa !important; border-color:#ddd5c2 !important;
+}
+html[data-theme="light"] .marketing-hero {
+  background:linear-gradient(115deg,#f7f5ef 0%,#f5f0e4 100%) !important;
+}
+html[data-theme="light"] .marketing-hero-image {
+  opacity:.16 !important;
+  background-image:linear-gradient(90deg,rgba(247,245,239,.92),rgba(247,245,239,.60)),url("https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=2000&q=85") !important;
+  background-position:center 46% !important;
+}
+html[data-theme="light"] .marketing-stars { opacity:.12 !important; }
+html[data-theme="light"] .marketing-hero h1 { color:#25271f !important; text-shadow:none !important; }
+html[data-theme="light"] .marketing-hero h1 em { color:#99712e !important; }
+html[data-theme="light"] .marketing-hero-copy { color:#5f6259 !important; }
+html[data-theme="light"] .marketing-eyebrow,
+html[data-theme="light"] .marketing-proof-row svg { color:#927039 !important; }
+html[data-theme="light"] .marketing-proof-row { color:#62645b !important; }
+html[data-theme="light"] .marketing-button-secondary {
+  color:#765b2d !important; background:rgba(255,254,250,.8) !important; border-color:#d8c79e !important;
+}
+html[data-theme="light"] .marketing-chart-art { opacity:.22 !important; }
+html[data-theme="light"] .chart-art-label { color:#28291f !important; background:rgba(255,254,250,.88) !important; border-color:#e2d6bc !important; }
+html[data-theme="light"] .chart-art-label small { color:#62645b !important; }
+html[data-theme="light"] .marketing-intro,
+html[data-theme="light"] .marketing-feature-section,
+html[data-theme="light"] .marketing-steps-section,
+html[data-theme="light"] .marketing-final-cta {
+  background:#f7f5ef !important; color:#28291f !important; border-color:#e3ddcf !important;
+}
+html[data-theme="light"] .marketing-feature-section { background:#f0ede4 !important; }
+html[data-theme="light"] .marketing-feature-card,
+html[data-theme="light"] .marketing-step {
+  background:#fffefa !important; color:#28291f !important; border-color:#e2ddd0 !important;
+}
+html[data-theme="light"] .marketing-feature-card h3,
+html[data-theme="light"] .marketing-step h3 { color:#28291f !important; }
+html[data-theme="light"] .marketing-feature-card p,
+html[data-theme="light"] .marketing-steps-section p,
+html[data-theme="light"] .marketing-section-heading>p,
+html[data-theme="light"] .marketing-intro-grid>p,
+html[data-theme="light"] .marketing-principles-copy>p { color:#62645b !important; }
+html[data-theme="light"] .marketing-visual-break { background:#ebe6da !important; }
+html[data-theme="light"] .marketing-visual-overlay {
+  background:linear-gradient(90deg,rgba(247,245,239,.92),rgba(247,245,239,.62)) !important;
+}
+html[data-theme="light"] .marketing-visual-copy h2,
+html[data-theme="light"] .marketing-visual-copy p { color:#28291f !important; }
+html[data-theme="light"] .marketing-principles {
+  background:#fffefa !important; border-color:#e2ddd0 !important;
+}
+html[data-theme="light"] .marketing-final-cta { background:#f0ede4 !important; }
+html[data-theme="light"] .marketing-footer {
+  background:#fffefa !important; color:#28291f !important; border-top-color:#e2ddd0 !important;
+}
+html[data-theme="light"] .marketing-footer p,
+html[data-theme="light"] .marketing-footer small,
+html[data-theme="light"] .marketing-footer-links a { color:#62645b !important; }
+html[data-theme="light"] .marketing-scroll-cue { color:#62645b !important; }
+
+/* One shared navigation drawer treatment across the chat and feature pages. */
+.site-drawer-backdrop {
+  position:fixed; inset:0; z-index:900; border:0; padding:0;
+  background:rgba(7,10,16,.46); -webkit-backdrop-filter:blur(5px); backdrop-filter:blur(5px);
+}
+.site-navigation-drawer {
+  position:fixed; inset:0 auto 0 0; z-index:901; width:min(88vw,350px); max-width:390px;
+  display:flex; flex-direction:column; gap:0; overflow-y:auto; overscroll-behavior:contain;
+  padding:20px 15px max(16px,env(safe-area-inset-bottom));
+  color:#e7e8ed; background:linear-gradient(180deg,#151a25,#10141d);
+  border-right:1px solid rgba(212,183,122,.2); box-shadow:25px 0 70px rgba(0,0,0,.3);
+}
+.site-drawer-heading { display:flex; align-items:center; gap:12px; padding:2px 5px 18px; border-bottom:1px solid rgba(255,255,255,.1); }
+.site-drawer-heading>div { display:flex; flex:1; min-width:0; flex-direction:column; gap:5px; }
+.site-drawer-heading strong { color:inherit; font-size:18px; letter-spacing:-.4px; }
+.site-drawer-heading strong span { color:#e0c58c; }
+.site-drawer-heading small { color:#969eae; font-size:9px; letter-spacing:1.8px; text-transform:uppercase; }
+.site-drawer-heading>button { display:grid; place-items:center; width:40px; height:40px; border:1px solid rgba(255,255,255,.12); border-radius:12px; background:rgba(255,255,255,.04); color:inherit; }
+.site-drawer-new { display:flex; align-items:center; gap:10px; min-height:49px; margin:18px 0 22px; padding:0 15px; border:1px solid rgba(212,183,122,.25); border-radius:15px; background:rgba(212,183,122,.08); color:#e9d49b; text-decoration:none; font-weight:650; }
+.site-drawer-new span { margin-left:auto; }
+.site-drawer-label { margin:0 4px 8px; padding:0 8px; color:#9299a8; font-size:10px; font-weight:750; letter-spacing:1.6px; }
+.site-drawer-links { display:flex; flex-direction:column; gap:5px; }
+.site-drawer-link { display:flex; align-items:center; gap:12px; min-height:65px; padding:10px 12px; border:1px solid transparent; border-radius:13px; color:#c0c5d0; text-decoration:none; transition:background .16s,border-color .16s,color .16s; }
+.site-drawer-link:hover { background:rgba(255,255,255,.045); }
+.site-drawer-link.active { background:rgba(224,197,140,.1); border-color:rgba(224,197,140,.23); color:#f2d99e; }
+.site-drawer-icon { display:grid; flex:0 0 43px; width:43px; height:43px; place-items:center; border:1px solid rgba(255,255,255,.1); border-radius:12px; background:rgba(255,255,255,.035); color:#dfc17d; }
+.site-drawer-copy { display:flex; flex:1; min-width:0; flex-direction:column; gap:5px; }
+.site-drawer-copy strong { font-size:13px; font-weight:650; }
+.site-drawer-copy small { color:#9299a8; font-size:10px; line-height:1.4; }
+.site-drawer-arrow { color:#9299a8; font-size:23px; }
+.site-drawer-footer { display:flex; align-items:center; gap:9px; margin-top:auto; padding:24px 7px 3px; color:#9299a8; font-size:11px; }
+.site-drawer-status { width:9px; height:9px; border-radius:50%; background:#6ebd91; box-shadow:0 0 0 5px rgba(110,189,145,.09); }
+html[data-theme="light"] .site-navigation-drawer {
+  color:#282d38 !important; background:linear-gradient(180deg,#fffefa,#f5f2e9) !important;
+  border-right-color:#e2ddd0 !important; box-shadow:25px 0 70px rgba(35,39,48,.18) !important;
+}
+html[data-theme="light"] .site-drawer-heading { border-bottom-color:#e6e0d2 !important; }
+html[data-theme="light"] .site-drawer-heading small,
+html[data-theme="light"] .site-drawer-copy small,
+html[data-theme="light"] .site-drawer-arrow,
+html[data-theme="light"] .site-drawer-footer { color:#73766e !important; }
+html[data-theme="light"] .site-drawer-heading>button { color:#3e4652 !important; border-color:#e2ddd0 !important; background:#fff !important; }
+html[data-theme="light"] .site-drawer-new { color:#78591f !important; background:#f8f0de !important; border-color:#e2d2ae !important; }
+html[data-theme="light"] .site-drawer-link { color:#555b66 !important; }
+html[data-theme="light"] .site-drawer-link:hover { background:#f4f0e6 !important; }
+html[data-theme="light"] .site-drawer-link.active { color:#795a21 !important; background:#f8f0df !important; border-color:#e4d3ac !important; }
+html[data-theme="light"] .site-drawer-icon { color:#987338 !important; background:#fffaf0 !important; border-color:#e7ddc7 !important; }
+html[data-theme="light"] .site-drawer-status { background:#4d9568; }
+html[data-theme="light"] .mobile-nav-drawer { background:linear-gradient(180deg,#fffefa,#f5f2e9) !important; color:#282d38 !important; border-right-color:#e2ddd0 !important; }
+html[data-theme="light"] .mobile-nav-drawer .side-link { color:#555b66 !important; }
+html[data-theme="light"] .mobile-nav-drawer .side-link.active { color:#795a21 !important; background:#f8f0df !important; border-color:#e4d3ac !important; }
