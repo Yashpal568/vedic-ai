@@ -3466,3 +3466,29 @@ body:has(.app-shell[data-theme="light"]) {
   .message-content table { font-size: 10px; }
   .user-bubble { font-size: 12px; }
 }
+
+
+/* Chat screen polish based on the supplied conversational HTML reference. */
+.app-shell .main-panel{position:relative;isolation:isolate;background-color:var(--bg)}
+.app-shell:not([data-theme="light"]) .main-panel{
+  background-image:
+    linear-gradient(180deg,rgba(10,12,22,.78) 0%,rgba(10,12,22,.84) 38%,rgba(10,12,22,.91) 76%,#10110f 100%),
+    url("https://lh3.googleusercontent.com/aida-public/AB6AXuD74e0LVVlimK7dA0xRkh2UPnM_JMkaevOOUIPkEFhX34KrqDxZ1rbH0a1OE_v2l5td6xZd2IQdMgdessEfGixa2txOFy4QP5s5LHLZ8yOAvuGmeZHH1MWlmm6q_6yKsmhTRqOyd57Nukx-sTEpb8qko_1kNV9PoZznjjnafhZe0US5S_8VyLg2g10oEwjvZTcBYidsa397F4Z1sr_111-Gu2ZtvXl7uzz-ZyU7xjSj");
+  background-size:cover;
+  background-position:center top;
+  background-attachment:fixed;
+}
+.app-shell:not([data-theme="light"]) .content-scroll{background:linear-gradient(180deg,rgba(12,14,24,.1),rgba(12,14,24,.16))}
+.app-shell:not([data-theme="light"]) .topbar{background:rgba(12,14,23,.78);backdrop-filter:blur(22px)}
+.app-shell:not([data-theme="light"]) .welcome-wrap{position:relative}
+.app-shell:not([data-theme="light"]) .prompt-card{background:rgba(19,21,32,.62);backdrop-filter:blur(14px);border-color:rgba(222,202,155,.15)}
+.app-shell:not([data-theme="light"]) .assistant-note{background:rgba(22,23,32,.62);backdrop-filter:blur(14px)}
+.app-shell:not([data-theme="light"]) .user-bubble{background:rgba(37,39,49,.82);backdrop-filter:blur(14px)}
+.app-shell:not([data-theme="light"]) .message-text{ text-shadow:0 1px 12px rgba(0,0,0,.18)}
+.app-shell:not([data-theme="light"]) .composer{background:rgba(20,22,31,.88);backdrop-filter:blur(22px);border-color:rgba(222,202,155,.22)}
+.app-shell[data-theme="light"] .main-panel{background:radial-gradient(ellipse at 75% 0%,rgba(190,164,103,.09),transparent 40%),var(--bg);background-image:none}
+@media(max-width:680px){
+ .app-shell:not([data-theme="light"]) .main-panel{background-attachment:scroll;background-position:center top;background-size:auto 100dvh}
+ .app-shell:not([data-theme="light"]) .content-scroll{background:rgba(12,14,24,.12)}
+ .app-shell:not([data-theme="light"]) .chat-footer{background:linear-gradient(180deg,rgba(16,17,15,0),rgba(16,17,15,.9) 28%,#10110f 100%)}
+}
