@@ -10,6 +10,23 @@ const schema = z.object({
   question: z.string().max(800).optional(),
 });
 
+function buildPalmPrompt(hand: "left" | "right" | "unsure", question?: string) {
+  return `You are a cautious visual assistant describing only features that are actually visible in a palm photograph. This is a traditional palmistry interpretation, not science or a reliable prediction of a person's future.
+
+First assess image quality. The palm should be clearly visible, reasonably in focus, and large enough to inspect. Do not infer palm lines from blur, shadows, jewellery, markings, or artifacts. If the image is not clearly a palm or the major lines cannot be seen confidently, return clear=false and a short actionable reason asking for a brighter, sharper, closer photo with the full open palm visible.
+
+Hand identified by the user: ${hand}.
+User's optional question: ${question?.trim() || "Describe the clearly visible major palm lines in a cautious, traditional way."}
+
+If the image is clear, return a concise reading grounded in visible details. Distinguish observations from traditional symbolic interpretations. Do not claim certainty about lifespan, health, death, marriage dates, wealth, pregnancy, or exact future events. Never invent line features that are not visible.
+
+Return ONLY valid JSON with this shape:
+{"clear": true, "reading": "..." }
+or
+{"clear": false, "reason": "..."}
+No markdown fences or extra text.`;
+}
+
 export async function POST(request: Request) {
   try {
     const body = schema.parse(await request.json());
@@ -18,13 +35,14 @@ export async function POST(request: Request) {
     const mimeType = match[1];
     const base64 = match[2];
     if (base64.length > 6_500_000) return NextResponse.json({ error: "Image is too large. Please upload a photo under 4 MB." }, { status: 413 });
+    const prompt = buildPalmPrompt(body.hand, body.question);
     const provider = (process.env.AI_PROVIDER || "gemini").toLowerCase();
     const useGroqVision = provider === "groq" || (!process.env.GEMINI_API_KEY && Boolean(process.env.GROQ_API_KEY));
     let response: Response;
     if (useGroqVision) {
       const key = process.env.GROQ_API_KEY;
       if (!key) return NextResponse.json({ error: "Palm reading needs GROQ_API_KEY or GEMINI_API_KEY configured on the server." }, { status: 503 });
-      const model = process.env.PALM_GROQ_MODEL || "qwen/qwen3.8-27b";
+      const model = process.env.PALM_GROQ_MODEL || "meta-llama/llama-4-scout-17b-16e-instruct";
       response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + key },
@@ -48,7 +66,7 @@ export async function POST(request: Request) {
     } else {
       const key = process.env.GEMINI_API_KEY;
       if (!key) return NextResponse.json({ error: "Palm reading needs GEMINI_API_KEY or GROQ_API_KEY configured on the server." }, { status: 503 });
-      const model = process.env.PALM_GEMINI_MODEL || process.env.GEMINI_MODEL || process.env.AI_MODEL || "gemini-3.8-flash";
+      const model = process.env.PALM_GEMINI_MODEL || "gemini-2.5-flash";
       response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent", {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-goog-api-key": key },
