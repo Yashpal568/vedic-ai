@@ -2,6 +2,7 @@
 
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import MobileBottomNav from "@/components/mobile-bottom-nav";
 import { ArrowLeft, Camera, Check, LoaderCircle, LogOut, MoonStar, Save, ShieldCheck, UserRound } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 
@@ -93,5 +94,6 @@ export default function ProfilePage() {
         <p className="profile-privacy"><ShieldCheck size={14}/> Profile details are stored in your authenticated account. Do not add sensitive personal information to your bio.</p>
       </div>
     </section>
+    <MobileBottomNav />
   </main>;
 }
