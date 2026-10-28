@@ -2036,3 +2036,85 @@ html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) {
   .topbar-link, .topbar-theme-toggle, .topbar .icon-button { transition: none; }
 }
+
+
+/* Premium responsive polish: breathable navigation and a complete light theme for chat surfaces. */
+.app-shell[data-theme="light"] .chat-footer {
+  background: linear-gradient(180deg, rgba(246,245,241,0), rgba(246,245,241,.92) 22%, #f6f5f1 100%);
+}
+.app-shell[data-theme="light"] .composer {
+  color: #252c3d;
+  background: rgba(255,255,255,.97);
+  border-color: #dfe3ea;
+  box-shadow: 0 14px 36px rgba(24,35,54,.09), 0 1px 0 rgba(255,255,255,.9) inset;
+}
+.app-shell[data-theme="light"] .composer textarea { color: #252c3d; }
+.app-shell[data-theme="light"] .composer textarea::placeholder { color: #858b98; }
+.app-shell[data-theme="light"] .composer .tool-button { color: #606a7d; }
+.app-shell[data-theme="light"] .composer .tool-button:hover { color: #76551d; background: rgba(168,132,58,.1); }
+.app-shell[data-theme="light"] .send-button { background: linear-gradient(135deg,#d9bd80,#c6a45c); color: #211b10; box-shadow: 0 5px 14px rgba(160,123,48,.18); }
+.app-shell[data-theme="light"] .footer-note { color: #7c8290; }
+.app-shell[data-theme="light"] .sidebar { background: linear-gradient(180deg,#fff 0%,#f6f7fa 100%); border-right-color: #e5e8ef; }
+.app-shell[data-theme="light"] .sidebar .brand-name { color: #22283a; }
+.app-shell[data-theme="light"] .side-label { color: #8a90a0; }
+.app-shell[data-theme="light"] .side-link { color: #596174; border-color: transparent; }
+.app-shell[data-theme="light"] .side-link:hover { background: #f2f4f8; color: #252c3d; }
+.app-shell[data-theme="light"] .side-link.active { color: #252c3d; background: #eceff5; border-color: #e0e5ee; box-shadow: inset 3px 0 #b8944e; }
+.app-shell[data-theme="light"] .sidebar-bottom { border-top-color: #e5e8ef; }
+.app-shell[data-theme="light"] .profile-row { color: #252c3d; }
+.app-shell[data-theme="light"] .profile-caption { color: #798194; }
+.app-shell[data-theme="light"] .plan-card { color: #34394a; background: linear-gradient(145deg,#fffdf7,#f5f1e7); border-color: #e8dfca; }
+.app-shell[data-theme="light"] .plan-card button { color: #76551d; }
+.app-shell[data-theme="light"] .topbar { padding-inline: clamp(18px,3vw,42px); gap: 20px; }
+.app-shell[data-theme="light"] .topbar-actions { gap: 10px; }
+.app-shell[data-theme="light"] .chat-area { background: transparent; }
+.app-shell[data-theme="light"] .message-meta { color: #858b98; }
+.app-shell[data-theme="light"] .user-bubble { color: #293044; background: #eceff5; border-color: #e0e5ee; }
+.app-shell[data-theme="light"] .message-content { color: #252c3d; }
+.app-shell[data-theme="light"] .message-text { color: #343b4e; }
+.app-shell[data-theme="light"] .modal { background: #fff; color: #252c3d; border-color: #e1e5ed; box-shadow: 0 24px 70px rgba(24,35,54,.18); }
+.app-shell[data-theme="light"] .modal-copy { color: #697286; }
+.app-shell[data-theme="light"] .form-label { color: #4f586b; }
+.app-shell[data-theme="light"] .form-input { color: #252c3d; background: #f8f9fb; border-color: #dfe3ea; }
+.app-shell[data-theme="light"] .secondary-button { color: #4f586b; border-color: #dfe3ea; }
+@media (min-width: 681px) {
+  .topbar { padding-inline: clamp(22px,3vw,44px); }
+  .topbar-actions { gap: 12px; }
+  .topbar-actions .topbar-link, .topbar-actions .topbar-theme-toggle { min-height: 40px; border-radius: 12px; padding-inline: 14px; }
+}
+@media (max-width: 680px) {
+  .topbar { min-height: 68px; padding: 0 16px; gap: 12px; }
+  .topbar-left { gap: 11px; min-width: 0; }
+  .mobile-brand { gap: 10px; }
+  .mobile-brand .brand-mark { width: 36px; height: 36px; border-radius: 12px; }
+  .mobile-brand .brand-name { font-size: 15px; }
+  .topbar-actions { gap: 8px; }
+  .topbar-actions .topbar-theme-toggle { width: 40px; min-width: 40px; height: 40px; display: inline-flex; justify-content: center; align-items: center; padding: 0; border-radius: 13px; }
+  .topbar-actions .topbar-theme-toggle span { display: none; }
+  .topbar-actions .topbar-link { width: 40px; min-width: 40px; height: 40px; border-radius: 13px; }
+  .topbar-actions .topbar-notifications, .topbar-actions .topbar-help { display: none !important; }
+  .topbar-actions .topbar-link svg, .topbar-actions .icon-button svg { width: 18px; height: 18px; }
+  .chat-area { padding-top: 22px; }
+  .chat-footer { padding: 12px 14px max(12px,env(safe-area-inset-bottom)); }
+  .composer { border-radius: 20px; padding: 13px 14px 11px; }
+  .composer textarea { min-height: 40px; font-size: 14px; }
+  .composer-bottom { gap: 10px; }
+  .composer-tools { gap: 8px; }
+  .tool-button { min-width: 40px; min-height: 40px; justify-content: center; border-radius: 12px; }
+  .send-button { width: 42px; height: 42px; border-radius: 13px; }
+  .app-shell[data-theme="light"] .chat-footer { background: linear-gradient(180deg,rgba(246,245,241,0),rgba(246,245,241,.94) 15%,#f6f5f1 100%); }
+  .app-shell[data-theme="light"] .composer { background: rgba(255,255,255,.98); }
+  .app-shell[data-theme="light"] .mobile-menu-panel { background: #fff; color: #252c3d; border-right-color: #e5e8ef; box-shadow: 20px 0 70px rgba(24,35,54,.16); }
+  .app-shell[data-theme="light"] .mobile-menu-panel .side-link { color: #596174; }
+  .app-shell[data-theme="light"] .mobile-menu-panel .side-link.active { background: #eceff5; color: #252c3d; }
+  .app-shell[data-theme="light"] .mobile-menu-panel .new-chat { background: #fff; border-color: #dfe3ea; }
+  .app-shell[data-theme="light"] .mobile-menu-panel .sidebar-bottom { border-top-color: #e5e8ef; }
+}
+@media (max-width: 390px) {
+  .topbar { padding-inline: 10px; gap: 7px; }
+  .topbar-left { gap: 7px; }
+  .mobile-brand .brand-mark { width: 33px; height: 33px; }
+  .mobile-brand .brand-name { font-size: 14px; }
+  .topbar-actions { gap: 5px; }
+  .topbar-actions .topbar-theme-toggle, .topbar-actions .topbar-link { width: 36px; min-width: 36px; height: 36px; }
+}
