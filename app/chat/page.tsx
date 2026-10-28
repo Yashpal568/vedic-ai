@@ -4,12 +4,13 @@ import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Link from "next/link";
+import MobileBottomNav from "@/components/mobile-bottom-nav";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import type { KundliReport } from "@/lib/astrology";
 import { printKundliReport } from "@/lib/print-report";
 import {
   ArrowDown, ArrowUp, AudioLines, Mic, MicOff, BookOpen, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight,
-  CircleHelp, Gem, History, LogOut, Menu, MessageCircle, MoonStar, Orbit, Plus, Sun, House, Hand,
+  CircleHelp, Gem, History, LogOut, Menu, MessageCircle, MoonStar, Orbit, Plus, Sun,
   ShieldCheck, Sparkles, Stars, UserRound, X, BriefcaseBusiness, Heart, Compass, Trash2, RefreshCw,
 } from "lucide-react";
 
@@ -21,10 +22,11 @@ type VoiceRecognition = { lang: string; interimResults: boolean; continuous: boo
 type VoiceWindow = Window & { SpeechRecognition?: new () => VoiceRecognition; webkitSpeechRecognition?: new () => VoiceRecognition };
 
 const suggestions = [
-  { title: "Understand my birth chart", description: "Read my own lagna, houses, and planetary placements.", prompt: "Give me a personalised reading of my calculated Vedic birth chart. Explain my Lagna, Moon sign, key planetary placements, and what cannot be concluded from the available data.", icon: Orbit },
-  { title: "Career & life direction", description: "Analyse career indicators in my own chart.", prompt: "Analyse career and work themes from my calculated birth chart. Examine the 10th house and lord, 6th house, 2nd and 11th houses, Lagna and lord, and current Vimshottari dasha only where calculated data supports it. Explain the chart facts behind each interpretation; do not give generic advice as if it came from my chart.", icon: BriefcaseBusiness },
-  { title: "Love & relationships", description: "Explore relationship themes from my own chart.", prompt: "Analyse traditional relationship themes in my calculated birth chart using the 7th house and lord, Venus, Moon, and Navamsa only if validated data is available. Separate calculated facts from symbolic interpretation and do not guarantee events.", icon: Heart },
-  { title: "Nakshatra & dasha", description: "Interpret my calculated Moon nakshatra and dasha.", prompt: "Explain my calculated Moon nakshatra, pada, and Vimshottari dasha timeline. Use only values present in my calculated chart; do not invent placements or dates.", icon: Stars },
+  { title: "Kundli banwa lo", description: "Generate your Janam Kundli, Lagna and houses.", prompt: "Give me a personalised overview of my calculated Vedic birth chart, including Lagna, houses and planetary placements. Use only values present in my calculated chart.", icon: Orbit },
+  { title: "Relationship & marriage compatibility", description: "Explore traditional relationship themes and compatibility.", prompt: "Analyse traditional relationship themes from my calculated birth chart using the 7th house and lord, Venus, Moon, and Navamsa only if validated data is available. Separate chart facts from symbolic interpretation and do not guarantee events.", icon: Heart },
+  { title: "Career & 10th house direction", description: "Explore career indicators and traditional timing factors.", prompt: "Analyse career and work themes from my calculated birth chart. Examine the 10th house and lord, 6th house, 2nd and 11th houses, Lagna and lord, and current Vimshottari dasha only where calculated data supports it. Do not invent placements or dates.", icon: BriefcaseBusiness },
+  { title: "Current Mahadasha & remedies", description: "Understand calculated dasha periods and optional traditions.", prompt: "Explain my calculated Vimshottari Mahadasha and Antardasha if available. Suggest only optional, low-risk traditional practices and clearly distinguish symbolism from evidence.", icon: Gem },
+  { title: "Today's Shubh Muhurat & Panchang", description: "View tithi, nakshatra, yoga and local daily timings.", prompt: "Help me understand today's Panchang and traditional timing concepts. Direct me to the live Panchang page for location-based timings.", icon: CalendarDays },
 ];
 const makeId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
@@ -216,6 +218,9 @@ function StreamingMarkdown({ content }: { content: string }) {
 }
 
 export default function Home() {
+  useEffect(() => {
+    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("openBirth") === "1") setIsBirthOpen(true);
+  }, []);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [voiceListening, setVoiceListening] = useState(false);
@@ -1001,21 +1006,30 @@ export default function Home() {
 
         <div className="content-scroll">
           {!hasConversation ? <section className="welcome-wrap">
-            <div className="hero-heading-row">
-              <svg className="hero-orbit" viewBox="0 0 220 220" fill="none" aria-hidden="true">
-                <circle cx="110" cy="110" r="78" stroke="#d4b77a" strokeOpacity=".18" /><circle cx="110" cy="110" r="58" stroke="#d4b77a" strokeOpacity=".12" strokeDasharray="2 7" /><circle cx="110" cy="110" r="37" stroke="#d4b77a" strokeOpacity=".22" />
-                <ellipse cx="110" cy="110" rx="96" ry="38" transform="rotate(-36 110 110)" stroke="#d4b77a" strokeOpacity=".22" /><ellipse cx="110" cy="110" rx="96" ry="38" transform="rotate(54 110 110)" stroke="#d4b77a" strokeOpacity=".12" />
-                <circle cx="171" cy="57" r="4" fill="#e6cc91" /><circle cx="34" cy="126" r="3" fill="#d4b77a" /><path d="M110 80 L117 103 L140 110 L117 117 L110 140 L103 117 L80 110 L103 103 Z" fill="#d4b77a" fillOpacity=".8" /><circle cx="110" cy="110" r="5" fill="#f1dba5" />
-              </svg>
-              <div className="eyebrow"><span className="eyebrow-line" /> THE WISDOM OF JYOTISH, REIMAGINED</div>
-              <h1 className="hero-title">Your stars have a story.<br /><span className="gold">Let’s explore it.</span></h1>
-              <p className="hero-copy">A personal space to explore Vedic astrology with more clarity. Start with your birth chart, discover the language of the planets, and ask the questions that matter to you.</p>
+            <div className="home-engine-status">
+              <span className="home-engine-mark"><MoonStar size={17}/></span>
+              <div className="home-engine-copy">
+                <strong><i/> PARASHARA ENGINE · VEDIC JYOTISH</strong>
+                <span>{chartReport?.planets.find((planet) => planet.name === "Moon")?.nakshatra ? "Moon in " + chartReport.planets.find((planet) => planet.name === "Moon")?.nakshatra + " Nakshatra" : "Add birth details for your personal chart"}</span>
+              </div>
+              <button type="button" className="home-sessions-button" onClick={() => setMobileMenuOpen(true)}><History size={14}/> Sessions</button>
             </div>
-            <div className="quick-label">A good place to begin</div>
+            <div className="home-welcome-message">
+              <div className="home-welcome-brand"><span className="home-welcome-avatar"><MoonStar size={20}/><i/></span><div><strong>VEDIC.AI <span>·</span> ASTROLOGY COMPANION</strong><small><i/> Ready to explore</small></div></div>
+              <p>Namaste! 🙏 How can I assist you with your cosmic chart today? Explore the language of the planets, your questions, and traditional Jyotish concepts.</p>
+              <div className="home-birth-card">
+                <div className="home-birth-card-title"><CalendarDays size={17}/> {savedBirth && chartReport ? "Your birth chart is ready" : "Birth coordinates required"}</div>
+                <p>{savedBirth && chartReport ? "Your chart is calculated. Open your birth profile to review the details before exploring personal interpretations." : "To interpret your personal Janam Kundli, add your date of birth, exact local birth time, and birthplace."}</p>
+                <button type="button" onClick={() => setIsBirthOpen(true)}><CalendarDays size={16}/>{savedBirth && chartReport ? "Review birth details" : "Enter birth details"} <span>✦</span></button>
+              </div>
+            </div>
+            <div className="home-pathway-heading"><span><Sparkles size={14}/> CHOOSE A PATHWAY TO EXPLORE</span><small>5 Presets</small></div>
             <div className="prompt-grid">{suggestions.map((item) => {
               const Icon = item.icon;
               return <button className="prompt-card" key={item.title} onClick={() => {
-                 if (!savedBirth || !chartReport) {
+                 if (item.title.startsWith("Today's")) {
+                   window.location.href = "/panchang";
+                 } else if (!savedBirth || !chartReport) {
                    setPendingPrompt(item.prompt);
                    setIsBirthOpen(true);
                    setToast("For a personal reading, add your birth date, exact time, and birthplace first.");
@@ -1023,11 +1037,12 @@ export default function Home() {
                    void sendMessage(item.prompt);
                  }
                }}>
-                <span className="prompt-icon"><Icon size={16} strokeWidth={1.7} /></span>
-                <span><span className="prompt-title" style={{ display: "block" }}>{item.title}</span><span className="prompt-description" style={{ display: "block" }}>{item.description}</span></span>
+                <span className="prompt-icon"><Icon size={18} strokeWidth={1.7} /></span>
+                <span className="home-pathway-copy"><span className="prompt-title" style={{ display: "block" }}>{item.title}</span><span className="prompt-description" style={{ display: "block" }}>{item.description}</span></span>
+                <ChevronRight className="home-pathway-chevron" size={19}/>
               </button>;
             })}</div>
-            <div className="assistant-note" style={{ marginTop: 22 }}><ShieldCheck size={15} style={{ flexShrink: 0, color: "var(--gold)", marginTop: 1 }} /><span>For a personalised reading, add your birth date, exact local birth time, and birthplace. This preview won’t invent planetary placements; verified chart calculations will be connected in the next development phase.</span></div>
+            <div className="home-guidance-note"><Sparkles size={17}/><span>Traditional Jyotish interpretations are for reflection. Personal chart insights require precise birth details and calculated chart data.</span></div>
           </section> : <section className="chat-area" aria-live="polite">
             {chartReport && <section className="chart-panel">
               <div className="chart-panel-head"><div><div className="eyebrow"><span className="eyebrow-line" /> YOUR VEDIC BIRTH CHART</div><h2 className="chart-title">{chartReport.ascendant.sign} Ascendant <span>· {chartReport.birth.place.split(",").slice(0, 2).join(",")}</span></h2><p className="chart-subtitle">Lahiri sidereal · Whole-sign houses · {chartReport.birth.timezone}</p></div><button className="secondary-button chart-export" onClick={() => { const blob = new Blob([JSON.stringify(chartReport, null, 2)], { type: "application/json" }); const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.href = url; link.download = "vedic-ai-kundli.json"; link.click(); URL.revokeObjectURL(url); }}>Export chart <ArrowDown size={13}/></button><button className="secondary-button chart-export" onClick={() => { try { printKundliReport(chartReport); } catch (error) { setToast(error instanceof Error ? error.message : "Could not open PDF preview."); } }}>Print / Save PDF</button><button className="primary-button chart-save" onClick={saveChartReport}>Save kundli <Check size={13}/></button><button className="secondary-button chart-export" onClick={loadCurrentTransits} disabled={transitLoading}>{transitLoading ? <RefreshCw size={13} className="spin-icon"/> : <Orbit size={13}/>} {transitLoading ? "Calculating…" : "Current transits"}</button></div>
@@ -1065,7 +1080,7 @@ export default function Home() {
 
         <footer className="chat-footer"><div className="composer-wrap">
           <form className="composer" onSubmit={submitMessage}>
-            <textarea ref={textareaRef} value={input} onChange={(event) => { setInput(event.target.value); event.target.style.height = "auto"; event.target.style.height = Math.min(event.target.scrollHeight, 150) + "px"; }} onKeyDown={onComposerKeyDown} placeholder="Ask about your kundli, planets, nakshatras, or Jyotish…" rows={1} aria-label="Message Vedic AI" />
+            <textarea id="chat-input" ref={textareaRef} value={input} onChange={(event) => { setInput(event.target.value); event.target.style.height = "auto"; event.target.style.height = Math.min(event.target.scrollHeight, 150) + "px"; }} onKeyDown={onComposerKeyDown} placeholder="Ask about your kundli, planets, nakshatras, or Jyotish…" rows={1} aria-label="Message Vedic AI" />
             <div className="composer-bottom"><div className="composer-tools">
               <button type="button" className="tool-button" onClick={() => setIsBirthOpen(true)}><Plus size={15} /><span>{savedBirth ? "Birth profile added" : "Add birth details"}</span></button>
               <button type="button" className={"tool-button voice-input-button" + (voiceListening ? " is-listening" : "")} onClick={toggleVoiceInput} aria-label={voiceListening ? "Stop voice typing" : "Start voice typing"} title={voiceListening ? "Stop voice typing" : "Speak to type"}><span className="voice-input-icon">{voiceListening ? <MicOff size={16} /> : <Mic size={16} />}</span><span>{voiceListening ? "Listening…" : "Speak"}</span></button>
@@ -1074,23 +1089,7 @@ export default function Home() {
           <p className="footer-note">Vedic AI can make mistakes. Astrological interpretations are traditional perspectives, not certainties. <span className="footer-separator">·</span> <Link href="/privacy">Privacy</Link> <span className="footer-separator">·</span> <Link href="/terms">Terms</Link></p>
         </div></footer>
 
-        <nav className="mobile-bottom-nav" aria-label="Primary navigation">
-          <button type="button" className={"mobile-bottom-nav-item" + (!hasConversation ? " active" : "")} onClick={startNewChat} aria-label="Home">
-            <House size={19} strokeWidth={1.8} /><span>Home</span>
-          </button>
-          <button type="button" className={"mobile-bottom-nav-item" + (chartReport ? " active" : "")} onClick={() => setIsBirthOpen(true)} aria-label="Kundli">
-            <Orbit size={19} strokeWidth={1.8} /><span>Kundli</span>
-          </button>
-          <button type="button" className={"mobile-bottom-nav-item" + (hasConversation ? " active" : "")} onClick={() => textareaRef.current?.focus()} aria-label="AI Chat">
-            <MessageCircle size={20} strokeWidth={1.9} /><span>AI Chat</span>
-          </button>
-          <button type="button" className="mobile-bottom-nav-item" onClick={() => { window.location.href = "/palm-reading"; }} aria-label="Palmistry">
-            <Hand size={19} strokeWidth={1.8} /><span>Palmistry</span>
-          </button>
-          <button type="button" className="mobile-bottom-nav-item" onClick={() => setToast("Panchang tools are not available in this build yet.")} aria-label="Panchang">
-            <CalendarDays size={19} strokeWidth={1.8} /><span>Panchang</span>
-          </button>
-        </nav>
+        <MobileBottomNav />
       </section>
 
       {notificationPromptOpen && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) dismissNotificationPrompt(); }}><section className="modal" role="dialog" aria-modal="true" aria-labelledby="notification-modal-title"><div className="modal-head"><div><div className="eyebrow"><span className="eyebrow-line" /> STAY IN THE LOOP</div><h2 className="modal-title" id="notification-modal-title" style={{ margin: "12px 0 0" }}>Enable notifications</h2><p className="modal-copy">Get helpful updates from Vedic AI in this browser. You can change this permission anytime in your browser settings.</p></div><button className="icon-button" onClick={dismissNotificationPrompt} aria-label="Close notification prompt"><X size={17}/></button></div><div className="assistant-note"><ShieldCheck size={15} style={{ flexShrink: 0, color: "var(--gold)" }}/><span>Your browser will show its own permission prompt after you tap Enable. Vedic AI cannot grant permission on your behalf.</span></div><div className="modal-actions"><button type="button" className="secondary-button" onClick={dismissNotificationPrompt}>Not now</button><button type="button" className="primary-button" onClick={() => { void enableNotifications(); }}>Enable notifications <Check size={14}/></button></div></section></div>}
