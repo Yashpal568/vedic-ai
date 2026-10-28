@@ -3,6 +3,7 @@ import { z } from "zod";
 import tzlookup from "@photostructure/tz-lookup";
 import { calculateKundliAtInstant } from "@/lib/astrology";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { Body, Observer, SearchRiseSet } from "astronomy-engine";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -47,6 +48,23 @@ function solarEvents(date: string, latitude: number, longitude: number, timezone
   const sunsetLocalOffset = timezoneOffsetMinutes(sunset, timezone);
   return { sunrise, sunset, sunriseLocalOffset, sunsetLocalOffset };
 }
+function localDateKey(date: Date, timezone: string) {
+  const parts = new Intl.DateTimeFormat("en-CA", { timeZone: timezone, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(date);
+  const p = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return p.year + "-" + p.month + "-" + p.day;
+}
+function lunarEvents(date: string, latitude: number, longitude: number, timezone: string) {
+  const [year, month, day] = date.split("-").map(Number);
+  const noonUtc = new Date(Date.UTC(year, month - 1, day, 12));
+  const offset = timezoneOffsetMinutes(noonUtc, timezone);
+  const localMidnightUtc = new Date(Date.UTC(year, month - 1, day) - offset * 60000);
+  const observer = new Observer(latitude, longitude, 0);
+  const rise = SearchRiseSet(Body.Moon, observer, +1, localMidnightUtc, 1);
+  const set = SearchRiseSet(Body.Moon, observer, -1, localMidnightUtc, 1);
+  const riseDate = rise?.date && localDateKey(rise.date, timezone) === date ? rise.date : null;
+  const setDate = set?.date && localDateKey(set.date, timezone) === date ? set.date : null;
+  return { moonrise: riseDate, moonset: setDate };
+}
 function formatTime(date: Date, timezone: string) {
   return new Intl.DateTimeFormat("en-IN", { timeZone: timezone, hour: "2-digit", minute: "2-digit", hour12: true }).format(date);
 }
@@ -78,6 +96,7 @@ export async function POST(request: Request) {
     const events = solarEvents(input.date, input.latitude, input.longitude, timezone);
     if (!events) return NextResponse.json({ error: "Sunrise and sunset are not available for this location and date with the current solar model." }, { status: 422 });
     const { sunrise, sunset } = events;
+    const lunar = lunarEvents(input.date, input.latitude, input.longitude, timezone);
     const localParts = new Intl.DateTimeFormat("en-GB", { timeZone: timezone, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(sunrise);
     const p = Object.fromEntries(localParts.map((part) => [part.type, part.value]));
     const localTime = p.hour + ":" + p.minute;
@@ -106,6 +125,8 @@ export async function POST(request: Request) {
       nakshatraPada: moon?.nakshatraPada || null, yoga: report.panchang.yoga,
       karana: report.panchang.karana, sunSign: sun?.sign || null, moonSign: moon?.sign || null,
       sunrise: formatTime(sunrise, timezone), sunset: formatTime(sunset, timezone),
+      moonrise: lunar.moonrise ? formatTime(lunar.moonrise, timezone) : null,
+      moonset: lunar.moonset ? formatTime(lunar.moonset, timezone) : null,
       rahuKaal: muhurta(rahu.start, rahu.end, timezone),
       yamaganda: muhurta(yama.start, yama.end, timezone),
       gulikaKaal: muhurta(gulika.start, gulika.end, timezone),
@@ -114,7 +135,7 @@ export async function POST(request: Request) {
       calculatedAt: new Date().toISOString(),
       engine: report.engine, engineVersion: report.engineVersion,
       experimental: true,
-      note: "Panchang is calculated for the selected location and date using Astronomy Engine with an approximate Lahiri sidereal conversion and a NOAA-style solar-event approximation. Rahu Kaal, Yamaganda, Gulika and Abhijit are derived from local sunrise/sunset and weekday. Cross-check against a trusted local Panchang for ritual-critical timing.",
+      note: "Panchang is calculated for the selected location and date using Astronomy Engine for lunar rise/set and an approximate Lahiri sidereal conversion with a NOAA-style solar-event approximation. Rahu Kaal, Yamaganda, Gulika and Abhijit are derived from local sunrise/sunset and weekday. Cross-check against a trusted local Panchang for ritual-critical timing.",
     }, { headers: { "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" } });
   } catch (error) {
     if (error instanceof z.ZodError) return NextResponse.json({ error: "Enter a valid date, place, latitude and longitude." }, { status: 400 });
