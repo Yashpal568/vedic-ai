@@ -885,8 +885,7 @@ export default function Home() {
             <button className="plan-action" onClick={() => setToast("Plans and billing will be added after the core experience is ready.")}>Explore the experience <ArrowDown size={12} style={{ display: "inline", marginLeft: 4 }} /></button>
           </div>
           <div className="profile-row">
-            <div className="avatar">{savedBirth?.name?.trim()?.[0]?.toUpperCase() || "G"}</div>
-            {accountAvatar ? <img className="profile-avatar" src={accountAvatar} alt="" /> : <span className="profile-avatar profile-avatar-fallback"><UserRound size={17} /></span>}
+{accountAvatar ? <img className="profile-avatar" src={accountAvatar} alt="" /> : <span className="profile-avatar profile-avatar-fallback">{(accountName || savedBirth?.name || (isSignedIn ? accountEmail : "Guest explorer") || "G").trim().charAt(0).toUpperCase()}</span>}
             <div style={{ minWidth: 0 }}><div className="profile-name">{isSignedIn ? (accountName || "My profile") : (savedBirth?.name || "Guest explorer")}</div><div className="profile-caption">{isSignedIn ? (accountEmail || "Signed in · private library") : savedBirth ? "Birth profile added · session only" : "Personal astrology workspace"}</div></div>
             <div className="sidebar-profile-actions">
               {isSignedIn && <span className="sidebar-google-mark" title="Account connected">G</span>}
@@ -921,8 +920,7 @@ export default function Home() {
           </div>
           <div className="mobile-nav-bottom">
             <div className="profile-row">
-              <div className="avatar">{savedBirth?.name?.trim()?.[0]?.toUpperCase() || "G"}</div>
-              {accountAvatar ? <img className="profile-avatar" src={accountAvatar} alt="" /> : <span className="profile-avatar profile-avatar-fallback"><UserRound size={17} /></span>}
+              {accountAvatar ? <img className="profile-avatar" src={accountAvatar} alt="" /> : <span className="profile-avatar profile-avatar-fallback">{(accountName || savedBirth?.name || (isSignedIn ? accountEmail : "Guest explorer") || "G").trim().charAt(0).toUpperCase()}</span>}
               <div style={{ minWidth: 0, flex: 1 }}><div className="profile-name">{isSignedIn ? (accountName || "My profile") : (savedBirth?.name || "Guest explorer")}</div><div className="profile-caption">{isSignedIn ? (accountEmail || "Signed in · private library") : "Guest session"}</div></div>
             </div>
             {isSignedIn ? <button className="mobile-signout-button" onClick={() => { setMobileMenuOpen(false); void signOut(); }} title="Sign out" aria-label="Sign out"><LogOut size={18} /></button> : <Link className="mobile-signout-button" href="/login" onClick={() => setMobileMenuOpen(false)} title="Sign in to sync history" aria-label="Sign in to sync history"><UserRound size={18} /></Link>}
