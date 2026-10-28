@@ -165,21 +165,54 @@ function KundliDiagram({ report }: { report: KundliReport }) {
 }
 
 
+function normalizeAssistantMarkdown(raw: string) {
+  const source = raw.replace(/\\r\\n?/g, "\\n").trim();
+  const lines = source.split("\\n");
+  const normalized: string[] = [];
+  const isPipeRow = (line: string) => line.includes("|") && line.split("|").length >= 3;
+  const isSeparator = (line: string) => {
+    const cells = line.trim().replace(/^\\|/, "").replace(/\\|$/, "").split("|");
+    return cells.length >= 2 && cells.every((cell) => /^\\s*:?-{1,}:?\\s*$/.test(cell));
+  };
+
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i].trimEnd();
+    normalized.push(line);
+    if (isPipeRow(line) && i + 1 < lines.length && isPipeRow(lines[i + 1]) && !isSeparator(lines[i + 1])) {
+      const headerCells = line.trim().replace(/^\\|/, "").replace(/\\|$/, "").split("|");
+      const nextCells = lines[i + 1].trim().replace(/^\\|/, "").replace(/\\|$/, "").split("|");
+      if (headerCells.length === nextCells.length && headerCells.length >= 2) {
+        normalized.push("| " + headerCells.map(() => "---").join(" | ") + " |");
+      }
+    } else if (isSeparator(line)) {
+      const cells = line.trim().replace(/^\\|/, "").replace(/\\|$/, "").split("|");
+      normalized[normalized.length - 1] = "| " + cells.map((cell) => {
+        const alignment = cell.trim();
+        return alignment.startsWith(":") && alignment.endsWith(":") ? ":---:" : alignment.startsWith(":") ? ":---" : alignment.endsWith(":") ? "---:" : "---";
+      }).join(" | ") + " |";
+    }
+  }
+
+  return normalized.join("\\n").replace(/\\n{3,}/g, "\\n\\n");
+}
+
 function StreamingMarkdown({ content }: { content: string }) {
+  const normalizedContent = normalizeAssistantMarkdown(content);
   const [visibleText, setVisibleText] = useState("");
   useEffect(() => {
     let index = 0;
     let timer = 0;
     setVisibleText("");
     const tick = () => {
-      index = Math.min(content.length, index + (content[index] === "\n" ? 1 : 4));
-      setVisibleText(content.slice(0, index));
-      if (index < content.length) timer = window.setTimeout(tick, 12);
+      const step = normalizedContent[index] === "\\n" ? 1 : 3;
+      index = Math.min(normalizedContent.length, index + step);
+      setVisibleText(normalizedContent.slice(0, index));
+      if (index < normalizedContent.length) timer = window.setTimeout(tick, 10);
     };
-    timer = window.setTimeout(tick, 90);
+    timer = window.setTimeout(tick, 80);
     return () => window.clearTimeout(timer);
-  }, [content]);
-  return <><ReactMarkdown remarkPlugins={[remarkGfm]}>{visibleText}</ReactMarkdown>{visibleText.length < content.length && <span className="typing-caret" aria-label="Writing response" />}</>;
+  }, [normalizedContent]);
+  return <><ReactMarkdown remarkPlugins={[remarkGfm]}>{visibleText}</ReactMarkdown>{visibleText.length < normalizedContent.length && <span className="typing-caret" aria-label="Writing response" />}</>;
 }
 
 export default function Home() {
@@ -1018,7 +1051,7 @@ export default function Home() {
               {message.role === "assistant" ? <div className="message-content">
                 <div className="message-meta">VEDIC AI <span style={{ color: "#5f6057", margin: "0 5px" }}>·</span> ASTROLOGY COMPANION</div>
                 <div className="message-text markdown-body">{message.role === "assistant" && messageIndex === messages.length - 1 && !isLoading ? <StreamingMarkdown content={message.content} /> : <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>}</div>
-                <div className="assistant-note"><Sparkles size={14} style={{ flexShrink: 0, color: "var(--gold)", marginTop: 2 }} /><span>Interpretations are intended for reflection and learning. Chart-based answers will be enabled once calculation and AI services are configured.</span></div>
+                <div className="assistant-note"><Sparkles size={14} style={{ flexShrink: 0, color: "var(--gold)", marginTop: 2 }} /><span>Traditional Jyotish interpretations are for reflection, not certainty. Personalised chart insights require your correct birth details and calculated chart.</span></div>
               </div> : <div className="user-bubble">{message.content}</div>}
             </div>)}
             {isLoading && <div className="message-row"><div className="message-avatar"><MoonStar size={16} /></div><div className="message-content"><div className="message-meta">VEDIC AI · THINKING</div><div className="message-text">Preparing a thoughtful response…</div></div></div>}<div ref={bottomRef} />
