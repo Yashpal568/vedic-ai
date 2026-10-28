@@ -3671,3 +3671,231 @@ body:has(.app-shell[data-theme="light"]) {
 @media (prefers-color-scheme: dark) {
   .app-shell[data-theme="light"] { color-scheme: light; }
 }
+
+
+/* --------------------------------------------------------------------------
+   Chat response system: premium Oracle cards + mobile/tablet app navigation.
+   This styles real AI output; it does not inject sample readings or chart facts.
+   -------------------------------------------------------------------------- */
+.assistant-response-card {
+  min-width: 0;
+  padding: clamp(15px, 2.2vw, 22px);
+  border: 1px solid rgba(212, 183, 122, .16);
+  border-radius: 20px;
+  background: linear-gradient(145deg, rgba(26, 29, 40, .94), rgba(17, 20, 30, .94));
+  box-shadow: 0 12px 34px rgba(0, 0, 0, .12);
+}
+.app-shell[data-theme="light"] .assistant-response-card {
+  color: #292d40;
+  border-color: rgba(122, 101, 66, .16);
+  background: linear-gradient(145deg, rgba(255,255,255,.98), rgba(250,248,243,.98));
+  box-shadow: 0 10px 30px rgba(36, 38, 56, .055);
+}
+.message-row.assistant .message-content { flex: 1 1 auto; width: min(100%, 720px); }
+.message-row.assistant .message-meta {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 2px 0 10px;
+  color: var(--gold2);
+  font-size: 10px;
+  letter-spacing: 1.35px;
+  line-height: 1.5;
+}
+.app-shell[data-theme="light"] .message-row.assistant .message-meta { color: #87672f; }
+.message-text.markdown-body {
+  max-width: none;
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.78;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+.message-text.markdown-body > :first-child { margin-top: 0; }
+.message-text.markdown-body > :last-child { margin-bottom: 0; }
+.message-text.markdown-body p { margin: 0 0 1em; color: inherit; }
+.message-text.markdown-body h1,
+.message-text.markdown-body h2,
+.message-text.markdown-body h3,
+.message-text.markdown-body h4 {
+  color: var(--text);
+  font-family: Manrope, ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -.45px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.message-text.markdown-body h1 { margin: 1.1em 0 .55em; font-size: clamp(23px, 3vw, 29px); }
+.message-text.markdown-body h2 { margin: 1.15em 0 .55em; padding-bottom: 8px; border-bottom: 1px solid var(--line); font-size: clamp(19px, 2.3vw, 23px); }
+.message-text.markdown-body h3 { margin: 1.05em 0 .45em; font-size: 17px; }
+.message-text.markdown-body h4 { margin: 1em 0 .4em; font-size: 15px; }
+.message-text.markdown-body strong { color: var(--gold2); font-weight: 700; }
+.app-shell[data-theme="light"] .message-text.markdown-body strong { color: #88682e; }
+.message-text.markdown-body ul,
+.message-text.markdown-body ol { margin: .35em 0 1.05em; padding-left: 1.4em; }
+.message-text.markdown-body li { margin: .38em 0; padding-left: .15em; }
+.message-text.markdown-body li::marker { color: var(--gold2); }
+.message-text.markdown-body blockquote {
+  margin: 1em 0;
+  padding: 12px 15px;
+  border-left: 3px solid var(--gold);
+  border-radius: 0 12px 12px 0;
+  color: var(--muted);
+  background: var(--wash);
+}
+.message-text.markdown-body hr { height: 1px; margin: 1.25em 0; border: 0; background: var(--line2); }
+.message-text.markdown-body a { color: var(--gold2); text-decoration: underline; text-underline-offset: 3px; }
+.message-text.markdown-body :not(pre) > code {
+  padding: .12em .38em;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  color: var(--gold2);
+  background: var(--wash);
+  font-size: .9em;
+}
+.message-text.markdown-body pre {
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 13px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--raised);
+  font-size: 12px;
+  line-height: 1.65;
+}
+.message-text.markdown-body table { display: block; width: 100%; max-width: 100%; overflow-x: auto; border-collapse: separate; border-spacing: 0; font-size: 12px; }
+.message-text.markdown-body th,
+.message-text.markdown-body td { padding: 9px 11px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.message-text.markdown-body th { color: var(--gold2); background: var(--wash); font-weight: 700; }
+.message-text.markdown-body tr > :first-child { border-left: 1px solid var(--line); }
+.message-text.markdown-body thead tr:first-child > * { border-top: 1px solid var(--line); }
+.assistant-response-card .assistant-note {
+  margin-top: 18px;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--wash);
+  font-size: 10px;
+  line-height: 1.65;
+}
+.app-shell[data-theme="light"] .assistant-response-card .assistant-note {
+  color: #6b6e7a;
+  background: #f7f5ef;
+  border-color: #e8e3d8;
+}
+.message-row.user { margin-top: 8px; margin-bottom: 25px; }
+.message-row.user .user-bubble { max-width: min(84%, 580px); }
+.message-row.assistant { margin-bottom: 30px; }
+.message-row.assistant .message-avatar { flex-basis: 34px; width: 34px; height: 34px; border-radius: 50%; }
+
+/* Bottom app tabs are shown only on phone/tablet widths; desktop keeps its sidebar. */
+.mobile-bottom-nav { display: none; }
+@media (max-width: 900px) {
+  .app-shell { display: block; min-height: 100dvh; overflow: visible; }
+  .app-shell > .sidebar { display: none !important; }
+  .app-shell > .main-panel { width: 100%; min-height: 100dvh; padding-bottom: calc(82px + env(safe-area-inset-bottom, 0px)); }
+  .topbar { padding-inline: 15px; }
+  .mobile-menu { display: inline-grid !important; }
+  .mobile-bottom-nav {
+    position: fixed;
+    z-index: 75;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    min-height: 67px;
+    padding: 7px 7px max(7px, env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid rgba(212, 183, 122, .16);
+    background: rgba(10, 12, 20, .94);
+    -webkit-backdrop-filter: blur(22px) saturate(135%);
+    backdrop-filter: blur(22px) saturate(135%);
+  }
+  .mobile-bottom-nav-item {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 4px;
+    padding: 4px 2px;
+    border: 0;
+    border-radius: 12px;
+    color: #a7a69f;
+    background: transparent;
+    font: 600 10px/1.2 Manrope, ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: .1px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mobile-bottom-nav-item svg { flex: 0 0 auto; }
+  .mobile-bottom-nav-item.active { color: #f0cc68; }
+  .mobile-bottom-nav-item.active svg { filter: drop-shadow(0 0 7px rgba(240, 204, 104, .36)); }
+  .app-shell[data-theme="light"] .mobile-bottom-nav {
+    border-top-color: rgba(122, 101, 66, .16);
+    background: rgba(255, 255, 255, .96);
+  }
+  .app-shell[data-theme="light"] .mobile-bottom-nav-item { color: #777b87; }
+  .app-shell[data-theme="light"] .mobile-bottom-nav-item.active { color: #98742f; }
+  .app-shell > .main-panel .chat-footer {
+    position: fixed;
+    z-index: 70;
+    right: 0;
+    bottom: calc(67px + env(safe-area-inset-bottom, 0px));
+    left: 0;
+    padding: 10px 14px 8px;
+    border-top: 0;
+    background: linear-gradient(180deg, transparent, rgba(7, 9, 17, .94) 24%);
+  }
+  .app-shell[data-theme="light"] > .main-panel .chat-footer {
+    background: linear-gradient(180deg, rgba(246,245,241,0), rgba(246,245,241,.97) 24%, #f6f5f1 100%);
+  }
+  .app-shell > .main-panel .composer-wrap { width: min(100%, 820px); }
+  .app-shell > .main-panel .composer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 11px;
+    border-radius: 24px;
+    background: rgba(24, 27, 38, .96);
+    box-shadow: 0 8px 30px rgba(0,0,0,.16);
+  }
+  .app-shell > .main-panel .composer textarea {
+    min-height: 34px;
+    max-height: 120px;
+    padding: 6px 4px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .app-shell > .main-panel .composer-bottom { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+  .app-shell > .main-panel .composer-tools { gap: 5px; }
+  .app-shell > .main-panel .tool-button { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; padding: 0; border-radius: 50%; }
+  .app-shell > .main-panel .tool-button > span:not(.voice-input-icon) { display: none; }
+  .app-shell > .main-panel .send-button { width: 39px; height: 39px; flex: 0 0 39px; border-radius: 50%; }
+  .app-shell > .main-panel .footer-note { display: none; }
+  .app-shell > .main-panel .content-scroll { padding-bottom: 190px; }
+  .app-shell > .main-panel .chat-area { width: min(100%, 820px); padding: 18px 18px 35px; }
+  .app-shell > .main-panel .message-row.assistant { gap: 10px; margin: 24px 0 28px; }
+  .app-shell > .main-panel .message-content { width: calc(100% - 44px); max-width: none; }
+  .app-shell > .main-panel .assistant-response-card { padding: 15px; border-radius: 17px; }
+  .app-shell > .main-panel .message-text.markdown-body { font-size: 14px; line-height: 1.75; }
+  .app-shell > .main-panel .message-text.markdown-body h1 { font-size: 23px; }
+  .app-shell > .main-panel .message-text.markdown-body h2 { font-size: 19px; }
+  .app-shell > .main-panel .message-text.markdown-body h3 { font-size: 16px; }
+  .app-shell > .main-panel .message-row.user .user-bubble { max-width: 86%; padding: 11px 14px; font-size: 13px; }
+  .app-shell[data-theme="light"] > .main-panel .composer { background: rgba(255,255,255,.97); }
+}
+@media (max-width: 420px) {
+  .mobile-bottom-nav { min-height: 64px; padding-inline: 3px; }
+  .mobile-bottom-nav-item { font-size: 9px; gap: 3px; }
+  .mobile-bottom-nav-item svg { width: 18px; height: 18px; }
+  .app-shell > .main-panel .chat-footer { bottom: calc(64px + env(safe-area-inset-bottom, 0px)); padding-inline: 10px; }
+  .app-shell > .main-panel .content-scroll { padding-bottom: 180px; }
+  .app-shell > .main-panel .chat-area { padding-inline: 12px; }
+  .app-shell > .main-panel .message-row.assistant .message-avatar { display: none; }
+  .app-shell > .main-panel .message-content { width: 100%; }
+  .app-shell > .main-panel .assistant-response-card { padding: 14px; }
+  .app-shell > .main-panel .message-text.markdown-body { font-size: 13.5px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mobile-bottom-nav-item { transition: none !important; }
+}
