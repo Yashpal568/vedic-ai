@@ -103,7 +103,7 @@ export function buildKundliSimpleSummary(report: KundliReport): string[] {
   const occupiedHouses = new Set(report.planets.map((planet) => planet.house)).size;
   const yogas = report.yogaCandidates || [];
   const summary = [
-    "Your chart starts with " + report.ascendant.sign + rising (your Lagna). Astrologers use this as the starting point for talking about your approach to life; it does not define who you must be.",
+    "Your chart starts with " + report.ascendant.sign + " rising (your Lagna). Astrologers use this as the starting point for talking about your approach to life; it does not define who you must be.",
     "Your Moon is in " + (moon?.sign || "an unavailable sign") + (moon?.nakshatra ? " and the " + moon.nakshatra + " nakshatra" : "") + ". In Jyotish, the Moon is often used when discussing feelings, comfort and habits.",
   ];
   if (sun) summary.push("Your Sun is in " + sun.sign + " in house " + sun.house + ". In traditional astrology, the Sun is linked with confidence, identity and responsibility.");
