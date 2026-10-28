@@ -3,6 +3,7 @@
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import MobileBottomNav from "@/components/mobile-bottom-nav";
+import SiteHeader from "@/components/site-header";
 import { ArrowLeft, Camera, Check, LoaderCircle, LogOut, MoonStar, Save, ShieldCheck, UserRound } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 
@@ -78,7 +79,7 @@ export default function ProfilePage() {
   if (loading) return <main className="profile-shell"><div className="profile-loading"><LoaderCircle className="palm-spin" size={20}/> Loading your profile…</div></main>;
 
   return <main className="profile-shell">
-    <header className="profile-header"><Link href="/chat" className="profile-back"><ArrowLeft size={16}/> Back to chat</Link><Link href="/chat" className="palm-brand"><span className="brand-mark"><MoonStar size={19}/></span><strong>vedic<span>.</span>ai</strong></Link><button className="profile-signout" onClick={() => void signOut()}><LogOut size={15}/> Sign out</button></header>
+    <SiteHeader section="Account profile" backHref="/chat" />
     <section className="profile-content">
       <div className="profile-eyebrow"><ShieldCheck size={14}/> YOUR PRIVATE SPACE</div><h1>My profile</h1><p className="profile-lead">Manage the details shown on your Vedic AI account. Your changes are saved to your signed-in profile.</p>
       <div className="profile-card">
