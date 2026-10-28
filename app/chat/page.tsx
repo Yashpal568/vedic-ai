@@ -864,19 +864,19 @@ export default function Home() {
   return (
     <main className="app-shell" data-theme={theme}>
       <aside className="sidebar">
-        <button className="brand" onClick={startNewChat} aria-label="Vedic AI home" style={{ border: 0, background: "transparent", textAlign: "left", color: "inherit" }}>
-          <span className="brand-mark"><MoonStar size={19} strokeWidth={1.6} /></span>
-          <span><span className="brand-name" style={{ display: "block" }}>vedic<span style={{ color: "var(--gold)" }}>.</span>ai</span><span className="brand-sub" style={{ display: "block" }}>Ancient insight, reimagined</span></span>
+        <button className="brand sidebar-brand-premium" onClick={startNewChat} aria-label="Vedic AI home" style={{ border: 0, background: "transparent", textAlign: "left", color: "inherit" }}>
+          <span className="brand-mark"><MoonStar size={21} strokeWidth={1.6} /></span>
+          <span className="sidebar-brand-copy"><span className="sidebar-brand-line"><span className="brand-name">vedic<span style={{ color: "var(--gold)" }}>.</span>ai</span><span className="sidebar-pro-badge">PRO</span></span><span className="brand-sub">Your Jyotish space</span></span>
         </button>
-        <button className="new-chat" onClick={startNewChat}><Plus size={16} /> <span>New conversation</span></button>
-        <div className="side-label">Your workspace</div>
-        <button className="side-link active" onClick={startNewChat}><MessageCircle size={16} /> <span>Astrology chat</span></button>
-        <button className="side-link" onClick={() => setIsBirthOpen(true)}><Orbit size={16} /> <span>My birth profile</span>{savedBirth && <Check size={13} style={{ marginLeft: "auto", color: "var(--green)" }} />}</button>
-        <button className="side-link" onClick={() => { window.location.href = "/reports"; }}><BookOpen size={16} /> <span>Kundli & reports</span></button>
-        <button className="side-link" onClick={() => { window.location.href = "/palm-reading"; }}><Sparkles size={16} /> <span>Palm reading</span></button>
-          <button className="side-link" onClick={() => { window.location.href = "/profile"; }}><UserRound size={16} /> <span>My profile</span></button>
-          <button className="side-link" onClick={() => setToast("Panchang and transit tools are on the product roadmap.")}><CalendarDays size={16} /> <span>Panchang & transits</span></button>
-        <div className="side-label">Recent conversations</div>
+        <button className="new-chat sidebar-new-chat" onClick={startNewChat}><Plus size={17} /> <span>New conversation</span></button>
+        <div className="side-label sidebar-workspace-label"><span>Workspace</span><span className="sidebar-tool-count">6 Tools</span></div>
+        <button className="side-link active" onClick={startNewChat}><MessageCircle size={17} /> <span>Astrology chat</span><span className="sidebar-active-dot" /></button>
+        <button className="side-link" onClick={() => setIsBirthOpen(true)}><Orbit size={17} /> <span>My birth profile</span>{savedBirth && <Check size={13} style={{ marginLeft: "auto", color: "var(--green)" }} />}</button>
+        <button className="side-link" onClick={() => { window.location.href = "/palm-reading"; }}><Sparkles size={17} /> <span>Palm reading</span></button>
+        <button className="side-link" onClick={() => { window.location.href = "/profile"; }}><UserRound size={17} /> <span>My profile</span></button>
+        <button className="side-link" onClick={() => { window.location.href = "/reports"; }}><BookOpen size={17} /> <span>Kundli & reports</span></button>
+        <button className="side-link" onClick={() => setToast("Saved memory is available in your personal workspace.")}><ShieldCheck size={17} /> <span>Saved memory</span></button>
+        <div className="side-label sidebar-history-label"><span>All conversations</span><span className="sidebar-history-count">{historyItems.length}</span></div>
         {historyItems.length ? historyItems.map((item) => <div className="history-item-row" key={item.id}><button className={"side-link history-item-open " + (activeConversationId === item.id ? "active" : "")} onClick={() => loadConversation(item.id)}><History size={15} /><span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</span></button><button className="history-delete" aria-label={"Delete " + item.title} onClick={() => deleteConversation(item.id)}><Trash2 size={13}/></button></div>) : <p className="history-empty">Sign in to save conversations and see them here.</p>}
         <div className="sidebar-bottom">
           <div className="plan-card">
