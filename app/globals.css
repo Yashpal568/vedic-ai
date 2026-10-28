@@ -3213,3 +3213,72 @@ html { scroll-behavior: smooth; }
   .app-shell .modal[aria-labelledby="birth-modal-title"] .birth-calculate-button { animation: none; transition: none; }
   .app-shell .modal[aria-labelledby="birth-modal-title"] .birth-calculate-button::before { display: none; }
 }
+
+
+/* Final mobile/light-mode polish: make the feature artwork belong to the light palette
+   and keep the composer hint compact, vertically centered, and single-line. */
+.app-shell[data-theme="light"] .cosmic-home-feature-art {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 82% 18%, rgba(218, 183, 116, .32), transparent 32%),
+    radial-gradient(ellipse at 15% 82%, rgba(163, 184, 224, .42), transparent 42%),
+    linear-gradient(135deg, #f8f3e8 0%, #e8edf7 52%, #f4e6d1 100%) !important;
+  border: 1px solid rgba(151, 124, 75, .22);
+}
+.app-shell[data-theme="light"] .cosmic-home-feature-art::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: .5;
+  background:
+    radial-gradient(circle at 78% 27%, rgba(255,255,255,.95) 0 1px, transparent 2px),
+    radial-gradient(circle at 69% 53%, rgba(151,124,75,.42) 0 1px, transparent 2px),
+    radial-gradient(circle at 90% 66%, rgba(255,255,255,.9) 0 1px, transparent 2px),
+    radial-gradient(circle at 56% 20%, rgba(151,124,75,.32) 0 1px, transparent 2px);
+  background-size: 54px 54px, 67px 67px, 73px 73px, 61px 61px;
+}
+.app-shell[data-theme="light"] .cosmic-home-feature-shade {
+  background: linear-gradient(90deg, rgba(248,246,239,.92) 0%, rgba(244,246,251,.78) 62%, rgba(242,232,214,.5) 100%) !important;
+}
+.app-shell[data-theme="light"] .cosmic-home-feature-copy h2 {
+  color: #20283b !important;
+  text-shadow: none !important;
+}
+.app-shell[data-theme="light"] .cosmic-home-feature-copy h2 span { color: #927039 !important; }
+.app-shell[data-theme="light"] .cosmic-home-feature-copy p { color: #586176 !important; }
+.app-shell[data-theme="light"] .cosmic-home-feature-kicker { color: #8c6a2f !important; }
+.app-shell[data-theme="light"] .cosmic-home-feature-button {
+  color: #283148 !important;
+  background: rgba(255,255,255,.68) !important;
+  border-color: rgba(151,124,75,.52) !important;
+  box-shadow: 0 6px 18px rgba(43,52,74,.08);
+}
+.app-shell[data-theme="light"] .cosmic-home-orbit {
+  opacity: .58;
+}
+.app-shell .composer textarea::placeholder,
+.app-shell .chat-composer textarea::placeholder {
+  font-size: 11px !important;
+  line-height: 20px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  vertical-align: middle;
+}
+.app-shell .composer textarea,
+.app-shell .chat-composer textarea {
+  min-height: 28px !important;
+  max-height: 150px;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+  line-height: 20px !important;
+}
+@media (max-width: 680px) {
+  .app-shell .composer textarea::placeholder,
+  .app-shell .chat-composer textarea::placeholder {
+    font-size: 10px !important;
+    letter-spacing: -.15px;
+  }
+}
