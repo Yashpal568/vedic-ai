@@ -9,7 +9,7 @@ type Place = { id: string; label: string; latitude: number; longitude: number; t
 type Panchang = {
   date: string; place: string; timezone: string; weekday: string; paksha: string; tithi: string; tithiNumber: number;
   nakshatra: string | null; nakshatraPada: number | null; yoga: string; karana: string;
-  sunSign: string | null; moonSign: string | null; sunrise: string; sunset: string;
+  sunSign: string | null; moonSign: string | null; sunrise: string; sunset: string; moonrise: string | null; moonset: string | null;
   rahuKaal: string; yamaganda: string; gulikaKaal: string; abhijitMuhurta: string;
   dayDuration: string; calculatedAt: string; engine: string; engineVersion: string; experimental: boolean; note: string;
 };
@@ -93,7 +93,7 @@ export default function PanchangPage() {
       {panchang && <>
         <div className="panchang-result-heading"><div><span>DAILY ALMANAC</span><h2>{panchang.weekday}, {new Date(panchang.date+"T12:00:00").toLocaleDateString("en-IN",{day:"numeric",month:"long",year:"numeric"})}</h2><p>{panchang.place} · {panchang.timezone}</p></div><span className="panchang-live-pill"><i/> Calculated</span></div>
         <div className="panchang-fact-grid">{facts.map(({label,value,detail,icon:Icon})=><article className="panchang-fact-card" key={label}><span className="panchang-fact-icon"><Icon size={18}/></span><span className="panchang-fact-label">{label}</span><strong>{value}</strong><small>{detail}</small></article>)}</div>
-        <section className="panchang-timing-card"><div className="panchang-card-title"><Sun size={18}/> Sunrise & sunset</div><div className="panchang-sun-grid"><div><Sunrise size={19}/><span>Sunrise</span><strong>{panchang.sunrise}</strong></div><div><Sunset size={19}/><span>Sunset</span><strong>{panchang.sunset}</strong></div><div><Clock3 size={19}/><span>Day length</span><strong>{panchang.dayDuration}</strong></div></div></section>
+        <section className="panchang-timing-card"><div className="panchang-card-title"><Sun size={18}/> Sunrise & sunset</div><div className="panchang-sun-grid"><div><Sunrise size={19}/><span>Sunrise</span><strong>{panchang.sunrise}</strong></div><div><Sunset size={19}/><span>Sunset</span><strong>{panchang.sunset}</strong></div><div><MoonStar size={19}/><span>Moonrise</span><strong>{panchang.moonrise || "No rise today"}</strong></div><div><MoonStar size={19}/><span>Moonset</span><strong>{panchang.moonset || "No set today"}</strong></div><div><Clock3 size={19}/><span>Day length</span><strong>{panchang.dayDuration}</strong></div></div></section>
         <section className="panchang-timing-card"><div className="panchang-card-title"><Clock3 size={18}/> Traditional time windows</div><div className="panchang-window-list">
           <div><span>Rahu Kaal</span><strong>{panchang.rahuKaal}</strong><small>Traditionally avoided for starting auspicious work</small></div>
           <div><span>Yamaganda</span><strong>{panchang.yamaganda}</strong><small>Traditional inauspicious period</small></div>
