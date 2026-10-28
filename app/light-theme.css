@@ -190,3 +190,6 @@ html[data-theme="light"] .auth-submit { background:linear-gradient(135deg,#e9d39
 html[data-theme="light"] .marketing-button-secondary,html[data-theme="light"] .marketing-text-link {
   color:#765b2d !important; border-color:#d9c89f !important;
 }
+
+/* The shared brand replaces the old duplicate preview pill in the chat header. */
+.app-shell .topbar .mode-pill { display:none !important; }
