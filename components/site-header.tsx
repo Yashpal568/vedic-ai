@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import AppNavigationDrawer from "@/components/app-navigation-drawer";
 import {
@@ -13,7 +12,6 @@ type Props = { section?: string; backHref?: string; backLabel?: string; onSignOu
 
 
 export default function SiteHeader({ section, backHref, backLabel = "Back to chat", onSignOut }: Props) {
-  const pathname = usePathname();
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -44,12 +42,6 @@ export default function SiteHeader({ section, backHref, backLabel = "Back to cha
     document.documentElement.dataset.theme = next;
     try { window.localStorage.setItem("vedic-chat-theme", next); } catch {}
   }
-
-  const activeKey = pathname === "/panchang" ? "panchang"
-    : pathname === "/palm-reading" ? "palm"
-    : pathname === "/profile" ? "profile"
-    : pathname === "/reports" ? "reports"
-    : "home";
 
   return <>
     <header className="site-header">
