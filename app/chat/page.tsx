@@ -1050,7 +1050,7 @@ export default function Home() {
               {message.role === "assistant" && <div className="message-avatar"><MoonStar size={16} /></div>}
               {message.role === "assistant" ? <div className="message-content">
                 <div className="message-meta">VEDIC AI <span style={{ color: "#5f6057", margin: "0 5px" }}>·</span> ASTROLOGY COMPANION</div>
-                <div className="message-text markdown-body">{message.role === "assistant" && messageIndex === messages.length - 1 && !isLoading ? <StreamingMarkdown content={message.content} /> : <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>}</div>
+                <div className="message-text markdown-body">{message.role === "assistant" && messageIndex === messages.length - 1 ? <StreamingMarkdown content={message.content} /> : <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>}</div>
                 <div className="assistant-note"><Sparkles size={14} style={{ flexShrink: 0, color: "var(--gold)", marginTop: 2 }} /><span>Traditional Jyotish interpretations are for reflection, not certainty. Personalised chart insights require your correct birth details and calculated chart.</span></div>
               </div> : <div className="user-bubble">{message.content}</div>}
             </div>)}
