@@ -2389,3 +2389,12 @@ html { scroll-behavior: smooth; }
   .sidebar .side-link:nth-of-type(3),.mobile-nav-drawer .side-link:nth-of-type(3) { animation-delay:45ms; }
   @keyframes sidebar-item-in { from { opacity:.6; transform:translateY(3px); } to { opacity:1; transform:translateY(0); } }
 }
+
+.sidebar-profile-actions{display:flex;align-items:center;gap:5px;flex:0 0 auto;margin-left:auto}
+.sidebar-google-mark{display:grid;place-items:center;width:31px;height:31px;border:1px solid rgba(255,255,255,.07);border-radius:9px;background:rgba(255,255,255,.045);color:#d4d7df;font-size:12px;font-weight:750}
+.sidebar-logout{display:grid;place-items:center;width:32px;height:32px;border:1px solid transparent;border-radius:9px;background:transparent;color:#9298a5;transition:color .18s,background .18s,border-color .18s}
+.sidebar-logout:hover{color:#fda4af;background:rgba(244,63,94,.09);border-color:rgba(244,63,94,.12)}
+.mobile-nav-drawer .mobile-nav-head .sidebar-brand-premium{width:auto;padding:0!important;border:0!important;margin:0;gap:12px}
+.mobile-nav-drawer .mobile-nav-head .sidebar-brand-premium .brand-mark{width:42px;height:42px;flex:0 0 42px}
+.mobile-nav-drawer .mobile-nav-head .sidebar-brand-premium .brand-name{font-size:18px!important}
+.mobile-nav-drawer .mobile-nav-head .sidebar-brand-premium .brand-sub{font-size:9px!important;letter-spacing:1.75px}
