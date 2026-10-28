@@ -3789,7 +3789,7 @@ body:has(.app-shell[data-theme="light"]) {
 
 /* Bottom app tabs are shown only on phone/tablet widths; desktop keeps its sidebar. */
 .mobile-bottom-nav { display: none; }
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .app-shell { display: block; min-height: 100dvh; overflow: visible; }
   .app-shell > .sidebar { display: none !important; }
   .app-shell > .main-panel { width: 100%; min-height: 100dvh; padding-bottom: calc(82px + env(safe-area-inset-bottom, 0px)); }
@@ -4034,7 +4034,7 @@ body:has(.app-shell[data-theme="light"]) {
 .app-shell[data-theme="light"] .home-guidance-note { color: #80612e; border-color: #e5dfd2; background: rgba(255,255,255,.86); }
 
 /* Shared navigation remains available when navigating away from the chat route. */
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .palm-shell, .panchang-shell { min-height: 100dvh; padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
   .palm-shell { background-color: #050914 !important; background-image: linear-gradient(180deg, rgba(4,7,15,.30), rgba(4,7,15,.62)), url("/cosmic-jyotish-bg.svg") !important; background-position: center top, center center !important; background-size: cover, cover !important; background-attachment: fixed, fixed !important; }
   .panchang-shell { background-color: #050914 !important; background-image: linear-gradient(180deg, rgba(4,7,15,.30), rgba(4,7,15,.62)), url("/cosmic-jyotish-bg.svg") !important; background-position: center top, center center !important; background-size: cover, cover !important; background-attachment: fixed, fixed !important; }
