@@ -254,6 +254,10 @@ export default function Home() {
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const [loadingConversationId, setLoadingConversationId] = useState<string | null>(null);
+  const [pendingDeleteConversation, setPendingDeleteConversation] = useState<HistoryItem | null>(null);
+  const [deletingConversationId, setDeletingConversationId] = useState<string | null>(null);
+  const conversationLoadRequestRef = useRef(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [toast, setToast] = useState("");
@@ -397,22 +401,43 @@ export default function Home() {
   }, [toast]);
 
   function startNewChat() {
+    conversationLoadRequestRef.current += 1;
     setMessages([]);
     setInput("");
     setChartReport(null);
     setTransitReport(null);
     setActiveConversationId(null);
+    setLoadingConversationId(null);
     setMobileMenuOpen(false);
+    if (typeof window !== "undefined") window.history.replaceState({}, "", "/chat");
   }
 
   async function loadConversation(id: string) {
+    const requestId = ++conversationLoadRequestRef.current;
+    setLoadingConversationId(id);
     try {
-      const response = await fetch("/api/conversations?id=" + encodeURIComponent(id));
+      const response = await fetch("/api/conversations?id=" + encodeURIComponent(id), { cache: "no-store" });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Could not load conversation.");
-      setMessages((data.messages || []).map((message: { id: string; role: "user" | "assistant"; content: string }) => ({
-        id: message.id, role: message.role, content: message.content,
-      })));
+      let loadedMessages = Array.isArray(data.messages)
+        ? data.messages.filter((message: { role?: string; content?: string }) =>
+            (message.role === "user" || message.role === "assistant") && typeof message.content === "string" && message.content.trim()
+          ).map((message: { id?: string; role: "user" | "assistant"; content: string }, index: number) => ({
+            id: message.id || id + "-" + index, role: message.role, content: message.content,
+          }))
+        : [];
+      if (!loadedMessages.length) {
+        try {
+          const cached = window.localStorage.getItem("vedic-chat-cache-v1:" + id);
+          const parsed = cached ? JSON.parse(cached) as { messages?: Message[] } : null;
+          if (Array.isArray(parsed?.messages)) loadedMessages = parsed.messages.filter((message) =>
+            (message.role === "user" || message.role === "assistant") && typeof message.content === "string" && message.content.trim()
+          );
+        } catch {}
+      }
+      if (requestId !== conversationLoadRequestRef.current) return;
+      if (!loadedMessages.length) throw new Error("This conversation has no readable saved messages. Your other conversations have not been changed.");
+      setMessages(loadedMessages);
       setActiveConversationId(id);
       setChartReport(data.chartReport || null);
       setTransitReport(null);
@@ -429,72 +454,81 @@ export default function Home() {
       } else {
         setSavedBirth(null);
       }
+      window.history.replaceState({}, "", "/chat?conversation=" + encodeURIComponent(id));
       setMobileMenuOpen(false);
     } catch (error) {
-      setToast(error instanceof Error ? error.message : "Could not load conversation.");
+      if (requestId === conversationLoadRequestRef.current) setToast(error instanceof Error ? error.message : "Could not load conversation.");
+    } finally {
+      if (requestId === conversationLoadRequestRef.current) setLoadingConversationId(null);
     }
+  }
+
+  function requestDeleteConversation(id: string) {
+    const item = historyItems.find((conversation) => conversation.id === id);
+    if (item) setPendingDeleteConversation(item);
   }
 
   async function deleteConversation(id: string) {
-    if (!window.confirm("Delete this conversation and its messages? This cannot be undone.")) return;
+    if (deletingConversationId) return;
+    setDeletingConversationId(id);
     try {
-      const response = await fetch("/api/conversations?id=" + encodeURIComponent(id), { method: "DELETE" });
+      const response = await fetch("/api/conversations?id=" + encodeURIComponent(id), { method: "DELETE", cache: "no-store" });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Could not delete conversation.");
       setHistoryItems((items) => items.filter((item) => item.id !== id));
-      if (activeConversationId === id) {
-        setActiveConversationId(null);
-        setMessages([]);
-        setChartReport(null);
-        setTransitReport(null);
-      }
-      setToast("Conversation deleted.");
+      try { window.localStorage.removeItem("vedic-chat-cache-v1:" + id); } catch {}
+      if (activeConversationId === id) startNewChat();
+      setPendingDeleteConversation(null);
+      setToast("Conversation deleted successfully.");
     } catch (error) {
       setToast(error instanceof Error ? error.message : "Could not delete conversation.");
+    } finally {
+      setDeletingConversationId(null);
     }
   }
 
-  async function persistConversation(allMessages: Message[], newMessages: Message[]) {
-    // Guest chats are intentionally session-only; do not send unauthenticated writes.
-    if (!isSignedIn) return;
+  async function persistConversation(allMessages: Message[], newMessages: Message[], conversationId: string | null = activeConversationId): Promise<string | null> {
+    const visibleMessages = allMessages.slice(-200);
+    const saveLocally = (id: string | null) => {
+      try {
+        if (id) window.localStorage.setItem("vedic-chat-cache-v1:" + id, JSON.stringify({ messages: visibleMessages, savedAt: new Date().toISOString() }));
+        if (!isSignedIn) window.localStorage.setItem("vedic-guest-chat-v1", JSON.stringify({ messages: visibleMessages }));
+      } catch {}
+    };
+    saveLocally(conversationId);
+    if (!isSignedIn) return conversationId;
+    const messagesToSave = (conversationId ? newMessages : allMessages).slice(-30).map(({ role, content }) => ({ role, content }));
     try {
       const response = await fetch("/api/conversations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: activeConversationId || undefined,
-          messages: (activeConversationId ? newMessages : allMessages).slice(-30).map(({ role, content }) => ({ role, content })),
-        }),
+        body: JSON.stringify({ id: conversationId || undefined, messages: messagesToSave }),
       });
       if (!response.ok) {
-        let detail = "Your reply arrived, but saving this conversation failed.";
+        let detail = "Your message is kept on this device, but server saving failed.";
         try { const errorPayload = await response.json(); if (typeof errorPayload.error === "string") detail += " " + errorPayload.error; } catch {}
-        setToast(detail + " Keep this tab open and retry after checking your connection.");
+        setToast(detail + " Please check your connection and try again.");
         try {
-          window.localStorage.setItem("vedic-pending-chat-v1", JSON.stringify({
-            conversationId: activeConversationId,
-            messages: (activeConversationId ? newMessages : allMessages).slice(-30).map(({ role, content }) => ({ role, content })),
-            savedAt: new Date().toISOString(),
-          }));
+          window.localStorage.setItem("vedic-pending-chat-v1", JSON.stringify({ conversationId, messages: messagesToSave, savedAt: new Date().toISOString() }));
         } catch {}
-        return;
+        return conversationId;
       }
       const data = await response.json();
       try { window.localStorage.removeItem("vedic-pending-chat-v1"); } catch {}
       const conversation = data.conversation as HistoryItem | undefined;
       if (conversation?.id) {
+        try { window.localStorage.setItem("vedic-chat-cache-v1:" + conversation.id, JSON.stringify({ messages: visibleMessages, savedAt: new Date().toISOString() })); } catch {}
         setActiveConversationId(conversation.id);
         setHistoryItems((items) => [conversation, ...items.filter((item) => item.id !== conversation.id)].slice(0, 30));
+        return conversation.id;
       }
+      return conversationId;
     } catch {
-      setToast("Could not save this conversation because the network request failed. Your latest messages are kept locally on this device; please retry when online.");
+      setToast("The network interrupted saving. Your messages are cached on this device and can be retried when you're online.");
       try {
-        window.localStorage.setItem("vedic-pending-chat-v1", JSON.stringify({
-          conversationId: activeConversationId,
-          messages: (activeConversationId ? newMessages : allMessages).slice(-30).map(({ role, content }) => ({ role, content })),
-          savedAt: new Date().toISOString(),
-        }));
+        window.localStorage.setItem("vedic-pending-chat-v1", JSON.stringify({ conversationId, messages: messagesToSave, savedAt: new Date().toISOString() }));
       } catch {}
+      return conversationId;
     }
   }
 
@@ -515,7 +549,9 @@ export default function Home() {
     setInput("");
     setIsLoading(true);
     if (textareaRef.current) textareaRef.current.style.height = "auto";
+    let conversationIdForTurn = activeConversationId;
     try {
+      conversationIdForTurn = await persistConversation(nextMessages, [userMessage], activeConversationId);
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -528,11 +564,14 @@ export default function Home() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "The AI service is not available right now.");
       const assistantMessage: Message = { id: makeId(), role: "assistant", content: data.reply };
-      setMessages((current) => [...current, assistantMessage]);
-      await persistConversation([...nextMessages, assistantMessage], [userMessage, assistantMessage]);
+      const completeMessages = [...nextMessages, assistantMessage];
+      setMessages(completeMessages);
+      await persistConversation(completeMessages, [assistantMessage], conversationIdForTurn);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unable to reach the AI service.";
-      setMessages((current) => [...current, { id: makeId(), role: "assistant", content: message }]);
+      const assistantMessage: Message = { id: makeId(), role: "assistant", content: message };
+      setMessages((current) => [...current, assistantMessage]);
+      await persistConversation([...nextMessages, assistantMessage], [assistantMessage], conversationIdForTurn);
     } finally {
       setIsLoading(false);
     }
@@ -726,6 +765,8 @@ export default function Home() {
       };
       const nextMessages = [...messages, userMessage];
       setMessages(nextMessages);
+      let conversationIdForTurn = activeConversationId;
+      conversationIdForTurn = await persistConversation(nextMessages, [userMessage], activeConversationId);
       try {
         const aiResponse = await fetch("/api/chat", {
           method: "POST",
@@ -739,15 +780,16 @@ export default function Home() {
         const aiData = await aiResponse.json();
         if (!aiResponse.ok) throw new Error(aiData.error || "AI chat is not configured.");
         const assistantMessage: Message = { id: makeId(), role: "assistant", content: aiData.reply };
-        setMessages((current) => [...current, assistantMessage]);
-        await persistConversation([...nextMessages, assistantMessage], [userMessage, assistantMessage]);
+        const completeMessages = [...nextMessages, assistantMessage];
+        setMessages(completeMessages);
+        await persistConversation(completeMessages, [assistantMessage], conversationIdForTurn);
       } catch {
         const assistantMessage: Message = {
           id: makeId(), role: "assistant",
           content: "Your chart has been calculated and is shown above. To enable personalised AI explanations and follow-up questions, configure GEMINI_API_KEY or OPENAI_API_KEY in the server environment. The chart engine currently uses an approximate Lahiri ayanamsha and should be validated against trusted reference charts before high-accuracy or commercial use.",
         };
         setMessages((current) => [...current, assistantMessage]);
-        await persistConversation([...nextMessages, assistantMessage], [userMessage, assistantMessage]);
+        await persistConversation([...nextMessages, assistantMessage], [assistantMessage], conversationIdForTurn);
       }
     } catch (error) {
       setToast(error instanceof Error ? error.message : "Kundli calculation failed. Please verify your details.");
