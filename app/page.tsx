@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import AppNavigationDrawer from "@/components/app-navigation-drawer";
 import { useState } from "react";
 import {
   ArrowRight, ArrowUpRight, Check, ChevronDown, Compass, Heart, Menu, MoonStar,
@@ -29,7 +30,7 @@ export default function MarketingHome() {
           <span className="marketing-brand-mark"><MoonStar size={21} strokeWidth={1.5} /></span>
           <span className="marketing-brand-name">vedic<span>.</span>ai</span>
         </Link>
-        <nav className={"marketing-nav-links " + (menuOpen ? "open" : "")} aria-label="Main navigation">
+        <nav className="marketing-nav-links" aria-label="Main navigation">
           <a href="#experience" onClick={() => setMenuOpen(false)}>Experience</a>
           <a href="#how-it-works" onClick={() => setMenuOpen(false)}>How it works</a>
           <a href="#principles" onClick={() => setMenuOpen(false)}>Our approach</a>
@@ -38,6 +39,7 @@ export default function MarketingHome() {
         </nav>
         <button className="marketing-menu-toggle" onClick={() => setMenuOpen(!menuOpen)} aria-label={menuOpen ? "Close menu" : "Open menu"}>{menuOpen ? <X size={20}/> : <Menu size={20}/>}</button>
       </header>
+      <AppNavigationDrawer open={menuOpen} onClose={() => setMenuOpen(false)} />
 
       <section className="marketing-hero">
         <div className="marketing-hero-image" aria-hidden="true" />
