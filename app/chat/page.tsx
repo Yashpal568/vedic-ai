@@ -247,7 +247,9 @@ export default function Home() {
   const [toast, setToast] = useState("");
   const [notificationPromptOpen, setNotificationPromptOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const recognitionRef = useRef<VoiceRecognition | null>(null);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
   const bottomRef = useRef<HTMLDivElement>(null);
   const hasConversation = messages.length > 0;
 
@@ -522,70 +524,87 @@ export default function Home() {
   function submitMessage(event: FormEvent<HTMLFormElement>) { event.preventDefault(); sendMessage(); }
   async function toggleVoiceInput() {
     if (voiceListening) {
-      try { recognitionRef.current?.stop(); } catch {}
-      setVoiceListening(false);
+      try { recorderRef.current?.stop(); } catch {}
       return;
     }
     if (typeof window === "undefined" || !window.isSecureContext) {
-      setToast("Voice typing needs a secure HTTPS page. Open Vedic AI using its https:// address.");
+      setToast("Voice typing needs HTTPS. Open Vedic AI using its https:// address.");
       return;
     }
-    const browserWindow = window as VoiceWindow;
-    const Recognition = browserWindow.SpeechRecognition || browserWindow.webkitSpeechRecognition;
-    if (!Recognition) {
-      setToast("This browser does not expose speech recognition. Update Chrome, allow microphone access for this site, or use your keyboard's microphone.");
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+      setToast("This browser cannot record voice here. Update Chrome or use your keyboard's microphone to dictate.");
       return;
     }
     try {
-      // Let the browser's SpeechRecognition request its own microphone permission.
-      // A separate getUserMedia preflight can fail on Android Chrome even when
-      // speech recognition itself is supported, and was blocking voice typing.
-      const recognition = new Recognition();
-      const browserLanguage = (navigator.language || "").toLowerCase();
-      recognition.lang = browserLanguage.startsWith("hi") ? "hi-IN" : browserLanguage.startsWith("en") ? "en-IN" : (navigator.language || "en-IN");
-      recognition.interimResults = false;
-      recognition.continuous = true;
-      recognition.onresult = (event) => {
-        const parts: string[] = [];
-        for (let index = event.resultIndex; index < event.results.length; index++) {
-          const result = event.results[index];
-          if (result?.[0]?.transcript) parts.push(result[0].transcript);
+      // Use the standard microphone + MediaRecorder path instead of browser SpeechRecognition.
+      // This records locally and sends the clip to our server transcription endpoint.
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+      mediaStreamRef.current = stream;
+      audioChunksRef.current = [];
+      const mimeType = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"].find((type) => MediaRecorder.isTypeSupported(type));
+      const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+      recorderRef.current = recorder;
+      recorder.ondataavailable = (event) => { if (event.data.size > 0) audioChunksRef.current.push(event.data); };
+      recorder.onerror = () => {
+        setVoiceListening(false);
+        stream.getTracks().forEach((track) => track.stop());
+        mediaStreamRef.current = null;
+        recorderRef.current = null;
+        setToast("Voice recording failed. Check microphone permissions and try again.");
+      };
+      recorder.onstop = async () => {
+        setVoiceListening(false);
+        stream.getTracks().forEach((track) => track.stop());
+        mediaStreamRef.current = null;
+        recorderRef.current = null;
+        const blob = new Blob(audioChunksRef.current, { type: recorder.mimeType || "audio/webm" });
+        audioChunksRef.current = [];
+        if (blob.size < 1500) {
+          setToast("Recording was too short. Tap the microphone, speak, then tap it again to finish.");
+          return;
         }
-        const transcript = parts.join(" ").trim();
-        if (transcript) setInput((current) => current.trim() ? current.trimEnd() + " " + transcript : transcript);
+        if (blob.size > 10 * 1024 * 1024) {
+          setToast("That recording is too long. Please record a shorter message (under 10 MB).");
+          return;
+        }
+        setToast("Transcribing your voice…");
+        try {
+          const formData = new FormData();
+          const extension = (blob.type || "").includes("mp4") ? "m4a" : "webm";
+          formData.append("audio", blob, "voice-input." + extension);
+          const response = await fetch("/api/transcribe", { method: "POST", body: formData });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(data.error || "Voice transcription is temporarily unavailable.");
+          const transcript = typeof data.text === "string" ? data.text.trim() : "";
+          if (!transcript) {
+            setToast("I couldn't hear clear words. Please try again, speaking close to the microphone.");
+            return;
+          }
+          setInput((current) => current.trim() ? current.trimEnd() + " " + transcript : transcript);
+          setToast("Voice added to your message. Review it, then tap send.");
+          window.setTimeout(() => textareaRef.current?.focus(), 0);
+        } catch (error) {
+          setToast(error instanceof Error ? error.message : "Could not transcribe the recording. Please try again.");
+        }
       };
-      recognition.onerror = (event) => {
-        setVoiceListening(false);
-        recognitionRef.current = null;
-        const messages: Record<string, string> = {
-          "not-allowed": "Microphone permission is blocked. Tap the lock/site-settings icon in Chrome → Permissions → Microphone → Allow, then reload.",
-          "service-not-allowed": "Speech recognition is blocked by the browser or network. Try Chrome with microphone permission enabled.",
-          "audio-capture": "No microphone was detected. Check your phone's microphone and Android app/site permissions.",
-          "no-speech": "I didn't hear speech. Tap the microphone and speak a little louder.",
-          "network": "Speech recognition needs a working network connection. Check internet and try again.",
-          "aborted": "Voice typing was stopped.",
-        };
-        setToast(messages[event?.error || ""] || "Voice typing failed (" + (event?.error || "unknown error") + "). Check Chrome microphone permission and try again.");
-      };
-      recognition.onend = () => {
-        setVoiceListening(false);
-        recognitionRef.current = null;
-      };
-      recognitionRef.current = recognition;
-      recognition.start();
+      recorder.start(250);
       setVoiceListening(true);
-      setToast("Listening… speak now. Your words will be added to the message box.");
+      setToast("Listening… speak now, then tap the microphone again to add your words.");
     } catch (error) {
       setVoiceListening(false);
-      recognitionRef.current = null;
       const err = error as DOMException;
       if (err?.name === "NotAllowedError" || err?.name === "SecurityError") {
-        setToast("Microphone access is blocked for this site. In Android Chrome, tap the site controls beside the address → Permissions → Microphone → Allow, then reload this page. Also check Android Settings → Apps → Chrome → Permissions → Microphone.");
-      } else if (err?.name === "NotFoundError") {
-        setToast("No microphone was found. Check your phone's microphone and try again.");
+        setToast("Microphone permission is blocked. In Android Chrome, tap the site controls beside the address → Permissions → Microphone → Allow. Also check Android Settings → Apps → Chrome → Permissions → Microphone, then reload Vedic AI.");
+      } else if (err?.name === "NotFoundError" || err?.name === "DevicesNotFoundError") {
+        setToast("No microphone was detected. Check your phone's microphone and Android app permissions.");
+      } else if (err?.name === "NotReadableError") {
+        setToast("The microphone is busy in another app. Close other apps using the mic and try again.");
       } else {
-        setToast("Could not start voice typing (" + (err?.name || "unknown error") + "). Allow microphone access for vedic-ai-psi.vercel.app, reload, and try again.");
+        setToast("Could not start microphone (" + (err?.name || "unknown error") + "). Check site and Android microphone permissions.");
       }
+      mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+      mediaStreamRef.current = null;
+      recorderRef.current = null;
     }
   }
   function onComposerKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
