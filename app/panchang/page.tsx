@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { CalendarDays, Clock3, Compass, MapPin, MoonStar, Search, Sun, Sunrise, Sunset, Sparkles, LoaderCircle } from "lucide-react";
 import MobileBottomNav from "@/components/mobile-bottom-nav";
+import SiteHeader from "@/components/site-header";
 
 type Place = { id: string; label: string; latitude: number; longitude: number; type: string; importance: number };
 type Panchang = {
@@ -66,11 +67,7 @@ export default function PanchangPage() {
   ] : [];
 
   return <main className="panchang-shell">
-    <header className="panchang-header">
-      <Link href="/chat" className="panchang-back"><MoonStar size={20}/> <strong>vedic.ai</strong></Link>
-      <span className="panchang-header-label">PANCHANG · DAILY ALMANAC</span>
-      <Link href="/profile" className="panchang-profile">My profile</Link>
-    </header>
+    <SiteHeader section="Panchang · Daily Almanac" />
     <section className="panchang-content">
       <div className="panchang-kicker"><Sparkles size={15}/> TRADITIONAL JYOTISH · LOCAL TIMINGS</div>
       <h1>Today in the <em>cosmos.</em></h1>
