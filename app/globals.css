@@ -3282,3 +3282,21 @@ html { scroll-behavior: smooth; }
     letter-spacing: -.15px;
   }
 }
+
+
+/* Chat typography refinement: compact, readable, professional on desktop and mobile. */
+.message-text { font-size: 13px; line-height: 1.78; }
+.markdown-body { font-size: 13px; line-height: 1.78; }
+.markdown-body p { margin: .72em 0; }
+.markdown-body h1 { font-size: 1.42em; }
+.markdown-body h2 { font-size: 1.24em; }
+.markdown-body h3 { font-size: 1.08em; }
+@media (max-width: 680px) {
+  .message-text, .markdown-body { font-size: 13px; line-height: 1.78; }
+  .markdown-body h1 { font-size: 1.35em; }
+  .markdown-body h2 { font-size: 1.18em; }
+  .markdown-body h3 { font-size: 1.05em; }
+  .markdown-body table { font-size: 11px; }
+  .markdown-body pre { font-size: 11px; }
+  .user-bubble { font-size: 13px; line-height: 1.7; }
+}
