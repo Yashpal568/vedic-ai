@@ -101,6 +101,7 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   const rate = await checkRateLimit(request, "conversation-delete", 10, 60_000);
+  if (!rate.available) return NextResponse.json({ error: "The shared rate-limiting service is unavailable. Please try again shortly." }, { status: 503 });
   if (!rate.allowed) return NextResponse.json({ error: "Too many delete requests. Please wait and try again." }, { status: 429, headers: { "Retry-After": String(rate.retryAfterSeconds) } });
   const supabase = await createSupabaseServerClient();
   if (!supabase) return NextResponse.json({ error: "Supabase is not configured." }, { status: 503 });
@@ -108,7 +109,10 @@ export async function DELETE(request: Request) {
   if (authError || !user) return NextResponse.json({ error: "Sign in to delete conversations." }, { status: 401 });
   const id = new URL(request.url).searchParams.get("id");
   if (!id || !z.string().uuid().safeParse(id).success) return NextResponse.json({ error: "A valid conversation ID is required." }, { status: 400 });
-  const { error } = await supabase.from("conversations").delete().eq("id", id).eq("user_id", user.id);
+  const { data: deletedRows, error } = await supabase.from("conversations")
+    .delete().eq("id", id).eq("user_id", user.id).select("id");
   if (error) return NextResponse.json({ error: "Could not delete conversation." }, { status: 500 });
-  return NextResponse.json({ deleted: true });
+  if (!deletedRows?.length) return NextResponse.json({ error: "Conversation not found or already deleted." }, { status: 404 });
+  // chat_messages are removed by the conversation_id foreign-key cascade.
+  return NextResponse.json({ deleted: true, id: deletedRows[0].id });
 }
