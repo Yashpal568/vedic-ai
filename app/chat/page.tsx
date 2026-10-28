@@ -1090,7 +1090,7 @@ export default function Home() {
             </div>
             <div className="assistant-note"><ShieldCheck size={14} style={{ flexShrink: 0, color: "var(--gold)", marginTop: 2 }} /><span>Your birth details are sent to Vedic AI&apos;s chart endpoint to calculate placements. To generate the automatic interpretation, your birth details and calculated chart are also sent to the AI provider configured by the site owner. Signed-in conversations may be saved to your account; use “Save kundli” only when you want to store a report. Guest conversations are not persisted.</span></div>
             <label className="birth-consent"><input type="checkbox" checked={birthAiConsent} onChange={(event) => setBirthAiConsent(event.target.checked)} /><span>I agree to send these birth details and the calculated chart to the configured AI provider for personalized interpretation. I understand astrology is interpretive and the calculation engine is still being validated.</span></label>
-            <div className="modal-actions"><button type="button" className="secondary-button" onClick={() => setIsBirthOpen(false)}>Cancel</button><button type="submit" className="primary-button" disabled={!birthAiConsent || isLoading || isGeocoding}>Calculate my kundli <ArrowUp size={14} /></button></div>
+            <div className="modal-actions birth-modal-actions"><button type="submit" className="primary-button birth-calculate-button" disabled={!birthAiConsent || isLoading || isGeocoding}>{isLoading ? "Calculating your kundli…" : isGeocoding ? "Finding birthplace…" : "Calculate my kundli"} <ArrowUp size={16} /></button></div>
           </form>
         </section>
       </div>}
