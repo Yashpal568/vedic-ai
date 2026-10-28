@@ -3447,3 +3447,22 @@ body:has(.app-shell[data-theme="light"]) {
     padding-bottom: max(14px, env(safe-area-inset-bottom));
   }
 }
+
+
+/* Restore the original compact chat typography without changing layout or alignment. */
+.message-text { font-size: 12px; line-height: 1.78; }
+.message-text p, .message-text li { font-size: inherit; line-height: inherit; }
+.message-content h1, .message-content h2, .message-content h3 { line-height: 1.35; }
+.message-content h1 { font-size: 18px; }
+.message-content h2 { font-size: 15px; }
+.message-content h3 { font-size: 13px; }
+.message-content table { font-size: 11px; }
+.user-bubble { font-size: 12px; line-height: 1.7; }
+@media (max-width: 680px) {
+  .message-text { font-size: 12px; line-height: 1.78; }
+  .message-content h1 { font-size: 17px; }
+  .message-content h2 { font-size: 14px; }
+  .message-content h3 { font-size: 12px; }
+  .message-content table { font-size: 10px; }
+  .user-bubble { font-size: 12px; }
+}
