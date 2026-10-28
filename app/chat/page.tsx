@@ -10,6 +10,7 @@ import AppNavigationDrawer from "@/components/app-navigation-drawer";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import type { KundliReport } from "@/lib/astrology";
 import { printKundliReport } from "@/lib/print-report";
+import { buildKundliHouseSummary, buildKundliSimpleSummary } from "@/lib/kundli-summary";
 import {
   ArrowDown, ArrowUp, AudioLines, Mic, MicOff, BookOpen, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight,
   CircleHelp, Gem, Hand, History, House, LogOut, Menu, MessageCircle, MoonStar, Orbit, Plus, Sun,
@@ -1124,6 +1125,12 @@ export default function Home() {
               </div>
               <div className="chart-table-wrap"><table className="chart-table"><thead><tr><th>Graha</th><th>Rashi</th><th>Degree</th><th>House</th><th>Nakshatra</th><th>D9 Navamsa</th><th>D10 Dashamsa</th><th>Status</th></tr></thead><tbody>{chartReport.planets.map((planet) => <tr key={planet.name}><td>{planet.name}</td><td>{planet.sign}</td><td>{planet.degreeInSign.toFixed(2)}°</td><td>{planet.house}</td><td>{planet.nakshatra} · {planet.nakshatraPada}</td><td>{planet.navamsaSign}</td><td>{planet.dashamsaSign}</td><td>{planet.retrograde ? "Retrograde" : "Direct"}</td></tr>)}</tbody></table></div>
               <p className="chart-disclaimer"><ShieldCheck size={13}/> {chartReport.disclaimer} D9/D10 sign mapping is tested separately, but the underlying planetary longitudes and full chart are still awaiting independent ephemeris validation.</p>
+              <section className="kundli-simple-summary" aria-labelledby="kundli-simple-summary-title">
+                <div className="kundli-summary-heading"><div><div className="eyebrow"><span className="eyebrow-line" /> YOUR CHART IN SIMPLE WORDS</div><h2 id="kundli-simple-summary-title">Your Kundli, explained simply</h2><p>Start here if astrology terms feel confusing. These are traditional interpretations, not guaranteed predictions.</p></div></div>
+                <div className="kundli-summary-points">{buildKundliSimpleSummary(chartReport).map((item, index) => <div className="kundli-summary-point" key={index}><span>{index + 1}</span><p>{item}</p></div>)}</div>
+                <div className="kundli-house-summary-heading"><h3>All 12 houses in everyday language</h3><p>Each house represents an area of life. The sign and planets below come from this calculated chart.</p></div>
+                <div className="kundli-house-summary-grid">{buildKundliHouseSummary(chartReport).map((house) => <article className="kundli-house-summary-card" key={house.house}><div className="kundli-house-summary-top"><span>HOUSE {house.house}</span><strong>{house.sign}</strong></div><h4>{house.title}</h4><p>{house.explanation}</p><small>Planets: {house.planets.length ? house.planets.join(", ") : "No major planet listed"}</small></article>)}</div>
+              </section>
             </section>}
             {transitReport && chartReport && <section className="chart-panel transit-panel">
               <div className="chart-panel-head"><div><div className="eyebrow"><span className="eyebrow-line" /> CURRENT SKY · EXPERIMENTAL</div><h2 className="chart-title">Transit snapshot <span>· {transitReport.birth.timezone}</span></h2><p className="chart-subtitle">Calculated at {new Date(transitReport.birth.utc).toLocaleString()} · compared with natal Lagna</p></div><button className="secondary-button" onClick={loadCurrentTransits} disabled={transitLoading}>{transitLoading ? "Refreshing…" : "Refresh"}</button></div>
