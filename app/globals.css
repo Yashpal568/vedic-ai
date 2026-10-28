@@ -1921,3 +1921,118 @@ html { scroll-behavior: smooth; }
     scroll-behavior: auto !important;
   }
 }
+
+
+/* Premium responsive app navigation — Shadcn Studio-inspired spacing, surfaces and focus states. */
+.topbar {
+  min-height: 76px;
+  padding-inline: clamp(16px, 2.6vw, 38px);
+  gap: 18px;
+  border-bottom: 1px solid var(--line);
+  box-shadow: 0 8px 28px rgba(0,0,0,.035);
+}
+.topbar-left { min-width: 0; }
+.mode-pill { white-space: nowrap; background: color-mix(in srgb, var(--panel) 76%, transparent); }
+.topbar-actions { gap: 8px; flex-shrink: 0; }
+.topbar-link, .topbar-theme-toggle {
+  min-height: 40px;
+  justify-content: center;
+  border: 1px solid var(--line2);
+  border-radius: 12px;
+  color: var(--text);
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  transition: transform .18s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+.topbar-link { padding: 9px 12px; }
+.topbar-theme-toggle {
+  display: inline-flex; align-items: center; gap: 8px; padding: 0 13px;
+  font-size: 11px; font-weight: 600; letter-spacing: .01em;
+}
+.topbar-link:hover, .topbar-theme-toggle:hover {
+  transform: translateY(-1px); border-color: rgba(212,183,122,.5);
+  box-shadow: 0 5px 18px rgba(0,0,0,.08);
+}
+.topbar-theme-toggle svg { color: var(--gold2); }
+.topbar-link svg { flex-shrink: 0; }
+.topbar .icon-button { width: 40px; height: 40px; border: 1px solid var(--line); background: color-mix(in srgb, var(--panel) 80%, transparent); }
+.topbar .icon-button:hover { border-color: var(--line2); }
+.app-shell[data-theme="light"] {
+  --bg: #f5f6f8; --panel: #ffffff; --raised: #eef0f4;
+  --line: rgba(35,43,57,.09); --line2: rgba(35,43,57,.15);
+  --text: #202638; --muted: #596174; --quiet: #788094;
+  --gold: #9a7028; --gold2: #80591a; --wash: rgba(184,139,57,.10);
+  --green: #39784e; background: var(--bg); color: var(--text);
+}
+.app-shell[data-theme="light"] .sidebar {
+  background: #fff; border-right-color: #e6e8ee; box-shadow: 6px 0 30px rgba(24,35,54,.025);
+}
+.app-shell[data-theme="light"] .topbar {
+  background: rgba(255,255,255,.88); border-bottom-color: #e6e8ee;
+  box-shadow: 0 8px 28px rgba(24,35,54,.035);
+}
+.app-shell[data-theme="light"] .new-chat {
+  background: #fff; color: var(--text); border-color: #dfe3ea;
+  box-shadow: 0 2px 5px rgba(24,35,54,.025);
+}
+.app-shell[data-theme="light"] .new-chat:hover { background: #f8f8fa; border-color: rgba(154,112,40,.38); }
+.app-shell[data-theme="light"] .side-link { color: #596174; }
+.app-shell[data-theme="light"] .side-link:hover,
+.app-shell[data-theme="light"] .side-link.active { color: #202638; background: #f1f3f7; border-color: #e4e7ee; }
+.app-shell[data-theme="light"] .side-link svg { color: #727b8d; }
+.app-shell[data-theme="light"] .plan-card { background: linear-gradient(140deg,rgba(184,139,57,.09),#fff 75%); border-color: #e7e3d8; }
+.app-shell[data-theme="light"] .plan-card p { color: #687083; }
+.app-shell[data-theme="light"] .topbar-link,
+.app-shell[data-theme="light"] .topbar-theme-toggle,
+.app-shell[data-theme="light"] .topbar .icon-button { background: #fff; color: #283044; border-color: #dfe3ea; }
+.app-shell[data-theme="light"] .topbar-link:hover,
+.app-shell[data-theme="light"] .topbar-theme-toggle:hover,
+.app-shell[data-theme="light"] .topbar .icon-button:hover { background: #f7f8fa; border-color: rgba(154,112,40,.4); }
+.app-shell[data-theme="light"] .mode-pill { color: #586174; background: rgba(255,255,255,.9); border-color: #e1e4eb; }
+.app-shell[data-theme="light"] .welcome-wrap { background: radial-gradient(ellipse at 84% 0%, rgba(205,173,111,.11), transparent 34%); }
+.app-shell[data-theme="light"] .hero-copy,
+.app-shell[data-theme="light"] .auth-copy { color: #5e6678; }
+.app-shell[data-theme="light"] .prompt-card,
+.app-shell[data-theme="light"] .chart-panel,
+.app-shell[data-theme="light"] .report-card,
+.app-shell[data-theme="light"] .chart-subpanel { background: #fff; border-color: #e3e6ed; box-shadow: 0 8px 24px rgba(24,35,54,.035); }
+.app-shell[data-theme="light"] .prompt-card:hover { background: #fffdf8; border-color: rgba(154,112,40,.38); }
+.app-shell[data-theme="light"] .composer { background: rgba(255,255,255,.96); border-color: #dfe3ea; box-shadow: 0 12px 35px rgba(24,35,54,.07); }
+.app-shell[data-theme="light"] .composer textarea,
+.app-shell[data-theme="light"] .message-text,
+.app-shell[data-theme="light"] .markdown-body,
+.app-shell[data-theme="light"] .markdown-body p,
+.app-shell[data-theme="light"] .markdown-body li,
+.app-shell[data-theme="light"] .markdown-body strong { color: #252c3d; }
+.app-shell[data-theme="light"] .user-bubble { color: #242b3c; background: #eceff4; border-color: #e0e4ec; }
+.app-shell[data-theme="light"] .message-meta,
+.app-shell[data-theme="light"] .footer-note,
+.app-shell[data-theme="light"] .quick-label { color: #737b8d; }
+.app-shell[data-theme="light"] .tool-button { color: #586174; background: #f5f6f8; border-color: #e1e4eb; }
+.app-shell[data-theme="light"] .tool-button:hover { color: #242b3c; background: #eceff4; }
+.app-shell[data-theme="light"] .mobile-nav-drawer { background: #fff; color: #202638; border-right-color: #e3e6ed; }
+.app-shell[data-theme="light"] .profile-name { color: #252c3d; }
+.app-shell[data-theme="light"] .profile-caption { color: #788094; }
+@media (max-width: 800px) {
+  .topbar { min-height: 66px; padding-inline: 12px; gap: 8px; }
+  .topbar-actions { gap: 5px; }
+  .topbar-theme-toggle { width: 36px; min-width: 36px; height: 36px; min-height: 36px; padding: 0; }
+  .topbar-theme-toggle span { display: none; }
+  .topbar-actions .topbar-link { width: 36px; min-width: 36px; height: 36px; min-height: 36px; padding: 0; }
+  .topbar-actions .topbar-link span { display: none; }
+  .topbar-actions .icon-button { width: 34px; height: 36px; }
+  .topbar-notifications { display: none !important; }
+}
+@media (max-width: 390px) {
+  .topbar { padding-inline: 8px; gap: 5px; }
+  .topbar-left { gap: 6px; }
+  .mobile-brand { gap: 5px; }
+  .mobile-brand .brand-mark { width: 27px; height: 27px; }
+  .mobile-brand .brand-name { font-size: 11px; }
+  .mode-pill { padding: 6px 7px; gap: 5px; font-size: 9px; }
+  .topbar-actions { gap: 3px; }
+  .topbar-actions .topbar-link, .topbar-theme-toggle { width: 32px; min-width: 32px; height: 33px; min-height: 33px; }
+  .topbar-actions .icon-button { width: 30px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .topbar-link, .topbar-theme-toggle, .topbar .icon-button { transition: none; }
+}
