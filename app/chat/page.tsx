@@ -367,6 +367,11 @@ export default function Home() {
   }, [isSignedIn]);
 
   useEffect(() => {
+    const conversationId = new URLSearchParams(window.location.search).get("conversation");
+    if (conversationId) void loadConversation(conversationId);
+  }, []);
+
+  useEffect(() => {
     let active = true;
     const supabase = getSupabaseBrowserClient();
     if (!supabase) return;
@@ -941,7 +946,7 @@ export default function Home() {
         <button className="side-link" onClick={() => { window.location.href = "/reports"; }}><BookOpen size={17} /> <span>Kundli & reports</span></button>
         <button className="side-link" onClick={() => setToast("Saved memory is available in your personal workspace.")}><ShieldCheck size={17} /> <span>Saved memory</span></button>
         <div className="side-label sidebar-history-label"><span>All conversations</span><span className="sidebar-history-count">{historyItems.length}</span></div>
-        {historyItems.length ? historyItems.map((item) => <div className="history-item-row" key={item.id}><button className={"side-link history-item-open " + (activeConversationId === item.id ? "active" : "")} onClick={() => loadConversation(item.id)}><History size={15} /><span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</span></button><button className="history-delete" aria-label={"Delete " + item.title} onClick={() => deleteConversation(item.id)}><Trash2 size={13}/></button></div>) : <p className="history-empty">Sign in to save conversations and see them here.</p>}
+        {historyItems.length ? historyItems.map((item) => <div className="history-item-row" key={item.id}><button type="button" className={"side-link history-item-open " + (activeConversationId === item.id ? "active" : "")} onClick={() => void loadConversation(item.id)} disabled={loadingConversationId === item.id}><History size={15} /><span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{loadingConversationId === item.id ? "Opening…" : item.title}</span></button><button type="button" className="history-delete" aria-label={"Delete " + item.title} title={"Delete " + item.title} onClick={() => requestDeleteConversation(item.id)}><Trash2 size={15}/></button></div>) : <p className="history-empty">Sign in to save conversations and see them here.</p>}
         <div className="sidebar-bottom">
           <div className="plan-card">
             <div className="plan-top"><Gem size={14} /> YOUR COSMIC JOURNEY</div>
@@ -969,7 +974,7 @@ export default function Home() {
           </div>
           <button className="new-chat mobile-drawer-new" onClick={() => { startNewChat(); setMobileMenuOpen(false); }}><Plus size={16} /> New conversation</button>
           <div className="side-label">Workspace</div>
-          <button className="side-link active" onClick={() => setMobileMenuOpen(false)}><MessageCircle size={16} /> Astrology chat</button>
+          <button className="side-link active" onClick={() => { startNewChat(); setMobileMenuOpen(false); }}><MessageCircle size={16} /> Astrology chat</button>
           <button className="side-link" onClick={() => { setIsBirthOpen(true); setMobileMenuOpen(false); }}><Orbit size={16} /> My birth profile</button>
           <button className="side-link" onClick={() => { setMobileMenuOpen(false); window.location.href = "/palm-reading"; }}><Sparkles size={16} /> Palm reading</button>
           <button className="side-link" onClick={() => { setMobileMenuOpen(false); window.location.href = "/profile"; }}><UserRound size={16} /> My profile</button>
@@ -978,8 +983,8 @@ export default function Home() {
           <div className="side-label mobile-history-label">All conversations <span>{historyItems.length}</span></div>
           <div className="mobile-history-list">
             {historyItems.length ? historyItems.map((item) => <div className="history-item-row" key={item.id}>
-              <button className={"side-link history-item-open " + (activeConversationId === item.id ? "active" : "")} onClick={() => { loadConversation(item.id); setMobileMenuOpen(false); }}><History size={15} /><span>{item.title}</span></button>
-              <button className="history-delete" aria-label={"Delete " + item.title} onClick={() => deleteConversation(item.id)}><Trash2 size={13}/></button>
+              <button type="button" className={"side-link history-item-open " + (activeConversationId === item.id ? "active" : "")} onClick={() => { void loadConversation(item.id); setMobileMenuOpen(false); }} disabled={loadingConversationId === item.id}><History size={15} /><span>{loadingConversationId === item.id ? "Opening…" : item.title}</span></button>
+              <button type="button" className="history-delete" aria-label={"Delete " + item.title} title={"Delete " + item.title} onClick={() => requestDeleteConversation(item.id)}><Trash2 size={15}/></button>
             </div>) : <p className="history-empty">{isSignedIn ? "Your saved conversations will appear here." : "Sign in to sync conversations across devices."}</p>}
           </div>
           <div className="mobile-nav-bottom">
@@ -1102,6 +1107,21 @@ export default function Home() {
       {notificationPromptOpen && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) dismissNotificationPrompt(); }}><section className="modal" role="dialog" aria-modal="true" aria-labelledby="notification-modal-title"><div className="modal-head"><div><div className="eyebrow"><span className="eyebrow-line" /> STAY IN THE LOOP</div><h2 className="modal-title" id="notification-modal-title" style={{ margin: "12px 0 0" }}>Enable notifications</h2><p className="modal-copy">Get helpful updates from Vedic AI in this browser. You can change this permission anytime in your browser settings.</p></div><button className="icon-button" onClick={dismissNotificationPrompt} aria-label="Close notification prompt"><X size={17}/></button></div><div className="assistant-note"><ShieldCheck size={15} style={{ flexShrink: 0, color: "var(--gold)" }}/><span>Your browser will show its own permission prompt after you tap Enable. Vedic AI cannot grant permission on your behalf.</span></div><div className="modal-actions"><button type="button" className="secondary-button" onClick={dismissNotificationPrompt}>Not now</button><button type="button" className="primary-button" onClick={() => { void enableNotifications(); }}>Enable notifications <Check size={14}/></button></div></section></div>}
 
       {toast && <div role="status" style={{ position: "fixed", zIndex: 80, bottom: 85, left: "50%", transform: "translateX(-50%)", width: "max-content", maxWidth: "calc(100vw - 32px)", padding: "12px 16px", border: "1px solid var(--line2)", borderRadius: 12, color: "var(--text)", background: "#25261f", boxShadow: "0 12px 40px #0005", fontSize: 12, lineHeight: 1.6 }}>{toast}</div>}
+
+      {pendingDeleteConversation && <div className="modal-backdrop conversation-delete-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !deletingConversationId) setPendingDeleteConversation(null); }}>
+        <section className="modal conversation-delete-modal" role="alertdialog" aria-modal="true" aria-labelledby="delete-conversation-title" aria-describedby="delete-conversation-description">
+          <div className="conversation-delete-icon"><Trash2 size={22}/></div>
+          <div className="conversation-delete-eyebrow">DELETE CONVERSATION</div>
+          <h2 className="modal-title" id="delete-conversation-title">Delete this chat?</h2>
+          <p className="modal-copy" id="delete-conversation-description">“{pendingDeleteConversation.title}” and all its saved messages will be permanently deleted. This action cannot be undone.</p>
+          <div className="conversation-delete-actions">
+            <button type="button" className="secondary-button" onClick={() => setPendingDeleteConversation(null)} disabled={Boolean(deletingConversationId)}>Keep conversation</button>
+            <button type="button" className="conversation-delete-confirm" onClick={() => void deleteConversation(pendingDeleteConversation.id)} disabled={Boolean(deletingConversationId)}>
+              {deletingConversationId === pendingDeleteConversation.id ? <><RefreshCw size={15} className="spin"/> Deleting…</> : <><Trash2 size={15}/> Delete chat</>}
+            </button>
+          </div>
+        </section>
+      </div>}
 
       {isBirthOpen && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setIsBirthOpen(false); }}>
         <section className="modal" role="dialog" aria-modal="true" aria-labelledby="birth-modal-title">
