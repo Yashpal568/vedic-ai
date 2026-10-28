@@ -3300,3 +3300,150 @@ html { scroll-behavior: smooth; }
   .markdown-body pre { font-size: 11px; }
   .user-bubble { font-size: 13px; line-height: 1.7; }
 }
+
+
+/* Cohesive premium light theme: warm ivory, muted lavender and restrained Jyotish gold. */
+body:has(.app-shell[data-theme="light"]) {
+  background: #f5f3f8;
+  color: #24283a;
+}
+.app-shell[data-theme="light"] {
+  --bg: #f5f3f8;
+  --panel: rgba(255,255,255,.78);
+  --raised: #ffffff;
+  --line: rgba(76, 67, 105, .10);
+  --line2: rgba(76, 67, 105, .16);
+  --text: #252a3c;
+  --muted: #646b7d;
+  --quiet: #858b9a;
+  --gold: #94713c;
+  --gold2: #a98245;
+  --wash: rgba(186, 151, 91, .11);
+  background:
+    radial-gradient(ellipse at 8% 8%, rgba(207, 197, 233, .34), transparent 34%),
+    radial-gradient(ellipse at 94% 22%, rgba(242, 220, 184, .28), transparent 32%),
+    radial-gradient(ellipse at 50% 100%, rgba(214, 225, 242, .35), transparent 42%),
+    linear-gradient(135deg, #f7f5fa 0%, #f5f3f0 52%, #f3f5fb 100%) !important;
+  color: #252a3c;
+  position: relative;
+  isolation: isolate;
+}
+.app-shell[data-theme="light"]::before {
+  content: "";
+  position: fixed;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  opacity: .18;
+  background:
+    radial-gradient(circle at 14% 22%, #b8a6d6 0 1px, transparent 1.8px),
+    radial-gradient(circle at 76% 36%, #c7a66a 0 1px, transparent 1.8px),
+    radial-gradient(circle at 56% 82%, #b8a6d6 0 1px, transparent 1.8px);
+  background-size: 110px 110px, 145px 145px, 170px 170px;
+}
+.app-shell[data-theme="light"] .sidebar {
+  background: rgba(249, 247, 252, .88) !important;
+  border-right-color: rgba(91, 79, 121, .12);
+  box-shadow: 8px 0 35px rgba(45, 43, 67, .035);
+  backdrop-filter: blur(22px);
+}
+.app-shell[data-theme="light"] .topbar {
+  background: rgba(250, 248, 252, .82) !important;
+  border-bottom-color: rgba(91, 79, 121, .12);
+  backdrop-filter: blur(22px) saturate(130%);
+}
+.app-shell[data-theme="light"] .new-chat {
+  color: #42364e;
+  background: linear-gradient(120deg, rgba(219, 208, 238, .42), rgba(248, 232, 204, .42));
+  border-color: rgba(151, 119, 68, .23);
+}
+.app-shell[data-theme="light"] .new-chat:hover,
+.app-shell[data-theme="light"] .side-link:hover,
+.app-shell[data-theme="light"] .side-link.active {
+  color: #302a43;
+  background: rgba(194, 178, 222, .19);
+  border-color: rgba(123, 105, 157, .14);
+}
+.app-shell[data-theme="light"] .side-label,
+.app-shell[data-theme="light"] .profile-caption { color: #858093; }
+.app-shell[data-theme="light"] .side-link,
+.app-shell[data-theme="light"] .icon-button,
+.app-shell[data-theme="light"] .topbar-link { color: #56556a; }
+.app-shell[data-theme="light"] .topbar-link {
+  background: rgba(255,255,255,.72);
+  border-color: rgba(91,79,121,.14);
+}
+.app-shell[data-theme="light"] .mode-pill {
+  color: #67647a;
+  border-color: rgba(91,79,121,.14);
+  background: rgba(255,255,255,.45);
+}
+.app-shell[data-theme="light"] .main-panel,
+.app-shell[data-theme="light"] .content-scroll { background: transparent; }
+.app-shell[data-theme="light"] .hero-title { color: #292b3d; }
+.app-shell[data-theme="light"] .hero-title .gold { color: #98723b; }
+.app-shell[data-theme="light"] .hero-copy,
+.app-shell[data-theme="light"] .prompt-description { color: #687084; }
+.app-shell[data-theme="light"] .quick-label { color: #898397; }
+.app-shell[data-theme="light"] .prompt-card {
+  color: #292d40;
+  background: rgba(255,255,255,.64);
+  border-color: rgba(91,79,121,.13);
+  box-shadow: 0 8px 28px rgba(49, 43, 70, .035);
+  backdrop-filter: blur(12px);
+}
+.app-shell[data-theme="light"] .prompt-card:hover {
+  background: rgba(255,255,255,.88);
+  border-color: rgba(169,132,69,.32);
+  box-shadow: 0 12px 30px rgba(49,43,70,.065);
+}
+.app-shell[data-theme="light"] .prompt-icon {
+  color: #94713c;
+  background: linear-gradient(145deg, rgba(222,204,164,.42), rgba(221,212,239,.35));
+}
+.app-shell[data-theme="light"] .chat-footer {
+  background: linear-gradient(180deg, rgba(245,243,248,0), rgba(245,243,248,.94) 26%, #f5f3f8 100%);
+}
+.app-shell[data-theme="light"] .composer {
+  background: rgba(255,255,255,.86);
+  border-color: rgba(91,79,121,.17);
+  box-shadow: 0 14px 42px rgba(49,43,70,.08);
+  backdrop-filter: blur(22px);
+}
+.app-shell[data-theme="light"] .composer textarea { color: #292d40; }
+.app-shell[data-theme="light"] .composer textarea::placeholder { color: #9296a5; }
+.app-shell[data-theme="light"] .tool-button { color: #6a687c; }
+.app-shell[data-theme="light"] .tool-button:hover { color: #8d6b38; background: rgba(222,204,164,.2); }
+.app-shell[data-theme="light"] .send-button {
+  color: #fffdf8;
+  background: linear-gradient(135deg, #a98a55, #8c7045);
+  box-shadow: 0 5px 14px rgba(140,112,69,.2);
+}
+.app-shell[data-theme="light"] .footer-note { color: #88899a; }
+.app-shell[data-theme="light"] .message-text,
+.app-shell[data-theme="light"] .markdown-body { color: #34384a; }
+.app-shell[data-theme="light"] .message-meta { color: #858397; }
+.app-shell[data-theme="light"] .user-bubble {
+  color: #353047;
+  background: linear-gradient(135deg, #e9e2f2, #f4e9d8);
+  border-color: rgba(121,101,153,.14);
+}
+.app-shell[data-theme="light"] .assistant-note {
+  color: #69647a;
+  background: rgba(255,255,255,.6);
+  border-color: rgba(169,132,69,.18);
+}
+.app-shell[data-theme="light"] .profile-row { border-top-color: rgba(91,79,121,.12); }
+.app-shell[data-theme="light"] .avatar {
+  color: #795c2f;
+  background: linear-gradient(145deg, #eee4cf, #e5def0);
+}
+@media (max-width: 680px) {
+  .app-shell[data-theme="light"] .topbar {
+    background: rgba(249,247,252,.91) !important;
+    box-shadow: 0 5px 24px rgba(49,43,70,.035);
+  }
+  .app-shell[data-theme="light"] .chat-footer {
+    padding-bottom: max(14px, env(safe-area-inset-bottom));
+  }
+}
