@@ -1,4 +1,4 @@
-import type { KundliReport, PlanetPosition } from "@/lib/astrology";
+import { SIGNS, type KundliReport, type PlanetPosition } from "@/lib/astrology";
 
 export type KundliHouseSummary = {
   house: number;
@@ -8,80 +8,113 @@ export type KundliHouseSummary = {
   explanation: string;
 };
 
+export type KundliPlanetSummary = {
+  name: string;
+  sign: string;
+  house: number;
+  nakshatra: string;
+  explanation: string;
+};
+
 const HOUSE_TOPICS = [
-  "self, personality and first impressions",
-  "money, family and speech",
+  "yourself, your personality and first impressions",
+  "money, family and the way you speak",
   "communication, courage and siblings",
-  "home, comfort and mother",
-  "learning, creativity, romance and children",
-  "daily work, routines and challenges",
-  "partnerships and marriage",
-  "change, shared resources and deeper subjects",
+  "home, comfort and family life",
+  "learning, creativity, fun and children",
+  "daily routines, work habits and challenges",
+  "close relationships and partnerships",
+  "shared money, major changes and deeper topics",
   "beliefs, higher learning and long journeys",
-  "career, responsibilities and public life",
-  "friends, networks and long-term goals",
-  "rest, expenses, privacy and letting go",
+  "career, duties and public life",
+  "friends, groups and long-term goals",
+  "rest, privacy, expenses and letting go",
 ];
 
 const PLANET_MEANINGS: Record<string, string> = {
   Sun: "confidence, identity and responsibility",
-  Moon: "feelings, comfort and changing moods",
-  Mars: "energy, initiative and assertiveness",
+  Moon: "feelings, comfort and everyday moods",
+  Mars: "energy, action and courage",
   Mercury: "thinking, learning and communication",
-  Jupiter: "growth, guidance and broader understanding",
-  Venus: "relationships, harmony and preferences",
-  Saturn: "patience, structure and lessons through effort",
-  Rahu: "strong ambition, curiosity and unconventional interests",
-  Ketu: "detachment, reflection and simplifying priorities",
+  Jupiter: "growth, learning and guidance",
+  Venus: "relationships, harmony and what you enjoy",
+  Saturn: "patience, effort and responsibility",
+  Rahu: "ambition, curiosity and unusual interests",
+  Ketu: "reflection, distance and simplifying priorities",
 };
 
 const SIGN_MEANINGS: Record<string, string> = {
-  Aries: "direct, active and willing to begin",
-  Taurus: "steady, practical and comfort-seeking",
-  Gemini: "curious, communicative and adaptable",
-  Cancer: "protective, sensitive and home-oriented",
-  Leo: "expressive, proud and creative",
-  Virgo: "careful, analytical and improvement-focused",
-  Libra: "cooperative, fair-minded and relationship-aware",
-  Scorpio: "private, focused and drawn to depth",
-  Sagittarius: "open-minded, exploratory and meaning-seeking",
-  Capricorn: "structured, patient and goal-focused",
-  Aquarius: "independent, idea-focused and community-aware",
-  Pisces: "imaginative, empathetic and reflective",
+  Aries: "active and ready to start", Taurus: "steady and practical",
+  Gemini: "curious and communicative", Cancer: "caring and protective",
+  Leo: "expressive and creative", Virgo: "careful and detail-focused",
+  Libra: "cooperative and fairness-minded", Scorpio: "private and focused",
+  Sagittarius: "curious about meaning and new experiences", Capricorn: "patient and goal-focused",
+  Aquarius: "independent and idea-focused", Pisces: "imaginative and reflective",
 };
+
+const plainDate = (value: string, timezone: string) => {
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return value;
+  try {
+    return new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", year: "numeric", timeZone: timezone }).format(date);
+  } catch {
+    return value.slice(0, 10);
+  }
+};
+
+export function buildKundliPlanetSummary(report: KundliReport): KundliPlanetSummary[] {
+  return report.planets.map((planet: PlanetPosition) => {
+    const meaning = PLANET_MEANINGS[planet.name] || "a traditional symbolic theme";
+    const signStyle = SIGN_MEANINGS[planet.sign] || "individual and context-dependent";
+    return {
+      name: planet.name,
+      sign: planet.sign,
+      house: planet.house,
+      nakshatra: planet.nakshatra,
+      explanation: planet.name + " is in " + planet.sign + ", house " + planet.house + ". In traditional Jyotish, " + planet.name + " is linked with " + meaning + "; " + planet.sign + " is often described as " + signStyle + ". Treat this as a symbolic tradition, not a proven description or prediction.",
+    };
+  });
+}
 
 export function buildKundliHouseSummary(report: KundliReport): KundliHouseSummary[] {
   return Array.from({ length: 12 }, (_, index) => {
     const house = index + 1;
-    const sign = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"][(report.ascendant.signIndex + house - 1) % 12];
-    const planets: PlanetPosition[] = report.planets.filter((planet) => planet.house === house);
+    const sign = SIGNS[(report.ascendant.signIndex + house - 1) % 12];
+    const planets = report.planets.filter((planet) => planet.house === house);
     const planetNames = planets.map((planet) => planet.name);
     const signStyle = SIGN_MEANINGS[sign] || "individual and context-dependent";
     const planetStyle = planets.length
-      ? " The listed planet" + (planets.length > 1 ? "s are " : " is ") + planets.map((planet) => planet.name + " (" + (PLANET_MEANINGS[planet.name] || "a traditional symbolic theme") + ")").join("; ") + "."
-      : " No major planet from the current report is listed in this house; astrologers still consider its sign and ruling planet when interpreting it.";
+      ? " Planets shown here: " + planets.map((planet) => planet.name + " (traditionally linked with " + (PLANET_MEANINGS[planet.name] || "a symbolic theme") + ")").join("; ") + "."
+      : " No major planet from this report is placed here. Astrologers may still look at the sign and its ruling planet when discussing this house.";
     return {
       house,
       sign,
       planets: planetNames,
       title: HOUSE_TOPICS[index].charAt(0).toUpperCase() + HOUSE_TOPICS[index].slice(1),
-      explanation: "In traditional Vedic astrology, this house relates to " + HOUSE_TOPICS[index] + ". Its sign is " + sign + ", often associated with being " + signStyle + "." + planetStyle,
+      explanation: "This house is traditionally about " + HOUSE_TOPICS[index] + ". Its sign is " + sign + ", often described as " + signStyle + "." + planetStyle,
     };
   });
 }
 
 export function buildKundliSimpleSummary(report: KundliReport): string[] {
   const moon = report.planets.find((planet) => planet.name === "Moon");
+  const sun = report.planets.find((planet) => planet.name === "Sun");
   const current = report.vimshottari.currentMahadasha;
-  const occupied = report.planets.reduce((count, planet) => count + (planet.house ? 1 : 0), 0);
-  return [
-    "Your Lagna (Ascendant) is " + report.ascendant.sign + ". In traditional astrology, the Lagna is used as a starting point for discussing personality and how you approach life.",
-    "Your Moon is in " + (moon?.sign || "an unavailable sign") + (moon?.nakshatra ? ", in the " + moon.nakshatra + " nakshatra" : "") + ". Astrologers use the Moon and nakshatra when discussing feelings, habits and the mind.",
-    "The report lists " + occupied + " planetary placements across the twelve houses. The house-by-house guide explains what each area traditionally represents and which planets are listed there.",
-    "The current calculated Mahadasha is " + current.lord + " (" + current.start.slice(0, 10) + " to " + current.end.slice(0, 10) + "). In Jyotish this period is used as one lens for timing; it should not be treated as a guaranteed forecast.",
-    report.yogaCandidates?.length
-      ? "The report shows " + report.yogaCandidates.length + " possible yoga candidate" + (report.yogaCandidates.length === 1 ? "" : "s") + ". These are experimental matches only, not confirmed classical yogas."
-      : "No yoga candidate was found by the current simplified rules. This does not prove that no traditional yoga exists in the chart.",
-    "Use this as a beginner-friendly guide to traditional symbolism, not as a fixed prediction. The calculation engine is still experimental and needs independent verification; your choices, circumstances and actions matter.",
+  const occupiedHouses = new Set(report.planets.map((planet) => planet.house)).size;
+  const yogas = report.yogaCandidates || [];
+  const summary = [
+    "Your chart starts with " + report.ascendant.sign + rising (your Lagna). Astrologers use this as the starting point for talking about your approach to life; it does not define who you must be.",
+    "Your Moon is in " + (moon?.sign || "an unavailable sign") + (moon?.nakshatra ? " and the " + moon.nakshatra + " nakshatra" : "") + ". In Jyotish, the Moon is often used when discussing feelings, comfort and habits.",
   ];
+  if (sun) summary.push("Your Sun is in " + sun.sign + " in house " + sun.house + ". In traditional astrology, the Sun is linked with confidence, identity and responsibility.");
+  summary.push(
+    "The report places planets in " + occupiedHouses + " of the 12 houses. Each house represents a different life area; an empty house does not mean that the area is missing or will not matter.",
+    "Your calculated Mahadasha is " + current.lord + ", from " + plainDate(current.start, report.birth.timezone) + " to " + plainDate(current.end, report.birth.timezone) + ". Jyotish treats this as a traditional timing cycle, not a guarantee of future events.",
+    "Your birth Panchang lists " + (report.panchang?.paksha || "—") + " paksha, " + (report.panchang?.tithi || "—") + " tithi, " + (report.panchang?.yoga || "—") + " yoga and " + (report.panchang?.karana || "—") + " karana. These are calendar terms; this app marks the calculation as experimental.",
+    yogas.length
+      ? "The app flagged " + yogas.length + " possible yoga pattern" + (yogas.length === 1 ? "" : "s") + ". These are early candidates only, not confirmed classical yogas."
+      : "The current simplified rules did not flag a yoga. That does not prove that no traditional yoga exists in your chart.",
+    "In short: use the chart as a guide to learn traditional Jyotish terms, not as a fixed verdict about your personality or future. This calculation engine still needs independent accuracy checks, and your choices and circumstances matter.",
+  );
+  return summary;
 }
