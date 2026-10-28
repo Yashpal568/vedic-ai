@@ -164,6 +164,24 @@ function KundliDiagram({ report }: { report: KundliReport }) {
   </div>;
 }
 
+
+function StreamingMarkdown({ content }: { content: string }) {
+  const [visibleText, setVisibleText] = useState("");
+  useEffect(() => {
+    let index = 0;
+    let timer = 0;
+    setVisibleText("");
+    const tick = () => {
+      index = Math.min(content.length, index + (content[index] === "\n" ? 1 : 4));
+      setVisibleText(content.slice(0, index));
+      if (index < content.length) timer = window.setTimeout(tick, 12);
+    };
+    timer = window.setTimeout(tick, 90);
+    return () => window.clearTimeout(timer);
+  }, [content]);
+  return <><ReactMarkdown remarkPlugins={[remarkGfm]}>{visibleText}</ReactMarkdown>{visibleText.length < content.length && <span className="typing-caret" aria-label="Writing response" />}</>;
+}
+
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -979,11 +997,11 @@ export default function Home() {
               <p className="chart-disclaimer"><ShieldCheck size={13}/> Transit positions use the experimental calculation engine and are not independently validated. Treat this as a preview, not a predictive reading.</p>
               <div className="chart-table-wrap"><table className="chart-table"><thead><tr><th>Graha</th><th>Current sign</th><th>Degree</th><th>House from natal Lagna</th><th>Natal sign</th></tr></thead><tbody>{transitReport.planets.map((planet) => { const natal = chartReport.planets.find((item) => item.name === planet.name); return <tr key={planet.name}><td>{planet.name}</td><td>{planet.sign}</td><td>{planet.degreeInSign.toFixed(2)}°</td><td>{(planet.signIndex - chartReport.ascendant.signIndex + 12) % 12 + 1}</td><td>{natal?.sign || "—"}</td></tr>; })}</tbody></table></div>
             </section>}
-            {messages.map((message) => <div className={"message-row " + message.role} key={message.id}>
+            {messages.map((message, messageIndex) => <div className={"message-row " + message.role} key={message.id}>
               {message.role === "assistant" && <div className="message-avatar"><MoonStar size={16} /></div>}
               {message.role === "assistant" ? <div className="message-content">
                 <div className="message-meta">VEDIC AI <span style={{ color: "#5f6057", margin: "0 5px" }}>·</span> ASTROLOGY COMPANION</div>
-                <div className="message-text markdown-body"><ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown></div>
+                <div className="message-text markdown-body">{message.role === "assistant" && messageIndex === messages.length - 1 && !isLoading ? <StreamingMarkdown content={message.content} /> : <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>}</div>
                 <div className="assistant-note"><Sparkles size={14} style={{ flexShrink: 0, color: "var(--gold)", marginTop: 2 }} /><span>Interpretations are intended for reflection and learning. Chart-based answers will be enabled once calculation and AI services are configured.</span></div>
               </div> : <div className="user-bubble">{message.content}</div>}
             </div>)}
