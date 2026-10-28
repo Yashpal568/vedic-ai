@@ -1023,11 +1023,13 @@ export default function Home() {
           </div>
           <button className="new-chat mobile-drawer-new" onClick={() => { startNewChat(); setMobileMenuOpen(false); }}><Plus size={16} /> New conversation</button>
           <div className="side-label">Workspace</div>
-          <button className="side-link active" onClick={() => { startNewChat(); setMobileMenuOpen(false); }}><MessageCircle size={16} /> Astrology chat</button>
-          <button className="side-link" onClick={() => { setIsBirthOpen(true); setMobileMenuOpen(false); }}><Orbit size={16} /> My birth profile</button>
-          <button className="side-link" onClick={() => { setMobileMenuOpen(false); window.location.href = "/palm-reading"; }}><Sparkles size={16} /> Palm reading</button>
+          <button className="side-link active" onClick={() => { startNewChat(); setMobileMenuOpen(false); }}><House size={16} /> Home</button>
+          <button className="side-link" onClick={() => { setIsBirthOpen(true); setMobileMenuOpen(false); }}><Orbit size={16} /> Kundli & birth details</button>
+          <button className="side-link" onClick={() => { setMobileMenuOpen(false); document.getElementById("chat-input")?.focus(); }}><MessageCircle size={16} /> AI Chat</button>
+          <button className="side-link" onClick={() => { setMobileMenuOpen(false); window.location.href = "/palm-reading"; }}><Hand size={16} /> Palmistry</button>
+          <button className="side-link" onClick={() => { setMobileMenuOpen(false); window.location.href = "/panchang"; }}><CalendarDays size={16} /> Panchang</button>
           <button className="side-link" onClick={() => { setMobileMenuOpen(false); window.location.href = "/profile"; }}><UserRound size={16} /> My profile</button>
-          <button className="side-link" onClick={() => { setMobileMenuOpen(false); window.location.href = "/reports"; }}><BookOpen size={16} /> Kundli & reports</button>
+          <button className="side-link" onClick={() => { setMobileMenuOpen(false); window.location.href = "/reports"; }}><BookOpen size={16} /> Saved Kundlis & reports</button>
           <button className="side-link" onClick={() => { openMemory(); setMobileMenuOpen(false); }}><ShieldCheck size={16} /> Saved memory</button>
           <div className="side-label mobile-history-label">All conversations <span>{historyItems.length}</span></div>
           <div className="mobile-history-list">
