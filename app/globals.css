@@ -2191,3 +2191,128 @@ html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) {
   .message-row, .typing-caret { animation: none !important; }
 }
+
+
+/* Premium birth-details modal: calmer hierarchy, responsive spacing and consistent micro-interactions. */
+:root {
+  --motion-fast: 160ms;
+  --motion-base: 240ms;
+  --motion-slow: 360ms;
+  --motion-ease: cubic-bezier(.2,.75,.25,1);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .modal-backdrop { animation: birth-backdrop-in 220ms ease-out both; }
+  .modal { animation: birth-modal-in 320ms cubic-bezier(.2,.8,.2,1) both; }
+  .modal .form-field, .modal .birth-consent, .modal .place-hint, .modal .place-attribution {
+    animation: birth-field-in 360ms var(--motion-ease) both;
+  }
+  .modal .form-field:nth-of-type(2) { animation-delay: 25ms; }
+  .modal .form-field:nth-of-type(3) { animation-delay: 50ms; }
+  .modal .form-field:nth-of-type(4) { animation-delay: 75ms; }
+}
+.modal {
+  width: min(100%, 700px);
+  max-height: min(88dvh, 900px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(221,190,128,.35) transparent;
+  border: 1px solid rgba(230,211,169,.18);
+  background:
+    radial-gradient(ellipse at 100% 0%, rgba(219,183,112,.075), transparent 38%),
+    linear-gradient(150deg, rgba(26,27,23,.98), rgba(16,17,15,.985));
+  box-shadow: 0 32px 100px rgba(0,0,0,.52), inset 0 1px 0 rgba(255,255,255,.035);
+}
+.modal .modal-title { letter-spacing: -.045em; line-height: 1.12; }
+.modal .form-input,
+.modal .place-search-button,
+.modal .secondary-button,
+.modal .primary-button,
+.modal .place-option,
+.modal button,
+.modal a {
+  transition:
+    color var(--motion-fast) var(--motion-ease),
+    background-color var(--motion-fast) var(--motion-ease),
+    border-color var(--motion-fast) var(--motion-ease),
+    box-shadow var(--motion-base) var(--motion-ease),
+    transform var(--motion-fast) var(--motion-ease),
+    opacity var(--motion-fast) ease;
+}
+.modal .form-input {
+  min-height: 54px;
+  border-color: rgba(225,218,196,.16);
+  background: rgba(8,9,8,.58);
+}
+.modal .form-input:hover { border-color: rgba(225,194,130,.32); }
+.modal .form-input:focus-visible {
+  outline: none;
+  border-color: rgba(230,195,125,.8);
+  box-shadow: 0 0 0 3px rgba(220,183,108,.12), 0 0 22px rgba(220,183,108,.06);
+}
+.modal .place-search-button:hover:not(:disabled),
+.modal .secondary-button:hover:not(:disabled) { transform: translateY(-1px); }
+.modal .place-option:hover { transform: translateX(2px); }
+.modal .birth-consent {
+  border-color: rgba(225,211,174,.14);
+  background: rgba(255,255,255,.025);
+  border-radius: 14px;
+  transition: background-color var(--motion-base) var(--motion-ease), border-color var(--motion-base) var(--motion-ease);
+}
+.modal .birth-consent:focus-within,
+.modal .birth-consent:has(input:checked) {
+  border-color: rgba(221,190,128,.4);
+  background: rgba(221,190,128,.055);
+}
+.modal .place-selected { animation: birth-field-in 220ms ease both; }
+.modal .place-options { animation: birth-field-in 220ms ease both; }
+.modal .form-grid { gap: 20px; }
+@keyframes birth-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes birth-modal-in { from { opacity: 0; transform: translateY(14px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes birth-field-in { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Consistent, subtle motion across the app without making interactions feel bouncy. */
+@media (prefers-reduced-motion: no-preference) {
+  .primary-button, .secondary-button, .icon-button, .topbar-link, .prompt-card,
+  .history-item, .report-card, .auth-feature-tile, .marketing-button-primary,
+  .marketing-button-secondary, .chat-suggestion, .tool-button {
+    transition: transform var(--motion-fast) var(--motion-ease),
+      border-color var(--motion-base) var(--motion-ease),
+      background-color var(--motion-base) var(--motion-ease),
+      color var(--motion-fast) ease, box-shadow var(--motion-base) var(--motion-ease),
+      opacity var(--motion-fast) ease;
+  }
+  .primary-button:hover:not(:disabled), .secondary-button:hover:not(:disabled),
+  .marketing-button-primary:hover, .marketing-button-secondary:hover { transform: translateY(-1px); }
+  .prompt-card:hover, .report-card:hover, .auth-feature-tile:hover { transform: translateY(-2px); }
+  .topbar-link:active, .icon-button:active, .primary-button:active:not(:disabled) { transform: scale(.98); }
+  .form-input, input, textarea, select {
+    transition: border-color var(--motion-base) var(--motion-ease),
+      box-shadow var(--motion-base) var(--motion-ease), background-color var(--motion-base) var(--motion-ease);
+  }
+  .message-row { animation: chat-message-enter 280ms var(--motion-ease) both; }
+}
+@media (max-width: 680px) {
+  .modal {
+    width: calc(100vw - 24px);
+    max-height: calc(100dvh - 24px);
+    margin: 12px auto;
+    padding: 24px 20px;
+    border-radius: 22px;
+  }
+  .modal .modal-title { font-size: clamp(27px, 7vw, 34px); }
+  .modal .form-grid { grid-template-columns: minmax(0,1fr); gap: 16px; }
+  .modal .form-field.full { grid-column: auto; }
+  .modal .form-input { min-height: 52px; font-size: 16px; }
+  .modal .place-search-row { align-items: stretch; gap: 9px; }
+  .modal .place-search-button { min-height: 46px; align-self: stretch; }
+  .modal .birth-consent { padding: 14px; line-height: 1.65; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
