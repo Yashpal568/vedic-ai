@@ -3119,3 +3119,97 @@ html { scroll-behavior: smooth; }
   .app-shell .modal[aria-labelledby="birth-modal-title"] { animation: none; }
   .app-shell .modal[aria-labelledby="birth-modal-title"] .modal-actions button { transition: none; }
 }
+
+
+/* Birth details modal: light theme contrast + one premium full-width animated CTA. */
+.app-shell[data-theme="light"] .modal[aria-labelledby="birth-modal-title"] {
+  color: #20283a;
+  border-color: rgba(157, 119, 45, .22);
+  background: linear-gradient(155deg, #ffffff 0%, #f7f8fc 58%, #f1f3f9 100%);
+  box-shadow: 0 32px 100px rgba(28, 37, 57, .22), inset 0 1px 0 rgba(255,255,255,.95);
+}
+.app-shell[data-theme="light"] .modal[aria-labelledby="birth-modal-title"] .modal-title { color: #20283a; }
+.app-shell[data-theme="light"] .modal[aria-labelledby="birth-modal-title"] .modal-copy { color: #657087; }
+.app-shell[data-theme="light"] .modal[aria-labelledby="birth-modal-title"] .form-label { color: #39445b; }
+.app-shell[data-theme="light"] .modal[aria-labelledby="birth-modal-title"] .form-input,
+.app-shell[data-theme="light"] .modal[aria-labelledby="birth-modal-title"] .birth-date-display,
+.app-shell[data-theme="light"] .modal[aria-labelledby="birth-modal-title"] input[type="time"] {
+  color: #20283a;
+  background: #fff;
+  border-color: #dce1eb;
+  color-scheme: light;
+}
+.app-shell[data-theme="light"] .modal[aria-labelledby="birth-modal-title"] .form-input::placeholder { color: #929bad; }
+.app-shell[data-theme="light"] .modal[aria-labelledby="birth-modal-title"] .form-input:focus,
+.app-shell[data-theme="light"] .modal[aria-labelledby="birth-modal-title"] .birth-date-display:focus {
+  background: #fff;
+  border-color: #b58b3c;
+  box-shadow: 0 0 0 4px rgba(181,139,60,.12);
+}
+.app-shell[data-theme="light"] .modal[aria-labelledby="birth-modal-title"] .place-hint,
+.app-shell[data-theme="light"] .modal[aria-labelledby="birth-modal-title"] .place-attribution { color: #68748b; }
+.app-shell[data-theme="light"] .modal[aria-labelledby="birth-modal-title"] .assistant-note,
+.app-shell[data-theme="light"] .modal[aria-labelledby="birth-modal-title"] .birth-consent {
+  color: #536079;
+  background: #f1f3f8;
+  border-color: #e0e5ef;
+}
+.app-shell .modal[aria-labelledby="birth-modal-title"] .birth-modal-actions { display: block; margin-top: 20px; }
+.app-shell .modal[aria-labelledby="birth-modal-title"] .birth-calculate-button {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  width: 100%;
+  min-height: 56px;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 231, 174, .45);
+  border-radius: 15px;
+  padding: 15px 20px;
+  color: #17150f;
+  font-size: 14px;
+  font-weight: 750;
+  letter-spacing: .01em;
+  background: linear-gradient(110deg, #c99a43 0%, #f7d98f 42%, #e8bd65 72%, #c99a43 100%);
+  background-size: 200% 100%;
+  box-shadow: 0 9px 24px rgba(191, 145, 54, .22), inset 0 1px 0 rgba(255,255,255,.58);
+  transition: transform .22s ease, box-shadow .22s ease, background-position .45s ease, filter .22s ease;
+  animation: birth-cta-glow 3.2s ease-in-out infinite;
+}
+.app-shell .modal[aria-labelledby="birth-modal-title"] .birth-calculate-button::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  content: "";
+  transform: translateX(-130%) skewX(-18deg);
+  background: linear-gradient(100deg, transparent 20%, rgba(255,255,255,.55) 50%, transparent 78%);
+  transition: transform .65s ease;
+}
+.app-shell .modal[aria-labelledby="birth-modal-title"] .birth-calculate-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  background-position: 100% 0;
+  box-shadow: 0 14px 32px rgba(191,145,54,.32), 0 0 0 4px rgba(218,177,93,.12), inset 0 1px 0 rgba(255,255,255,.7);
+  filter: saturate(1.08);
+}
+.app-shell .modal[aria-labelledby="birth-modal-title"] .birth-calculate-button:hover:not(:disabled)::before { transform: translateX(130%) skewX(-18deg); }
+.app-shell .modal[aria-labelledby="birth-modal-title"] .birth-calculate-button:active:not(:disabled) { transform: translateY(0) scale(.99); }
+.app-shell .modal[aria-labelledby="birth-modal-title"] .birth-calculate-button:disabled {
+  cursor: not-allowed;
+  opacity: .48;
+  animation: none;
+  filter: grayscale(.2);
+  box-shadow: none;
+}
+@keyframes birth-cta-glow {
+  0%, 100% { box-shadow: 0 9px 24px rgba(191,145,54,.2), inset 0 1px 0 rgba(255,255,255,.5); }
+  50% { box-shadow: 0 11px 29px rgba(191,145,54,.29), inset 0 1px 0 rgba(255,255,255,.62); }
+}
+@media (max-width: 680px) {
+  .app-shell .modal[aria-labelledby="birth-modal-title"] .birth-calculate-button { min-height: 54px; font-size: 13px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-shell .modal[aria-labelledby="birth-modal-title"] .birth-calculate-button { animation: none; transition: none; }
+  .app-shell .modal[aria-labelledby="birth-modal-title"] .birth-calculate-button::before { display: none; }
+}
