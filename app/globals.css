@@ -4076,7 +4076,7 @@ body:has(.app-shell[data-theme="light"]) {
 .panchang-fact-card small { color: #a7aab8; font-size: 10px; line-height: 1.5; }
 .panchang-timing-card { margin-top: 12px; padding: 15px; border: 1px solid rgba(220,190,127,.16); border-radius: 16px; background: rgba(16,21,35,.9); }
 .panchang-card-title { display: flex; align-items: center; gap: 8px; color: #e4d1a0; font-size: 13px; font-weight: 750; }
-.panchang-sun-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; margin-top: 13px; }
+.panchang-sun-grid { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 8px; margin-top: 13px; }
 .panchang-sun-grid > div { display: flex; min-width: 0; flex-direction: column; gap: 6px; padding: 11px; border-radius: 11px; background: rgba(255,255,255,.035); }
 .panchang-sun-grid svg { color: #d7b96f; }
 .panchang-sun-grid span { color: #aab0c0; font-size: 10px; }
