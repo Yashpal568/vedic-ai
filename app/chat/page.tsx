@@ -9,7 +9,7 @@ import type { KundliReport } from "@/lib/astrology";
 import { printKundliReport } from "@/lib/print-report";
 import {
   ArrowDown, ArrowUp, AudioLines, Mic, MicOff, BookOpen, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight,
-  CircleHelp, Gem, History, LogOut, Menu, MessageCircle, MoonStar, Orbit, Plus, Sun,
+  CircleHelp, Gem, History, LogOut, Menu, MessageCircle, MoonStar, Orbit, Plus, Sun, House, Hand,
   ShieldCheck, Sparkles, Stars, UserRound, X, BriefcaseBusiness, Heart, Compass, Trash2, RefreshCw,
 } from "lucide-react";
 
@@ -1053,8 +1053,10 @@ export default function Home() {
               {message.role === "assistant" && <div className="message-avatar"><MoonStar size={16} /></div>}
               {message.role === "assistant" ? <div className="message-content">
                 <div className="message-meta">VEDIC AI <span style={{ color: "#5f6057", margin: "0 5px" }}>·</span> ASTROLOGY COMPANION</div>
-                <div className="message-text markdown-body">{message.role === "assistant" && messageIndex === messages.length - 1 ? <StreamingMarkdown content={message.content} /> : <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>}</div>
-                <div className="assistant-note"><Sparkles size={14} style={{ flexShrink: 0, color: "var(--gold)", marginTop: 2 }} /><span>Traditional Jyotish interpretations are for reflection, not certainty. Personalised chart insights require your correct birth details and calculated chart.</span></div>
+                <div className="assistant-response-card">
+                  <div className="message-text markdown-body">{message.role === "assistant" && messageIndex === messages.length - 1 ? <StreamingMarkdown content={message.content} /> : <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>}</div>
+                  <div className="assistant-note"><Sparkles size={14} style={{ flexShrink: 0, color: "var(--gold)", marginTop: 2 }} /><span>Traditional Jyotish interpretations are for reflection, not certainty. Personalised chart insights require your correct birth details and calculated chart.</span></div>
+                </div>
               </div> : <div className="user-bubble">{message.content}</div>}
             </div>)}
             {isLoading && <div className="message-row"><div className="message-avatar"><MoonStar size={16} /></div><div className="message-content"><div className="message-meta">VEDIC AI · THINKING</div><div className="message-text">Preparing a thoughtful response…</div></div></div>}<div ref={bottomRef} />
@@ -1071,6 +1073,24 @@ export default function Home() {
           </form>
           <p className="footer-note">Vedic AI can make mistakes. Astrological interpretations are traditional perspectives, not certainties. <span className="footer-separator">·</span> <Link href="/privacy">Privacy</Link> <span className="footer-separator">·</span> <Link href="/terms">Terms</Link></p>
         </div></footer>
+
+        <nav className="mobile-bottom-nav" aria-label="Primary navigation">
+          <button type="button" className={"mobile-bottom-nav-item" + (!hasConversation ? " active" : "")} onClick={startNewChat} aria-label="Home">
+            <House size={19} strokeWidth={1.8} /><span>Home</span>
+          </button>
+          <button type="button" className={"mobile-bottom-nav-item" + (chartReport ? " active" : "")} onClick={() => setIsBirthOpen(true)} aria-label="Kundli">
+            <Orbit size={19} strokeWidth={1.8} /><span>Kundli</span>
+          </button>
+          <button type="button" className={"mobile-bottom-nav-item" + (hasConversation ? " active" : "")} onClick={() => textareaRef.current?.focus()} aria-label="AI Chat">
+            <MessageCircle size={20} strokeWidth={1.9} /><span>AI Chat</span>
+          </button>
+          <button type="button" className="mobile-bottom-nav-item" onClick={() => { window.location.href = "/palm-reading"; }} aria-label="Palmistry">
+            <Hand size={19} strokeWidth={1.8} /><span>Palmistry</span>
+          </button>
+          <button type="button" className="mobile-bottom-nav-item" onClick={() => setToast("Panchang tools are not available in this build yet.")} aria-label="Panchang">
+            <CalendarDays size={19} strokeWidth={1.8} /><span>Panchang</span>
+          </button>
+        </nav>
       </section>
 
       {notificationPromptOpen && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) dismissNotificationPrompt(); }}><section className="modal" role="dialog" aria-modal="true" aria-labelledby="notification-modal-title"><div className="modal-head"><div><div className="eyebrow"><span className="eyebrow-line" /> STAY IN THE LOOP</div><h2 className="modal-title" id="notification-modal-title" style={{ margin: "12px 0 0" }}>Enable notifications</h2><p className="modal-copy">Get helpful updates from Vedic AI in this browser. You can change this permission anytime in your browser settings.</p></div><button className="icon-button" onClick={dismissNotificationPrompt} aria-label="Close notification prompt"><X size={17}/></button></div><div className="assistant-note"><ShieldCheck size={15} style={{ flexShrink: 0, color: "var(--gold)" }}/><span>Your browser will show its own permission prompt after you tap Enable. Vedic AI cannot grant permission on your behalf.</span></div><div className="modal-actions"><button type="button" className="secondary-button" onClick={dismissNotificationPrompt}>Not now</button><button type="button" className="primary-button" onClick={() => { void enableNotifications(); }}>Enable notifications <Check size={14}/></button></div></section></div>}
