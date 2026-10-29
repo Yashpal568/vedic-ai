@@ -3,8 +3,9 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import {
-  BookOpen, CalendarDays, Hand, House, MessageCircle, MoonStar, Orbit, UserRound, X,
+  BookOpen, CalendarDays, ChevronDown, Hand, House, MessageCircle, MoonStar, Orbit, UserRound, X,
 } from "lucide-react";
 
 const links = [
@@ -19,6 +20,7 @@ const links = [
 
 export default function AppNavigationDrawer({ open, onClose, extraContent, onHome, onKundli, onWorkspace }: { open: boolean; onClose: () => void; extraContent?: ReactNode; onHome?: () => void; onKundli?: () => void; onWorkspace?: () => void }) {
   const pathname = usePathname();
+  const [workspaceOpen, setWorkspaceOpen] = useState(false);
   if (!open) return null;
   const activeKey = pathname === "/panchang" ? "panchang"
     : pathname === "/palm-reading" ? "palm"
@@ -35,13 +37,15 @@ export default function AppNavigationDrawer({ open, onClose, extraContent, onHom
         <button type="button" className="icon-button" onClick={onClose} aria-label="Close navigation"><X size={18}/></button>
       </div>
       <Link href="/chat" className="new-chat mobile-drawer-new" onClick={(event) => { if (onWorkspace) { event.preventDefault(); onWorkspace(); } onClose(); }}><MessageCircle size={16}/> Open Astrology Chat <span className="shared-navigation-arrow">↗</span></Link>
-      <div className="side-label">Workspace</div>
-      <nav className="shared-navigation-links" aria-label="Workspace pages">
-        {links.map(({ label, href, Icon, key, detail }) => <Link key={key} href={href} className={"side-link shared-navigation-link" + (activeKey === key ? " active" : "")} aria-current={activeKey === key ? "page" : undefined} onClick={(event) => { if (key === "home" && onHome) { event.preventDefault(); onHome(); } if (key === "kundli" && onKundli) { event.preventDefault(); onKundli(); } onClose(); }}>
-          <span className="shared-navigation-icon"><Icon size={18}/></span><span className="shared-navigation-copy"><strong>{label}</strong><small>{detail}</small></span><span className="shared-navigation-arrow">›</span>
-        </Link>)}
-      </nav>
-      {extraContent}
+      <div className="mobile-drawer-scroll">
+        <button type="button" className="side-label shared-workspace-toggle" aria-expanded={workspaceOpen} onClick={() => setWorkspaceOpen((value) => !value)}><span>Workspace <small>{links.length} tools</small></span><ChevronDown size={17} className={workspaceOpen ? "workspace-chevron expanded" : "workspace-chevron"} /></button>
+        {workspaceOpen && <nav className="shared-navigation-links" aria-label="Workspace pages">
+          {links.map(({ label, href, Icon, key, detail }) => <Link key={key} href={href} className={"side-link shared-navigation-link" + (activeKey === key ? " active" : "")} aria-current={activeKey === key ? "page" : undefined} onClick={(event) => { if (key === "home" && onHome) { event.preventDefault(); onHome(); } if (key === "kundli" && onKundli) { event.preventDefault(); onKundli(); } onClose(); }}>
+            <span className="shared-navigation-icon"><Icon size={18}/></span><span className="shared-navigation-copy"><strong>{label}</strong><small>{detail}</small></span><span className="shared-navigation-arrow">›</span>
+          </Link>)}
+        </nav>}
+        {extraContent}
+      </div>
       <div className="shared-navigation-footer"><span/> Vedic AI · Astrology companion</div>
     </aside>
   </div>;
