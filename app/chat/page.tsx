@@ -271,6 +271,7 @@ export default function Home() {
   const [deletingConversationId, setDeletingConversationId] = useState<string | null>(null);
   const conversationLoadRequestRef = useRef(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [workspaceExpanded, setWorkspaceExpanded] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [toast, setToast] = useState("");
   const [notificationPromptOpen, setNotificationPromptOpen] = useState(false);
@@ -285,6 +286,14 @@ export default function Home() {
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [messages]);
   useEffect(() => { try { const saved = window.localStorage.getItem("vedic-chat-theme"); if (saved === "light" || saved === "dark") setTheme(saved); } catch {} }, []);
   useEffect(() => { try { window.localStorage.setItem("vedic-chat-theme", theme); } catch {} }, [theme]);
+  useEffect(() => {
+    if (isSignedIn) return;
+    try {
+      const raw = window.localStorage.getItem("vedic-guest-conversations-v1");
+      const saved = raw ? JSON.parse(raw) as HistoryItem[] : [];
+      if (Array.isArray(saved)) setHistoryItems(saved.filter((item) => item && typeof item.id === "string" && item.id.startsWith("guest-") && typeof item.title === "string").slice(0, 30));
+    } catch {}
+  }, [isSignedIn]);
   useEffect(() => {
     if (typeof window === "undefined" || !("Notification" in window)) return;
     if (Notification.permission === "default" && !window.sessionStorage.getItem("vedic-notification-prompt-dismissed")) setNotificationPromptOpen(true);
@@ -429,6 +438,22 @@ export default function Home() {
     const requestId = ++conversationLoadRequestRef.current;
     setLoadingConversationId(id);
     try {
+      if (id.startsWith("guest-")) {
+        const raw = window.localStorage.getItem("vedic-chat-cache-v1:" + id);
+        const cached = raw ? JSON.parse(raw) as { messages?: Message[] } : null;
+        const localMessages = Array.isArray(cached?.messages) ? cached.messages.filter((message) =>
+          (message.role === "user" || message.role === "assistant") && typeof message.content === "string" && message.content.trim()
+        ) : [];
+        if (!localMessages.length) throw new Error("This local conversation has no saved messages.");
+        if (requestId !== conversationLoadRequestRef.current) return;
+        setMessages(localMessages);
+        setActiveConversationId(id);
+        setChartReport(null);
+        setTransitReport(null);
+        window.history.replaceState({}, "", "/chat?conversation=" + encodeURIComponent(id));
+        setMobileMenuOpen(false);
+        return;
+      }
       const response = await fetch("/api/conversations?id=" + encodeURIComponent(id), { cache: "no-store" });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Could not load conversation.");
@@ -492,6 +517,16 @@ export default function Home() {
     if (deletingConversationId) return;
     setDeletingConversationId(id);
     try {
+      if (id.startsWith("guest-")) {
+        window.localStorage.removeItem("vedic-chat-cache-v1:" + id);
+        const next = historyItems.filter((item) => item.id !== id);
+        setHistoryItems(next);
+        window.localStorage.setItem("vedic-guest-conversations-v1", JSON.stringify(next));
+        if (activeConversationId === id) startNewChat();
+        setPendingDeleteConversation(null);
+        setToast("Local conversation deleted.");
+        return;
+      }
       const response = await fetch("/api/conversations?id=" + encodeURIComponent(id), { method: "DELETE", cache: "no-store" });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Could not delete conversation.");
@@ -515,8 +550,19 @@ export default function Home() {
         if (!isSignedIn) window.localStorage.setItem("vedic-guest-chat-v1", JSON.stringify({ messages: visibleMessages }));
       } catch {}
     };
+    if (!isSignedIn) {
+      const localId = conversationId || ("guest-" + makeId());
+      saveLocally(localId);
+      const firstUserMessage = visibleMessages.find((message) => message.role === "user")?.content || "New conversation";
+      const localItem: HistoryItem = { id: localId, title: firstUserMessage.slice(0, 54) + (firstUserMessage.length > 54 ? "…" : ""), updated_at: new Date().toISOString() };
+      setHistoryItems((items) => {
+        const next = [localItem, ...items.filter((item) => item.id !== localId)].slice(0, 30);
+        try { window.localStorage.setItem("vedic-guest-conversations-v1", JSON.stringify(next)); } catch {}
+        return next;
+      });
+      return localId;
+    }
     saveLocally(conversationId);
-    if (!isSignedIn) return conversationId;
     const messagesToSave = (conversationId ? newMessages : allMessages).slice(-30).map(({ role, content }) => ({ role, content }));
     try {
       const response = await fetch("/api/conversations", {
@@ -617,6 +663,11 @@ export default function Home() {
     const Recognition = voiceWindow.SpeechRecognition || voiceWindow.webkitSpeechRecognition;
     if (Recognition) {
       try {
+        // Ask for microphone permission explicitly before native speech recognition.
+        if (navigator.mediaDevices?.getUserMedia) {
+          const permissionStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          permissionStream.getTracks().forEach((track) => track.stop());
+        }
         const recognition = new Recognition();
         speechRecognitionRef.current = recognition;
         recognition.lang = "hi-IN";
@@ -638,7 +689,7 @@ export default function Home() {
           setVoiceListening(false);
           speechRecognitionRef.current = null;
           if (event.error === "not-allowed" || event.error === "service-not-allowed") {
-            setToast("Microphone access is blocked. In Chrome, tap the site controls beside the address → Permissions → Microphone → Allow. Also enable Chrome in Android Settings → Apps → Chrome → Permissions → Microphone, then reload this page.");
+            setToast("Mic blocked. In Chrome, open site settings → Microphone → Allow; also check Android Settings → Apps → Chrome → Permissions → Microphone, then reload.");
           } else if (event.error === "no-speech") {
             setToast("I couldn't hear speech. Tap the microphone and speak clearly near your phone.");
           } else if (event.error === "audio-capture") {
@@ -660,7 +711,7 @@ export default function Home() {
         setVoiceListening(false);
         const err = error as DOMException;
         if (err?.name === "NotAllowedError" || err?.name === "SecurityError") {
-          setToast("Microphone access is blocked. In Chrome, open site controls → Permissions → Microphone → Allow, then reload Vedic AI.");
+          setToast("Mic permission denied. Allow Microphone for vedic-ai-psi.vercel.app in Chrome site settings and Android app permissions, then reload.");
           return;
         }
         // If native recognition fails to initialize, continue to the recorder fallback below.
@@ -1058,15 +1109,17 @@ export default function Home() {
           <span className="sidebar-brand-copy"><span className="sidebar-brand-line"><span className="brand-name">vedic<span style={{ color: "var(--gold)" }}>.</span>ai</span></span><span className="brand-sub">Your Jyotish space</span></span>
         </button>
         <button className="new-chat sidebar-new-chat" onClick={startNewChat}><Plus size={17} /> <span>New conversation</span></button>
-        <div className="side-label sidebar-workspace-label"><span>Workspace</span><span className="sidebar-tool-count">6 Tools</span></div>
+        <button type="button" className="side-label sidebar-workspace-label sidebar-workspace-toggle" aria-expanded={workspaceExpanded} onClick={() => setWorkspaceExpanded((expanded) => !expanded)}><span>Workspace</span><span className="sidebar-workspace-toggle-right"><span className="sidebar-tool-count">7 Tools</span><ChevronDown size={15} className={workspaceExpanded ? "workspace-chevron expanded" : "workspace-chevron"} /></span></button>
+        {workspaceExpanded && <div className="sidebar-workspace-items">
         <button className="side-link active" onClick={startNewChat}><MessageCircle size={17} /> <span>Astrology chat</span><span className="sidebar-active-dot" /></button>
         <button className="side-link" onClick={() => setIsBirthOpen(true)}><Orbit size={17} /> <span>My birth profile</span>{savedBirth && <Check size={13} style={{ marginLeft: "auto", color: "var(--green)" }} />}</button>
         <button className="side-link" onClick={() => { window.location.href = "/palm-reading"; }}><Sparkles size={17} /> <span>Palm reading</span></button>
         <button className="side-link" onClick={() => { window.location.href = "/profile"; }}><UserRound size={17} /> <span>My profile</span></button>
         <button className="side-link" onClick={() => { window.location.href = "/reports"; }}><BookOpen size={17} /> <span>Kundli & reports</span></button>
-        <button className="side-link" onClick={() => setToast("Saved memory is available in your personal workspace.")}><ShieldCheck size={17} /> <span>Saved memory</span></button>
+        <button className="side-link" onClick={openMemory}><ShieldCheck size={17} /> <span>Saved memory</span></button>
+        </div>}
         <div className="side-label sidebar-history-label"><span>All conversations</span><span className="sidebar-history-count">{historyItems.length}</span></div>
-        {historyItems.length ? historyItems.map((item) => <div className="history-item-row" key={item.id}><button type="button" className={"side-link history-item-open " + (activeConversationId === item.id ? "active" : "")} onClick={() => void loadConversation(item.id)} disabled={loadingConversationId === item.id}><History size={15} /><span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{loadingConversationId === item.id ? "Opening…" : item.title}</span></button><button type="button" className="history-delete" aria-label={"Delete " + item.title} title={"Delete " + item.title} onClick={() => requestDeleteConversation(item.id)}><Trash2 size={15}/></button></div>) : <p className="history-empty">Sign in to save conversations and see them here.</p>}
+        {historyItems.length ? historyItems.map((item) => <div className="history-item-row" key={item.id}><button type="button" className={"side-link history-item-open " + (activeConversationId === item.id ? "active" : "")} onClick={() => void loadConversation(item.id)} disabled={loadingConversationId === item.id}><History size={15} /><span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{loadingConversationId === item.id ? "Opening…" : item.title}</span></button><button type="button" className="history-delete" aria-label={"Delete " + item.title} title={"Delete " + item.title} onClick={() => requestDeleteConversation(item.id)}><Trash2 size={15}/></button></div>) : <p className="history-empty">{isSignedIn ? "Your saved conversations will appear here." : "Guest conversations are saved on this device only."}</p>}
         <div className="sidebar-bottom">
           <div className="plan-card">
             <div className="plan-top"><Gem size={14} /> YOUR COSMIC JOURNEY</div>
@@ -1098,7 +1151,7 @@ export default function Home() {
               {historyItems.length ? historyItems.map((item) => <div className="history-item-row" key={item.id}>
                 <button type="button" className={"side-link history-item-open " + (activeConversationId === item.id ? "active" : "")} onClick={() => { void loadConversation(item.id); setMobileMenuOpen(false); }} disabled={loadingConversationId === item.id}><History size={15}/><span>{loadingConversationId === item.id ? "Opening…" : item.title}</span></button>
                 <button type="button" className="history-delete" aria-label={"Delete " + item.title} title={"Delete " + item.title} onClick={() => { requestDeleteConversation(item.id); setMobileMenuOpen(false); }}><Trash2 size={15}/></button>
-              </div>) : <p className="history-empty">{isSignedIn ? "Your saved conversations will appear here." : "Sign in to sync conversations across devices."}</p>}
+              </div>) : <p className="history-empty">{isSignedIn ? "Your saved conversations will appear here." : "Guest chats stay on this device. Sign in to sync across devices."}</p>}
             </div>
             <div className="mobile-nav-bottom shared-navigation-account">
               <div className="profile-row">
