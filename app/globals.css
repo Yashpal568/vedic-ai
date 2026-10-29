@@ -4401,3 +4401,22 @@ html[data-theme="light"] .birth-calendar-layer .birth-calendar-today { color:#73
   .birth-calendar-layer .birth-calendar { width:min(360px,100%); max-height:calc(100dvh - 24px); padding:14px; border-radius:17px; }
   .birth-calendar-layer .birth-calendar-selectors select { max-width:min(140px,36vw); }
 }
+
+/* Sidebar navigation and history usability fixes */
+.sidebar-workspace-toggle{width:100%;border:0;background:transparent;cursor:pointer;text-align:left}
+.sidebar-workspace-toggle-right{display:flex;align-items:center;gap:8px}
+.workspace-chevron{flex-shrink:0;transition:transform .18s ease}
+.workspace-chevron.expanded{transform:rotate(180deg)}
+.sidebar-workspace-items{display:flex;flex-direction:column;gap:1px}
+.mobile-nav-drawer{overflow-y:auto!important;overscroll-behavior:contain}
+.mobile-drawer-scroll{display:flex;flex:1 1 auto;min-height:0;flex-direction:column;overflow-y:auto;overscroll-behavior:contain;padding-bottom:8px}
+.shared-workspace-toggle{display:flex!important;align-items:center;justify-content:space-between;width:100%;margin:0 4px 10px!important;padding:10px 8px!important;border:0;border-radius:10px;background:rgba(255,255,255,.025);color:#9298a6!important;text-align:left;cursor:pointer}
+.shared-workspace-toggle>span{display:flex;align-items:center;gap:9px}
+.shared-workspace-toggle small{font-size:10px;font-weight:500;letter-spacing:0;text-transform:none;color:#707785}
+.shared-navigation-links{display:flex;flex-direction:column;gap:4px}
+.shared-navigation-history{max-height:32vh;min-height:44px;overflow-y:auto;overscroll-behavior:contain}
+.shared-navigation-account{margin-top:auto;flex-shrink:0}
+.mobile-nav-drawer .history-empty{margin:4px 8px 10px;padding:9px 10px;border:1px dashed rgba(255,255,255,.09);border-radius:10px;background:rgba(255,255,255,.02);font-size:11px}
+.sidebar .sidebar-workspace-toggle{margin:0 5px 8px!important;padding:10px 8px!important;border:1px solid rgba(255,255,255,.045);border-radius:10px;background:rgba(255,255,255,.025);color:#737985!important}
+.sidebar .sidebar-workspace-toggle:hover{background:rgba(255,255,255,.045)}
+@media(max-width:680px){.mobile-nav-drawer{height:100dvh!important;padding-bottom:max(16px,env(safe-area-inset-bottom))!important}.mobile-drawer-scroll{min-height:0}.shared-navigation-history{max-height:28vh}.mobile-nav-bottom{margin-top:12px}}
