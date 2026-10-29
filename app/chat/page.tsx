@@ -555,6 +555,7 @@ export default function Home() {
       saveLocally(localId);
       const firstUserMessage = visibleMessages.find((message) => message.role === "user")?.content || "New conversation";
       const localItem: HistoryItem = { id: localId, title: firstUserMessage.slice(0, 54) + (firstUserMessage.length > 54 ? "…" : ""), updated_at: new Date().toISOString() };
+      setActiveConversationId(localId);
       setHistoryItems((items) => {
         const next = [localItem, ...items.filter((item) => item.id !== localId)].slice(0, 30);
         try { window.localStorage.setItem("vedic-guest-conversations-v1", JSON.stringify(next)); } catch {}
