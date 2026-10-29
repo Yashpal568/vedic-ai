@@ -290,8 +290,20 @@ export default function Home() {
     if (isSignedIn) return;
     try {
       const raw = window.localStorage.getItem("vedic-guest-conversations-v1");
-      const saved = raw ? JSON.parse(raw) as HistoryItem[] : [];
-      if (Array.isArray(saved)) setHistoryItems(saved.filter((item) => item && typeof item.id === "string" && item.id.startsWith("guest-") && typeof item.title === "string").slice(0, 30));
+      let saved = raw ? JSON.parse(raw) as HistoryItem[] : [];
+      if (!Array.isArray(saved)) saved = [];
+      // Migrate the previous single-session guest cache into the new history list.
+      const legacyRaw = window.localStorage.getItem("vedic-guest-chat-v1");
+      const legacy = legacyRaw ? JSON.parse(legacyRaw) as { messages?: Message[] } : null;
+      if (Array.isArray(legacy?.messages) && legacy!.messages!.some((message) => message.role === "user" && message.content.trim()) && !saved.some((item) => item.id === "guest-legacy")) {
+        const legacyMessages = legacy!.messages!.filter((message) => (message.role === "user" || message.role === "assistant") && typeof message.content === "string" && message.content.trim()).slice(-200);
+        const firstUserMessage = legacyMessages.find((message) => message.role === "user")?.content || "Previous guest conversation";
+        const legacyItem: HistoryItem = { id: "guest-legacy", title: firstUserMessage.slice(0, 54) + (firstUserMessage.length > 54 ? "…" : ""), updated_at: new Date().toISOString() };
+        window.localStorage.setItem("vedic-chat-cache-v1:guest-legacy", JSON.stringify({ messages: legacyMessages, savedAt: new Date().toISOString() }));
+        saved = [legacyItem, ...saved].slice(0, 30);
+        window.localStorage.setItem("vedic-guest-conversations-v1", JSON.stringify(saved));
+      }
+      setHistoryItems(saved.filter((item) => item && typeof item.id === "string" && item.id.startsWith("guest-") && typeof item.title === "string").slice(0, 30));
     } catch {}
   }, [isSignedIn]);
   useEffect(() => {
