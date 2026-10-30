@@ -271,12 +271,12 @@ export default function Home() {
   const [pendingDeleteConversation, setPendingDeleteConversation] = useState<HistoryItem | null>(null);
   const [deletingConversationId, setDeletingConversationId] = useState<string | null>(null);
   const conversationLoadRequestRef = useRef(0);
+  const accountUserIdRef = useRef<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [workspaceExpanded, setWorkspaceExpanded] = useState(true);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [toast, setToast] = useState("");
-  const [notificationPromptOpen, setNotificationPromptOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const speechRecognitionRef = useRef<VoiceRecognition | null>(null);
@@ -306,48 +306,49 @@ export default function Home() {
   async function enableNotifications() {
     if (!("Notification" in window)) {
       setToast("This browser does not support web notifications. Try updating Chrome or installing the site as an app.");
-      setNotificationPromptOpen(false);
       return;
     }
     if (!window.isSecureContext) {
       setToast("Notifications require a secure HTTPS connection.");
-      setNotificationPromptOpen(false);
       return;
     }
     if (Notification.permission === "granted") {
       setToast("Notifications are already enabled for this site.");
-      setNotificationPromptOpen(false);
       return;
     }
     if (Notification.permission === "denied") {
       setToast("Notifications are blocked in browser settings. Tap the site controls beside the address bar → Permissions → Notifications → Allow, then reload.");
-      setNotificationPromptOpen(false);
       return;
     }
     try {
       const permission = await Notification.requestPermission();
-      setNotificationPromptOpen(false);
-      window.sessionStorage.setItem("vedic-notification-prompt-dismissed", "1");
       setToast(permission === "granted" ? "Notifications enabled for this browser." : permission === "denied" ? "Notifications were blocked. Enable them from this site's browser permissions." : "No permission was selected. You can enable notifications from the bell button later.");
     } catch {
       setToast("Could not request notification permission. Check this site's browser permissions and try again.");
-      setNotificationPromptOpen(false);
     }
   }
 
-  function dismissNotificationPrompt() {
-    setNotificationPromptOpen(false);
-    try { window.sessionStorage.setItem("vedic-notification-prompt-dismissed", "1"); } catch { /* storage may be disabled */ }
-  }
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
     if (!supabase) { setAuthReady(true); return; }
-    const applyUser = (user: { email?: string; user_metadata?: Record<string, unknown> } | null) => {
-      setIsSignedIn(Boolean(user));
+    const applyUser = (user: { id?: string; email?: string; is_anonymous?: boolean; user_metadata?: Record<string, unknown> } | null) => {
+      const signedInUser = Boolean(user && !user.is_anonymous && user.id);
+      const nextUserId = signedInUser ? user?.id || null : null;
+      if (accountUserIdRef.current !== nextUserId) {
+        accountUserIdRef.current = nextUserId;
+        setHistoryItems([]);
+        setMessages([]);
+        setActiveConversationId(null);
+        setLoadingConversationId(null);
+        setPendingDeleteConversation(null);
+        setChartReport(null);
+        setTransitReport(null);
+      }
+      setIsSignedIn(signedInUser);
       setAuthReady(true);
-      setAccountEmail(user?.email || "");
-      setAccountName(String(user?.user_metadata?.display_name || user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split("@")[0] || ""));
-      setAccountAvatar(String(user?.user_metadata?.avatar_url || user?.user_metadata?.picture || ""));
+      setAccountEmail(signedInUser ? user?.email || "" : "");
+      setAccountName(signedInUser ? String(user?.user_metadata?.display_name || user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split("@")[0] || "") : "");
+      setAccountAvatar(signedInUser ? String(user?.user_metadata?.avatar_url || user?.user_metadata?.picture || "") : "");
     };
     supabase.auth.getUser().then(({ data }) => applyUser(data.user)).catch(() => setAuthReady(true));
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -384,7 +385,7 @@ export default function Home() {
     if (!supabase) return;
     const loadHistory = async () => {
       const { data } = await supabase.auth.getSession();
-      if (!active || !data.session) return;
+      if (!active || !data.session || data.session.user.is_anonymous) return;
       const response = await fetch("/api/conversations");
       if (!active || !response.ok) return;
       const payload = await response.json();
@@ -392,7 +393,7 @@ export default function Home() {
     };
     void loadHistory().catch(() => undefined);
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) { setHistoryItems([]); return; }
+      if (!session || session.user.is_anonymous) { setHistoryItems([]); return; }
       void loadHistory().catch(() => undefined);
     });
     return () => { active = false; subscription.unsubscribe(); };
@@ -1031,8 +1032,12 @@ export default function Home() {
         <button className="side-link" onClick={() => { window.location.href = "/reports"; }}><BookOpen size={17} /> <span>Kundli & reports</span></button>
         <button className="side-link" onClick={openMemory}><ShieldCheck size={17} /> <span>Saved memory</span></button>
         </div>}
-        <div className="side-label sidebar-history-label"><span>All conversations</span><span className="sidebar-history-count">{historyItems.length}</span></div>
-        {isSignedIn && historyItems.length ? historyItems.map((item) => <div className="history-item-row" key={item.id}><button type="button" className={"side-link history-item-open " + (activeConversationId === item.id ? "active" : "")} onClick={() => void loadConversation(item.id)} disabled={loadingConversationId === item.id}><History size={15} /><span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{loadingConversationId === item.id ? "Opening…" : item.title}</span></button><button type="button" className="history-delete" aria-label={"Delete " + item.title} title={"Delete " + item.title} onClick={() => requestDeleteConversation(item.id)}><Trash2 size={15}/></button></div>) : <p className="history-empty">{isSignedIn ? "Your saved conversations will appear here." : "Sign in to save private conversations."}</p>}
+        <section className="sidebar-history" aria-label="Conversation history">
+          <div className="side-label sidebar-history-label"><span>All conversations</span><span className="sidebar-history-count">{historyItems.length}</span></div>
+          <div className="sidebar-history-list">
+            {isSignedIn && historyItems.length ? historyItems.map((item) => <div className="history-item-row" key={item.id}><button type="button" className={"side-link history-item-open " + (activeConversationId === item.id ? "active" : "")} onClick={() => void loadConversation(item.id)} disabled={loadingConversationId === item.id}><History size={15} /><span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{loadingConversationId === item.id ? "Opening…" : item.title}</span></button><button type="button" className="history-delete" aria-label={"Delete " + item.title} title={"Delete " + item.title} onClick={() => requestDeleteConversation(item.id)}><Trash2 size={15}/></button></div>) : <p className="history-empty">{isSignedIn ? "Your saved conversations will appear here." : "Sign in to save private conversations."}</p>}
+          </div>
+        </section>
         <div className="sidebar-bottom">
           <div className="plan-card">
             <div className="plan-top"><Gem size={14} /> YOUR COSMIC JOURNEY</div>
@@ -1092,7 +1097,7 @@ export default function Home() {
             </button>
             {isSignedIn ? <button className="topbar-link topbar-signout-icon" onClick={signOut} title="Sign out" aria-label="Sign out"><LogOut size={17} /></button> : <Link href="/login" className="topbar-link" title="Sign in" aria-label="Sign in"><UserRound size={14}/> <span>Sign in</span></Link>}
             <button className="topbar-link" title={savedBirth ? "Edit birth details" : "Add birth details"} aria-label={savedBirth ? "Edit birth details" : "Add birth details"} onClick={() => setIsBirthOpen(true)}><Orbit size={14} /><span>{savedBirth ? "Birth profile" : "Birth details"}</span></button>
-            <button className="icon-button topbar-notifications" aria-label="Enable notifications" title="Notification settings" onClick={() => { if (typeof Notification !== "undefined" && Notification.permission === "granted") setToast("Notifications are already enabled for this browser."); else setNotificationPromptOpen(true); }}><Bell size={16}/></button>
+            <button className="icon-button topbar-notifications" aria-label="Enable notifications" title="Notification settings" onClick={() => { void enableNotifications(); }}><Bell size={16}/></button>
             <button className="icon-button topbar-help" aria-label="Help and product status" title="Help & status" onClick={() => setToast("Vedic AI is an early preview. Astrology calculations need reference-chart validation; AI and saved history depend on configured services.")}><CircleHelp size={17} /></button>
           </div>
         </header>
@@ -1192,8 +1197,6 @@ export default function Home() {
 
         <MobileBottomNav />
       </section>
-
-      {notificationPromptOpen && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) dismissNotificationPrompt(); }}><section className="modal" role="dialog" aria-modal="true" aria-labelledby="notification-modal-title"><div className="modal-head"><div><div className="eyebrow"><span className="eyebrow-line" /> STAY IN THE LOOP</div><h2 className="modal-title" id="notification-modal-title" style={{ margin: "12px 0 0" }}>Enable notifications</h2><p className="modal-copy">Get helpful updates from Vedic AI in this browser. You can change this permission anytime in your browser settings.</p></div><button className="icon-button" onClick={dismissNotificationPrompt} aria-label="Close notification prompt"><X size={17}/></button></div><div className="assistant-note"><ShieldCheck size={15} style={{ flexShrink: 0, color: "var(--gold)" }}/><span>Your browser will show its own permission prompt after you tap Enable. Vedic AI cannot grant permission on your behalf.</span></div><div className="modal-actions"><button type="button" className="secondary-button" onClick={dismissNotificationPrompt}>Not now</button><button type="button" className="primary-button" onClick={() => { void enableNotifications(); }}>Enable notifications <Check size={14}/></button></div></section></div>}
 
       {toast && <div role="status" style={{ position: "fixed", zIndex: 80, bottom: 85, left: "50%", transform: "translateX(-50%)", width: "max-content", maxWidth: "calc(100vw - 32px)", padding: "12px 16px", border: "1px solid var(--line2)", borderRadius: 12, color: "var(--text)", background: "#25261f", boxShadow: "0 12px 40px #0005", fontSize: 12, lineHeight: 1.6 }}>{toast}</div>}
 
