@@ -4708,3 +4708,131 @@ html[data-theme="light"] .birth-calendar-layer .birth-calendar-today { color:#73
   .app-shell.sidebar-is-collapsed .sidebar-scroll-area { overflow-y:auto; }
   .app-shell.sidebar-is-collapsed .sidebar-scroll-area .sidebar-history { display:none !important; }
 }
+
+/* Vedic AI responsive shell refinement: desktop canvas without a top navbar,
+   and a mobile drawer with a truly fixed account footer. */
+.brand-mark img,
+.chat-header-brand .brand-mark img {
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  padding:3px;
+}
+@media (min-width:681px) {
+  .app-shell > .main-panel > .topbar { display:none !important; }
+  .app-shell > .sidebar .sidebar-head-actions {
+    display:flex;
+    align-items:center;
+    gap:6px;
+    flex:0 0 auto;
+  }
+  .app-shell > .sidebar .sidebar-theme-toggle {
+    display:grid;
+    place-items:center;
+    width:34px;
+    height:34px;
+    border:1px solid rgba(212,183,122,.18);
+    border-radius:10px;
+    color:#e7cb8b;
+    background:rgba(255,255,255,.035);
+    cursor:pointer;
+  }
+  .app-shell > .sidebar .sidebar-theme-toggle:hover {
+    background:rgba(212,183,122,.12);
+    border-color:rgba(212,183,122,.38);
+  }
+  .app-shell.sidebar-is-collapsed .sidebar-head-actions {
+    flex-direction:column;
+    gap:7px;
+  }
+  .app-shell.sidebar-is-collapsed .sidebar-head .sidebar-brand-premium .brand-mark {
+    width:42px;
+    height:42px;
+  }
+  .app-shell.sidebar-is-collapsed .sidebar-theme-toggle {
+    width:36px;
+    height:34px;
+  }
+}
+.mobile-nav-drawer .mobile-drawer-scroll {
+  display:flex;
+  flex:1 1 auto;
+  flex-direction:column;
+  min-height:0;
+  overflow-x:hidden;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(212,183,122,.25) transparent;
+  padding:0 2px 12px;
+}
+.mobile-nav-drawer .mobile-drawer-scroll::-webkit-scrollbar { width:4px; }
+.mobile-nav-drawer .mobile-drawer-scroll::-webkit-scrollbar-thumb {
+  border-radius:99px;
+  background:rgba(212,183,122,.22);
+}
+.mobile-nav-drawer .shared-navigation-account-fixed {
+  flex:0 0 auto;
+  position:relative;
+  z-index:2;
+  margin:0 -16px;
+  padding:10px 16px max(10px,env(safe-area-inset-bottom));
+  border-top:1px solid rgba(212,183,122,.17);
+  background:linear-gradient(180deg,rgba(8,12,22,.96),#080c16 38%);
+  box-shadow:0 -12px 28px rgba(0,0,0,.22);
+}
+.mobile-nav-drawer .shared-navigation-account-fixed .shared-navigation-account {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin:0 !important;
+  padding:0 !important;
+}
+.mobile-nav-drawer .shared-navigation-account-fixed .profile-row {
+  flex:1 1 auto;
+  min-width:0;
+  padding:8px !important;
+  border:1px solid rgba(212,183,122,.14);
+  border-radius:12px;
+  background:rgba(255,255,255,.035);
+}
+.mobile-nav-drawer .shared-navigation-account-fixed .profile-caption {
+  max-width:190px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.mobile-nav-drawer .shared-navigation-footer {
+  flex:0 0 auto;
+  min-height:32px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:4px 0 8px;
+  font-size:9px;
+  color:#7f8798;
+}
+.mobile-nav-drawer .shared-navigation-footer > span {
+  width:5px;
+  height:5px;
+  margin-right:7px;
+  border-radius:50%;
+  background:#78bd91;
+  box-shadow:0 0 0 3px rgba(120,189,145,.12);
+}
+@media (max-width:680px) {
+  .mobile-nav-drawer { height:100dvh !important; max-height:100dvh !important; }
+  .mobile-nav-drawer .mobile-drawer-scroll { max-height:none !important; }
+  .mobile-nav-drawer .shared-navigation-account-fixed { padding-bottom:max(10px,env(safe-area-inset-bottom)); }
+  .mobile-nav-drawer .mobile-nav-head { flex:0 0 auto; }
+  .mobile-nav-drawer .mobile-drawer-new { flex:0 0 auto; }
+}
+.app-shell[data-theme="light"] .mobile-nav-drawer .shared-navigation-account-fixed {
+  background:linear-gradient(180deg,rgba(255,255,255,.97),#fff 38%);
+  border-top-color:rgba(91,79,121,.14);
+}
+.app-shell[data-theme="light"] .mobile-nav-drawer .shared-navigation-account-fixed .profile-row {
+  background:#f7f8fb;
+  border-color:#e4e7ef !important;
+}
