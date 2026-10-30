@@ -4420,3 +4420,95 @@ html[data-theme="light"] .birth-calendar-layer .birth-calendar-today { color:#73
 .sidebar .sidebar-workspace-toggle{margin:0 5px 8px!important;padding:10px 8px!important;border:1px solid rgba(255,255,255,.045);border-radius:10px;background:rgba(255,255,255,.025);color:#737985!important}
 .sidebar .sidebar-workspace-toggle:hover{background:rgba(255,255,255,.045)}
 @media(max-width:680px){.mobile-nav-drawer{height:100dvh!important;padding-bottom:max(16px,env(safe-area-inset-bottom))!important}.mobile-drawer-scroll{min-height:0}.shared-navigation-history{max-height:28vh}.mobile-nav-bottom{margin-top:12px}}
+
+
+/* Premium desktop workspace: independently scrolling navigation and content. */
+@media (min-width: 681px) {
+  .app-shell { height: 100dvh; min-height: 100dvh; overflow: hidden; }
+  .sidebar {
+    position: relative; z-index: 20; flex: 0 0 282px; width: 282px;
+    height: 100dvh; min-height: 0; align-self: flex-start;
+    overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain;
+    scrollbar-width: thin; scrollbar-color: rgba(211,184,124,.24) transparent;
+    transition: width .24s cubic-bezier(.2,.8,.2,1), flex-basis .24s cubic-bezier(.2,.8,.2,1), padding .24s ease;
+    padding: 18px 13px 14px;
+    background: linear-gradient(180deg, rgba(13,16,25,.98), rgba(8,11,19,.98));
+    border-right: 1px solid rgba(220,190,127,.13);
+  }
+  .sidebar::-webkit-scrollbar { width: 6px; }
+  .sidebar::-webkit-scrollbar-track { background: transparent; }
+  .sidebar::-webkit-scrollbar-thumb { border-radius: 99px; background: rgba(211,184,124,.18); }
+  .sidebar::-webkit-scrollbar-thumb:hover { background: rgba(211,184,124,.34); }
+  .sidebar-head { display:flex; align-items:center; justify-content:space-between; gap:8px; min-width:0; padding:2px 2px 17px; border-bottom:1px solid rgba(220,190,127,.12); }
+  .sidebar-head .sidebar-brand-premium { min-width:0; flex:1; padding:0 5px; }
+  .sidebar-collapse-toggle,.desktop-sidebar-toggle {
+    display:inline-grid; place-items:center; flex:0 0 36px; width:36px; height:36px;
+    border:1px solid rgba(220,190,127,.16); border-radius:11px;
+    color:#b6b7c4; background:rgba(255,255,255,.035);
+    transition:color .18s ease, background .18s ease, border-color .18s ease, transform .18s ease;
+  }
+  .sidebar-collapse-toggle:hover,.desktop-sidebar-toggle:hover {
+    color:#f0d89e; background:rgba(212,183,122,.10); border-color:rgba(212,183,122,.38); transform:translateY(-1px);
+  }
+  .desktop-sidebar-toggle { flex:0 0 38px; width:38px; height:38px; margin-right:2px; }
+  .sidebar .sidebar-new-chat { margin-top:16px; min-height:46px; border-radius:13px; background:linear-gradient(135deg,rgba(212,183,122,.13),rgba(255,255,255,.035)); border-color:rgba(212,183,122,.2); box-shadow:0 8px 22px rgba(0,0,0,.12); }
+  .sidebar .sidebar-new-chat:hover { background:linear-gradient(135deg,rgba(212,183,122,.2),rgba(255,255,255,.055)); border-color:rgba(212,183,122,.42); transform:translateY(-1px); }
+  .sidebar .sidebar-workspace-label { margin:19px 2px 8px!important; padding:10px 11px!important; border-radius:11px!important; color:#9da3b4!important; background:rgba(255,255,255,.025)!important; border-color:rgba(255,255,255,.055)!important; }
+  .sidebar-workspace-items { gap:4px; }
+  .sidebar .side-link { min-height:42px; padding:10px 11px; border-radius:11px; color:#aeb4c3; }
+  .sidebar .side-link svg { color:#9299aa; }
+  .sidebar .side-link:hover { color:#fff; background:rgba(255,255,255,.055); border-color:rgba(255,255,255,.07); transform:translateX(2px); }
+  .sidebar .side-link.active { color:#f2d99c; background:linear-gradient(100deg,rgba(212,183,122,.13),rgba(255,255,255,.035)); border-color:rgba(212,183,122,.2); box-shadow:inset 2px 0 rgba(230,204,145,.8); }
+  .sidebar .side-link.active svg { color:#e6cc91; }
+  .sidebar-history-label { display:flex; align-items:center; justify-content:space-between; margin:22px 6px 8px; padding-top:17px; border-top:1px solid rgba(220,190,127,.1); color:#828b9e; }
+  .sidebar-history-count { display:grid; place-items:center; min-width:23px; height:22px; padding:0 6px; border:1px solid rgba(220,190,127,.16); border-radius:8px; color:#e2c98f; background:rgba(212,183,122,.07); font-size:10px; }
+  .sidebar .history-item-row { gap:4px; margin:3px 0; }
+  .sidebar .history-item-open { min-width:0; min-height:38px; padding:8px 9px; font-size:11px; }
+  .sidebar .history-delete { flex-basis:32px; width:32px; height:34px; opacity:.45; }
+  .sidebar .history-item-row:hover .history-delete,.sidebar .history-item-row:focus-within .history-delete { opacity:1; }
+  .sidebar .history-empty { margin:4px 3px; padding:12px 10px; border:1px dashed rgba(220,190,127,.12); border-radius:11px; color:#858da0; background:rgba(255,255,255,.018); font-size:11px; }
+  .sidebar-bottom { margin-top:auto; padding-top:12px; }
+  .sidebar .plan-card { margin:8px 2px 13px; padding:13px; border-color:rgba(220,190,127,.17); border-radius:14px; background:linear-gradient(145deg,rgba(212,183,122,.09),rgba(255,255,255,.018)); }
+  .sidebar .profile-row { padding:13px 5px 3px; border-top-color:rgba(220,190,127,.12); }
+  .main-panel { height:100dvh; min-height:0; overflow:hidden; }
+  .main-panel > .content-scroll { flex:1 1 auto; min-height:0; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:rgba(211,184,124,.2) transparent; }
+  .main-panel > .content-scroll::-webkit-scrollbar { width:7px; }
+  .main-panel > .content-scroll::-webkit-scrollbar-thumb { border-radius:99px; background:rgba(211,184,124,.18); }
+  .main-panel > .content-scroll::-webkit-scrollbar-thumb:hover { background:rgba(211,184,124,.34); }
+  .topbar { flex:0 0 72px; }
+  .chat-footer { flex:0 0 auto; position:relative; z-index:5; }
+  .app-shell.sidebar-is-collapsed .sidebar { flex-basis:82px; width:82px; padding-inline:10px; }
+  .app-shell.sidebar-is-collapsed .sidebar-head { flex-direction:column; gap:11px; padding-inline:0; }
+  .app-shell.sidebar-is-collapsed .sidebar-head .sidebar-brand-premium { justify-content:center; padding:0; }
+  .app-shell.sidebar-is-collapsed .sidebar-brand-copy,
+  .app-shell.sidebar-is-collapsed .sidebar-workspace-label,
+  .app-shell.sidebar-is-collapsed .sidebar-history-label,
+  .app-shell.sidebar-is-collapsed .history-item-row,
+  .app-shell.sidebar-is-collapsed .history-empty,
+  .app-shell.sidebar-is-collapsed .sidebar-bottom,
+  .app-shell.sidebar-is-collapsed .sidebar-new-chat span { display:none!important; }
+  .app-shell.sidebar-is-collapsed .sidebar-new-chat { width:48px; height:46px; margin:15px auto 12px; padding:0; }
+  .app-shell.sidebar-is-collapsed .sidebar-workspace-items { display:flex; gap:7px; margin-top:8px; }
+  .app-shell.sidebar-is-collapsed .sidebar-workspace-items .side-link { justify-content:center; width:48px; height:46px; min-height:46px; margin:0 auto; padding:0; }
+  .app-shell.sidebar-is-collapsed .sidebar-workspace-items .side-link span:not(.sidebar-active-dot) { display:none!important; }
+  .app-shell.sidebar-is-collapsed .sidebar-workspace-items .side-link svg { width:18px; height:18px; }
+  .app-shell.sidebar-is-collapsed .sidebar-collapse-toggle { width:42px; height:38px; flex-basis:38px; }
+  .app-shell.sidebar-is-collapsed .sidebar-active-dot { width:5px; height:5px; margin-left:0; }
+}
+@media (max-width:680px) { .sidebar-head,.sidebar-collapse-toggle,.desktop-sidebar-toggle { display:none!important; } }
+@media (prefers-reduced-motion:reduce) {
+  .sidebar,.sidebar *,.desktop-sidebar-toggle,.sidebar-collapse-toggle { transition-duration:.01ms!important; animation-duration:.01ms!important; }
+}
+
+/* Desktop cosmic canvas: keep the complete artwork covering tall and ultrawide monitors. */
+@media (min-width:681px) {
+  .app-shell:not([data-theme="light"]) .main-panel:has(.welcome-wrap),
+  .app-shell:not([data-theme="light"]) .main-panel:has(.chat-area) {
+    min-height:100dvh;
+    background-repeat:no-repeat!important;
+    background-position:center center!important;
+    background-size:cover!important;
+    background-attachment:fixed!important;
+  }
+  .app-shell:not([data-theme="light"]) .main-panel > .content-scroll { background:linear-gradient(180deg,rgba(4,7,15,.08),rgba(4,7,15,.16)); }
+}
