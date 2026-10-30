@@ -20,7 +20,7 @@ export async function GET(request: Request) {
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   // Guest users have no saved history. Return an empty collection for the history list;
   // detail reads still require authentication and never reveal another user's records.
-  if (authError || !user) {
+  if (authError || !user || user.is_anonymous) {
     const id = new URL(request.url).searchParams.get("id");
     if (!id) return NextResponse.json({ conversations: [] }, { headers: { "Cache-Control": "private, no-store" } });
     return NextResponse.json({ error: "Sign in to access saved conversations." }, { status: 401 });
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
   const supabase = await createSupabaseServerClient();
   if (!supabase) return NextResponse.json({ error: "Supabase is not configured." }, { status: 503 });
   const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) return NextResponse.json({ error: "Sign in to save conversations." }, { status: 401 });
+  if (authError || !user || user.is_anonymous) return NextResponse.json({ error: "Sign in with a personal account to save conversations." }, { status: 401, headers: { "Cache-Control": "private, no-store" } });
   try {
     const body = schema.parse(await request.json());
     let conversationId = body.id;
@@ -106,13 +106,16 @@ export async function DELETE(request: Request) {
   const supabase = await createSupabaseServerClient();
   if (!supabase) return NextResponse.json({ error: "Supabase is not configured." }, { status: 503 });
   const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) return NextResponse.json({ error: "Sign in to delete conversations." }, { status: 401 });
+  if (authError || !user || user.is_anonymous) return NextResponse.json({ error: "Sign in with the account that owns this conversation to delete it." }, { status: 401, headers: { "Cache-Control": "private, no-store" } });
   const id = new URL(request.url).searchParams.get("id");
   if (!id || !z.string().uuid().safeParse(id).success) return NextResponse.json({ error: "A valid conversation ID is required." }, { status: 400 });
   const { data: deletedRows, error } = await supabase.from("conversations")
     .delete().eq("id", id).eq("user_id", user.id).select("id");
-  if (error) return NextResponse.json({ error: "Could not delete conversation." }, { status: 500 });
+  if (error) {
+    console.error("[vedic-ai] Conversation delete failed.", { code: error.code, message: error.message });
+    return NextResponse.json({ error: "Could not delete this conversation. Refresh the page and try again. If it keeps failing, the deployed Supabase conversation policies need to be checked." }, { status: 500, headers: { "Cache-Control": "private, no-store" } });
+  }
   if (!deletedRows?.length) return NextResponse.json({ error: "Conversation not found or already deleted." }, { status: 404 });
   // chat_messages are removed by the conversation_id foreign-key cascade.
-  return NextResponse.json({ deleted: true, id: deletedRows[0].id });
+  return NextResponse.json({ deleted: true, id: deletedRows[0].id }, { headers: { "Cache-Control": "private, no-store" } });
 }
