@@ -46,8 +46,8 @@ export default function AppNavigationDrawer({ open, onClose, extraContent, accou
         </nav>}
         {extraContent}
       </div>
-      {accountContent && <div className="shared-navigation-account-fixed">{accountContent}</div>}
       <div className="shared-navigation-footer"><span/> Vedic AI · Astrology companion</div>
+      {accountContent && <div className="shared-navigation-account-fixed">{accountContent}</div>}
     </aside>
   </div>;
 }
