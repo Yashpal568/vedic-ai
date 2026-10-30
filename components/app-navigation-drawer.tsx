@@ -28,26 +28,48 @@ export default function AppNavigationDrawer({ open, onClose, extraContent, accou
     : pathname === "/reports" ? "reports"
     : pathname === "/chat" ? "home" : "";
   return <div className="mobile-nav-backdrop shared-navigation-backdrop" onClick={onClose}>
-    <aside className="mobile-nav-drawer shared-navigation-drawer" aria-label="App navigation" onClick={(event) => event.stopPropagation()}>
-      <div className="mobile-nav-head shared-navigation-head">
+    <aside className="mobile-nav-drawer shared-navigation-drawer stitch-mobile-drawer" aria-label="App navigation" onClick={(event) => event.stopPropagation()}>
+      <header className="mobile-nav-head shared-navigation-head stitch-drawer-head">
         <Link href="/chat" className="brand sidebar-brand-premium" onClick={onClose} aria-label="Vedic AI home">
           <span className="brand-mark"><img src="/vedic-ai-emblem.svg" alt="" /></span>
           <span className="sidebar-brand-copy"><span className="sidebar-brand-line"><span className="brand-name">vedic<span style={{ color: "var(--gold)" }}>.</span>ai</span></span><span className="brand-sub">Your Jyotish space</span></span>
         </Link>
-        <button type="button" className="icon-button" onClick={onClose} aria-label="Close navigation"><X size={18}/></button>
+        <button type="button" className="icon-button stitch-close-button" onClick={onClose} aria-label="Close navigation"><X size={18}/></button>
+      </header>
+
+      <div className="mobile-drawer-scroll stitch-drawer-scroll">
+        <button type="button" className="stitch-consultation-button" onClick={() => { onWorkspace?.(); onClose(); }}>
+          <span className="stitch-consultation-plus">+</span>
+          <span>New consultation</span>
+          <span className="stitch-consultation-spark">✧</span>
+        </button>
+
+        <Link href="/chat#chat-input" className="stitch-featured-chat" onClick={onClose}>
+          <span className="stitch-featured-icon"><MessageCircle size={17}/></span>
+          <span className="stitch-featured-copy"><strong>Open Astrology Chat</strong><small>Ask your Jyotish questions</small></span>
+          <span className="stitch-featured-arrow">↗</span>
+        </Link>
+
+        <section className="stitch-workspace-section" aria-label="Workspace tools">
+          <div className="stitch-section-heading"><span>Workspace</span><span className="stitch-tool-count">7 tools</span></div>
+          <nav className="stitch-workspace-links">
+            {links.map(({ label, href, Icon, key, detail }) => <Link key={key} href={href} className={"stitch-workspace-link" + (activeKey === key ? " active" : "")} aria-current={activeKey === key ? "page" : undefined} onClick={(event) => { if (key === "home" && onHome) { event.preventDefault(); onHome(); } if (key === "kundli" && onKundli) { event.preventDefault(); onKundli(); } onClose(); }}>
+              <span className="stitch-workspace-icon"><Icon size={17}/></span>
+              <span className="stitch-workspace-copy"><strong>{label}</strong><small>{detail}</small></span>
+              <span className="stitch-workspace-arrow">›</span>
+            </Link>)}
+          </nav>
+        </section>
+
+        <section className="stitch-history-section" aria-label="Conversation history">
+          {extraContent}
+        </section>
       </div>
-      <Link href="/chat" className="new-chat mobile-drawer-new" onClick={(event) => { if (onWorkspace) { event.preventDefault(); onWorkspace(); } onClose(); }}><MessageCircle size={16}/> Open Astrology Chat <span className="shared-navigation-arrow">↗</span></Link>
-      <div className="mobile-drawer-scroll">
-        <button type="button" className="side-label shared-workspace-toggle" aria-expanded={workspaceOpen} onClick={() => setWorkspaceOpen((value) => !value)}><span>Workspace <small>{links.length} tools</small></span><ChevronDown size={17} className={workspaceOpen ? "workspace-chevron expanded" : "workspace-chevron"} /></button>
-        {workspaceOpen && <nav className="shared-navigation-links" aria-label="Workspace pages">
-          {links.map(({ label, href, Icon, key, detail }) => <Link key={key} href={href} className={"side-link shared-navigation-link" + (activeKey === key ? " active" : "")} aria-current={activeKey === key ? "page" : undefined} onClick={(event) => { if (key === "home" && onHome) { event.preventDefault(); onHome(); } if (key === "kundli" && onKundli) { event.preventDefault(); onKundli(); } onClose(); }}>
-            <span className="shared-navigation-icon"><Icon size={18}/></span><span className="shared-navigation-copy"><strong>{label}</strong><small>{detail}</small></span><span className="shared-navigation-arrow">›</span>
-          </Link>)}
-        </nav>}
-        {extraContent}
-      </div>
-      <div className="shared-navigation-footer"><span/> Vedic AI · Astrology companion</div>
-      {accountContent && <div className="shared-navigation-account-fixed">{accountContent}</div>}
+
+      <footer className="stitch-drawer-footer">
+        <div className="shared-navigation-footer stitch-engine-status"><span/> Vedic AI · Astrology companion</div>
+        {accountContent && <div className="shared-navigation-account-fixed stitch-account-fixed">{accountContent}</div>}
+      </footer>
     </aside>
   </div>;
 }
