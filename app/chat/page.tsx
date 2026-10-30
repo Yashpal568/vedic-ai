@@ -245,6 +245,7 @@ export default function Home() {
   const [voiceListening, setVoiceListening] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSignedIn, setIsSignedIn] = useState(false);
+  const [authReady, setAuthReady] = useState(false);
   const [accountName, setAccountName] = useState("");
   const [accountEmail, setAccountEmail] = useState("");
   const [accountAvatar, setAccountAvatar] = useState("");
@@ -340,9 +341,10 @@ export default function Home() {
   }
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
-    if (!supabase) return;
+    if (!supabase) { setAuthReady(true); return; }
     const applyUser = (user: { email?: string; user_metadata?: Record<string, unknown> } | null) => {
       setIsSignedIn(Boolean(user));
+      setAuthReady(true);
       setAccountEmail(user?.email || "");
       setAccountName(String(user?.user_metadata?.display_name || user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split("@")[0] || ""));
       setAccountAvatar(String(user?.user_metadata?.avatar_url || user?.user_metadata?.picture || ""));
@@ -559,6 +561,7 @@ export default function Home() {
   async function sendMessage(value?: string) {
     const trimmed = (value === undefined ? input : value).trim();
     if (!trimmed || isLoading) return;
+    if (!authReady) { setToast("Checking your sign-in session. Please try again in a moment."); return; }
     // Personal questions must not receive generic text disguised as a chart reading.
     const personalIntent = /\b(my career|my job|my profession|my marriage|my relationship|my future|my kundli|my birth chart|my nakshatra|my dasha|my promotion|my business|personal reading|personalised reading|personalized reading|meri kundli|mera career|meri job|meri shaadi|mera bhavishya|mujhe job|mujhe career|career prediction|job prediction|marriage prediction|relationship prediction|when will i get a job|will i get married|will i get a job)\b/i.test(trimmed);
     if ((!savedBirth || !chartReport) && personalIntent) {
@@ -1233,7 +1236,7 @@ export default function Home() {
             <div className="composer-bottom"><div className="composer-tools">
               <button type="button" className="tool-button" onClick={() => setIsBirthOpen(true)}><Plus size={15} /><span>{savedBirth ? "Birth profile added" : "Add birth details"}</span></button>
               <button type="button" className={"tool-button voice-input-button" + (voiceListening ? " is-listening" : "")} onClick={toggleVoiceInput} aria-label={voiceListening ? "Stop voice typing" : "Start voice typing"} title={voiceListening ? "Stop voice typing" : "Speak to type"}><span className="voice-input-icon">{voiceListening ? <MicOff size={16} /> : <Mic size={16} />}</span><span>{voiceListening ? "Listening…" : "Speak"}</span></button>
-            </div><button type="submit" className="send-button" aria-label="Send message" disabled={!input.trim() || isLoading}><ArrowUp size={17} /></button></div>
+            </div><button type="submit" className="send-button" aria-label="Send message" disabled={!input.trim() || isLoading || !authReady}><ArrowUp size={17} /></button></div>
           </form>
           <p className="footer-note">Vedic AI can make mistakes. Astrological interpretations are traditional perspectives, not certainties. <span className="footer-separator">·</span> <Link href="/privacy">Privacy</Link> <span className="footer-separator">·</span> <Link href="/terms">Terms</Link></p>
         </div></footer>
