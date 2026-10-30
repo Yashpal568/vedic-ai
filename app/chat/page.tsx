@@ -33,6 +33,20 @@ const suggestions = [
 ];
 const makeId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
+function formatConversationDate(value?: string) {
+  if (!value) return "Saved conversation";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Saved conversation";
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const dayDiff = Math.round((startOfToday.getTime() - startOfDate.getTime()) / 86400000);
+  if (dayDiff === 0) return "Today, " + date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  if (dayDiff === 1) return "Yesterday";
+  if (dayDiff > 1 && dayDiff < 7) return dayDiff + " days ago";
+  return date.toLocaleDateString([], { month: "short", day: "numeric" });
+}
+
 function BirthDatePicker({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   const today = new Date();
   const selected = value ? new Date(value + "T12:00:00") : null;
@@ -1067,8 +1081,11 @@ export default function Home() {
             <div className="side-label mobile-history-label">All conversations <span>{historyItems.length}</span></div>
             <div className="mobile-history-list shared-navigation-history">
               {isSignedIn && historyItems.length ? historyItems.map((item) => <div className="history-item-row" key={item.id}>
-                <button type="button" className={"side-link history-item-open " + (activeConversationId === item.id ? "active" : "")} onClick={() => { void loadConversation(item.id); setMobileMenuOpen(false); }} disabled={loadingConversationId === item.id}><History size={15}/><span>{loadingConversationId === item.id ? "Opening…" : item.title}</span></button>
-                <button type="button" className="history-delete" aria-label={"Delete " + item.title} title={"Delete " + item.title} onClick={() => { requestDeleteConversation(item.id); setMobileMenuOpen(false); }}><Trash2 size={15}/></button>
+                <button type="button" className={"side-link history-item-open " + (activeConversationId === item.id ? "active" : "")} onClick={() => { void loadConversation(item.id); setMobileMenuOpen(false); }} disabled={loadingConversationId === item.id}>
+                  <History size={14}/>
+                  <span className="mobile-history-copy"><strong>{loadingConversationId === item.id ? "Opening…" : item.title}</strong><small>{formatConversationDate(item.updated_at)}</small></span>
+                </button>
+                <button type="button" className="history-delete" aria-label={"Delete " + item.title} title={"Delete " + item.title} onClick={() => { requestDeleteConversation(item.id); setMobileMenuOpen(false); }}><Trash2 size={13}/></button>
               </div>) : <p className="history-empty">{isSignedIn ? "Your saved conversations will appear here." : "Sign in to save private conversations."}</p>}
             </div>
 
