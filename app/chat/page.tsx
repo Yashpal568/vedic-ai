@@ -1031,7 +1031,6 @@ export default function Home() {
         <button className="side-link" onClick={() => { window.location.href = "/palm-reading"; }}><Sparkles size={17} /> <span>Palm reading</span></button>
         <button className="side-link" onClick={() => { window.location.href = "/profile"; }}><UserRound size={17} /> <span>My profile</span></button>
         <button className="side-link" onClick={() => { window.location.href = "/reports"; }}><BookOpen size={17} /> <span>Kundli & reports</span></button>
-        <button className="side-link" onClick={openMemory}><ShieldCheck size={17} /> <span>Saved memory</span></button>
         </div>}
         <section className="sidebar-history" aria-label="Conversation history">
           <div className="side-label sidebar-history-label"><span>All conversations</span><span className="sidebar-history-count">{historyItems.length}</span></div>
