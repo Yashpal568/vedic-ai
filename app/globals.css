@@ -4984,3 +4984,34 @@ html[data-theme="light"] .birth-calendar-layer .birth-calendar-today { color:#73
 @media (max-width:680px) {
   .app-shell > aside.sidebar { display:none !important; }
 }
+/* Premium sidebar finish: remove duplicate divider artifacts and refine controls. */
+.app-shell>aside.sidebar{background:radial-gradient(ellipse at 0 0,rgba(210,177,105,.09),transparent 34%),linear-gradient(180deg,#101624,#0b111e 60%,#090f1a)!important;border-right:1px solid rgba(205,180,126,.13)!important}
+.app-shell>aside.sidebar>.sidebar-head{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important;padding:4px 2px 15px!important;margin:0 0 12px!important;border:0!important;border-bottom:1px solid rgba(205,180,126,.12)!important}
+.app-shell>aside.sidebar>.sidebar-head:after{content:none!important}
+.app-shell>aside.sidebar .sidebar-brand-premium{border:0!important;margin:0!important;padding:0 4px!important;gap:11px!important}
+.app-shell>aside.sidebar .sidebar-brand-premium .brand-mark{width:44px!important;height:44px!important;flex:0 0 44px!important;border-radius:14px!important;background:linear-gradient(145deg,rgba(225,190,112,.18),rgba(225,190,112,.035))!important;border:1px solid rgba(225,190,112,.34)!important;box-shadow:0 5px 22px rgba(0,0,0,.25),inset 0 1px rgba(255,255,255,.08)!important}
+.app-shell>aside.sidebar .sidebar-brand-copy{gap:3px!important}
+.app-shell>aside.sidebar>.sidebar-scroll-area{border:0!important;box-shadow:none!important;padding:0 2px 18px 0!important}
+.app-shell>aside.sidebar .sidebar-new-chat{min-height:44px!important;margin:4px 2px 18px!important;width:calc(100% - 4px)!important;border:1px solid rgba(220,190,127,.22)!important;border-radius:13px!important;background:linear-gradient(115deg,rgba(255,255,255,.075),rgba(255,255,255,.025))!important;color:#f1e7d1!important;box-shadow:0 8px 20px rgba(0,0,0,.16),inset 0 1px rgba(255,255,255,.045)!important;font-size:12px!important;font-weight:650!important;transition:all .18s ease!important}
+.app-shell>aside.sidebar .sidebar-new-chat svg{width:16px!important;height:16px!important;color:#e6c98c!important}
+.app-shell>aside.sidebar .sidebar-new-chat:hover{transform:translateY(-1px)!important;border-color:rgba(225,190,112,.48)!important;background:linear-gradient(115deg,rgba(225,190,112,.13),rgba(255,255,255,.045))!important}
+.app-shell>aside.sidebar .sidebar-workspace-label{min-height:38px!important;margin:0 2px 9px!important;padding:8px 10px!important;border:1px solid rgba(205,180,126,.12)!important;border-radius:11px!important;background:linear-gradient(110deg,rgba(255,255,255,.045),rgba(255,255,255,.018))!important;color:#aeb7c9!important;font-size:9px!important;letter-spacing:1.45px!important}
+.app-shell>aside.sidebar .sidebar-workspace-items{display:flex!important;flex-direction:column!important;gap:4px!important;padding:0 1px 7px!important}
+.app-shell>aside.sidebar .sidebar-workspace-items .side-link{display:flex!important;align-items:center!important;min-height:39px!important;margin:0!important;padding:7px 10px!important;gap:10px!important;border:1px solid transparent!important;border-radius:11px!important;background:transparent!important;color:#b7c0d0!important;font-size:12px!important;font-weight:520!important;transition:background .18s,border-color .18s,color .18s,transform .18s!important}
+.app-shell>aside.sidebar .sidebar-workspace-items .side-link>svg{width:16px!important;height:16px!important;color:#9aa6ba!important;stroke-width:1.8!important}
+.app-shell>aside.sidebar .sidebar-workspace-items .side-link:hover{transform:translateX(2px)!important;background:rgba(255,255,255,.045)!important;border-color:rgba(255,255,255,.045)!important;color:#f4f0e8!important}
+.app-shell>aside.sidebar .sidebar-workspace-items .side-link.active{background:linear-gradient(105deg,rgba(218,184,112,.14),rgba(255,255,255,.035))!important;border-color:rgba(218,184,112,.22)!important;color:#f5e8c9!important;box-shadow:inset 2px 0 #e5c77f,0 5px 14px rgba(0,0,0,.1)!important}
+.app-shell>aside.sidebar .sidebar-workspace-items .side-link.active>svg{color:#e6c77e!important}
+.app-shell>aside.sidebar .sidebar-active-dot{background:#6ed6aa!important;box-shadow:0 0 10px rgba(110,214,170,.5)!important}
+.app-shell>aside.sidebar .sidebar-history-label{margin:7px 4px 7px!important;padding:13px 7px 0!important;border:0!important;border-top:1px solid rgba(205,180,126,.11)!important;color:#8994a8!important;font-size:9px!important;letter-spacing:1.35px!important}
+.app-shell>aside.sidebar .sidebar-history-count{border:1px solid rgba(218,184,112,.18)!important;border-radius:8px!important;background:rgba(218,184,112,.075)!important;color:#e6cb91!important}
+.app-shell>aside.sidebar>.sidebar-bottom{border-top:1px solid rgba(205,180,126,.16)!important;background:linear-gradient(180deg,rgba(13,20,33,.98),#0b111d 55%)!important}
+.app-shell>aside.sidebar>.sidebar-bottom .profile-row{border:1px solid rgba(205,180,126,.15)!important;border-radius:13px!important;background:linear-gradient(110deg,rgba(255,255,255,.055),rgba(255,255,255,.018))!important}
+.app-shell>aside.sidebar>.sidebar-bottom .profile-avatar{width:34px!important;height:34px!important;border-radius:11px!important}
+.app-shell>aside.sidebar>.sidebar-bottom .sidebar-logout{width:30px!important;height:30px!important;border:1px solid rgba(205,180,126,.14)!important;border-radius:9px!important;background:rgba(255,255,255,.035)!important;color:#aeb8c8!important}
+.app-shell>aside.sidebar .sidebar-scroll-area::-webkit-scrollbar{width:4px!important}
+.app-shell>aside.sidebar .sidebar-scroll-area::-webkit-scrollbar-thumb{border-radius:99px!important;background:rgba(205,180,126,.2)!important}
+.app-shell[data-theme="light"]>aside.sidebar{background:linear-gradient(180deg,#f6f6f4,#eef0f4)!important}
+.app-shell[data-theme="light"]>aside.sidebar .sidebar-new-chat{color:#303548!important;background:linear-gradient(110deg,#fff,#f5f2e8)!important;border-color:rgba(143,119,67,.24)!important}
+.app-shell[data-theme="light"]>aside.sidebar .sidebar-workspace-items .side-link{color:#525b6d!important}
+.app-shell[data-theme="light"]>aside.sidebar .sidebar-workspace-items .side-link.active{color:#4a3b1e!important;background:linear-gradient(105deg,rgba(218,184,112,.2),rgba(255,255,255,.8))!important}
