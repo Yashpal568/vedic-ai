@@ -1017,10 +1017,10 @@ export default function Home() {
       <aside className="sidebar">
         <div className="sidebar-head">
         <button className="brand sidebar-brand-premium" onClick={startNewChat} aria-label="Vedic AI home" style={{ border: 0, background: "transparent", textAlign: "left", color: "inherit" }}>
-          <span className="brand-mark"><MoonStar size={21} strokeWidth={1.6} /></span>
+          <span className="brand-mark"><img src="/vedic-ai-emblem.svg" alt="" /></span>
           <span className="sidebar-brand-copy"><span className="sidebar-brand-line"><span className="brand-name">vedic<span style={{ color: "var(--gold)" }}>.</span>ai</span></span><span className="brand-sub">Your Jyotish space</span></span>
         </button>
-        <button type="button" className="sidebar-collapse-toggle" onClick={toggleDesktopSidebar} aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"} title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}>{sidebarCollapsed ? <PanelLeftOpen size={17}/> : <PanelLeftClose size={17}/>}</button>
+        <div className="sidebar-head-actions"><button type="button" className="sidebar-theme-toggle" onClick={() => { const next = theme === "dark" ? "light" : "dark"; setTheme(next); document.documentElement.dataset.theme = next; try { window.localStorage.setItem("vedic-chat-theme", next); } catch {} }} aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} title={theme === "dark" ? "Light mode" : "Dark mode"}>{theme === "dark" ? <Sun size={15}/> : <MoonStar size={15}/>}</button>        <button type="button" className="sidebar-collapse-toggle" onClick={toggleDesktopSidebar} aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"} title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}>{sidebarCollapsed ? <PanelLeftOpen size={17}/> : <PanelLeftClose size={17}/>}</button></div>
         </div>
                 <div className="sidebar-scroll-area">
 <button className="new-chat sidebar-new-chat" onClick={startNewChat}><Plus size={17} /> <span>New conversation</span></button>
@@ -1073,6 +1073,10 @@ export default function Home() {
                 <button type="button" className="history-delete" aria-label={"Delete " + item.title} title={"Delete " + item.title} onClick={() => { requestDeleteConversation(item.id); setMobileMenuOpen(false); }}><Trash2 size={15}/></button>
               </div>) : <p className="history-empty">{isSignedIn ? "Your saved conversations will appear here." : "Sign in to save private conversations."}</p>}
             </div>
+
+          </>
+        }
+        accountContent={
             <div className="mobile-nav-bottom shared-navigation-account">
               <div className="profile-row">
                 {accountAvatar ? <img className="profile-avatar" src={accountAvatar} alt="" /> : <span className="profile-avatar profile-avatar-fallback">{(accountName || savedBirth?.name || (isSignedIn ? accountEmail : "Guest explorer") || "G").trim().charAt(0).toUpperCase()}</span>}
@@ -1080,7 +1084,6 @@ export default function Home() {
               </div>
               {isSignedIn ? <button className="mobile-signout-button" onClick={() => { setMobileMenuOpen(false); void signOut(); }} title="Sign out" aria-label="Sign out"><LogOut size={18}/></button> : <Link className="mobile-signout-button" href="/login" onClick={() => setMobileMenuOpen(false)} title="Sign in to sync history" aria-label="Sign in to sync history"><UserRound size={18}/></Link>}
             </div>
-          </>
         }
       />
 
@@ -1089,7 +1092,7 @@ export default function Home() {
           <div className="topbar-left">
             <button type="button" className="desktop-sidebar-toggle" onClick={toggleDesktopSidebar} aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"} title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}>{sidebarCollapsed ? <PanelLeftOpen size={18}/> : <PanelLeftClose size={18}/>}</button>
             <button className="icon-button mobile-menu" onClick={() => setMobileMenuOpen(true)} aria-label="Open menu"><Menu size={18} /></button>
-            <div className="chat-header-brand"><span className="brand-mark"><MoonStar size={17} /></span><span className="brand-name">vedic<span style={{ color: "var(--gold)" }}>.</span>ai</span></div>
+            <div className="chat-header-brand"><span className="brand-mark"><img src="/vedic-ai-emblem.svg" alt="" /></span><span className="brand-name">vedic<span style={{ color: "var(--gold)" }}>.</span>ai</span></div>
             <div className="mode-pill" aria-label="Vedic AI preview status"><span className="status-dot" /> <span className="mode-pill-name">Vedic AI</span> <span className="mode-pill-preview" style={{ color: "var(--quiet)" }}>· Preview</span></div>
           </div>
           <div className="topbar-actions">
