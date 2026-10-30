@@ -44,8 +44,8 @@ export default function AppNavigationDrawer({ open, onClose, extraContent, accou
             <span className="shared-navigation-icon"><Icon size={18}/></span><span className="shared-navigation-copy"><strong>{label}</strong><small>{detail}</small></span><span className="shared-navigation-arrow">›</span>
           </Link>)}
         </nav>}
-        {extraContent}
       </div>
+      <section className="mobile-history-panel" aria-label="Conversation history">{extraContent}</section>
       <div className="shared-navigation-footer"><span/> Vedic AI · Astrology companion</div>
       {accountContent && <div className="shared-navigation-account-fixed">{accountContent}</div>}
     </aside>
