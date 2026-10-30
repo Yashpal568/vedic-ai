@@ -4887,3 +4887,100 @@ html[data-theme="light"] .birth-calendar-layer .birth-calendar-today { color:#73
 .mobile-nav-drawer .shared-navigation-account-fixed .profile-row {
   display:flex !important; visibility:visible !important;
 }
+
+/* FINAL SIDEBAR LAYOUT: keep account visible at all viewport heights.
+   The scroll region owns all navigation/history; the account row never scrolls. */
+.app-shell > aside.sidebar {
+  position:relative !important;
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) !important;
+  grid-template-rows:auto minmax(0,1fr) 76px !important;
+  width:264px;
+  height:100dvh !important;
+  min-height:0 !important;
+  max-height:100dvh !important;
+  padding:16px 14px 0 !important;
+  overflow:hidden !important;
+  box-sizing:border-box !important;
+}
+.app-shell > aside.sidebar > .sidebar-head {
+  grid-column:1 !important;
+  grid-row:1 !important;
+  min-height:64px !important;
+  padding-bottom:12px !important;
+}
+.app-shell > aside.sidebar > .sidebar-scroll-area {
+  grid-column:1 !important;
+  grid-row:2 !important;
+  display:block !important;
+  width:100% !important;
+  min-width:0 !important;
+  min-height:0 !important;
+  height:100% !important;
+  max-height:100% !important;
+  overflow-x:hidden !important;
+  overflow-y:auto !important;
+  overscroll-behavior-y:contain !important;
+  scrollbar-gutter:stable;
+  padding:0 2px 18px 0 !important;
+}
+.app-shell > aside.sidebar > .sidebar-scroll-area .sidebar-history {
+  display:block !important;
+  min-height:0 !important;
+  height:auto !important;
+  overflow:visible !important;
+}
+.app-shell > aside.sidebar > .sidebar-scroll-area .sidebar-history-list {
+  display:flex !important;
+  flex-direction:column !important;
+  min-height:0 !important;
+  height:auto !important;
+  max-height:none !important;
+  overflow:visible !important;
+}
+.app-shell > aside.sidebar > .sidebar-bottom {
+  grid-column:1 !important;
+  grid-row:3 !important;
+  align-self:stretch !important;
+  display:flex !important;
+  align-items:center !important;
+  width:100% !important;
+  min-width:0 !important;
+  min-height:76px !important;
+  height:76px !important;
+  max-height:76px !important;
+  margin:0 !important;
+  padding:6px 0 max(8px,env(safe-area-inset-bottom)) !important;
+  overflow:hidden !important;
+  border-top:1px solid rgba(212,183,122,.18) !important;
+  background:#080c16 !important;
+  z-index:20 !important;
+}
+.app-shell > aside.sidebar > .sidebar-bottom .plan-card { display:none !important; }
+.app-shell > aside.sidebar > .sidebar-bottom .profile-row {
+  display:flex !important;
+  align-items:center !important;
+  width:100% !important;
+  min-width:0 !important;
+  min-height:54px !important;
+  height:54px !important;
+  margin:0 !important;
+  padding:7px 6px !important;
+  overflow:hidden !important;
+  border:1px solid rgba(212,183,122,.14) !important;
+  border-radius:12px !important;
+  background:rgba(255,255,255,.035) !important;
+}
+.app-shell > aside.sidebar > .sidebar-bottom .profile-row > div:first-of-type {
+  flex:1 1 auto !important;
+  min-width:0 !important;
+}
+.app-shell > aside.sidebar > .sidebar-bottom .profile-name,
+.app-shell > aside.sidebar > .sidebar-bottom .profile-caption {
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+}
+@media (max-width:680px) {
+  .app-shell > aside.sidebar { display:none !important; }
+}
