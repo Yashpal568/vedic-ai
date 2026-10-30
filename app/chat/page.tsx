@@ -14,7 +14,7 @@ import { buildKundliHouseSummary, buildKundliPlanetSummary, buildKundliSimpleSum
 import {
   ArrowDown, ArrowUp, AudioLines, Mic, MicOff, BookOpen, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight,
   CircleHelp, Gem, Hand, History, House, LogOut, Menu, MessageCircle, MoonStar, Orbit, Plus, Sun,
-  ShieldCheck, Sparkles, Stars, UserRound, X, BriefcaseBusiness, Heart, Compass, Trash2, RefreshCw,
+  ShieldCheck, Sparkles, Stars, UserRound, X, BriefcaseBusiness, Heart, Compass, Trash2, RefreshCw, PanelLeftClose, PanelLeftOpen, Bell,
 } from "lucide-react";
 
 type Message = { id: string; role: "user" | "assistant"; content: string };
@@ -271,7 +271,8 @@ export default function Home() {
   const [deletingConversationId, setDeletingConversationId] = useState<string | null>(null);
   const conversationLoadRequestRef = useRef(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [workspaceExpanded, setWorkspaceExpanded] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [workspaceExpanded, setWorkspaceExpanded] = useState(true);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [toast, setToast] = useState("");
   const [notificationPromptOpen, setNotificationPromptOpen] = useState(false);
@@ -287,29 +288,19 @@ export default function Home() {
   useEffect(() => { try { const saved = window.localStorage.getItem("vedic-chat-theme"); if (saved === "light" || saved === "dark") setTheme(saved); } catch {} }, []);
   useEffect(() => { try { window.localStorage.setItem("vedic-chat-theme", theme); } catch {} }, [theme]);
   useEffect(() => {
-    if (isSignedIn) return;
     try {
-      const raw = window.localStorage.getItem("vedic-guest-conversations-v1");
-      let saved = raw ? JSON.parse(raw) as HistoryItem[] : [];
-      if (!Array.isArray(saved)) saved = [];
-      // Migrate the previous single-session guest cache into the new history list.
-      const legacyRaw = window.localStorage.getItem("vedic-guest-chat-v1");
-      const legacy = legacyRaw ? JSON.parse(legacyRaw) as { messages?: Message[] } : null;
-      if (Array.isArray(legacy?.messages) && legacy!.messages!.some((message) => message.role === "user" && message.content.trim()) && !saved.some((item) => item.id === "guest-legacy")) {
-        const legacyMessages = legacy!.messages!.filter((message) => (message.role === "user" || message.role === "assistant") && typeof message.content === "string" && message.content.trim()).slice(-200);
-        const firstUserMessage = legacyMessages.find((message) => message.role === "user")?.content || "Previous guest conversation";
-        const legacyItem: HistoryItem = { id: "guest-legacy", title: firstUserMessage.slice(0, 54) + (firstUserMessage.length > 54 ? "…" : ""), updated_at: new Date().toISOString() };
-        window.localStorage.setItem("vedic-chat-cache-v1:guest-legacy", JSON.stringify({ messages: legacyMessages, savedAt: new Date().toISOString() }));
-        saved = [legacyItem, ...saved].slice(0, 30);
-        window.localStorage.setItem("vedic-guest-conversations-v1", JSON.stringify(saved));
+      setSidebarCollapsed(window.localStorage.getItem("vedic-sidebar-collapsed") === "1");
+      // Clear legacy guest chat data; history is now strictly account-scoped.
+      window.localStorage.removeItem("vedic-guest-chat-v1");
+      window.localStorage.removeItem("vedic-guest-conversations-v1");
+      window.localStorage.removeItem("vedic-pending-chat-v1");
+      for (let index = window.localStorage.length - 1; index >= 0; index -= 1) {
+        const key = window.localStorage.key(index);
+        if (key?.startsWith("vedic-chat-cache-v1:")) window.localStorage.removeItem(key);
       }
-      setHistoryItems(saved.filter((item) => item && typeof item.id === "string" && item.id.startsWith("guest-") && typeof item.title === "string").slice(0, 30));
     } catch {}
-  }, [isSignedIn]);
-  useEffect(() => {
-    if (typeof window === "undefined" || !("Notification" in window)) return;
-    if (Notification.permission === "default" && !window.sessionStorage.getItem("vedic-notification-prompt-dismissed")) setNotificationPromptOpen(true);
   }, []);
+
 
   async function enableNotifications() {
     if (!("Notification" in window)) {
@@ -359,33 +350,9 @@ export default function Home() {
     supabase.auth.getUser().then(({ data }) => applyUser(data.user));
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       applyUser(session?.user || null);
-      if (session?.user) {
-        void (async () => {
-          try {
-            const raw = window.localStorage.getItem("vedic-guest-chat-v1");
-            if (!raw) return;
-            const guest = JSON.parse(raw) as { messages?: Message[] };
-            const guestMessages = (guest.messages || []).filter((m) => (m.role === "user" || m.role === "assistant") && typeof m.content === "string" && m.content.trim()).slice(-30);
-            if (!guestMessages.some((m) => m.role === "user")) return;
-            const response = await fetch("/api/conversations", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages: guestMessages.map(({ role, content }) => ({ role, content })) }) });
-            if (response.ok) {
-              window.localStorage.removeItem("vedic-guest-chat-v1");
-              const payload = await response.json();
-              if (payload.conversation?.id) {
-                setActiveConversationId(payload.conversation.id);
-                setHistoryItems((items) => [payload.conversation, ...items.filter((item) => item.id !== payload.conversation.id)].slice(0, 30));
-              }
-            }
-          } catch { /* keep local guest history if migration fails */ }
-        })();
-      }
     });
     return () => subscription.unsubscribe();
   }, []);
-  useEffect(() => {
-    if (isSignedIn || !messages.length) return;
-    try { window.localStorage.setItem("vedic-guest-chat-v1", JSON.stringify({ messages: messages.slice(-30) })); } catch {}
-  }, [messages, isSignedIn]);
   useEffect(() => {
     const refreshHistory = async () => {
       if (!isSignedIn) return;
@@ -433,6 +400,14 @@ export default function Home() {
     const timer = window.setTimeout(() => setToast(""), 3200);
     return () => window.clearTimeout(timer);
   }, [toast]);
+
+  function toggleDesktopSidebar() {
+    setSidebarCollapsed((current) => {
+      const next = !current;
+      try { window.localStorage.setItem("vedic-sidebar-collapsed", next ? "1" : "0"); } catch {}
+      return next;
+    });
+  }
 
   function startNewChat() {
     conversationLoadRequestRef.current += 1;
@@ -555,58 +530,28 @@ export default function Home() {
   }
 
   async function persistConversation(allMessages: Message[], newMessages: Message[], conversationId: string | null = activeConversationId): Promise<string | null> {
-    const visibleMessages = allMessages.slice(-200);
-    const saveLocally = (id: string | null) => {
-      try {
-        if (id) window.localStorage.setItem("vedic-chat-cache-v1:" + id, JSON.stringify({ messages: visibleMessages, savedAt: new Date().toISOString() }));
-        if (!isSignedIn) window.localStorage.setItem("vedic-guest-chat-v1", JSON.stringify({ messages: visibleMessages }));
-      } catch {}
-    };
-    if (!isSignedIn) {
-      const localId = conversationId || ("guest-" + makeId());
-      saveLocally(localId);
-      const firstUserMessage = visibleMessages.find((message) => message.role === "user")?.content || "New conversation";
-      const localItem: HistoryItem = { id: localId, title: firstUserMessage.slice(0, 54) + (firstUserMessage.length > 54 ? "…" : ""), updated_at: new Date().toISOString() };
-      setActiveConversationId(localId);
-      setHistoryItems((items) => {
-        const next = [localItem, ...items.filter((item) => item.id !== localId)].slice(0, 30);
-        try { window.localStorage.setItem("vedic-guest-conversations-v1", JSON.stringify(next)); } catch {}
-        return next;
-      });
-      return localId;
-    }
-    saveLocally(conversationId);
+    // Guest chats live only in React state for the current tab. Never write them to browser storage.
+    if (!isSignedIn) return null;
     const messagesToSave = (conversationId ? newMessages : allMessages).slice(-30).map(({ role, content }) => ({ role, content }));
     try {
       const response = await fetch("/api/conversations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: conversationId || undefined, messages: messagesToSave }),
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: conversationId || undefined, messages: messagesToSave }), cache: "no-store",
       });
+      const data = await response.json();
       if (!response.ok) {
-        let detail = "Your message is kept on this device, but server saving failed.";
-        try { const errorPayload = await response.json(); if (typeof errorPayload.error === "string") detail += " " + errorPayload.error; } catch {}
-        setToast(detail + " Please check your connection and try again.");
-        try {
-          window.localStorage.setItem("vedic-pending-chat-v1", JSON.stringify({ conversationId, messages: messagesToSave, savedAt: new Date().toISOString() }));
-        } catch {}
+        setToast(response.status === 401 ? "Your session expired. Sign in again to save this chat." : (data.error || "Could not save this chat. It remains only in this open tab."));
         return conversationId;
       }
-      const data = await response.json();
-      try { window.localStorage.removeItem("vedic-pending-chat-v1"); } catch {}
       const conversation = data.conversation as HistoryItem | undefined;
       if (conversation?.id) {
-        try { window.localStorage.setItem("vedic-chat-cache-v1:" + conversation.id, JSON.stringify({ messages: visibleMessages, savedAt: new Date().toISOString() })); } catch {}
         setActiveConversationId(conversation.id);
         setHistoryItems((items) => [conversation, ...items.filter((item) => item.id !== conversation.id)].slice(0, 30));
         return conversation.id;
       }
       return conversationId;
     } catch {
-      setToast("The network interrupted saving. Your messages are cached on this device and can be retried when you're online.");
-      try {
-        window.localStorage.setItem("vedic-pending-chat-v1", JSON.stringify({ conversationId, messages: messagesToSave, savedAt: new Date().toISOString() }));
-      } catch {}
+      setToast("Connection interrupted. This chat is only available in this open tab until it can be saved.");
       return conversationId;
     }
   }
@@ -1115,12 +1060,15 @@ export default function Home() {
   }
 
   return (
-    <main className="app-shell" data-theme={theme}>
+    <main className={"app-shell" + (sidebarCollapsed ? " sidebar-is-collapsed" : "")} data-theme={theme} data-sidebar-collapsed={sidebarCollapsed ? "true" : "false"}>
       <aside className="sidebar">
+        <div className="sidebar-head">
         <button className="brand sidebar-brand-premium" onClick={startNewChat} aria-label="Vedic AI home" style={{ border: 0, background: "transparent", textAlign: "left", color: "inherit" }}>
           <span className="brand-mark"><MoonStar size={21} strokeWidth={1.6} /></span>
           <span className="sidebar-brand-copy"><span className="sidebar-brand-line"><span className="brand-name">vedic<span style={{ color: "var(--gold)" }}>.</span>ai</span></span><span className="brand-sub">Your Jyotish space</span></span>
         </button>
+        <button type="button" className="sidebar-collapse-toggle" onClick={toggleDesktopSidebar} aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"} title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}>{sidebarCollapsed ? <PanelLeftOpen size={17}/> : <PanelLeftClose size={17}/>}</button>
+        </div>
         <button className="new-chat sidebar-new-chat" onClick={startNewChat}><Plus size={17} /> <span>New conversation</span></button>
         <button type="button" className="side-label sidebar-workspace-label sidebar-workspace-toggle" aria-expanded={workspaceExpanded} onClick={() => setWorkspaceExpanded((expanded) => !expanded)}><span>Workspace</span><span className="sidebar-workspace-toggle-right"><span className="sidebar-tool-count">7 Tools</span><ChevronDown size={15} className={workspaceExpanded ? "workspace-chevron expanded" : "workspace-chevron"} /></span></button>
         {workspaceExpanded && <div className="sidebar-workspace-items">
@@ -1132,7 +1080,7 @@ export default function Home() {
         <button className="side-link" onClick={openMemory}><ShieldCheck size={17} /> <span>Saved memory</span></button>
         </div>}
         <div className="side-label sidebar-history-label"><span>All conversations</span><span className="sidebar-history-count">{historyItems.length}</span></div>
-        {historyItems.length ? historyItems.map((item) => <div className="history-item-row" key={item.id}><button type="button" className={"side-link history-item-open " + (activeConversationId === item.id ? "active" : "")} onClick={() => void loadConversation(item.id)} disabled={loadingConversationId === item.id}><History size={15} /><span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{loadingConversationId === item.id ? "Opening…" : item.title}</span></button><button type="button" className="history-delete" aria-label={"Delete " + item.title} title={"Delete " + item.title} onClick={() => requestDeleteConversation(item.id)}><Trash2 size={15}/></button></div>) : <p className="history-empty">{isSignedIn ? "Your saved conversations will appear here." : "Guest conversations are saved on this device only."}</p>}
+        {isSignedIn && historyItems.length ? historyItems.map((item) => <div className="history-item-row" key={item.id}><button type="button" className={"side-link history-item-open " + (activeConversationId === item.id ? "active" : "")} onClick={() => void loadConversation(item.id)} disabled={loadingConversationId === item.id}><History size={15} /><span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{loadingConversationId === item.id ? "Opening…" : item.title}</span></button><button type="button" className="history-delete" aria-label={"Delete " + item.title} title={"Delete " + item.title} onClick={() => requestDeleteConversation(item.id)}><Trash2 size={15}/></button></div>) : <p className="history-empty">{isSignedIn ? "Your saved conversations will appear here." : "Sign in to save private conversations."}</p>}
         <div className="sidebar-bottom">
           <div className="plan-card">
             <div className="plan-top"><Gem size={14} /> YOUR COSMIC JOURNEY</div>
@@ -1161,10 +1109,10 @@ export default function Home() {
             <button className="side-link shared-memory-link" onClick={() => { openMemory(); setMobileMenuOpen(false); }}><ShieldCheck size={16}/> Saved memory</button>
             <div className="side-label mobile-history-label">All conversations <span>{historyItems.length}</span></div>
             <div className="mobile-history-list shared-navigation-history">
-              {historyItems.length ? historyItems.map((item) => <div className="history-item-row" key={item.id}>
+              {isSignedIn && historyItems.length ? historyItems.map((item) => <div className="history-item-row" key={item.id}>
                 <button type="button" className={"side-link history-item-open " + (activeConversationId === item.id ? "active" : "")} onClick={() => { void loadConversation(item.id); setMobileMenuOpen(false); }} disabled={loadingConversationId === item.id}><History size={15}/><span>{loadingConversationId === item.id ? "Opening…" : item.title}</span></button>
                 <button type="button" className="history-delete" aria-label={"Delete " + item.title} title={"Delete " + item.title} onClick={() => { requestDeleteConversation(item.id); setMobileMenuOpen(false); }}><Trash2 size={15}/></button>
-              </div>) : <p className="history-empty">{isSignedIn ? "Your saved conversations will appear here." : "Guest chats stay on this device. Sign in to sync across devices."}</p>}
+              </div>) : <p className="history-empty">{isSignedIn ? "Your saved conversations will appear here." : "Sign in to save private conversations."}</p>}
             </div>
             <div className="mobile-nav-bottom shared-navigation-account">
               <div className="profile-row">
@@ -1180,6 +1128,7 @@ export default function Home() {
       <section className="main-panel">
         <header className="topbar">
           <div className="topbar-left">
+            <button type="button" className="desktop-sidebar-toggle" onClick={toggleDesktopSidebar} aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"} title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}>{sidebarCollapsed ? <PanelLeftOpen size={18}/> : <PanelLeftClose size={18}/>}</button>
             <button className="icon-button mobile-menu" onClick={() => setMobileMenuOpen(true)} aria-label="Open menu"><Menu size={18} /></button>
             <div className="chat-header-brand"><span className="brand-mark"><MoonStar size={17} /></span><span className="brand-name">vedic<span style={{ color: "var(--gold)" }}>.</span>ai</span></div>
             <div className="mode-pill" aria-label="Vedic AI preview status"><span className="status-dot" /> <span className="mode-pill-name">Vedic AI</span> <span className="mode-pill-preview" style={{ color: "var(--quiet)" }}>· Preview</span></div>
@@ -1191,7 +1140,7 @@ export default function Home() {
             </button>
             {isSignedIn ? <button className="topbar-link topbar-signout-icon" onClick={signOut} title="Sign out" aria-label="Sign out"><LogOut size={17} /></button> : <Link href="/login" className="topbar-link" title="Sign in" aria-label="Sign in"><UserRound size={14}/> <span>Sign in</span></Link>}
             <button className="topbar-link" title={savedBirth ? "Edit birth details" : "Add birth details"} aria-label={savedBirth ? "Edit birth details" : "Add birth details"} onClick={() => setIsBirthOpen(true)}><Orbit size={14} /><span>{savedBirth ? "Birth profile" : "Birth details"}</span></button>
-            <button className="icon-button topbar-notifications" aria-label="Enable notifications" title="Notification settings" onClick={() => { if (typeof Notification !== "undefined" && Notification.permission === "granted") setToast("Notifications are already enabled for this browser."); else setNotificationPromptOpen(true); }}><span aria-hidden="true">♧</span></button>
+            <button className="icon-button topbar-notifications" aria-label="Enable notifications" title="Notification settings" onClick={() => { if (typeof Notification !== "undefined" && Notification.permission === "granted") setToast("Notifications are already enabled for this browser."); else setNotificationPromptOpen(true); }}><Bell size={16}/></button>
             <button className="icon-button topbar-help" aria-label="Help and product status" title="Help & status" onClick={() => setToast("Vedic AI is an early preview. Astrology calculations need reference-chart validation; AI and saved history depend on configured services.")}><CircleHelp size={17} /></button>
           </div>
         </header>
