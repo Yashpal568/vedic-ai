@@ -18,7 +18,7 @@ const links = [
   { label: "My profile", href: "/profile", Icon: UserRound, key: "profile", detail: "Your account settings" },
 ];
 
-export default function AppNavigationDrawer({ open, onClose, extraContent, onHome, onKundli, onWorkspace }: { open: boolean; onClose: () => void; extraContent?: ReactNode; onHome?: () => void; onKundli?: () => void; onWorkspace?: () => void }) {
+export default function AppNavigationDrawer({ open, onClose, extraContent, accountContent, onHome, onKundli, onWorkspace }: { open: boolean; onClose: () => void; extraContent?: ReactNode; accountContent?: ReactNode; onHome?: () => void; onKundli?: () => void; onWorkspace?: () => void }) {
   const pathname = usePathname();
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
   if (!open) return null;
@@ -31,7 +31,7 @@ export default function AppNavigationDrawer({ open, onClose, extraContent, onHom
     <aside className="mobile-nav-drawer shared-navigation-drawer" aria-label="App navigation" onClick={(event) => event.stopPropagation()}>
       <div className="mobile-nav-head shared-navigation-head">
         <Link href="/chat" className="brand sidebar-brand-premium" onClick={onClose} aria-label="Vedic AI home">
-          <span className="brand-mark"><MoonStar size={21}/></span>
+          <span className="brand-mark"><img src="/vedic-ai-emblem.svg" alt="" /></span>
           <span className="sidebar-brand-copy"><span className="sidebar-brand-line"><span className="brand-name">vedic<span style={{ color: "var(--gold)" }}>.</span>ai</span></span><span className="brand-sub">Your Jyotish space</span></span>
         </Link>
         <button type="button" className="icon-button" onClick={onClose} aria-label="Close navigation"><X size={18}/></button>
@@ -46,6 +46,7 @@ export default function AppNavigationDrawer({ open, onClose, extraContent, onHom
         </nav>}
         {extraContent}
       </div>
+      {accountContent && <div className="shared-navigation-account-fixed">{accountContent}</div>}
       <div className="shared-navigation-footer"><span/> Vedic AI · Astrology companion</div>
     </aside>
   </div>;
