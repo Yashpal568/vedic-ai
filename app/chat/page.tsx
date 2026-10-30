@@ -349,7 +349,7 @@ export default function Home() {
       setAccountName(String(user?.user_metadata?.display_name || user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split("@")[0] || ""));
       setAccountAvatar(String(user?.user_metadata?.avatar_url || user?.user_metadata?.picture || ""));
     };
-    supabase.auth.getUser().then(({ data }) => applyUser(data.user));
+    supabase.auth.getUser().then(({ data }) => applyUser(data.user)).catch(() => setAuthReady(true));
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       applyUser(session?.user || null);
     });
@@ -424,70 +424,29 @@ export default function Home() {
   }
 
   async function loadConversation(id: string) {
+    if (!isSignedIn) { setToast("Sign in to open your saved conversations."); return; }
     const requestId = ++conversationLoadRequestRef.current;
     setLoadingConversationId(id);
     try {
-      if (id.startsWith("guest-")) {
-        const raw = window.localStorage.getItem("vedic-chat-cache-v1:" + id);
-        const cached = raw ? JSON.parse(raw) as { messages?: Message[] } : null;
-        const localMessages = Array.isArray(cached?.messages) ? cached.messages.filter((message) =>
-          (message.role === "user" || message.role === "assistant") && typeof message.content === "string" && message.content.trim()
-        ) : [];
-        if (!localMessages.length) throw new Error("This local conversation has no saved messages.");
-        if (requestId !== conversationLoadRequestRef.current) return;
-        setMessages(localMessages);
-        setActiveConversationId(id);
-        setChartReport(null);
-        setTransitReport(null);
-        window.history.replaceState({}, "", "/chat?conversation=" + encodeURIComponent(id));
-        setMobileMenuOpen(false);
-        return;
-      }
       const response = await fetch("/api/conversations?id=" + encodeURIComponent(id), { cache: "no-store" });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Could not load conversation.");
-      let loadedMessages = Array.isArray(data.messages)
+      const loadedMessages: Message[] = Array.isArray(data.messages)
         ? data.messages.filter((message: { role?: string; content?: string }) =>
             (message.role === "user" || message.role === "assistant") && typeof message.content === "string" && message.content.trim()
           ).map((message: { id?: string; role: "user" | "assistant"; content: string }, index: number) => ({
             id: message.id || id + "-" + index, role: message.role, content: message.content,
           }))
         : [];
-      if (!loadedMessages.length) {
-        try {
-          const cached = window.localStorage.getItem("vedic-chat-cache-v1:" + id);
-          const parsed = cached ? JSON.parse(cached) as { messages?: Message[] } : null;
-          if (Array.isArray(parsed?.messages)) loadedMessages = parsed.messages.filter((message) =>
-            (message.role === "user" || message.role === "assistant") && typeof message.content === "string" && message.content.trim()
-          );
-          if (!loadedMessages.length) {
-            const pendingRaw = window.localStorage.getItem("vedic-pending-chat-v1");
-            const pending = pendingRaw ? JSON.parse(pendingRaw) as { conversationId?: string | null; messages?: Message[] } : null;
-            if (pending?.conversationId === id && Array.isArray(pending.messages)) loadedMessages = pending.messages.filter((message) =>
-              (message.role === "user" || message.role === "assistant") && typeof message.content === "string" && message.content.trim()
-            );
-          }
-        } catch {}
-      }
       if (requestId !== conversationLoadRequestRef.current) return;
-      if (!loadedMessages.length) throw new Error("This conversation has no readable saved messages. Your other conversations have not been changed.");
+      if (!loadedMessages.length) throw new Error("This conversation has no readable saved messages.");
       setMessages(loadedMessages);
       setActiveConversationId(id);
       setChartReport(data.chartReport || null);
       setTransitReport(null);
       if (data.chartReport?.birth) {
-        setSavedBirth({
-          name: "",
-          date: data.chartReport.birth.date,
-          time: data.chartReport.birth.time,
-          place: data.chartReport.birth.place,
-          latitude: data.chartReport.birth.latitude,
-          longitude: data.chartReport.birth.longitude,
-          timezone: data.chartReport.birth.timezone,
-        });
-      } else {
-        setSavedBirth(null);
-      }
+        setSavedBirth({ name: "", date: data.chartReport.birth.date, time: data.chartReport.birth.time, place: data.chartReport.birth.place, latitude: data.chartReport.birth.latitude, longitude: data.chartReport.birth.longitude, timezone: data.chartReport.birth.timezone });
+      } else setSavedBirth(null);
       window.history.replaceState({}, "", "/chat?conversation=" + encodeURIComponent(id));
       setMobileMenuOpen(false);
     } catch (error) {
@@ -503,24 +462,14 @@ export default function Home() {
   }
 
   async function deleteConversation(id: string) {
+    if (!isSignedIn) { setToast("Sign in to delete saved conversations."); return; }
     if (deletingConversationId) return;
     setDeletingConversationId(id);
     try {
-      if (id.startsWith("guest-")) {
-        window.localStorage.removeItem("vedic-chat-cache-v1:" + id);
-        const next = historyItems.filter((item) => item.id !== id);
-        setHistoryItems(next);
-        window.localStorage.setItem("vedic-guest-conversations-v1", JSON.stringify(next));
-        if (activeConversationId === id) startNewChat();
-        setPendingDeleteConversation(null);
-        setToast("Local conversation deleted.");
-        return;
-      }
       const response = await fetch("/api/conversations?id=" + encodeURIComponent(id), { method: "DELETE", cache: "no-store" });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Could not delete conversation.");
       setHistoryItems((items) => items.filter((item) => item.id !== id));
-      try { window.localStorage.removeItem("vedic-chat-cache-v1:" + id); } catch {}
       if (activeConversationId === id) startNewChat();
       setPendingDeleteConversation(null);
       setToast("Conversation deleted successfully.");
