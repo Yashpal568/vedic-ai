@@ -5250,3 +5250,117 @@ html[data-theme="light"] .birth-calendar-layer .birth-calendar-today { color:#73
 .app-shell[data-theme="light"] .stitch-mobile-drawer .stitch-featured-copy small {color:#7f8798!important}
 .app-shell[data-theme="light"] .stitch-mobile-drawer .stitch-account-fixed .profile-name {color:#283145!important}
 .app-shell[data-theme="light"] .stitch-mobile-drawer .stitch-account-fixed .profile-caption {color:#7a8395!important}
+
+/* Mobile conversation history — compact two-line rows like the supplied reference. */
+.stitch-mobile-drawer .stitch-history-section {
+  gap:7px!important;
+  padding-top:14px!important;
+}
+.stitch-mobile-drawer .mobile-history-label {
+  margin:0 2px 4px!important;
+  padding:0 4px 8px!important;
+  font-size:9px!important;
+  letter-spacing:1.65px!important;
+}
+.stitch-mobile-drawer .mobile-history-list {
+  gap:2px!important;
+  padding:0 0 6px!important;
+}
+.stitch-mobile-drawer .mobile-history-list .history-item-row {
+  position:relative!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:3px!important;
+  min-height:49px!important;
+  margin:0!important;
+  padding:0 3px!important;
+  border:1px solid transparent!important;
+  border-radius:10px!important;
+  background:transparent!important;
+}
+.stitch-mobile-drawer .mobile-history-list .history-item-row:hover {
+  background:rgba(255,255,255,.025)!important;
+}
+.stitch-mobile-drawer .mobile-history-list .history-item-open {
+  display:flex!important;
+  flex:1 1 auto!important;
+  align-items:center!important;
+  min-width:0!important;
+  min-height:47px!important;
+  margin:0!important;
+  padding:6px 7px!important;
+  gap:10px!important;
+  border:1px solid transparent!important;
+  border-radius:9px!important;
+  background:transparent!important;
+  color:#d9deea!important;
+}
+.stitch-mobile-drawer .mobile-history-list .history-item-open>svg {
+  width:13px!important;
+  height:13px!important;
+  flex:0 0 13px!important;
+  color:#8e9bb0!important;
+  stroke-width:1.8!important;
+}
+.stitch-mobile-drawer .mobile-history-copy {
+  display:flex!important;
+  flex:1 1 auto!important;
+  flex-direction:column!important;
+  align-items:flex-start!important;
+  justify-content:center!important;
+  min-width:0!important;
+  gap:4px!important;
+  overflow:hidden!important;
+}
+.stitch-mobile-drawer .mobile-history-copy strong {
+  display:block!important;
+  width:100%!important;
+  overflow:hidden!important;
+  color:#e0e5ef!important;
+  font-size:10.5px!important;
+  font-weight:550!important;
+  line-height:1.25!important;
+  letter-spacing:.02px!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+.stitch-mobile-drawer .mobile-history-copy small {
+  display:block!important;
+  color:#8390a5!important;
+  font-size:8px!important;
+  font-weight:450!important;
+  line-height:1.2!important;
+  letter-spacing:.05px!important;
+}
+.stitch-mobile-drawer .mobile-history-list .history-item-open.active {
+  border-color:rgba(214,184,116,.13)!important;
+  background:linear-gradient(105deg,rgba(255,255,255,.055),rgba(255,255,255,.018))!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.012)!important;
+}
+.stitch-mobile-drawer .mobile-history-list .history-item-open.active>svg {
+  color:#d8bb79!important;
+}
+.stitch-mobile-drawer .mobile-history-list .history-delete {
+  width:26px!important;
+  height:28px!important;
+  flex:0 0 26px!important;
+  opacity:.32!important;
+  border:0!important;
+  border-radius:7px!important;
+  background:transparent!important;
+  color:#a17f83!important;
+}
+.stitch-mobile-drawer .mobile-history-list .history-item-row:focus-within .history-delete,
+.stitch-mobile-drawer .mobile-history-list .history-delete:focus-visible {
+  opacity:1!important;
+}
+.stitch-mobile-drawer .mobile-history-list .history-delete:hover {
+  background:rgba(190,80,92,.12)!important;
+  color:#e18c96!important;
+}
+.app-shell[data-theme="light"] .stitch-mobile-drawer .mobile-history-copy strong {color:#333c4f!important}
+.app-shell[data-theme="light"] .stitch-mobile-drawer .mobile-history-copy small {color:#8790a0!important}
+.app-shell[data-theme="light"] .stitch-mobile-drawer .mobile-history-list .history-item-open.active {
+  border-color:rgba(150,119,58,.15)!important;
+  background:linear-gradient(105deg,rgba(218,184,112,.12),rgba(255,255,255,.85))!important;
+}
