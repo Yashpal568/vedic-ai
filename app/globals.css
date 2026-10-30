@@ -4512,3 +4512,100 @@ html[data-theme="light"] .birth-calendar-layer .birth-calendar-today { color:#73
   }
   .app-shell:not([data-theme="light"]) .main-panel > .content-scroll { background:linear-gradient(180deg,rgba(4,7,15,.08),rgba(4,7,15,.16)); }
 }
+
+
+/* Vedic AI desktop refinement: smooth, independently scrolling sidebar and wide cosmic canvas. */
+@media (min-width:681px) {
+  .app-shell > .sidebar {
+    overflow:hidden;
+    contain:layout paint;
+    transition:width .18s ease, flex-basis .18s ease, padding .18s ease;
+    background:
+      radial-gradient(ellipse at 8% 0%,rgba(212,183,122,.075),transparent 34%),
+      radial-gradient(ellipse at 100% 78%,rgba(61,91,151,.12),transparent 38%),
+      linear-gradient(180deg,#080d1a 0%,#070b16 58%,#060914 100%) !important;
+    border-right:1px solid rgba(212,183,122,.14) !important;
+  }
+  .app-shell .sidebar-history {
+    display:flex;
+    flex:1 1 auto;
+    flex-direction:column;
+    min-height:0;
+    margin:0;
+    overflow:hidden;
+  }
+  .app-shell .sidebar-history-label {
+    flex:0 0 auto;
+    margin:18px 6px 9px !important;
+    padding-top:15px !important;
+  }
+  .app-shell .sidebar-history-list {
+    flex:1 1 auto;
+    min-height:0;
+    overflow-x:hidden;
+    overflow-y:auto;
+    padding:0 3px 8px 0;
+    overscroll-behavior:contain;
+    scrollbar-width:thin;
+    scrollbar-color:rgba(212,183,122,.22) transparent;
+  }
+  .app-shell .sidebar-history-list::-webkit-scrollbar { width:5px; }
+  .app-shell .sidebar-history-list::-webkit-scrollbar-track { background:transparent; }
+  .app-shell .sidebar-history-list::-webkit-scrollbar-thumb { border-radius:99px; background:rgba(212,183,122,.2); }
+  .app-shell .sidebar-history-list::-webkit-scrollbar-thumb:hover { background:rgba(212,183,122,.4); }
+  .app-shell .sidebar-history-list .history-item-row { contain:layout paint; margin:3px 0; }
+  .app-shell .sidebar .side-link {
+    transition:background-color .14s ease,color .14s ease,border-color .14s ease;
+  }
+  .app-shell .sidebar .side-link:hover {
+    transform:none !important;
+    background:rgba(255,255,255,.055) !important;
+    border-color:rgba(212,183,122,.12) !important;
+  }
+  .app-shell .sidebar .side-link.active {
+    background:linear-gradient(100deg,rgba(212,183,122,.15),rgba(255,255,255,.035)) !important;
+    border-color:rgba(212,183,122,.22) !important;
+    box-shadow:inset 2px 0 rgba(230,204,145,.9);
+  }
+  .app-shell .sidebar .history-delete {
+    opacity:.62;
+    transition:opacity .14s ease,background-color .14s ease,border-color .14s ease;
+  }
+  .app-shell .sidebar .history-item-row:hover .history-delete,
+  .app-shell .sidebar .history-item-row:focus-within .history-delete { opacity:1; }
+  .app-shell.sidebar-is-collapsed .sidebar-history { display:none !important; }
+  .app-shell.sidebar-is-collapsed .sidebar { flex-basis:82px; width:82px; }
+  .app-shell .main-panel { position:relative; isolation:isolate; }
+  .app-shell:not([data-theme="light"]) .main-panel:has(.welcome-wrap),
+  .app-shell:not([data-theme="light"]) .main-panel:has(.chat-area) {
+    background-color:#050914 !important;
+    background-image:
+      linear-gradient(90deg,rgba(4,7,15,.64),rgba(4,7,15,.34) 52%,rgba(4,7,15,.48)),
+      linear-gradient(180deg,rgba(4,7,15,.16),rgba(4,7,15,.48)),
+      url("/cosmic-jyotish-desktop.svg") !important;
+    background-position:center center !important;
+    background-size:cover !important;
+    background-repeat:no-repeat !important;
+    background-attachment:scroll !important;
+  }
+  .app-shell:not([data-theme="light"]) .main-panel > .content-scroll {
+    background:linear-gradient(180deg,rgba(4,7,15,.035),rgba(4,7,15,.12)) !important;
+  }
+}
+@media (min-width:1440px) {
+  .app-shell .welcome-wrap { width:min(100%,1080px); }
+  .app-shell .chat-area { width:min(100%,1080px); }
+  .app-shell .composer-wrap { width:min(100%,1000px); }
+  .app-shell .welcome-wrap { padding-top:clamp(36px,5vh,68px); }
+}
+@media (min-width:1920px) {
+  .app-shell .welcome-wrap { width:min(100%,1160px); }
+  .app-shell .chat-area { width:min(100%,1160px); }
+  .app-shell .composer-wrap { width:min(100%,1080px); }
+}
+@media (prefers-reduced-motion:reduce) {
+  .app-shell .sidebar,
+  .app-shell .sidebar *,
+  .app-shell .desktop-sidebar-toggle,
+  .app-shell .sidebar-collapse-toggle { transition:none !important; animation:none !important; }
+}
