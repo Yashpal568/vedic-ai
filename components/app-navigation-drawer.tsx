@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
-  BookOpen, CalendarDays, ChevronDown, Hand, House, MessageCircle, MoonStar, Orbit, UserRound, X,
+  BookOpen, CalendarDays, ChevronDown, Hand, House, MessageCircle, Orbit, UserRound, X,
 } from "lucide-react";
 
 const links = [
