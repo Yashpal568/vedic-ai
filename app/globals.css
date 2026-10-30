@@ -4609,3 +4609,12 @@ html[data-theme="light"] .birth-calendar-layer .birth-calendar-today { color:#73
   .app-shell .desktop-sidebar-toggle,
   .app-shell .sidebar-collapse-toggle { transition:none !important; animation:none !important; }
 }
+
+/* Keep the fixed composer aligned with the actual desktop sidebar width. */
+@media (min-width:681px) {
+  .app-shell .chat-footer {
+    left:282px;
+    transition:left .18s ease;
+  }
+  .app-shell.sidebar-is-collapsed .chat-footer { left:82px; }
+}
