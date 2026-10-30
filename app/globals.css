@@ -4836,3 +4836,54 @@ html[data-theme="light"] .birth-calendar-layer .birth-calendar-today { color:#73
   background:#f7f8fb;
   border-color:#e4e7ef !important;
 }
+
+/* Reserve a dedicated non-scrolling row for the account/profile panel. */
+.app-shell > .sidebar {
+  display:grid !important;
+  grid-template-rows:auto minmax(0,1fr) auto !important;
+  height:100dvh !important; min-height:0 !important; max-height:100dvh !important;
+  overflow:hidden !important;
+}
+.app-shell > .sidebar > .sidebar-head { grid-row:1; min-height:0; }
+.app-shell > .sidebar > .sidebar-scroll-area {
+  grid-row:2; min-height:0 !important; height:auto !important; max-height:none !important;
+  overflow-x:hidden !important; overflow-y:auto !important; overscroll-behavior:contain;
+}
+.app-shell > .sidebar > .sidebar-bottom {
+  grid-row:3; display:block !important; visibility:visible !important;
+  position:relative !important; inset:auto !important; flex:none !important;
+  min-height:max-content !important; max-height:none !important; overflow:visible !important;
+  margin:0 !important; padding:8px 0 max(2px,env(safe-area-inset-bottom)) !important;
+  border-top:1px solid rgba(212,183,122,.16);
+  background:linear-gradient(180deg,rgba(7,11,22,.97),#070b16 35%) !important; z-index:5;
+}
+.app-shell > .sidebar > .sidebar-bottom .plan-card { margin:5px 2px 8px !important; padding:9px 10px !important; }
+.app-shell > .sidebar > .sidebar-bottom .plan-card p { margin:5px 0 7px !important; }
+.app-shell > .sidebar > .sidebar-bottom .profile-row {
+  display:flex !important; visibility:visible !important; min-height:48px;
+  margin:0 2px !important; padding:8px 5px 2px !important;
+}
+@media (max-height:760px) {
+  .app-shell > .sidebar > .sidebar-bottom .plan-card { display:none !important; }
+}
+.mobile-nav-drawer {
+  display:grid !important; grid-template-rows:auto auto minmax(0,1fr) auto auto !important;
+  height:100dvh !important; max-height:100dvh !important; min-height:0 !important; overflow:hidden !important;
+}
+.mobile-nav-drawer > .mobile-nav-head { grid-row:1; }
+.mobile-nav-drawer > .mobile-drawer-new { grid-row:2; }
+.mobile-nav-drawer > .mobile-drawer-scroll {
+  grid-row:3; min-height:0 !important; height:auto !important; max-height:none !important;
+  overflow-x:hidden !important; overflow-y:auto !important; overscroll-behavior:contain;
+}
+.mobile-nav-drawer > .shared-navigation-footer { grid-row:4; min-height:30px; }
+.mobile-nav-drawer > .shared-navigation-account-fixed {
+  grid-row:5; display:block !important; visibility:visible !important; position:relative !important;
+  flex:none !important; min-height:max-content !important; margin:0 -16px !important;
+  padding:9px 16px max(10px,env(safe-area-inset-bottom)) !important;
+  border-top:1px solid rgba(212,183,122,.18); background:#080c16 !important; z-index:10;
+}
+.mobile-nav-drawer .shared-navigation-account-fixed .mobile-nav-bottom,
+.mobile-nav-drawer .shared-navigation-account-fixed .profile-row {
+  display:flex !important; visibility:visible !important;
+}
