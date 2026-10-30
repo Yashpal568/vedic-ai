@@ -1022,7 +1022,8 @@ export default function Home() {
         </button>
         <button type="button" className="sidebar-collapse-toggle" onClick={toggleDesktopSidebar} aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"} title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}>{sidebarCollapsed ? <PanelLeftOpen size={17}/> : <PanelLeftClose size={17}/>}</button>
         </div>
-        <button className="new-chat sidebar-new-chat" onClick={startNewChat}><Plus size={17} /> <span>New conversation</span></button>
+                <div className="sidebar-scroll-area">
+<button className="new-chat sidebar-new-chat" onClick={startNewChat}><Plus size={17} /> <span>New conversation</span></button>
         <button type="button" className="side-label sidebar-workspace-label sidebar-workspace-toggle" aria-expanded={workspaceExpanded} onClick={() => setWorkspaceExpanded((expanded) => !expanded)}><span>Workspace</span><span className="sidebar-workspace-toggle-right"><span className="sidebar-tool-count">7 Tools</span><ChevronDown size={15} className={workspaceExpanded ? "workspace-chevron expanded" : "workspace-chevron"} /></span></button>
         {workspaceExpanded && <div className="sidebar-workspace-items">
         <button className="side-link active" onClick={startNewChat}><MessageCircle size={17} /> <span>Astrology chat</span><span className="sidebar-active-dot" /></button>
@@ -1038,6 +1039,7 @@ export default function Home() {
             {isSignedIn && historyItems.length ? historyItems.map((item) => <div className="history-item-row" key={item.id}><button type="button" className={"side-link history-item-open " + (activeConversationId === item.id ? "active" : "")} onClick={() => void loadConversation(item.id)} disabled={loadingConversationId === item.id}><History size={15} /><span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{loadingConversationId === item.id ? "Opening…" : item.title}</span></button><button type="button" className="history-delete" aria-label={"Delete " + item.title} title={"Delete " + item.title} onClick={() => requestDeleteConversation(item.id)}><Trash2 size={15}/></button></div>) : <p className="history-empty">{isSignedIn ? "Your saved conversations will appear here." : "Sign in to save private conversations."}</p>}
           </div>
         </section>
+        </div>
         <div className="sidebar-bottom">
           <div className="plan-card">
             <div className="plan-top"><Gem size={14} /> YOUR COSMIC JOURNEY</div>
