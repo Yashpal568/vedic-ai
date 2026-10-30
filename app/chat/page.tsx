@@ -25,11 +25,11 @@ type VoiceRecognition = { lang: string; interimResults: boolean; continuous: boo
 type VoiceWindow = Window & { SpeechRecognition?: new () => VoiceRecognition; webkitSpeechRecognition?: new () => VoiceRecognition };
 
 const suggestions = [
-  { title: "Kundli banwa lo", description: "Generate your Janam Kundli, Lagna and houses.", prompt: "Give me a personalised overview of my calculated Vedic birth chart, including Lagna, houses and planetary placements. Use only values present in my calculated chart.", icon: Orbit },
+  { title: "Generate Your Birth Chart", description: "Explore your Vedic birth chart, ascendant and houses.", prompt: "Give me a personalised overview of my calculated Vedic birth chart, including Lagna, houses and planetary placements. Use only values present in my calculated chart.", icon: Orbit },
   { title: "Relationship & marriage compatibility", description: "Explore traditional relationship themes and compatibility.", prompt: "Analyse traditional relationship themes from my calculated birth chart using the 7th house and lord, Venus, Moon, and Navamsa only if validated data is available. Separate chart facts from symbolic interpretation and do not guarantee events.", icon: Heart },
   { title: "Career & 10th house direction", description: "Explore career indicators and traditional timing factors.", prompt: "Analyse career and work themes from my calculated birth chart. Examine the 10th house and lord, 6th house, 2nd and 11th houses, Lagna and lord, and current Vimshottari dasha only where calculated data supports it. Do not invent placements or dates.", icon: BriefcaseBusiness },
   { title: "Current Mahadasha & remedies", description: "Understand calculated dasha periods and optional traditions.", prompt: "Explain my calculated Vimshottari Mahadasha and Antardasha if available. Suggest only optional, low-risk traditional practices and clearly distinguish symbolism from evidence.", icon: Gem },
-  { title: "Today's Shubh Muhurat & Panchang", description: "View tithi, nakshatra, yoga and local daily timings.", prompt: "Help me understand today's Panchang and traditional timing concepts. Direct me to the live Panchang page for location-based timings.", icon: CalendarDays },
+  { title: "Today's Auspicious Timings & Panchang", description: "View lunar day, nakshatra, yoga and local daily timings.", prompt: "Help me understand today's Panchang and traditional timing concepts. Direct me to the live Panchang page for location-based timings.", icon: CalendarDays },
 ];
 const makeId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
