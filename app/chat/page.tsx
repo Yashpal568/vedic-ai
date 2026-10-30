@@ -1065,7 +1065,6 @@ export default function Home() {
         onKundli={() => setIsBirthOpen(true)}
         extraContent={
           <>
-            <button className="side-link shared-memory-link" onClick={() => { openMemory(); setMobileMenuOpen(false); }}><ShieldCheck size={16}/> Saved memory</button>
             <div className="side-label mobile-history-label">All conversations <span>{historyItems.length}</span></div>
             <div className="mobile-history-list shared-navigation-history">
               {isSignedIn && historyItems.length ? historyItems.map((item) => <div className="history-item-row" key={item.id}>
