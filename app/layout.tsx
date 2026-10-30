@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   title: { default: "Vedic AI — Your Personal Vedic Astrology Companion", template: "%s | Vedic AI" },
   description: "Explore your Vedic birth chart through a thoughtful AI astrology experience. Understand planetary placements, nakshatras, dashas, and traditional Jyotish concepts in one calm, conversational workspace.",
   applicationName: "Vedic AI",
+  icons: { icon: "/vedic-ai-emblem.svg", shortcut: "/vedic-ai-emblem.svg", apple: "/vedic-ai-emblem.svg" },
   keywords: ["Vedic astrology", "Kundli", "Birth chart", "Jyotish", "Nakshatra", "AI astrologer", "Vimshottari dasha"],
   openGraph: {
     title: "Vedic AI — A clearer way to explore your kundli",
