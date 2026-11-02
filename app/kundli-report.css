@@ -1,0 +1,71 @@
+/* Kundli report readability layer — keeps the existing dark + antique-gold identity. */
+.chart-panel {
+  --report-gold: #e6cc91;
+  --report-muted: #aeb4c2;
+  color: #edf0f6;
+  padding: clamp(18px, 2.8vw, 30px);
+  border-color: rgba(212,183,122,.24);
+  background:
+    radial-gradient(ellipse at 88% 4%, rgba(212,183,122,.075), transparent 34%),
+    linear-gradient(150deg, rgba(18,23,36,.97), rgba(10,14,24,.98));
+}
+.chart-panel-head { align-items: center; row-gap: 12px; }
+.chart-title { font-size: clamp(23px, 2.4vw, 30px); line-height: 1.25; }
+.chart-subtitle { font-size: 12px; line-height: 1.65; color: #a0a8b8; }
+.chart-stat, .chart-subpanel, .kundli-summary-point, .kundli-house-summary-card {
+  background: rgba(12,17,29,.64);
+  border-color: rgba(180,190,211,.15);
+  box-shadow: inset 0 1px rgba(255,255,255,.025);
+}
+.chart-stat { min-height: 104px; padding: 16px; gap: 9px; }
+.chart-stat span, .house-cell span { font-size: 11px; letter-spacing: .06em; line-height: 1.5; }
+.chart-stat strong { font-size: 18px; line-height: 1.3; color: #f0d99e; }
+.chart-stat small { font-size: 12px; line-height: 1.65; color: #aeb5c4; }
+.chart-secondary-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; margin-top: 18px; align-items: start; }
+.chart-subpanel { min-width: 0; padding: clamp(16px,2vw,22px); border: 1px solid rgba(180,190,211,.15); border-radius: 15px; }
+.chart-subpanel h3 { margin: 0; color: #f0d99e; font: 650 17px/1.4 Manrope,sans-serif; letter-spacing: -.2px; }
+.chart-subcopy { margin: 8px 0 15px; color: #aeb5c4; font-size: 12px; line-height: 1.75; }
+.house-grid { gap: 9px; }
+.house-cell { min-height: 98px; padding: 13px; border-color: rgba(180,190,211,.15); border-radius: 12px; background: rgba(255,255,255,.025); }
+.house-cell strong { display: block; margin-top: 7px; color: #f0d99e; font: 650 15px/1.35 Manrope,sans-serif; }
+.house-cell small { display: block; margin-top: 7px; color: #b7bfce; font-size: 11px; line-height: 1.55; }
+.dasha-list { gap: 8px; }
+.dasha-row { min-height: 66px; padding: 12px 13px; border: 1px solid rgba(180,190,211,.12); border-radius: 11px; background: rgba(255,255,255,.022); }
+.dasha-row strong { color: #f0d99e; font-size: 14px; line-height: 1.4; }
+.dasha-row small { margin-top: 5px; color: #aeb5c4; font-size: 11px; line-height: 1.6; }
+.dasha-years { color: #d8dce6; font-size: 12px; }
+.experimental-label { display: inline-flex; vertical-align: middle; margin-left: 7px; padding: 4px 8px; border: 1px solid rgba(212,183,122,.28); border-radius: 7px; color: #e6cc91; background: rgba(212,183,122,.07); font: 600 9px/1.3 "DM Sans",sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+.kundli-summary-heading { margin: 30px 0 15px; }
+.kundli-summary-heading h2 { margin: 8px 0 6px; color: #f3e5c1; font: 650 clamp(21px,2.2vw,27px)/1.3 Manrope,sans-serif; letter-spacing: -.45px; }
+.kundli-summary-heading p, .kundli-house-summary-heading p { max-width: 760px; margin: 0; color: #aeb5c4; font-size: 13px; line-height: 1.8; }
+.kundli-summary-points { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 11px; }
+.kundli-summary-point { display: flex; align-items: flex-start; gap: 12px; min-width: 0; padding: 15px; border: 1px solid rgba(180,190,211,.14); border-radius: 13px; }
+.kundli-summary-point>span { display: grid; place-items: center; flex: 0 0 26px; width: 26px; height: 26px; border: 1px solid rgba(212,183,122,.3); border-radius: 8px; color: #f0d99e; background: rgba(212,183,122,.08); font-size: 11px; font-weight: 700; }
+.kundli-summary-point p { margin: 1px 0 0; color: #d1d6e0; font-size: 13px; line-height: 1.8; }
+.kundli-house-summary-heading { margin: 30px 0 13px; }
+.kundli-house-summary-heading h3 { margin: 0 0 6px; color: #f0d99e; font: 650 18px/1.4 Manrope,sans-serif; }
+.kundli-house-summary-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 11px; }
+.kundli-house-summary-card { min-width: 0; padding: 16px; border: 1px solid rgba(180,190,211,.14); border-radius: 13px; }
+.kundli-house-summary-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.kundli-house-summary-top span { color: #aeb5c4; font-size: 10px; font-weight: 650; letter-spacing: .1em; }
+.kundli-house-summary-top strong { color: #f0d99e; font: 650 14px/1.3 Manrope,sans-serif; }
+.kundli-house-summary-card h4 { margin: 12px 0 7px; color: #edf0f6; font: 650 14px/1.45 Manrope,sans-serif; }
+.kundli-house-summary-card p { margin: 0; color: #c0c7d4; font-size: 12px; line-height: 1.8; }
+.kundli-house-summary-card small { display: block; margin-top: 11px; padding-top: 9px; border-top: 1px solid rgba(180,190,211,.1); color: #e0c987; font-size: 10px; line-height: 1.6; }
+.chart-table-wrap { margin-top: 18px; border-color: rgba(180,190,211,.17); border-radius: 13px; background: rgba(12,17,29,.55); }
+.chart-table { min-width: 760px; font-size: 12px; }
+.chart-table th { padding: 13px 14px; color: #e4d2a6; background: rgba(212,183,122,.065); font-size: 11px; letter-spacing: .025em; }
+.chart-table td { padding: 13px 14px; color: #d5dbe5; border-top-color: rgba(180,190,211,.1); }
+.chart-table td:first-child { color: #f0d99e; }
+.chart-disclaimer { margin-top: 16px; padding: 13px 15px; border: 1px solid rgba(212,183,122,.17); border-radius: 11px; background: rgba(212,183,122,.045); color: #b6bdca; font-size: 11px; line-height: 1.8; }
+@media(max-width:760px) {
+  .chart-secondary-grid, .kundli-summary-points, .kundli-house-summary-grid { grid-template-columns: 1fr; }
+  .chart-panel { padding: 16px; border-radius: 15px; }
+  .chart-stat { min-height: 0; }
+  .chart-subpanel { padding: 16px; }
+  .kundli-summary-point { padding: 13px; }
+  .kundli-house-summary-card { padding: 14px; }
+}
+@media(min-width:761px) {
+  .chart-secondary-grid > .chart-subpanel { height: 100%; }
+}
