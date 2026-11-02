@@ -122,10 +122,13 @@ export default function PalmReadingPage() {
       <div className="palm-grid">
         <section className="palm-upload-card">
           <div className="palm-card-title"><Camera size={18}/> Your palm photo</div>
-          <label className={"palm-dropzone" + (image ? " has-image" : "")} htmlFor="palm-photo-input">
-            {image ? <><img src={image} alt="Selected palm preview"/><span className="palm-change"><RefreshCw size={14}/> Change photo</span></> : <><span className="palm-upload-icon"><ImagePlus size={24}/></span><strong>Upload a palm photo</strong><span>Choose from camera or gallery · JPG, PNG, WebP or HEIC</span><span className="palm-choose"><Upload size={15}/> Choose photo</span></>}
-            <input ref={inputRef} id="palm-photo-input" className="palm-file-input" type="file" accept="image/*,.heic,.heif" onChange={chooseImage} aria-label="Choose a palm photo"/>
-          </label>
+          <div className={"palm-dropzone" + (image ? " has-image" : "")}>
+            {image ? <><img src={image} alt="Selected palm preview"/><span className="palm-change"><RefreshCw size={14}/> Photo selected · choose another below</span></> : <><span className="palm-upload-icon"><ImagePlus size={24}/></span><strong>Upload a palm photo</strong><span>Use the phone's photo picker below to select from Gallery or Camera</span></>}
+          </div>
+          <div className="palm-picker-control">
+            <input ref={inputRef} id="palm-photo-input" className="palm-native-picker" type="file" accept="image/*" onChange={chooseImage} aria-label="Choose a palm photo from your phone"/>
+            <span>Tap the native Choose files control. Your phone will open its photo picker.</span>
+          </div>
           <label className="palm-field-label">Which hand is shown?</label>
           <div className="palm-hand-options">
             {(["left","right","unsure"] as const).map(value => <button key={value} type="button" className={hand === value ? "selected" : ""} onClick={() => setHand(value)}>{value === "left" ? "Left hand" : value === "right" ? "Right hand" : "Not sure"}</button>)}
