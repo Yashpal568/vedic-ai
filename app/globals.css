@@ -5392,3 +5392,14 @@ html[data-theme="light"] .birth-calendar-layer .birth-calendar-today { color:#73
 .palm-dropzone:focus-within { outline:2px solid var(--gold); outline-offset:3px; }
 .palm-dropzone.has-image .palm-file-input { cursor:pointer; }
 .palm-dropzone > *:not(.palm-file-input) { pointer-events:none; }
+
+
+/* Use the browser's real, visible file control on mobile. This deliberately
+   avoids transparent overlays and label-triggered synthetic picker clicks. */
+.palm-file-input { display:none !important; }
+.palm-native-picker { display:block; position:relative; z-index:1; width:100%; min-height:52px; padding:10px; border:1px solid rgba(212,183,122,.55); border-radius:12px; background:rgba(212,183,122,.07); color:var(--text); font:inherit; font-size:13px; cursor:pointer; touch-action:manipulation; }
+.palm-native-picker::file-selector-button { min-height:38px; margin-right:12px; padding:0 16px; border:0; border-radius:9px; background:var(--gold); color:#171610; font:inherit; font-weight:700; cursor:pointer; }
+.palm-picker-control { display:grid; gap:7px; margin-top:12px; }
+.palm-picker-control span { color:var(--quiet); font-size:11px; line-height:1.5; }
+.palm-dropzone { pointer-events:none; }
+.palm-dropzone > * { pointer-events:none; }
