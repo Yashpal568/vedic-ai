@@ -5383,3 +5383,12 @@ html[data-theme="light"] .birth-calendar-layer .birth-calendar-today { color:#73
   .assistant-response-card .message-text.markdown-body h1 { font-size: 22px; }
   .assistant-response-card .message-text.markdown-body h2 { font-size: 18px; }
 }
+
+
+/* Native mobile gallery picker: the real file input overlays the dropzone.
+   Avoid display:none/hidden inputs, which can fail to open reliably on mobile browsers. */
+.palm-dropzone { position:relative; cursor:pointer; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+.palm-file-input { position:absolute; inset:0; z-index:3; display:block; width:100%; height:100%; margin:0; padding:0; opacity:0; cursor:pointer; }
+.palm-dropzone:focus-within { outline:2px solid var(--gold); outline-offset:3px; }
+.palm-dropzone.has-image .palm-file-input { cursor:pointer; }
+.palm-dropzone > *:not(.palm-file-input) { pointer-events:none; }
