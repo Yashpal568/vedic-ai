@@ -18,13 +18,9 @@ export default function PalmReadingPage() {
 
   function openPalmPicker(input: HTMLInputElement | null) {
     if (!input) return;
-    // showPicker is the preferred native Android Chrome API; click is the fallback.
-    try {
-      if (typeof input.showPicker === "function") input.showPicker();
-      else input.click();
-    } catch {
-      input.click();
-    }
+    // Trigger the native file input directly during the button's user gesture.
+    // Android Chrome's showPicker() can silently fail for clipped/visually-hidden inputs.
+    input.click();
   }
 
   async function chooseImage(event: ChangeEvent<HTMLInputElement>) {
@@ -38,7 +34,7 @@ export default function PalmReadingPage() {
       setError("This photo is larger than 15 MB. Please choose a smaller image.");
       return;
     }
-    if (file.type && !file.type.startsWith("image/") && !/\\.(jpe?g|png|webp|heic|heif)$/i.test(file.name)) {
+    if (file.type && !file.type.startsWith("image/") && !/\.(jpe?g|png|webp|heic|heif)$/i.test(file.name)) {
       setError("Please choose an image from your gallery (JPG, PNG, WebP or HEIC).");
       return;
     }
