@@ -16,6 +16,17 @@ export default function PalmReadingPage() {
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
+  function openPalmPicker(input: HTMLInputElement | null) {
+    if (!input) return;
+    // showPicker is the preferred native Android Chrome API; click is the fallback.
+    try {
+      if (typeof input.showPicker === "function") input.showPicker();
+      else input.click();
+    } catch {
+      input.click();
+    }
+  }
+
   async function chooseImage(event: ChangeEvent<HTMLInputElement>) {
     const input = event.currentTarget;
     const file = input.files?.[0];
@@ -126,15 +137,11 @@ export default function PalmReadingPage() {
           <div className={"palm-dropzone" + (image ? " has-image" : "")}>
             {image ? <><img src={image} alt="Selected palm preview"/><span className="palm-change"><RefreshCw size={14}/> Photo selected</span></> : <><span className="palm-upload-icon"><ImagePlus size={24}/></span><strong>Upload a palm photo</strong><span>Take a new palm photo or choose one from your gallery</span></>}
           </div>
+          <input ref={cameraInputRef} className="palm-native-file-input" type="file" accept="image/*" capture="environment" onChange={chooseImage} aria-label="Take a palm photo with your rear camera" />
+          <input id="palm-gallery-retry" ref={galleryInputRef} className="palm-native-file-input" type="file" accept="image/*" onChange={chooseImage} aria-label="Choose a palm photo from your gallery" />
           <div className="palm-picker-actions">
-            <label className="palm-picker-label palm-camera-button">
-              <Camera size={17}/><span>Take photo</span>
-              <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={chooseImage} aria-label="Take a palm photo with your rear camera"/>
-            </label>
-            <label className="palm-picker-label palm-gallery-button">
-              <ImagePlus size={17}/><span>Choose from gallery</span>
-              <input id="palm-gallery-retry" ref={galleryInputRef} type="file" accept="image/*" onChange={chooseImage} aria-label="Choose a palm photo from your gallery"/>
-            </label>
+            <button type="button" className="palm-picker-button palm-camera-button" onClick={() => openPalmPicker(cameraInputRef.current)}><Camera size={17}/><span>Take photo</span></button>
+            <button type="button" className="palm-picker-button palm-gallery-button" onClick={() => openPalmPicker(galleryInputRef.current)}><ImagePlus size={17}/><span>Choose from gallery</span></button>
           </div>
           <p className="palm-picker-hint">Take photo opens your rear camera. Choose from gallery opens saved photos.</p>
           <label className="palm-field-label">Which hand is shown?</label>
@@ -145,7 +152,7 @@ export default function PalmReadingPage() {
           <textarea id="palm-question" value={question} onChange={e => setQuestion(e.target.value)} maxLength={800} placeholder="e.g. Explain my visible heart, head and life lines…" rows={3}/>
           <button type="button" className="palm-analyse-button" disabled={!image || loading} onClick={analyse}>{loading ? <><LoaderCircle className="palm-spin" size={17}/> Checking image and lines…</> : <><Sparkles size={17}/> Analyse my palm</>}</button>
           {error && <p className="palm-error" role="alert">{error}</p>}
-          {quality && <div className="palm-quality" role="alert"><strong>Photo needs another look</strong><p>{quality}</p><button type="button" onClick={() => document.getElementById("palm-gallery-retry")?.click()}><RefreshCw size={14}/> Upload a clearer photo</button></div>}
+          {quality && <div className="palm-quality" role="alert"><strong>Photo needs another look</strong><p>{quality}</p><button type="button" onClick={() => openPalmPicker(galleryInputRef.current)}><RefreshCw size={14}/> Upload a clearer photo</button></div>}
         </section>
         <aside className="palm-guidance">
           <div className="palm-guidance-icon"><Sparkles size={20}/></div><h2>How to get a useful photo</h2>
