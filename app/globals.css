@@ -5385,21 +5385,13 @@ html[data-theme="light"] .birth-calendar-layer .birth-calendar-today { color:#73
 }
 
 
-/* Native mobile gallery picker: the real file input overlays the dropzone.
-   Avoid display:none/hidden inputs, which can fail to open reliably on mobile browsers. */
-.palm-dropzone { position:relative; cursor:pointer; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
-.palm-file-input { position:absolute; inset:0; z-index:3; display:block; width:100%; height:100%; margin:0; padding:0; opacity:0; cursor:pointer; }
-.palm-dropzone:focus-within { outline:2px solid var(--gold); outline-offset:3px; }
-.palm-dropzone.has-image .palm-file-input { cursor:pointer; }
-.palm-dropzone > *:not(.palm-file-input) { pointer-events:none; }
 
 
-/* Use the browser's real, visible file control on mobile. This deliberately
-   avoids transparent overlays and label-triggered synthetic picker clicks. */
-.palm-file-input { display:none !important; }
-.palm-native-picker { display:block; position:relative; z-index:1; width:100%; min-height:52px; padding:10px; border:1px solid rgba(212,183,122,.55); border-radius:12px; background:rgba(212,183,122,.07); color:var(--text); font:inherit; font-size:13px; cursor:pointer; touch-action:manipulation; }
-.palm-native-picker::file-selector-button { min-height:38px; margin-right:12px; padding:0 16px; border:0; border-radius:9px; background:var(--gold); color:#171610; font:inherit; font-weight:700; cursor:pointer; }
-.palm-picker-control { display:grid; gap:7px; margin-top:12px; }
-.palm-picker-control span { color:var(--quiet); font-size:11px; line-height:1.5; }
-.palm-dropzone { pointer-events:none; }
-.palm-dropzone > * { pointer-events:none; }
+/* Palm photo source actions: distinct camera capture and gallery selection. */
+.palm-hidden-input { position:fixed !important; left:-10000px !important; top:0 !important; width:1px !important; height:1px !important; opacity:0 !important; }
+.palm-picker-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px; }
+.palm-picker-actions button { display:flex; align-items:center; justify-content:center; gap:9px; min-height:52px; padding:12px 10px; border-radius:12px; font:inherit; font-size:14px; font-weight:650; cursor:pointer; touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
+.palm-camera-button { border:1px solid var(--gold); background:var(--gold); color:#171610; }
+.palm-gallery-button { border:1px solid rgba(212,183,122,.6); background:rgba(212,183,122,.08); color:var(--gold2); }
+.palm-picker-hint { margin:8px 0 16px; color:var(--quiet); font-size:12px; line-height:1.55; }
+@media(max-width:420px) { .palm-picker-actions { grid-template-columns:1fr; } }
