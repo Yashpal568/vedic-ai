@@ -5389,8 +5389,25 @@ html[data-theme="light"] .birth-calendar-layer .birth-calendar-today { color:#73
 
 
 
-/* Native file inputs stay out of layout; visible buttons invoke the picker directly. */
-.palm-native-file-input { display:none !important; }
+/* Keep native file inputs rendered: display:none blocks Android Chrome's
+   showPicker()/click() activation. Visually hide them without removing them
+   from the rendered document so the visible buttons can open camera/gallery. */
+.palm-native-file-input {
+  position: fixed !important;
+  left: 0 !important;
+  top: 0 !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  opacity: 0 !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  clip-path: inset(50%) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+  pointer-events: none !important;
+}
 .palm-picker-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px; }
 .palm-picker-button { display:flex; align-items:center; justify-content:center; gap:9px; width:100%; min-height:56px; padding:12px 10px; border-radius:12px; font:inherit; font-size:14px; font-weight:700; cursor:pointer; touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
 .palm-picker-button:focus-visible { outline:2px solid var(--gold2); outline-offset:3px; }
