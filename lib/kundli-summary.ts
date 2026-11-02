@@ -52,6 +52,7 @@ const SIGN_MEANINGS: Record<string, string> = {
   Aquarius: "independent and idea-focused", Pisces: "imaginative and reflective",
 };
 
+const NAKSHATRA_MEANING = "Nakshatra means a lunar star area: one of 27 traditional sections of the zodiac used to describe the Moon's position.";
 const plainDate = (value: string, timezone: string) => {
   const date = new Date(value);
   if (!Number.isFinite(date.getTime())) return value;
@@ -71,7 +72,12 @@ export function buildKundliPlanetSummary(report: KundliReport): KundliPlanetSumm
       sign: planet.sign,
       house: planet.house,
       nakshatra: planet.nakshatra,
-      explanation: planet.name + " is in " + planet.sign + ", house " + planet.house + ". In traditional Jyotish, " + planet.name + " is linked with " + meaning + "; " + planet.sign + " is often described as " + signStyle + ". Treat this as a symbolic tradition, not a proven description or prediction.",
+      explanation:
+        planet.name + " is in " + planet.sign + ", house " + planet.house + ". " +
+        "A house (Bhava) is a life area in the chart; " + planet.name + " is traditionally linked with " + meaning + ". " +
+        planet.sign + " is often described as " + signStyle + ". " +
+        (planet.nakshatra ? "Its Nakshatra is " + planet.nakshatra + ". " + NAKSHATRA_MEANING : "Nakshatra information is not available.") +
+        " These are traditional symbols for reflection, not proven facts or guaranteed predictions.",
     };
   });
 }
@@ -85,13 +91,16 @@ export function buildKundliHouseSummary(report: KundliReport): KundliHouseSummar
     const signStyle = SIGN_MEANINGS[sign] || "individual and context-dependent";
     const planetStyle = planets.length
       ? " Planets shown here: " + planets.map((planet) => planet.name + " (traditionally linked with " + (PLANET_MEANINGS[planet.name] || "a symbolic theme") + ")").join("; ") + "."
-      : " No major planet from this report is placed here. Astrologers may still look at the sign and its ruling planet when discussing this house.";
+      : " No major planet from this report is placed here. An empty house does not mean that this area of life is missing or unimportant.";
     return {
       house,
       sign,
       planets: planetNames,
       title: HOUSE_TOPICS[index].charAt(0).toUpperCase() + HOUSE_TOPICS[index].slice(1),
-      explanation: "This house is traditionally about " + HOUSE_TOPICS[index] + ". Its sign is " + sign + ", often described as " + signStyle + "." + planetStyle,
+      explanation:
+        "House " + house + " (Bhava) represents " + HOUSE_TOPICS[index] + ". " +
+        "Its sign is " + sign + ", traditionally described as " + signStyle + "." + planetStyle +
+        " A sign (Rashi) is the zodiac sign occupying this house in the displayed whole-sign chart.",
     };
   });
 }
@@ -102,19 +111,21 @@ export function buildKundliSimpleSummary(report: KundliReport): string[] {
   const current = report.vimshottari.currentMahadasha;
   const occupiedHouses = new Set(report.planets.map((planet) => planet.house)).size;
   const yogas = report.yogaCandidates || [];
+  const panchang = report.panchang;
   const summary = [
-    "Your chart starts with " + report.ascendant.sign + " rising (your Lagna). Astrologers use this as the starting point for talking about your approach to life; it does not define who you must be.",
-    "Your Moon is in " + (moon?.sign || "an unavailable sign") + (moon?.nakshatra ? " and the " + moon.nakshatra + " nakshatra" : "") + ". In Jyotish, the Moon is often used when discussing feelings, comfort and habits.",
+    "Your chart starts with " + report.ascendant.sign + " rising (your Lagna or Ascendant). This is the first house and the starting point astrologers use to read the chart. It does not define who you must be.",
+    "Your Moon is in " + (moon?.sign || "an unavailable sign") + (moon?.nakshatra ? " and the " + moon.nakshatra + " Nakshatra" : "") + ". The Moon is traditionally linked with feelings and daily habits. " + NAKSHATRA_MEANING,
   ];
   if (sun) summary.push("Your Sun is in " + sun.sign + " in house " + sun.house + ". In traditional astrology, the Sun is linked with confidence, identity and responsibility.");
   summary.push(
-    "The report places planets in " + occupiedHouses + " of the 12 houses. Each house represents a different life area; an empty house does not mean that the area is missing or will not matter.",
-    "Your calculated Mahadasha is " + current.lord + ", from " + plainDate(current.start, report.birth.timezone) + " to " + plainDate(current.end, report.birth.timezone) + ". Jyotish treats this as a traditional timing cycle, not a guarantee of future events.",
-    "Your birth Panchang lists " + (report.panchang?.paksha || "—") + " paksha, " + (report.panchang?.tithi || "—") + " tithi, " + (report.panchang?.yoga || "—") + " yoga and " + (report.panchang?.karana || "—") + " karana. These are calendar terms; this app marks the calculation as experimental.",
+    "The report places planets in " + occupiedHouses + " of the 12 houses. A house (Bhava) represents one area of life. An empty house does not mean that the area is missing or will never matter.",
+    "Your calculated Mahadasha is " + current.lord + ", from " + plainDate(current.start, report.birth.timezone) + " to " + plainDate(current.end, report.birth.timezone) + ". Mahadasha means a major planetary time period in the traditional Vimshottari system. It is a timing framework, not a guarantee of future events.",
+    "Your birth Panchang lists " + (panchang?.paksha || "—") + " paksha, " + (panchang?.tithi || "—") + " tithi, " + (panchang?.yoga || "—") + " yoga and " + (panchang?.karana || "—") + " karana. Panchang is a traditional five-part calendar: Vara = weekday, Tithi = lunar day, Paksha = waxing or waning Moon phase, Yoga = a calculated Sun-Moon combination, and Karana = half a Tithi. This app marks these birth values as experimental; verify them independently.",
     yogas.length
-      ? "The app flagged " + yogas.length + " possible yoga pattern" + (yogas.length === 1 ? "" : "s") + ". These are early candidates only, not confirmed classical yogas."
-      : "The current simplified rules did not flag a yoga. That does not prove that no traditional yoga exists in your chart.",
-    "In short: use the chart as a guide to learn traditional Jyotish terms, not as a fixed verdict about your personality or future. This calculation engine still needs independent accuracy checks, and your choices and circumstances matter.",
+      ? "The app flagged " + yogas.length + " possible Yoga pattern" + (yogas.length === 1 ? "" : "s") + ". Yoga means a traditional combination of chart factors. These are early candidates only, not confirmed classical Yogas; the full rules and exceptions are not yet assessed."
+      : "The current simplified rules did not flag a Yoga. Yoga means a traditional combination of chart factors. This does not prove that no classical Yoga exists in your chart.",
+    "Degrees show how far a planet has moved within its zodiac sign. Direct means its apparent motion is forward; retrograde means it appears to move backward from Earth. D9 (Navamsa) and D10 (Dashamsa) are additional divisional charts used in traditional readings.",
+    "In short: use this chart to learn traditional Jyotish terms, not as a fixed verdict about your personality or future. The calculation engine still needs independent accuracy checks, and your choices and circumstances matter.",
   );
   return summary;
 }
