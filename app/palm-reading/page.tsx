@@ -3,7 +3,7 @@
 import { ChangeEvent, useRef, useState } from "react";
 import MobileBottomNav from "@/components/mobile-bottom-nav";
 import SiteHeader from "@/components/site-header";
-import { Camera, ImagePlus, LoaderCircle, RefreshCw, Sparkles, Upload } from "lucide-react";
+import { Camera, ImagePlus, LoaderCircle, RefreshCw, Sparkles } from "lucide-react";
 
 export default function PalmReadingPage() {
   const [image, setImage] = useState<string>("");
