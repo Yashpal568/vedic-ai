@@ -13,7 +13,8 @@ export default function PalmReadingPage() {
   const [error, setError] = useState("");
   const [quality, setQuality] = useState("");
   const [loading, setLoading] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   async function chooseImage(event: ChangeEvent<HTMLInputElement>) {
     const input = event.currentTarget;
@@ -123,12 +124,15 @@ export default function PalmReadingPage() {
         <section className="palm-upload-card">
           <div className="palm-card-title"><Camera size={18}/> Your palm photo</div>
           <div className={"palm-dropzone" + (image ? " has-image" : "")}>
-            {image ? <><img src={image} alt="Selected palm preview"/><span className="palm-change"><RefreshCw size={14}/> Photo selected · choose another below</span></> : <><span className="palm-upload-icon"><ImagePlus size={24}/></span><strong>Upload a palm photo</strong><span>Use the phone&apos;s photo picker below to select from Gallery or Camera</span></>}
+            {image ? <><img src={image} alt="Selected palm preview"/><span className="palm-change"><RefreshCw size={14}/> Photo selected</span></> : <><span className="palm-upload-icon"><ImagePlus size={24}/></span><strong>Upload a palm photo</strong><span>Take a new palm photo or choose one from your gallery</span></>}
           </div>
-          <div className="palm-picker-control">
-            <input ref={inputRef} id="palm-photo-input" className="palm-native-picker" type="file" accept="image/*" onChange={chooseImage} aria-label="Choose a palm photo from your phone"/>
-            <span>Tap the native Choose files control. Your phone will open its photo picker.</span>
+          <input ref={cameraInputRef} className="palm-hidden-input" type="file" accept="image/*" capture="environment" onChange={chooseImage} aria-label="Take a palm photo with your rear camera"/>
+          <input ref={galleryInputRef} className="palm-hidden-input" type="file" accept="image/*" onChange={chooseImage} aria-label="Choose a palm photo from your gallery"/>
+          <div className="palm-picker-actions">
+            <button type="button" className="palm-camera-button" onClick={() => cameraInputRef.current?.click()}><Camera size={17}/> Take photo</button>
+            <button type="button" className="palm-gallery-button" onClick={() => galleryInputRef.current?.click()}><ImagePlus size={17}/> Choose from gallery</button>
           </div>
+          <p className="palm-picker-hint">Take photo opens your rear camera. Choose from gallery opens saved photos.</p>
           <label className="palm-field-label">Which hand is shown?</label>
           <div className="palm-hand-options">
             {(["left","right","unsure"] as const).map(value => <button key={value} type="button" className={hand === value ? "selected" : ""} onClick={() => setHand(value)}>{value === "left" ? "Left hand" : value === "right" ? "Right hand" : "Not sure"}</button>)}
@@ -137,7 +141,7 @@ export default function PalmReadingPage() {
           <textarea id="palm-question" value={question} onChange={e => setQuestion(e.target.value)} maxLength={800} placeholder="e.g. Explain my visible heart, head and life lines…" rows={3}/>
           <button type="button" className="palm-analyse-button" disabled={!image || loading} onClick={analyse}>{loading ? <><LoaderCircle className="palm-spin" size={17}/> Checking image and lines…</> : <><Sparkles size={17}/> Analyse my palm</>}</button>
           {error && <p className="palm-error" role="alert">{error}</p>}
-          {quality && <div className="palm-quality" role="alert"><strong>Photo needs another look</strong><p>{quality}</p><button type="button" onClick={() => inputRef.current?.click()}><RefreshCw size={14}/> Upload a clearer photo</button></div>}
+          {quality && <div className="palm-quality" role="alert"><strong>Photo needs another look</strong><p>{quality}</p><button type="button" onClick={() => galleryInputRef.current?.click()}><RefreshCw size={14}/> Upload a clearer photo</button></div>}
         </section>
         <aside className="palm-guidance">
           <div className="palm-guidance-icon"><Sparkles size={20}/></div><h2>How to get a useful photo</h2>
