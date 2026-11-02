@@ -18,7 +18,6 @@ export default function PalmReadingPage() {
   async function chooseImage(event: ChangeEvent<HTMLInputElement>) {
     const input = event.currentTarget;
     const file = input.files?.[0];
-    // Reset immediately so selecting the same photo again still fires change.
     input.value = "";
     if (!file) return;
 
@@ -32,57 +31,59 @@ export default function PalmReadingPage() {
       return;
     }
 
+    let objectUrl = "";
+    let bitmap: ImageBitmap | null = null;
     try {
-      // Normalize phone photos to JPEG and downscale them before sending to the API.
-      // This avoids oversized camera images and unsupported HEIC uploads.
-      let bitmap: ImageBitmap | null = null;
+      // Decode camera/gallery images and normalize them to a compact JPEG.
+      // The HTMLImageElement fallback covers browsers without createImageBitmap.
+      let source: CanvasImageSource;
+      let sourceWidth: number;
+      let sourceHeight: number;
       try {
         bitmap = await createImageBitmap(file);
+        source = bitmap;
+        sourceWidth = bitmap.width;
+        sourceHeight = bitmap.height;
       } catch {
-        bitmap = null;
+        objectUrl = URL.createObjectURL(file);
+        const decoded = await new Promise<HTMLImageElement>((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = () => reject(new Error("This browser cannot open this photo format. Please choose a JPG or PNG image."));
+          img.src = objectUrl;
+        });
+        source = decoded;
+        sourceWidth = decoded.naturalWidth;
+        sourceHeight = decoded.naturalHeight;
       }
 
-      if (bitmap) {
-        const maxDimension = 1800;
-        const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
-        const canvas = document.createElement("canvas");
-        canvas.width = Math.max(1, Math.round(bitmap.width * scale));
-        canvas.height = Math.max(1, Math.round(bitmap.height * scale));
-        const context = canvas.getContext("2d");
-        if (!context) throw new Error("Your browser could not prepare this photo. Please try another image.");
-        context.fillStyle = "#ffffff";
-        context.fillRect(0, 0, canvas.width, canvas.height);
-        context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-        bitmap.close();
+      if (!sourceWidth || !sourceHeight) throw new Error("The selected image has no readable dimensions. Please choose another photo.");
+      const maxDimension = 1800;
+      const scale = Math.min(1, maxDimension / Math.max(sourceWidth, sourceHeight));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(sourceWidth * scale));
+      canvas.height = Math.max(1, Math.round(sourceHeight * scale));
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("Your browser could not prepare this photo. Please try another image.");
+      context.fillStyle = "#ffffff";
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.drawImage(source, 0, 0, canvas.width, canvas.height);
+      bitmap?.close();
+      bitmap = null;
 
-        let quality = 0.88;
-        let prepared = canvas.toDataURL("image/jpeg", quality);
-        while (prepared.length > 5_300_000 && quality > 0.55) {
-          quality -= 0.08;
-          prepared = canvas.toDataURL("image/jpeg", quality);
-        }
-        if (prepared.length > 5_300_000) throw new Error("This photo is still too large after resizing. Please choose another photo.");
-        setImage(prepared);
-        return;
+      let quality = 0.88;
+      let prepared = canvas.toDataURL("image/jpeg", quality);
+      while (prepared.length > 5_300_000 && quality > 0.55) {
+        quality -= 0.08;
+        prepared = canvas.toDataURL("image/jpeg", quality);
       }
-
-      // Fallback for browsers that cannot decode a format such as HEIC.
-      if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
-        throw new Error("This phone's browser cannot open this photo format. Please choose a JPG or PNG image.");
-      }
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (typeof reader.result === "string" && reader.result.startsWith("data:image/")) {
-          setImage(reader.result);
-        } else {
-          setError("This photo could not be prepared. Please select it again.");
-        }
-      };
-      reader.onerror = () => setError("Could not read this photo. Please check the file and try again.");
-      reader.onabort = () => setError("Photo selection was cancelled. Please select it again.");
-      reader.readAsDataURL(file);
+      if (prepared.length > 5_300_000) throw new Error("This photo is still too large after resizing. Please choose another photo.");
+      setImage(prepared);
     } catch (e) {
+      bitmap?.close();
       setError(e instanceof Error ? e.message : "Could not prepare this photo. Please try another image.");
+    } finally {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
     }
   }
 
