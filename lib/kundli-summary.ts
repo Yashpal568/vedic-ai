@@ -74,7 +74,7 @@ export function buildKundliPlanetSummary(report: KundliReport): KundliPlanetSumm
       house: planet.house,
       nakshatra: planet.nakshatra,
       explanation:
-        "In your chart, " + planet.name + " is in " + planet.sign + " and the " + planet.house + "th house. " +
+        "In your chart, " + planet.name + " is in " + planet.sign + " and house " + planet.house + ". " +
         "In simple terms, " + planet.name + " represents " + meaning + ". " +
         planet.sign + " is traditionally described as " + signStyle + ". " +
         (planet.nakshatra ? "Its Nakshatra (lunar star group) is " + planet.nakshatra + ". " : "") +
