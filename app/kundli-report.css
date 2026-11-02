@@ -69,3 +69,34 @@
 @media(min-width:761px) {
   .chart-secondary-grid > .chart-subpanel { height: 100%; }
 }
+
+
+/* Guided beginner report sections */
+.kundli-summary-heading { margin: 26px 0 22px; }
+.kundli-summary-heading h2 { font-size: clamp(24px, 2.6vw, 32px); line-height: 1.22; letter-spacing: -.65px; }
+.kundli-summary-heading p { font-size: 14px; line-height: 1.8; }
+.kundli-summary-subheading { display: flex; align-items: flex-start; gap: 13px; margin: 30px 0 14px; }
+.kundli-summary-subheading > span { display: grid; place-items: center; flex: 0 0 30px; width: 30px; height: 30px; border: 1px solid rgba(230,204,145,.38); border-radius: 9px; color: #f0d99e; background: rgba(212,183,122,.09); font-size: 11px; font-weight: 700; }
+.kundli-summary-subheading h3 { margin: 0; color: #f1e2bd; font: 650 18px/1.35 Manrope,sans-serif; }
+.kundli-summary-subheading p { margin: 4px 0 0; color: #aeb5c4; font-size: 12px; line-height: 1.65; }
+.kundli-summary-points { gap: 12px; }
+.kundli-summary-point { padding: 17px; border-radius: 14px; }
+.kundli-summary-point p { color: #e0e4ec; font-size: 14px; line-height: 1.8; }
+.kundli-summary-point > span { margin-top: 1px; }
+.kundli-planet-summary-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+.kundli-planet-summary-card { min-width: 0; padding: 17px; border: 1px solid rgba(180,190,211,.15); border-radius: 14px; background: linear-gradient(145deg,rgba(19,25,39,.82),rgba(11,16,27,.8)); }
+.kundli-planet-summary-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding-bottom: 11px; border-bottom: 1px solid rgba(180,190,211,.12); }
+.kundli-planet-summary-top strong { color: #f0d99e; font: 650 15px/1.4 Manrope,sans-serif; }
+.kundli-planet-summary-top span { color: #b9c1ce; font-size: 11px; }
+.kundli-planet-summary-card p { margin: 12px 0 0; color: #d0d6e1; font-size: 13px; line-height: 1.8; }
+.kundli-planet-summary-card small { display: block; margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(180,190,211,.1); color: #e0c987; font-size: 11px; line-height: 1.6; }
+.kundli-house-summary-grid { gap: 12px; }
+.kundli-house-summary-card { padding: 17px; }
+.kundli-house-summary-card h4 { font-size: 14px; }
+.kundli-house-summary-card p { font-size: 13px; line-height: 1.8; }
+@media(max-width:760px) {
+  .kundli-planet-summary-grid { grid-template-columns: 1fr; }
+  .kundli-summary-subheading { margin-top: 25px; }
+  .kundli-summary-point, .kundli-planet-summary-card, .kundli-house-summary-card { padding: 14px; }
+  .kundli-summary-point p, .kundli-planet-summary-card p, .kundli-house-summary-card p { font-size: 13px; line-height: 1.8; }
+}
