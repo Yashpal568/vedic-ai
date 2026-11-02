@@ -16,30 +16,74 @@ export default function PalmReadingPage() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   async function chooseImage(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    // Reset immediately so selecting the same photo again still fires change.
+    input.value = "";
     if (!file) return;
+
     setError(""); setQuality(""); setReading(""); setImage("");
-    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
-      setError("Please choose a JPG, PNG, or WebP image.");
-      event.target.value = "";
+    if (file.size > 15 * 1024 * 1024) {
+      setError("This photo is larger than 15 MB. Please choose a smaller image.");
       return;
     }
-    if (file.size > 4 * 1024 * 1024) {
-      setError("Photo must be under 4 MB. Resize it and upload again.");
-      event.target.value = "";
+    if (file.type && !file.type.startsWith("image/") && !/\\.(jpe?g|png|webp|heic|heif)$/i.test(file.name)) {
+      setError("Please choose an image from your gallery (JPG, PNG, WebP or HEIC).");
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string" && reader.result.startsWith("data:image/")) {
-        setImage(reader.result);
-      } else {
-        setError("This photo could not be prepared for analysis. Please select it again.");
+
+    try {
+      // Normalize phone photos to JPEG and downscale them before sending to the API.
+      // This avoids oversized camera images and unsupported HEIC uploads.
+      let bitmap: ImageBitmap | null = null;
+      try {
+        bitmap = await createImageBitmap(file);
+      } catch {
+        bitmap = null;
       }
-    };
-    reader.onerror = () => setError("Could not read this image. Please select it again.");
-    reader.onabort = () => setError("Image reading was cancelled. Please select the photo again.");
-    reader.readAsDataURL(file);
+
+      if (bitmap) {
+        const maxDimension = 1800;
+        const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+        canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+        const context = canvas.getContext("2d");
+        if (!context) throw new Error("Your browser could not prepare this photo. Please try another image.");
+        context.fillStyle = "#ffffff";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+        bitmap.close();
+
+        let quality = 0.88;
+        let prepared = canvas.toDataURL("image/jpeg", quality);
+        while (prepared.length > 5_300_000 && quality > 0.55) {
+          quality -= 0.08;
+          prepared = canvas.toDataURL("image/jpeg", quality);
+        }
+        if (prepared.length > 5_300_000) throw new Error("This photo is still too large after resizing. Please choose another photo.");
+        setImage(prepared);
+        return;
+      }
+
+      // Fallback for browsers that cannot decode a format such as HEIC.
+      if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+        throw new Error("This phone's browser cannot open this photo format. Please choose a JPG or PNG image.");
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === "string" && reader.result.startsWith("data:image/")) {
+          setImage(reader.result);
+        } else {
+          setError("This photo could not be prepared. Please select it again.");
+        }
+      };
+      reader.onerror = () => setError("Could not read this photo. Please check the file and try again.");
+      reader.onabort = () => setError("Photo selection was cancelled. Please select it again.");
+      reader.readAsDataURL(file);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not prepare this photo. Please try another image.");
+    }
   }
 
   async function analyse() {
@@ -77,10 +121,10 @@ export default function PalmReadingPage() {
       <div className="palm-grid">
         <section className="palm-upload-card">
           <div className="palm-card-title"><Camera size={18}/> Your palm photo</div>
-          <button type="button" className={"palm-dropzone" + (image ? " has-image" : "")} onClick={() => inputRef.current?.click()} aria-label="Choose palm photo">
-            {image ? <><img src={image} alt="Selected palm preview"/><span className="palm-change"><RefreshCw size={14}/> Change photo</span></> : <><span className="palm-upload-icon"><ImagePlus size={24}/></span><strong>Upload a palm photo</strong><span>JPG, PNG or WebP · up to 4 MB</span><span className="palm-choose"><Upload size={15}/> Choose image</span></>}
-          </button>
-          <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={chooseImage} hidden/>
+          <label className={"palm-dropzone" + (image ? " has-image" : "")} htmlFor="palm-photo-input">
+            {image ? <><img src={image} alt="Selected palm preview"/><span className="palm-change"><RefreshCw size={14}/> Change photo</span></> : <><span className="palm-upload-icon"><ImagePlus size={24}/></span><strong>Upload a palm photo</strong><span>Choose from camera or gallery · JPG, PNG, WebP or HEIC</span><span className="palm-choose"><Upload size={15}/> Choose photo</span></>}
+            <input ref={inputRef} id="palm-photo-input" className="palm-file-input" type="file" accept="image/*,.heic,.heif" onChange={chooseImage} aria-label="Choose a palm photo"/>
+          </label>
           <label className="palm-field-label">Which hand is shown?</label>
           <div className="palm-hand-options">
             {(["left","right","unsure"] as const).map(value => <button key={value} type="button" className={hand === value ? "selected" : ""} onClick={() => setHand(value)}>{value === "left" ? "Left hand" : value === "right" ? "Right hand" : "Not sure"}</button>)}
