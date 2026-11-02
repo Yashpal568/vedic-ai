@@ -83,14 +83,14 @@ export function printKundliReport(report: KundliReport, reportId?: string) {
   .detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.detail-item{padding:10px;border:1px solid #e4e0d6;border-radius:8px}.detail-item span{display:block;color:var(--muted);font-size:8pt}.detail-item strong{display:block;margin-top:4px;font-size:9pt;overflow-wrap:anywhere}
   .planet-summary-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.planet-summary-card{padding:8px;border:1px solid #e6e0d2;border-radius:8px;background:#fff;break-inside:avoid}.planet-summary-top{display:flex;flex-direction:column;gap:3px;padding-bottom:5px;border-bottom:1px solid #eee7d9}.planet-summary-top strong{color:#805e25;font-size:8.5pt}.planet-summary-top span{color:#68727a;font-size:7pt}.planet-summary-card p{margin:5px 0 0;color:#56616a;font-size:7.1pt;line-height:1.35}.planet-summary-card small{display:block;margin-top:5px;color:#8a7655;font-size:6.8pt;line-height:1.3}
   .summary-points{display:grid;grid-template-columns:1fr;gap:8px}.summary-point{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid #e6e0d2;border-radius:9px;background:#fff;break-inside:avoid}.summary-point>span{display:grid;flex:0 0 23px;width:23px;height:23px;place-items:center;border-radius:50%;background:#f3ead6;color:#805e25;font-weight:700;font-size:8.5pt}.summary-point p{margin:1px 0;color:#48535d;font-size:9pt;line-height:1.5}.house-summary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.house-summary-card{padding:10px;border:1px solid #e6e0d2;border-radius:9px;background:#fff;break-inside:avoid}.house-summary-top{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-bottom:6px;border-bottom:1px solid #eee7d9}.house-summary-top span{color:#7a6a4b;font-size:7pt;font-weight:700;letter-spacing:.7px}.house-summary-top strong{color:#8b6728;font-size:8.5pt}.house-summary-card h3{margin:7px 0 4px;font-size:9pt}.house-summary-card p{margin:0;color:#56616a;font-size:7.6pt;line-height:1.4}.house-summary-card small{display:block;margin-top:6px;color:#8a7655;font-size:7pt;line-height:1.35}.report-footer{margin-top:18px;padding-top:10px;border-top:1px solid var(--gold-line);font-size:8pt;color:#68727a}.report-footer strong{color:#34404a}.disclaimer{padding:11px 13px;border-radius:8px;background:#f5f2e9;color:#5c625f;font-size:8pt;line-height:1.6}
-  @page{size:A4;margin:12mm}
-  @media print{html,body{background:#fff}.toolbar{display:none}.report-page{width:auto;min-height:0;margin:0;box-shadow:none;overflow:visible;break-after:page;page-break-after:always}.report-page:last-of-type{break-after:auto;page-break-after:auto}.page-inner{padding:0}.eyebrow{margin-top:15px}h2,.section-head{break-after:avoid}table{break-inside:auto}tr{break-inside:avoid}a{color:inherit;text-decoration:none}}
+  @page{size:A4 portrait;margin:10mm}
+  @media print{html,body{width:100%;margin:0!important;padding:0!important;background:#fff!important}main{width:100%!important;margin:0!important;padding:0!important}.toolbar{display:none!important}.report-page{display:block;width:100%!important;height:277mm!important;min-height:277mm!important;max-height:277mm!important;margin:0!important;padding:0!important;box-shadow:none!important;overflow:hidden!important;break-after:page;page-break-after:always}.report-page:last-of-type{break-after:auto;page-break-after:auto}.page-inner{width:100%!important;height:100%!important;padding:0!important}h2,.section-head{break-after:avoid}table{break-inside:auto}tr{break-inside:avoid}a{color:inherit;text-decoration:none}}
   @media screen and (max-width:760px){.report-page{width:100%;min-height:0;margin:0 0 14px;box-shadow:0 8px 32px #24324418}.page-inner{padding:24px 18px}.chart-layout{grid-template-columns:1fr}.kundli-chart{max-width:300px}.summary-grid{gap:6px}.summary-card{padding:9px}.summary-card strong{font-size:12pt}.panchang-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.panchang-grid>div:last-child{grid-column:1/-1}}
   </style></head><body>
   <div class="toolbar"><p>Review your report, then choose <strong>Save as PDF</strong> in your browser's print menu.</p><button onclick="window.print()">Print / Save PDF</button></div>
   <main>
     <section class="report-page"><div class="page-inner">
-      <div class="brandline"><span>Vedic AI · Janma Kundli</span><span class="page-number">01 / 05 · PERSONAL REPORT</span></div>
+      <div class="brandline"><span>Vedic AI · Janma Kundli</span><span class="page-number">01 / 02 · PERSONAL REPORT</span></div>
       <p class="eyebrow">Your birth chart</p><h1>${escapeHtml(report.birth.place)}</h1>
       <p class="subtitle">A structured overview of your Vedic birth chart and traditional Jyotish placements.</p>
       <div class="birth-meta"><span class="meta-pill"><strong>Birth date:</strong> ${escapeHtml(birthDate)}</span><span class="meta-pill"><strong>Local time:</strong> ${escapeHtml(report.birth.time)}</span><span class="meta-pill"><strong>Timezone:</strong> ${escapeHtml(report.birth.timezone)}</span></div>
@@ -104,49 +104,18 @@ export function printKundliReport(report: KundliReport, reportId?: string) {
       <div class="report-footer"><strong>Generated:</strong> ${escapeHtml(generated)}${reportId ? " · Report ID: " + escapeHtml(reportId) : ""}<br/>This report presents the application's current calculation output; see the final page for calculation notes and limitations.</div>
     </div></section>
     <section class="report-page"><div class="page-inner">
-      <div class="brandline"><span>Vedic AI · Planetary details</span><span class="page-number">02 / 05</span></div>
-      <div class="section-head"><h2>Planetary positions</h2><p>Calculated graha placements</p></div>
-      <table><thead><tr><th>Graha</th><th>Sign</th><th>Degree</th><th>House</th><th>Nakshatra</th><th>D9 Navamsa</th><th>D10 Dashamsa</th></tr></thead><tbody>${planetRows}</tbody></table>
-      <div class="section-head"><h2>Birth Panchang</h2><p>Experimental calculation</p></div>${panchangHtml}
-      <div class="section-head"><h2>Yoga candidates</h2><p>Indicative only</p></div>${yogaHtml}
-      <p class="muted note">Yoga candidates use simplified heuristics and are not a complete classical yoga assessment.</p>
-      <div class="report-footer">The planetary values above are shown as returned by the current calculation engine. For interpretation, distinguish calculated placements from traditional symbolic meanings.</div>
-    </div></section>
-    <section class="report-page"><div class="page-inner">
-      <div class="brandline"><span>Vedic AI · Timing & methods</span><span class="page-number">03 / 05</span></div>
-      <div class="section-head"><h2>Vimshottari Mahadasha periods</h2><p>Engine output · dates in ${escapeHtml(report.birth.timezone)}</p></div>
-      <table><thead><tr><th>Mahadasha</th><th>Start date</th><th>End date</th><th>Years</th></tr></thead><tbody>${dashaRows}</tbody></table>
-      <div class="section-head"><h2>Calculation details</h2><p>Reference information</p></div>
-      <div class="detail-grid">
-        <div class="detail-item"><span>Ayanamsha</span><strong>${escapeHtml(report.ayanamsha.name)} · ${escapeHtml(report.ayanamsha.degrees.toFixed(4))}°</strong></div>
-        <div class="detail-item"><span>Zodiac</span><strong>${escapeHtml(report.zodiac)}</strong></div>
-        <div class="detail-item"><span>House system</span><strong>${escapeHtml(report.houseSystem.replace("_", " "))}</strong></div>
-        <div class="detail-item"><span>Calculation engine</span><strong>${escapeHtml(report.engine)} · ${escapeHtml(report.engineVersion)}</strong></div>
-        <div class="detail-item"><span>Birth location</span><strong>${escapeHtml(report.birth.latitude.toFixed(4))}, ${escapeHtml(report.birth.longitude.toFixed(4))}</strong></div>
-        <div class="detail-item"><span>UTC birth time</span><strong>${escapeHtml(readableDateTime(report.birth.utc, "UTC"))}</strong></div>
-      </div>
-      <div class="section-head"><h2>Important notes</h2></div>
-      <p class="disclaimer">${escapeHtml(report.disclaimer)} This report reflects the application's current calculation engine and is not a guarantee of astrological accuracy or a substitute for professional advice. Verify placements against a trusted reference before relying on them. Birth Panchang and yoga candidates are marked experimental where applicable.</p>
-      <div class="report-footer"><strong>Vedic AI</strong> · A learning companion for exploring traditional Jyotish concepts.<br/>Generated on ${escapeHtml(generated)}${reportId ? " · Report ID: " + escapeHtml(reportId) : ""}</div>
-    </div></section>
-    <section class="report-page"><div class="page-inner">
-      <div class="brandline"><span>Vedic AI · Your chart in simple words</span><span class="page-number">04 / 05</span></div>
-      <p class="eyebrow">A beginner-friendly guide</p><h1>Understanding your Kundli</h1>
-      <p class="subtitle">A plain-language recap of the main placements. You do not need to know astrology terms to start here.</p>
-      <div class="section-head"><h2>Quick summary</h2><p>The main points</p></div>
-      <div class="summary-points">${simpleSummaryHtml}</div>
-      <div class="section-head"><h2>Each planet in simple words</h2><p>Traditional symbolism only</p></div>
-      <div class="planet-summary-grid">${planetSummaryHtml}</div>
-      <div class="report-footer"><strong>Vedic AI</strong> · Generated on ${escapeHtml(generated)}${reportId ? " · Report ID: " + escapeHtml(reportId) : ""}</div>
-    </div></section>
-    <section class="report-page"><div class="page-inner">
-      <div class="brandline"><span>Vedic AI · All houses explained</span><span class="page-number">05 / 05</span></div>
-      <p class="eyebrow">House-by-house guide</p><h1>The 12 houses</h1>
-      <p class="subtitle">Each house represents an area of life in traditional Jyotish. Your chart lists the sign and any planets placed in each house.</p>
+      <div class="brandline"><span>Vedic AI · Your chart details</span><span class="page-number">02 / 02 · SIMPLE GUIDE</span></div>
+      <p class="eyebrow">Your chart · Clear meanings</p><h1>What your Kundli shows</h1>
+      <div class="section-head"><h2>Planetary positions</h2><p>Degree = exact position · House = life area</p></div>
+      <table><thead><tr><th>Planet</th><th>Sign</th><th>Degree</th><th>House</th><th>Nakshatra / Pada</th><th>D9</th><th>D10</th></tr></thead><tbody>${planetRows}</tbody></table>
+      <div class="section-head"><h2>Mahadasha timeline</h2><p>Mahadasha means a long chapter in the traditional astrology calendar.</p></div>
+      <table><thead><tr><th>Major period</th><th>Starts</th><th>Ends</th><th>Length</th></tr></thead><tbody>${dashaRows}</tbody></table>
+      <div class="section-head"><h2>Birth Panchang</h2><p>Five traditional calendar details for your birth moment.</p></div>
+      ${panchangHtml}
+      <div class="section-head"><h2>All 12 houses, simply explained</h2><p>House = life area · Sign = zodiac sign · Planet = influence shown in that area.</p></div>
       <div class="house-summary-grid">${houseSummaryHtml}</div>
-      <div class="section-head"><h2>How to use this summary</h2></div>
-      <p class="disclaimer">These descriptions explain common traditional Jyotish symbolism; they do not prove personality traits or predict events. An empty house does not mean that area of life is absent. The current calculation engine is experimental and needs independent verification, so use this report for learning rather than high-stakes decisions.</p>
-      <div class="report-footer"><strong>Vedic AI</strong> · Generated on ${escapeHtml(generated)}${reportId ? " · Report ID: " + escapeHtml(reportId) : ""}</div>
+      <div class="disclaimer"><strong>Important:</strong> These are traditional astrology meanings, not guaranteed predictions. Planet positions, degrees, houses and Dasha dates above are displayed from the existing calculation engine; this PDF does not change or recalculate them. Panchang and Yoga calculations may be experimental. ${escapeHtml(report.disclaimer)}</div>
+      <div class="report-footer"><strong>Vedic AI</strong> · For learning and personal reflection. Generated ${escapeHtml(generated)}</div>
     </div></section>
   </main></body></html>`;
   const preview = window.open("", "_blank", "width=980,height=820");
