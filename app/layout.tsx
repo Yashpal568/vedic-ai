@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import "./light-mode-fix.css";
 import "./light-theme.css";
+import "./kundli-report.css";
 import ThemeSync from "@/components/theme-sync";
 
 export const metadata: Metadata = {
