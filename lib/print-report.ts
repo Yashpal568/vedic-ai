@@ -47,15 +47,26 @@ function chartSvg(report: KundliReport): string {
 export function printKundliReport(report: KundliReport, reportId?: string) {
   const generated = readableDateTime(report.generatedAt, report.birth.timezone);
   const birthDate = readableDate(report.birth.date, report.birth.timezone);
+  const plainPlanetMeanings: Record<string, string> = {
+    Sun: "Confidence and identity", Moon: "Feelings and comfort", Mars: "Energy and action",
+    Mercury: "Thinking and communication", Jupiter: "Learning and growth", Venus: "Love and enjoyment",
+    Saturn: "Patience and responsibility", Rahu: "Ambition and strong desires", Ketu: "Reflection and letting go",
+  };
   const planetRows = report.planets.map((planet) =>
-    `<tr><td><strong>${escapeHtml(planet.name)}</strong></td><td>${escapeHtml(planet.sign)}</td><td>${escapeHtml(planet.degreeInSign.toFixed(2) + "°")}</td><td>${escapeHtml(planet.house)}</td><td>${escapeHtml(planet.nakshatra)} <span class="muted">· Pada ${escapeHtml(planet.nakshatraPada)}</span></td><td>${escapeHtml(planet.navamsaSign || "—")}</td><td>${escapeHtml(planet.dashamsaSign || "—")}</td></tr>`
+    "<tr><td><strong>" + escapeHtml(planet.name) + "</strong></td><td>" + escapeHtml(planet.sign) +
+    "</td><td>" + escapeHtml(planet.degreeInSign.toFixed(2) + "°") + "</td><td>" + escapeHtml(planet.house) +
+    "</td><td>" + escapeHtml(planet.nakshatra) + " · P" + escapeHtml(planet.nakshatraPada) +
+    "</td><td>" + escapeHtml(planet.navamsaSign || "—") + " / " + escapeHtml(planet.dashamsaSign || "—") +
+    "</td><td>" + escapeHtml(plainPlanetMeanings[planet.name] || "Traditional life theme") + "</td></tr>"
   ).join("");
   const dashaRows = report.vimshottari.periods.map((period) =>
     `<tr><td><strong>${escapeHtml(period.lord)}</strong></td><td>${escapeHtml(readableDate(period.start, report.birth.timezone))}</td><td>${escapeHtml(readableDate(period.end, report.birth.timezone))}</td><td>${escapeHtml(period.years)}</td></tr>`
   ).join("");
-  const simpleSummaryHtml = buildKundliSimpleSummary(report).map((item, index) => `<div class="summary-point"><span>${index + 1}</span><p>${escapeHtml(item)}</p></div>`).join("");
-  const houseSummaryHtml = buildKundliHouseSummary(report).map((house) => `<article class="house-summary-card"><div class="house-summary-top"><span>HOUSE ${house.house}</span><strong>${escapeHtml(house.sign)}</strong></div><h3>${escapeHtml(house.title)}</h3><p>${escapeHtml(house.explanation)}</p><small>Planets: ${escapeHtml(house.planets.length ? house.planets.join(", ") : "No major planet listed")}</small></article>`).join("");
-  const planetSummaryHtml = buildKundliPlanetSummary(report).map((planet) => `<article class="planet-summary-card"><div class="planet-summary-top"><strong>${escapeHtml(planet.name)}</strong><span>${escapeHtml(planet.sign)} · House ${escapeHtml(planet.house)}</span></div><p>${escapeHtml(planet.explanation)}</p><small>Nakshatra: ${escapeHtml(planet.nakshatra)}</small></article>`).join("");
+  const houseSummaryHtml = buildKundliHouseSummary(report).map((house) =>
+    "<tr><td><strong>" + house.house + ". " + escapeHtml(house.title) + "</strong></td><td>" +
+    escapeHtml(house.sign) + "</td><td>" +
+    escapeHtml(house.planets.length ? house.planets.join(", ") : "No planet listed") + "</td></tr>"
+  ).join("");
   const yogaCandidates = Array.isArray(report.yogaCandidates) ? report.yogaCandidates : [];
   const yogaHtml = yogaCandidates.length
     ? `<div class="yoga-grid">${yogaCandidates.map((yoga) => `<article class="yoga-card"><strong>${escapeHtml(yoga.name)}</strong><p>${escapeHtml(yoga.reason)}</p></article>`).join("")}</div>`
@@ -107,13 +118,13 @@ export function printKundliReport(report: KundliReport, reportId?: string) {
       <div class="brandline"><span>Vedic AI · Your chart details</span><span class="page-number">02 / 02 · SIMPLE GUIDE</span></div>
       <p class="eyebrow">Your chart · Clear meanings</p><h1>What your Kundli shows</h1>
       <div class="section-head"><h2>Planetary positions</h2><p>Degree = exact position · House = life area</p></div>
-      <table><thead><tr><th>Planet</th><th>Sign</th><th>Degree</th><th>House</th><th>Nakshatra / Pada</th><th>D9</th><th>D10</th></tr></thead><tbody>${planetRows}</tbody></table>
+      <table><thead><tr><th>Planet</th><th>Sign</th><th>Degree</th><th>House</th><th>Nakshatra / Pada</th><th>D9 / D10</th><th>Simple meaning</th></tr></thead><tbody>${planetRows}</tbody></table>
       <div class="section-head"><h2>Mahadasha timeline</h2><p>Mahadasha means a long chapter in the traditional astrology calendar.</p></div>
       <table><thead><tr><th>Major period</th><th>Starts</th><th>Ends</th><th>Length</th></tr></thead><tbody>${dashaRows}</tbody></table>
       <div class="section-head"><h2>Birth Panchang</h2><p>Five traditional calendar details for your birth moment.</p></div>
       ${panchangHtml}
       <div class="section-head"><h2>All 12 houses, simply explained</h2><p>House = life area · Sign = zodiac sign · Planet = influence shown in that area.</p></div>
-      <div class="house-summary-grid">${houseSummaryHtml}</div>
+      <table><thead><tr><th>House · Life area</th><th>Sign</th><th>Planets shown</th></tr></thead><tbody>${houseSummaryHtml}</tbody></table>
       <div class="disclaimer"><strong>Important:</strong> These are traditional astrology meanings, not guaranteed predictions. Planet positions, degrees, houses and Dasha dates above are displayed from the existing calculation engine; this PDF does not change or recalculate them. Panchang and Yoga calculations may be experimental. ${escapeHtml(report.disclaimer)}</div>
       <div class="report-footer"><strong>Vedic AI</strong> · For learning and personal reflection. Generated ${escapeHtml(generated)}</div>
     </div></section>
