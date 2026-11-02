@@ -5387,10 +5387,13 @@ html[data-theme="light"] .birth-calendar-layer .birth-calendar-today { color:#73
 
 
 
-/* Palm photo source actions: distinct camera capture and gallery selection. */
-.palm-hidden-input { position:fixed !important; left:-10000px !important; top:0 !important; width:1px !important; height:1px !important; opacity:0 !important; }
+
+
+/* Use the real file input as the tap target: Android Chrome requires a direct user gesture. */
 .palm-picker-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px; }
-.palm-picker-actions button { display:flex; align-items:center; justify-content:center; gap:9px; min-height:52px; padding:12px 10px; border-radius:12px; font:inherit; font-size:14px; font-weight:650; cursor:pointer; touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
+.palm-picker-label { position:relative; isolation:isolate; display:flex; align-items:center; justify-content:center; gap:9px; min-height:56px; padding:12px 10px; overflow:hidden; border-radius:12px; font:inherit; font-size:14px; font-weight:700; cursor:pointer; touch-action:manipulation; -webkit-tap-highlight-color:transparent; user-select:none; }
+.palm-picker-label input[type="file"] { position:absolute; inset:0; z-index:3; display:block; width:100%; height:100%; margin:0; padding:0; opacity:0; cursor:pointer; }
+.palm-picker-label:focus-within { outline:2px solid var(--gold2); outline-offset:3px; }
 .palm-camera-button { border:1px solid var(--gold); background:var(--gold); color:#171610; }
 .palm-gallery-button { border:1px solid rgba(212,183,122,.6); background:rgba(212,183,122,.08); color:var(--gold2); }
 .palm-picker-hint { margin:8px 0 16px; color:var(--quiet); font-size:12px; line-height:1.55; }
