@@ -1,5 +1,5 @@
 import { SIGNS, type KundliReport } from "@/lib/astrology";
-import { buildKundliHouseSummary, buildKundliPlanetSummary, buildKundliSimpleSummary } from "@/lib/kundli-summary";
+import { buildKundliHouseSummary } from "@/lib/kundli-summary";
 
 const htmlEntities: Record<string, string> = {
   "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
