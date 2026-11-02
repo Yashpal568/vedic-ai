@@ -123,7 +123,7 @@ export default function PalmReadingPage() {
         <section className="palm-upload-card">
           <div className="palm-card-title"><Camera size={18}/> Your palm photo</div>
           <div className={"palm-dropzone" + (image ? " has-image" : "")}>
-            {image ? <><img src={image} alt="Selected palm preview"/><span className="palm-change"><RefreshCw size={14}/> Photo selected · choose another below</span></> : <><span className="palm-upload-icon"><ImagePlus size={24}/></span><strong>Upload a palm photo</strong><span>Use the phone's photo picker below to select from Gallery or Camera</span></>}
+            {image ? <><img src={image} alt="Selected palm preview"/><span className="palm-change"><RefreshCw size={14}/> Photo selected · choose another below</span></> : <><span className="palm-upload-icon"><ImagePlus size={24}/></span><strong>Upload a palm photo</strong><span>Use the phone&apos;s photo picker below to select from Gallery or Camera</span></>}
           </div>
           <div className="palm-picker-control">
             <input ref={inputRef} id="palm-photo-input" className="palm-native-picker" type="file" accept="image/*" onChange={chooseImage} aria-label="Choose a palm photo from your phone"/>
