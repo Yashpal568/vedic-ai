@@ -123,6 +123,8 @@ export function printKundliReport(report: KundliReport, reportId?: string) {
       <table><thead><tr><th>Major period</th><th>Starts</th><th>Ends</th><th>Length</th></tr></thead><tbody>${dashaRows}</tbody></table>
       <div class="section-head"><h2>Birth Panchang</h2><p>Five traditional calendar details for your birth moment.</p></div>
       ${panchangHtml}
+      <div class="section-head"><h2>Yoga patterns</h2><p>Traditional combinations · early candidates only</p></div>
+      ${yogaHtml}
       <div class="section-head"><h2>All 12 houses, simply explained</h2><p>House = life area · Sign = zodiac sign · Planet = influence shown in that area.</p></div>
       <table><thead><tr><th>House · Life area</th><th>Sign</th><th>Planets shown</th></tr></thead><tbody>${houseSummaryHtml}</tbody></table>
       <div class="disclaimer"><strong>Important:</strong> These are traditional astrology meanings, not guaranteed predictions. Planet positions, degrees, houses and Dasha dates above are displayed from the existing calculation engine; this PDF does not change or recalculate them. Panchang and Yoga calculations may be experimental. ${escapeHtml(report.disclaimer)}</div>
