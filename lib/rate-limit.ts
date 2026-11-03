@@ -60,15 +60,10 @@ export async function checkRateLimit(
       console.warn("[vedic-ai] Supabase admin credentials are missing; using bounded in-memory rate limiting.");
       return fallbackLimit(bucketKey, limit, windowMs);
     }
-      // The generated Supabase Database type may lag behind migration 004.
-      // Narrow this one RPC call locally until database types are regenerated.
-      const consumeRateLimit = (admin as unknown as {
-        rpc: (functionName: string, args: Record<string, string | number>) => Promise<{
-          data: unknown;
-          error: { message: string } | null;
-        }>;
-      }).rpc;
-      const { data, error } = await consumeRateLimit("consume_rate_limit", {
+      // Invoke the Supabase RPC through the public client API. If the admin client
+      // is misconfigured or the RPC is unavailable, the catch below uses the bounded
+      // process-local limiter so ordinary chat requests remain available.
+      const { data, error } = await admin.rpc("consume_rate_limit", {
         p_bucket_key: bucketKey,
         p_limit: limit,
         p_window_seconds: windowSeconds,
