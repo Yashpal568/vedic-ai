@@ -5,7 +5,27 @@ import * as fs from "fs";
 import * as path from "path";
 import { execFileSync } from "child_process";
 
-describe("Kundli PDF Export (Task 2)", () => {
+function findChromePath(): string | null {
+  const candidatePaths = [
+    process.env.CHROME_BIN,
+    process.env.CHROME_PATH,
+    "/usr/bin/google-chrome",
+    "/usr/bin/google-chrome-stable",
+    "/usr/bin/chromium-browser",
+    "/usr/bin/chromium",
+    "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+    "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
+    path.join(process.env.LOCALAPPDATA || "", "Google\\Chrome\\Application\\chrome.exe"),
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+  ].filter(Boolean) as string[];
+
+  for (const p of candidatePaths) {
+    if (fs.existsSync(p)) return p;
+  }
+  return null;
+}
+
+describe("Kundli PDF Export (Task 2 & 3)", () => {
   const testInput = {
     date: "1995-10-24",
     time: "06:30",
@@ -63,15 +83,12 @@ describe("Kundli PDF Export (Task 2)", () => {
     fs.writeFileSync(htmlPath, html, "utf-8");
 
     try {
-      const chromePath = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
-      if (!fs.existsSync(chromePath)) {
-        console.warn("Chrome not found at standard path, skipping headless PDF execution");
-        return;
-      }
+      const chromePath = findChromePath();
+      expect(chromePath, "Google Chrome or Chromium binary must be available in environment").toBeTruthy();
 
       // Generate PDF via Chrome
       execFileSync(
-        chromePath,
+        chromePath!,
         [
           "--headless=new",
           "--disable-gpu",
@@ -91,7 +108,6 @@ describe("Kundli PDF Export (Task 2)", () => {
       // Verify PDF has exactly 2 pages by checking the page count in PDF trailer/catalog
       const pdfText = pdfBytes.toString("latin1");
       const pageMatches = pdfText.match(/\/Type\s*\/Page\b/g);
-      // In standard Chromium PDF output, each page corresponds to a /Type /Page object
       console.log("PDF generated successfully. File size:", pdfBytes.length, "bytes. Detected /Type /Page count:", pageMatches?.length);
       expect(pageMatches?.length).toBe(2);
     } finally {

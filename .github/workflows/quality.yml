@@ -14,6 +14,8 @@ concurrency:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    env:
+      CHROME_BIN: /usr/bin/google-chrome
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
