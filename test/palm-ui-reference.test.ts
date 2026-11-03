@@ -63,7 +63,7 @@ Traditional palmistry reflects symbolic tendencies rather than set-in-stone outc
     expect(headerCode).toContain("Vedic Astrological Insight");
 
     const plateCode = fs.readFileSync(path.resolve(__dirname, "../components/palm/palm-biometric-plate.tsx"), "utf-8");
-    expect(plateCode).toContain("Live Palm Scan • 99.4% Match");
+    expect(plateCode).toContain("Verified Hastarekha Scan");
     expect(plateCode).toContain("AI Biometrics");
     expect(plateCode).toContain("Heart Line");
     expect(plateCode).toContain("Head Line");

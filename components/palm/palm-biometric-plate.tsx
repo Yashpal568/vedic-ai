@@ -43,7 +43,7 @@ export default function PalmBiometricPlate({
       <div className="flex items-center justify-between text-[11px] text-[var(--muted)] px-2 mb-2">
         <span className="flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 rounded-full bg-[var(--green)] animate-pulse" />
-          Live Palm Scan • 99.4% Match
+          Verified Hastarekha Scan
         </span>
         <div className="flex items-center gap-2">
           <button

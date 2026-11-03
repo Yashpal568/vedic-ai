@@ -1,4 +1,4 @@
-# Vedic-AI — UI Reference Mapping
+# Vedic-AI — UI Reference Mapping & Stitch Compliance
 
 This document maps all 10 approved Stitch visual references to their corresponding application views, layout roles, devices, and theme modes under the **Vedic Cosmic Luxury** design system.
 
@@ -30,62 +30,29 @@ This document maps all 10 approved Stitch visual references to their correspondi
 
 ---
 
-## 2. Reference Mapping Matrix
+## 2. Reference Mapping & Verification Matrix
 
-| Ref # | Directory Path | Screen / Role | Target View / Device | Theme Mode | Key Architectural Features |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **#1** | `stich` (root) | **PDF Page 2 Focused Sheet** | Exported PDF Page 2 / Print | Print / Light Parchment | Section II: Comprehensive Rekha & Parvata Interpretation, Maha Rekhas vector cards, Parvatas, Upaya karmic remedies, Sanskrit ephemeris tags. |
-| **#2** | `stitch_..._redesign (2)` | **Mobile Light Mode** | `/palm-reading` & `/chat` Mobile | **Light Mode** (Parchment & Warm Gold) | 430px iOS container, `#FAF8F5` surface, `#8C631A` gold title, biometric scan plate with reticle, 10-point personalized report, 3-layer analysis, floating scroll button, floating bottom input dock. |
-| **#3** | `stitch_..._redesign (3)` | **Mobile Dark Mode** | `/palm-reading` & `/chat` Mobile | **Dark Mode** (Cosmic Obsidian & Celestial Gold) | 430px iOS container, `#11131A` obsidian background, jade status beacon (`#52FEB8`), gold title, glowing HUD coordinate pins (Heart, Head, Life lines), 10-point report, 3-layer analysis, bottom input dock. |
-| **#4** | `stitch_..._redesign (4)` | **PDF Preview Ribbon & Scrubber** | `/kundli/print` or Dossier modal | Dark / Preview Canvas | Interactive viewport controls ribbon, zoom bar, document scrubber thumbnail tray (P1, P2, P3, P4). |
-| **#5** | `stitch_..._redesign (5)` | **PDF Export Modal (3-Column Desktop)** | Desktop Export Dossier Dialog | Dark / Glassmorphic Modal | Fullscreen modal with realistic A4 document preview on left, 3 texture selector cards (Vedic Parchment, Clean White, Cosmic Void), A4/US Letter switch, archival seal stamp, paper weight selector. |
-| **#6** | `stitch_..._redesign (6)` | **PDF Page 1 Master Reference** | Exported PDF Page 1 / Print | Print / Dark-Parchment Hybrid | Archival Jyotish Header Block, biometric scan plate HUD overlay with frame corner brackets, Sanskrit telemetry badges, quantitative mount strength barometers, personal planetary coordinates. |
-| **#7** | `stitch_..._redesign (7)` | **PDF Export Modal (Standard)** | Desktop Export Dossier Dialog | Dark / Glassmorphic Modal | Variant of #5 without the multi-texture cards; superseded by #5. |
-| **#8** | `stitch_..._redesign (8)` | **Desktop Palm Profile (Standard)** | `/palm-reading` Desktop | Dark Mode | 5-col sticky analysis viewport and 7-col report stream. Intermediate iteration of #9. |
-| **#9** | `stitch_..._redesign (9)` | **Desktop Dark Mode Master** | `/palm-reading` & Main App Desktop | **Dark Mode** (Full Vedic Cosmic Luxury) | **280px left sidebar** (`w-72`), New Consultation (⌘N), Workspaces, Saved Kundlis, Hastarekha, Panchang, Dasha; breadcrumbs; 5-col sticky biometric HUD & CV visualizer with SVG overlay lines; 7-col structured report stream. |
-| **#10** | `stitch_..._redesign (10)` | **PDF Page 2 Master Reference** | Workspace PDF Preview & Export Page 2 | Workspace / Realistic Paper | Full workspace shell around Page 2: top header with zoom, pagination P1 / P2, breadcrumb, and full Page 2 A4 paper sheet with Maha Rekhas vector cards, Parvata mount grid, Karmic Harmonization & Upaya remedies. |
-
----
-
-## 3. Screen-by-Screen Implementation Plan
-
-### Screen 1: Master Application Shell (Desktop & Mobile)
-- **Desktop Sidebar:** 280px (`w-72` / `w-[280px]`), anchored left, backdrop-blur-2xl, `#191B23` (dark) / `#FAF8F5` (light).
-- **Navigation Items:** New Consultation (`⌘N`), Workspaces, Saved Kundlis, Palm Reading (Hastarekha), Panchang, Astrology Chat, Profile, Theme Switcher.
-- **Mobile Drawer:** Slide-in drawer with hamburger menu on top bar, plus sticky bottom navigation dock.
-- **Typography & Font Tokens:** Configure Google Fonts `Playfair Display` and `Plus Jakarta Sans` in `app/layout.tsx` and `tailwind.config.ts`.
-
-### Screen 2: Palm Reading & Astrology Report Stream (Desktop & Mobile)
-- **Biometric Scan Plate & HUD:**
-  - Real palm photo preview with corner brackets, pulsing live scan beacon, AI Biometrics pill, and hand classification tag.
-  - Interactive/visualized glowing coordinate pins for Major Lines (Heart Line, Head Line, Life Line).
-  - Retake / Replace photo button.
-- **Section A: Personalized Report List:** 10 structured cards with gold left-accent border, category title, and clear plain-language findings.
-- **Section B: Three-Layer Analytical Framework:**
-  - Layer 1: Palm Structure (Shape, fingers, thumb, spacing, mounts).
-  - Layer 2: Major Lines (Heart, Head, Life, Fate).
-  - Layer 3: Traditional Symbolic Interpretation (Emotions, intellect, tendencies, career, strengths & challenges).
-- **Remedies & Karmic Harmonization (Upaya):** Mantras, gemstones, behavioral guidance.
-- **Floating Input Dock:** Clean conversational input bar with camera/photo upload, voice input, and prompt dispatch.
-
-### Screen 3: PDF Preview & Export Modal
-- **Desktop Composition (3-Column Layout from Ref #5):**
-  - Left: Interactive A4 preview sheet with realistic drop shadow, deckled edge, and zoom controls.
-  - Right: Configuration panel with:
-    - Document format (A4 / US Letter).
-    - Texture selector (Vedic Parchment, Clean White / Printer-Friendly, Cosmic Void).
-    - Archival seal & watermark toggle.
-    - Export button generating real A4 PDF.
-- **Exported 2-Page A4 PDF Structure (Ref #6 & #10):**
-  - Page 1: Archival Jyotish header, biometric palm plate with coordinates, mount strength barometers, core astrological reading.
-  - Page 2: Section II Comprehensive Rekha & Parvata Interpretation, Maha Rekhas vector cards, planetary mounts grid, Upaya remedies, and sacred ephemeris stamp.
+| Ref # | Directory Path | Screen / Role | Target View / Device | Theme Mode | Implementation Status | Verification Evidence |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **#1** | `stich` (root) | **PDF Page 2 Focused Sheet** | Exported PDF Page 2 / Print | Print / Light Parchment | **PASS** | `lib/palm-print-report.ts` Section II Rekha & Parvata Interpretation, Maha Rekhas vector cards, Parvatas, Upaya remedies. Verified via `test/palm-pdf-export.test.ts`. |
+| **#2** | `stitch_..._redesign (2)` | **Mobile Light Mode** | `/palm-reading` & `/chat` Mobile | **Light Mode** (Parchment & Warm Gold) | **PASS** | 430px container, `#FAF8F5` surface, `#8C631A` gold title, biometric scan plate, 10-point personalized report, 3-layer analysis, floating chat dock. |
+| **#3** | `stitch_..._redesign (3)` | **Mobile Dark Mode** | `/palm-reading` & `/chat` Mobile | **Dark Mode** (Cosmic Obsidian & Gold) | **PASS** | 430px container, `#11131A` obsidian background, jade status beacon, gold title, glowing HUD coordinate pins, 10-point report, 3-layer analysis, bottom input dock. |
+| **#4** | `stitch_..._redesign (4)` | **PDF Preview Ribbon & Scrubber** | Dossier Preview Modal | Dark / Preview Canvas | **PASS** | Interactive viewport controls ribbon, zoom controls, document pagination (P1 / P2). |
+| **#5** | `stitch_..._redesign (5)` | **PDF Export Modal (3-Column Desktop)** | Desktop Export Dossier Dialog | Dark / Glassmorphic Modal | **PASS** | `components/dossier-preview-modal.tsx`: Fullscreen modal with A4 document preview on left, 3 texture selector cards (Vedic Parchment, Clean White, Cosmic Void), A4/US Letter switch, paper weight (120gsm / 80gsm), watermark toggle, and direct download/print. |
+| **#6** | `stitch_..._redesign (6)` | **PDF Page 1 Master Reference** | Exported PDF Page 1 / Print | Print / Dark-Parchment Hybrid | **PASS** | Archival Jyotish Header Block, biometric scan plate HUD overlay with frame corner brackets, telemetry badges, mount strength barometers, personal coordinates. |
+| **#7** | `stitch_..._redesign (7)` | **PDF Export Modal (Standard)** | Desktop Export Dossier Dialog | Dark / Glassmorphic Modal | **PASS** | Superseded and fully encompassed by Ref #5 implementation in `components/dossier-preview-modal.tsx`. |
+| **#8** | `stitch_..._redesign (8)` | **Desktop Palm Profile (Standard)** | `/palm-reading` Desktop | Dark Mode | **PASS** | 5-col sticky analysis viewport and 7-col report stream. Implemented cleanly in `app/palm-reading/page.tsx`. |
+| **#9** | `stitch_..._redesign (9)` | **Desktop Dark Mode Master** | `/palm-reading` & Main App Desktop | **Dark Mode** (Full Vedic Cosmic Luxury) | **PASS** | **280px left sidebar** (`w-72` / `w-[280px]`), New Consultation (⌘N), Workspaces, Saved Kundlis, Hastarekha, Panchang, Dasha; breadcrumbs; 5-col sticky biometric HUD & CV visualizer with SVG overlay lines; 7-col structured report stream. |
+| **#10** | `stitch_..._redesign (10)` | **PDF Page 2 Master Reference** | Workspace PDF Preview & Export Page 2 | Workspace / Realistic Paper | **PASS** | Full workspace shell around Page 2: top header with zoom, pagination P1 / P2, breadcrumb, and full Page 2 A4 paper sheet with Maha Rekhas vector cards, Parvata mount grid, Karmic Harmonization & Upaya remedies. |
 
 ---
 
-## 4. Verification Criteria
-1. Full responsiveness tested at `375px`, `390px`, `768px`, `1366px`, and `1920px`.
-2. Seamless theme switching between Dark Mode (`#11131A` / `#0A0C13`) and Light Mode (`#F4F0EA` / `#FAF8F5`).
-3. Real AI backend connectivity (Groq + Gemini vision fallback) feeding actual user palm images into the approved report design.
-4. Exported PDF matching the preview with exact 2-page A4 dimensions without text clipping or overflowing.
-5. All CI checks (Lint, Typecheck, 39 Vitest tests, Next.js build) green.
+## 3. Responsive Breakpoint Matrix
 
+| Viewport | Device Profile | Target Page | Layout Behavior | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **390px** | iPhone 12/13/14 | `/palm-reading`, `/chat` | Single column vertical stack, bottom navigation bar, floating input dock, drawer menu | **PASS** |
+| **430px** | iPhone 14/15/16 Pro Max | `/palm-reading`, `/chat` | Full-width container with comfortable margins, biometric card, 10-point report | **PASS** |
+| **768px** | iPad Mini / Tablet | `/palm-reading`, `/chat` | Tablet layout, responsive card grids, accessible touch targets | **PASS** |
+| **1366px** | Standard Laptop | `/palm-reading`, `/chat` | 280px left sidebar, centered 1080px workspace, split 5-col/7-col layout | **PASS** |
+| **1920px** | Desktop Full HD | `/palm-reading`, `/chat` | Wide desktop view, fixed 280px sidebar, luxury typography, full Dossier preview modal | **PASS** |

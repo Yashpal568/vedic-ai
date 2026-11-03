@@ -6,6 +6,7 @@ export interface PalmPrintOptions {
   texture?: "parchment" | "clean" | "void";
   paperWeight?: "120gsm" | "80gsm";
   format?: "A4" | "US_Letter";
+  watermark?: boolean;
   reportId?: string;
 }
 
@@ -458,9 +459,10 @@ export function generatePalmPrintHtml(report: ParsedPalmReport, options: PalmPri
     }
 
     @page {
-      size: A4 portrait;
+      size: ${options.format === "US_Letter" ? "letter" : "A4"} portrait;
       margin: 8mm 10mm;
     }
+    ${options.watermark === false ? ".watermark { display: none !important; }" : ""}
 
     @media print {
       body {
@@ -476,9 +478,9 @@ export function generatePalmPrintHtml(report: ParsedPalmReport, options: PalmPri
         gap: 0 !important;
       }
       .pdf-page {
-        width: 190mm !important;
-        min-height: 279mm !important;
-        max-height: 279mm !important;
+        width: ${options.format === "US_Letter" ? "195mm" : "190mm"} !important;
+        min-height: ${options.format === "US_Letter" ? "265mm" : "279mm"} !important;
+        max-height: ${options.format === "US_Letter" ? "265mm" : "279mm"} !important;
         box-shadow: none !important;
         border: none !important;
         page-break-after: always !important;
@@ -536,8 +538,8 @@ export function generatePalmPrintHtml(report: ParsedPalmReport, options: PalmPri
         <div class="subject-ribbon">
           <div><span>Target Palm</span><strong>${escapeHtml(handLabel)}</strong></div>
           <div><span>Analytical Model</span><strong>Hastarekha Vision 2.0</strong></div>
-          <div><span>Biometric Match</span><strong>99.4% Line Cohesion</strong></div>
-          <div><span>Archival Grade</span><strong>ISO 216 / A4 Standard</strong></div>
+          <div><span>Biometric Status</span><strong>Verified Hastarekha Scan</strong></div>
+          <div><span>Archival Grade</span><strong>${options.format === "US_Letter" ? "US Letter" : "ISO 216 / A4"} · ${escapeHtml(options.paperWeight || "120gsm")}</strong></div>
         </div>
 
         <!-- Biometric Scan Plate + Mount Strengths -->

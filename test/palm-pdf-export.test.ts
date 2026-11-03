@@ -45,7 +45,7 @@ Steady vertical ascent manifesting autonomous vocational direction and self-earn
 Strong alignment between intuitive potential and practical manifestation in worldly endeavors.
 
 ## 7. Limitations & Guidance
-Traditional Hastarekha observations offer symbolic lenses for contemplation; conscious action shapes reality.`;
+Samudrika Shastra provides symbolic reflections of inherent tendencies, not unalterable decrees. Consciousness and deliberate action always direct one's life.`;
 
   it("generates structured 2-page A4 print HTML matching Stitch reference specifications", () => {
     const parsed = parsePalmReading(sampleMarkdown, "left");
@@ -79,12 +79,15 @@ Traditional Hastarekha observations offer symbolic lenses for contemplation; con
     expect(html).toContain("Samudrika Shastra Advisory");
   });
 
-  it("renders to an actual two-page A4 PDF using Chrome headless without clipping", () => {
+  it("renders to an actual two-page A4 PDF using Chrome headless without clipping (Vedic Parchment Profile)", () => {
     const parsed = parsePalmReading(sampleMarkdown, "left");
     const html = generatePalmPrintHtml(parsed, {
       hand: "left",
       texture: "parchment",
       reportId: "VD-PALM-TEST-002",
+      format: "A4",
+      paperWeight: "120gsm",
+      watermark: true,
     });
 
     const htmlPath = path.resolve(__dirname, "temp-palm-report.html");
@@ -115,28 +118,10 @@ Traditional Hastarekha observations offer symbolic lenses for contemplation; con
       const pdfBytes = fs.readFileSync(pdfPath);
       expect(pdfBytes.length).toBeGreaterThan(15000);
 
-      // Save live screenshot of the rendered A4 print document
-      const imgPath = path.resolve("C:/Users/hp/.gemini/antigravity/brain/df355cbb-8b43-4434-bd55-f527cbd6b92a/screenshots/live_exported_dossier_a4.png");
-      try {
-        execFileSync(
-          chromePath!,
-          [
-            "--headless=new",
-            "--disable-gpu",
-            "--no-sandbox",
-            `--user-data-dir=${chromeDataDir}`,
-            "--window-size=1000,1400",
-            `--screenshot=${imgPath}`,
-            `file:///${htmlPath.replace(/\\/g, "/")}`,
-          ],
-          { timeout: 25000 }
-        );
-      } catch {}
-
       // Verify exact 2-page PDF
       const pdfText = pdfBytes.toString("latin1");
       const pageMatches = pdfText.match(/\/Type\s*\/Page\b/g);
-      console.log("Palm PDF generated successfully. File size:", pdfBytes.length, "bytes. Detected /Type /Page count:", pageMatches?.length);
+      console.log("Palm PDF (Vedic Parchment) generated. Size:", pdfBytes.length, "bytes. Pages:", pageMatches?.length);
       expect(pageMatches?.length).toBe(2);
     } finally {
       try { if (fs.existsSync(htmlPath)) fs.unlinkSync(htmlPath); } catch {}
@@ -144,4 +129,31 @@ Traditional Hastarekha observations offer symbolic lenses for contemplation; con
       try { if (fs.existsSync(chromeDataDir)) fs.rmSync(chromeDataDir, { recursive: true, force: true }); } catch {}
     }
   }, 30000);
+
+  it("verifies Clean White and Cosmic Void profiles and US Letter export", () => {
+    const parsed = parsePalmReading(sampleMarkdown, "right");
+
+    // Clean White Profile
+    const cleanHtml = generatePalmPrintHtml(parsed, {
+      hand: "right",
+      texture: "clean",
+      format: "US_Letter",
+      paperWeight: "80gsm",
+      watermark: false,
+    });
+    expect(cleanHtml).toContain("US Letter");
+    expect(cleanHtml).toContain("80gsm");
+    expect(cleanHtml).toContain("display: none !important;"); // Watermark disabled
+
+    // Cosmic Void Profile
+    const voidHtml = generatePalmPrintHtml(parsed, {
+      hand: "right",
+      texture: "void",
+      format: "A4",
+      watermark: true,
+    });
+    expect(voidHtml).toContain("#0C0E15"); // Cosmic Void Dark background
+    expect(voidHtml).toContain("Page 01 of 02");
+    expect(voidHtml).toContain("Page 02 of 02");
+  });
 });

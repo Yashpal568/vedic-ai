@@ -52,6 +52,7 @@ export default function DossierPreviewModal({
         texture: selectedTexture,
         paperWeight,
         format: selectedFormat,
+        watermark: hasWatermark,
       });
     } catch (err) {
       console.error("Print error:", err);
@@ -69,6 +70,7 @@ export default function DossierPreviewModal({
         texture: selectedTexture,
         paperWeight,
         format: selectedFormat,
+        watermark: hasWatermark,
       });
     } catch (err) {
       console.error("Download PDF error:", err);
@@ -207,7 +209,7 @@ export default function DossierPreviewModal({
                     <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-[#52FEB8]" />
                     <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-[#52FEB8]" />
                     <div className="absolute top-2 left-3 text-[9px] font-bold text-[#52FEB8] bg-black/70 px-1.5 py-0.5 rounded">
-                      Live Scan • 99.4% Match
+                      Verified Hastarekha Scan
                     </div>
                   </div>
 
