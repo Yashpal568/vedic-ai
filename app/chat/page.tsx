@@ -19,7 +19,7 @@ import {
   ShieldCheck, Sparkles, UserRound, X, BriefcaseBusiness, Heart, Compass, Trash2, RefreshCw, PanelLeftClose, PanelLeftOpen, Bell, Clock3,
 } from "lucide-react";
 
-type Message = { id: string; role: "user" | "assistant"; content: string };
+type Message = { id: string; role: "user" | "assistant"; content: string; animated?: boolean };
 type BirthProfile = { name: string; date: string; time: string; place: string; latitude?: number; longitude?: number; timezone?: string };
 type PlaceOption = { id: string; label: string; latitude: number; longitude: number; type: string; importance: number };
 type HistoryItem = { id: string; title: string; updated_at?: string };
@@ -644,9 +644,10 @@ export default function Home() {
     setInput("");
     setIsLoading(true);
     if (textareaRef.current) textareaRef.current.style.height = "auto";
-    let conversationIdForTurn = activeConversationId;
+    // Save the user turn in parallel with the AI request. Conversation persistence
+    // must never keep the chat's "thinking" state visible after the AI has replied.
+    const initialSave = persistConversation(nextMessages, [userMessage], activeConversationId);
     try {
-      conversationIdForTurn = await persistConversation(nextMessages, [userMessage], activeConversationId);
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -658,15 +659,26 @@ export default function Home() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "The AI service is not available right now.");
-      const assistantMessage: Message = { id: makeId(), role: "assistant", content: data.reply };
+      if (typeof data.reply !== "string" || !data.reply.trim()) {
+        throw new Error("The AI returned an empty response. Please try again.");
+      }
+      const assistantMessage: Message = { id: makeId(), role: "assistant", content: data.reply, animated: true };
       const completeMessages = [...nextMessages, assistantMessage];
       setMessages(completeMessages);
-      await persistConversation(completeMessages, [assistantMessage], conversationIdForTurn);
+      setIsLoading(false);
+      // Persist the completed turn in the background; don't block rendering or input.
+      void initialSave.then((conversationId) =>
+        persistConversation(completeMessages, [assistantMessage], conversationId)
+      );
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unable to reach the AI service.";
-      const assistantMessage: Message = { id: makeId(), role: "assistant", content: message };
-      setMessages((current) => [...current, assistantMessage]);
-      await persistConversation([...nextMessages, assistantMessage], [assistantMessage], conversationIdForTurn);
+      const assistantMessage: Message = { id: makeId(), role: "assistant", content: message, animated: true };
+      const failedMessages = [...nextMessages, assistantMessage];
+      setMessages(failedMessages);
+      setIsLoading(false);
+      void initialSave.then((conversationId) =>
+        persistConversation(failedMessages, [assistantMessage], conversationId)
+      );
     } finally {
       setIsLoading(false);
     }
@@ -1359,7 +1371,7 @@ export default function Home() {
               <p className="chart-disclaimer"><ShieldCheck size={13}/> Transit positions use the experimental calculation engine and are not independently validated. Treat this as a preview, not a predictive reading.</p>
               <div className="chart-table-wrap"><table className="chart-table"><thead><tr><th>Graha</th><th>Current sign</th><th>Degree</th><th>House from natal Lagna</th><th>Natal sign</th></tr></thead><tbody>{transitReport.planets.map((planet) => { const natal = chartReport.planets.find((item) => item.name === planet.name); return <tr key={planet.name}><td>{planet.name}</td><td>{planet.sign}</td><td>{planet.degreeInSign.toFixed(2)}°</td><td>{(planet.signIndex - chartReport.ascendant.signIndex + 12) % 12 + 1}</td><td>{natal?.sign || "—"}</td></tr>; })}</tbody></table></div>
             </section>}
-            {messages.map((message, messageIndex) => <div className={"message-row " + message.role} key={message.id}>
+            {messages.map((message, messageIndex) => <div className={"message-row " + message.role + (message.animated ? " is-new" : "")} key={message.id}>
               {message.role === "assistant" && <div className="message-avatar"><MoonStar size={16} /></div>}
               {message.role === "assistant" ? <div className="message-content">
                 <div className="message-meta">VEDIC AI <span style={{ color: "#5f6057", margin: "0 5px" }}>·</span> ASTROLOGY COMPANION</div>
