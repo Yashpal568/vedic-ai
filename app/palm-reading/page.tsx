@@ -190,7 +190,6 @@ export default function PalmReadingPage() {
   async function chooseImage(event: ChangeEvent<HTMLInputElement>) {
     const input = event.currentTarget;
     const file = input.files?.[0];
-    input.value = "";
     if (!file) return;
 
     setError("");
@@ -201,64 +200,66 @@ export default function PalmReadingPage() {
     setFileName("");
     setFileSizeStr("");
 
-    if (file.size > 15 * 1024 * 1024) {
-      setError("This photo is larger than 15 MB. Please select a smaller photo.");
+    // Maximum 20 MB size threshold
+    if (file.size > 20 * 1024 * 1024) {
+      setError("This photo is larger than 20 MB. Please select a smaller photo.");
+      if (input) input.value = "";
       return;
     }
 
-    const isImageMime = file.type && file.type.startsWith("image/");
-    const isImageExt = /\.(jpe?g|png|webp|heic|heif)$/i.test(file.name);
+    // Permissive check for mobile gallery files
+    const isImageMime = !file.type || file.type.startsWith("image/") || file.type === "application/octet-stream";
+    const isImageExt = !file.name || /\.(jpe?g|png|webp|heic|heif|bmp|tiff?)$/i.test(file.name) || !file.name.includes(".");
     if (!isImageMime && !isImageExt) {
       setError("Please choose a valid photo (JPG, PNG, WebP, or HEIC).");
+      if (input) input.value = "";
       return;
     }
 
-    let objectUrl = "";
-    let bitmap: ImageBitmap | null = null;
     try {
-      let source: CanvasImageSource;
-      let sourceWidth = 0;
-      let sourceHeight = 0;
+      // 1. Universal FileReader reading (safest across all mobile WebViews and detached file handles)
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          if (typeof reader.result === "string") {
+            resolve(reader.result);
+          } else {
+            reject(new Error("Unable to read image bytes from file."));
+          }
+        };
+        reader.onerror = () => reject(new Error("Could not read image from device gallery."));
+        reader.readAsDataURL(file);
+      });
 
-      try {
-        bitmap = await createImageBitmap(file);
-        source = bitmap;
-        sourceWidth = bitmap.width;
-        sourceHeight = bitmap.height;
-      } catch {
-        objectUrl = URL.createObjectURL(file);
-        const decoded = await new Promise<HTMLImageElement>((resolve, reject) => {
-          const img = new Image();
-          img.onload = () => resolve(img);
-          img.onerror = () => reject(new Error("Unable to decode this image format. Please choose a JPG or PNG image."));
-          img.src = objectUrl;
-        });
-        source = decoded;
-        sourceWidth = decoded.naturalWidth;
-        sourceHeight = decoded.naturalHeight;
-      }
+      // 2. Decode into HTMLImageElement
+      const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = () => reject(new Error("Could not decode image format. Please select a standard JPG or PNG photo."));
+        image.src = dataUrl;
+      });
 
-      if (!sourceWidth || !sourceHeight) {
+      const width = img.naturalWidth || img.width;
+      const height = img.naturalHeight || img.height;
+      if (!width || !height) {
         throw new Error("The selected image has unreadable dimensions. Please choose another photo.");
       }
 
       const maxDimension = 1920;
-      const scale = Math.min(1, maxDimension / Math.max(sourceWidth, sourceHeight));
+      const scale = Math.min(1, maxDimension / Math.max(width, height));
       const canvas = document.createElement("canvas");
-      canvas.width = Math.max(1, Math.round(sourceWidth * scale));
-      canvas.height = Math.max(1, Math.round(sourceHeight * scale));
+      canvas.width = Math.max(1, Math.round(width * scale));
+      canvas.height = Math.max(1, Math.round(height * scale));
       const context = canvas.getContext("2d");
       if (!context) throw new Error("Browser canvas is unavailable. Please try another image.");
 
       context.fillStyle = "#ffffff";
       context.fillRect(0, 0, canvas.width, canvas.height);
-      context.drawImage(source, 0, 0, canvas.width, canvas.height);
-      bitmap?.close();
-      bitmap = null;
+      context.drawImage(img, 0, 0, canvas.width, canvas.height);
 
       let q = 0.88;
       let prepared = canvas.toDataURL("image/jpeg", q);
-      while (prepared.length > 5_200_000 && q > 0.5) {
+      while (prepared.length > 5_200_000 && q > 0.45) {
         q -= 0.08;
         prepared = canvas.toDataURL("image/jpeg", q);
       }
@@ -272,10 +273,12 @@ export default function PalmReadingPage() {
       setFileName(file.name || "palm-photo.jpg");
       setFileSizeStr(sizeKB > 1024 ? `${(sizeKB / 1024).toFixed(1)} MB` : `${sizeKB} KB`);
     } catch (e) {
-      bitmap?.close();
+      console.error("[chooseImage error]", e);
       setError(e instanceof Error ? e.message : "Could not prepare this photo. Please try another image.");
     } finally {
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      try {
+        if (input) input.value = "";
+      } catch {}
     }
   }
 
@@ -373,6 +376,29 @@ These are traditional symbolic interpretations, not scientifically validated per
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] flex flex-col font-sans-luxury">
+      {/* Universal Hidden File Inputs (Mounted persistently at DOM root for reliable mobile gallery & camera access) */}
+      <input
+        id="palm-gallery-input"
+        ref={galleryInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/heic,image/heif,image/*"
+        onChange={chooseImage}
+        className="sr-only"
+        tabIndex={-1}
+        aria-label="Upload palm photo from device gallery"
+      />
+      <input
+        id="palm-camera-input"
+        ref={cameraInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/*"
+        capture="environment"
+        onChange={chooseImage}
+        className="sr-only"
+        tabIndex={-1}
+        aria-label="Capture palm photo with device camera"
+      />
+
       {/* 280px Left Sidebar on Desktop (Reference #9) */}
       <AppDesktopSidebar onNewConsultation={() => { removePhoto(); setQuestion(""); }} />
 
@@ -471,7 +497,19 @@ These are traditional symbolic interpretations, not scientifically validated per
                   </div>
 
                   {/* Photo preview / upload dropzone */}
-                  <div className={"palm-dropzone" + (image ? " has-image" : "")}>
+                  <div
+                    className={"palm-dropzone cursor-pointer" + (image ? " has-image" : "")}
+                    onClick={openGalleryPicker}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        openGalleryPicker();
+                      }
+                    }}
+                    title="Click or tap to upload a palm photo"
+                  >
                     {image ? (
                       <div className="palm-preview-container">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -493,24 +531,7 @@ These are traditional symbolic interpretations, not scientifically validated per
                     )}
                   </div>
 
-                  {/* Native file inputs (rendered accessible in DOM without blocking click events) */}
-                  <input
-                    ref={cameraInputRef}
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    onChange={chooseImage}
-                    style={{ position: "absolute", width: "1px", height: "1px", opacity: 0, pointerEvents: "none" }}
-                    aria-label="Take a photo with your device camera"
-                  />
-                  <input
-                    ref={galleryInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={chooseImage}
-                    style={{ position: "absolute", width: "1px", height: "1px", opacity: 0, pointerEvents: "none" }}
-                    aria-label="Choose a palm photo from your gallery"
-                  />
+                  {/* File inputs are mounted persistently at root of view */}
 
                   {/* Main Action buttons */}
                   {image ? (
@@ -523,14 +544,17 @@ These are traditional symbolic interpretations, not scientifically validated per
                         <Camera size={16} />
                         <span>Retake with Camera</span>
                       </button>
-                      <button
-                        type="button"
-                        className="palm-picker-button palm-gallery-button"
-                        onClick={openGalleryPicker}
+                      <label
+                        htmlFor="palm-gallery-input"
+                        className="palm-picker-button palm-gallery-button cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openGalleryPicker();
+                        }}
                       >
                         <RefreshCw size={16} />
                         <span>Replace from Gallery</span>
-                      </button>
+                      </label>
                       <button
                         type="button"
                         className="palm-remove-button"
@@ -551,14 +575,17 @@ These are traditional symbolic interpretations, not scientifically validated per
                         <Camera size={17} />
                         <span>Take photo</span>
                       </button>
-                      <button
-                        type="button"
-                        className="palm-picker-button palm-gallery-button"
-                        onClick={openGalleryPicker}
+                      <label
+                        htmlFor="palm-gallery-input"
+                        className="palm-picker-button palm-gallery-button cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openGalleryPicker();
+                        }}
                       >
                         <ImagePlus size={17} />
                         <span>Choose from gallery</span>
-                      </button>
+                      </label>
                     </div>
                   )}
 
