@@ -3,14 +3,9 @@ import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const provider = (process.env.AI_PROVIDER || "").toLowerCase();
-  const aiConfigured = Boolean(
-    provider === "openai"
-      ? process.env.OPENAI_API_KEY
-      : provider === "groq"
-        ? process.env.GROQ_API_KEY
-        : process.env.GEMINI_API_KEY || process.env.GROQ_API_KEY || process.env.OPENAI_API_KEY,
-  );
+  const { getConfiguredAiProvider } = await import("@/lib/ai-config");
+  const aiProvider = getConfiguredAiProvider();
+  const aiConfigured = Boolean(aiProvider);
 
   return NextResponse.json({
     status: "ok",
@@ -18,6 +13,7 @@ export async function GET() {
     stage: "preview",
     integrations: {
       aiConfigured,
+      aiProvider,
       supabaseConfigured: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
       sharedRateLimitConfigured: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY),
       permanentAccountDeletionConfigured: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY),
