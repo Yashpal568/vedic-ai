@@ -62,13 +62,15 @@ export async function checkRateLimit(
     }
     // Invoke the RPC through the typed Supabase client. If it is unavailable,
     // the catch below uses the bounded process-local limiter.
-    const { data, error } = await admin.rpc("consume_rate_limit", {
+    type AdminRpc = { rpc: (name: string, params: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }> };
+    const { data, error } = await (admin as unknown as AdminRpc).rpc("consume_rate_limit", {
       p_bucket_key: bucketKey,
       p_limit: limit,
       p_window_seconds: windowSeconds,
     });
       if (!error) {
-        const result = Array.isArray(data) ? data[0] : data;
+        const raw = Array.isArray(data) ? data[0] : data;
+      const result = raw as { allowed?: boolean; retry_after_seconds?: number; remaining?: number } | null;
         if (result && typeof result.allowed === "boolean") {
           return {
             allowed: result.allowed,
@@ -80,7 +82,7 @@ export async function checkRateLimit(
         }
       } else {
         console.error("[vedic-ai] Durable rate limiter unavailable; using process-local fallback.", {
-          message: error.message,
+          message: (error as { message?: string }).message,
           code: (error as { code?: string }).code,
           details: (error as { details?: string }).details,
           hint: (error as { hint?: string }).hint,

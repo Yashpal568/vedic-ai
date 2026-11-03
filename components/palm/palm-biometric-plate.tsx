@@ -16,7 +16,7 @@ export default function PalmBiometricPlate({
   onRetake,
   className = "",
 }: PalmBiometricPlateProps) {
-  const [showOverlay, setShowOverlay] = useState(true);
+  const [showOverlay, setShowOverlay] = useState(false);
 
   const handLabel =
     hand === "left"
@@ -48,12 +48,12 @@ export default function PalmBiometricPlate({
             type="button"
             onClick={() => setShowOverlay((v) => !v)}
             className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold tracking-wide border border-[var(--gold)]/30 hover:border-[var(--gold)] text-[var(--gold)] bg-[var(--panel)] transition-all cursor-pointer shadow-xs"
-            title="Toggle Hastarekha line and mount highlights"
+            title="Toggle classical reference guide overlay"
           >
             <Eye size={11} />
-            <span>{showOverlay ? "Highlights ON" : "Clean Photo"}</span>
+            <span>{showOverlay ? "Hide Reference Guide" : "Show Reference Guide"}</span>
           </button>
-          <span className="font-semibold text-[var(--gold)]/80 uppercase tracking-wider text-[10px] hidden sm:inline">
+          <span className="font-semibold text-[var(--quiet)] uppercase tracking-wider text-[10px] hidden sm:inline">
             AI Biometrics
           </span>
         </div>
@@ -83,7 +83,7 @@ export default function PalmBiometricPlate({
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={imageSrc || "/realistic-palm.jpg"}
-            alt="User Palm Photograph with Hastarekha Biometric Scan"
+            alt="User Palm Photograph for Hastarekha Analysis"
             onError={(e) => {
               e.currentTarget.onerror = null;
               e.currentTarget.src = "/realistic-palm.jpg";

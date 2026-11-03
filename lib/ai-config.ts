@@ -7,7 +7,7 @@ const providerKeys: Record<AiProvider, string> = {
 };
 
 /** Resolve only providers that actually have a server-side API key configured. */
-export function getConfiguredAiProvider(env: NodeJS.ProcessEnv = process.env): AiProvider | null {
+export function getConfiguredAiProvider(env: Record<string, string | undefined> = process.env): AiProvider | null {
   const requested = (env.AI_PROVIDER || "gemini").trim().toLowerCase();
   const order: AiProvider[] = requested === "openai"
     ? ["openai", "gemini", "groq"]

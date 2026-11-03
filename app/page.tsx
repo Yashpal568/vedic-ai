@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import AppDesktopSidebar from "@/components/app-desktop-sidebar";
 import SiteHeader from "@/components/site-header";
+import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import MobileBottomNav from "@/components/mobile-bottom-nav";
 import {
   Sparkles,
@@ -27,27 +28,105 @@ export default function VedicAIDashboard() {
   const router = useRouter();
   const [promptInput, setPromptInput] = useState("");
   const [hasBirthData, setHasBirthData] = useState(false);
+  const [isCalculated, setIsCalculated] = useState(false);
   const [nativeName, setNativeName] = useState("");
   const [natalLagna, setNatalLagna] = useState<string | null>(null);
   const [natalMoon, setNatalMoon] = useState<string | null>(null);
   const [natalDasha, setNatalDasha] = useState<string | null>(null);
   const [currentTimeStr, setCurrentTimeStr] = useState("");
+  const [livePanchang, setLivePanchang] = useState<{
+    nakshatra: string;
+    moonSign: string;
+    abhijit: string;
+    rahuKaal: string | null;
+    ayanamsha: string;
+  } | null>(null);
 
   useEffect(() => {
-    // Check if birth profile exists in localStorage
-    try {
-      const saved = window.localStorage.getItem("vedic_birth_profile");
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.date && parsed.place) {
-          setHasBirthData(true);
-          setNativeName(parsed.name || "Explorer");
-          setNatalLagna(parsed.lagna || "Aries");
-          setNatalMoon(parsed.nakshatra ? `${parsed.nakshatra} (Pada ${parsed.pada || 1})` : "Rohini");
-          setNatalDasha(parsed.dasha || "Jupiter Mahadasha");
-        }
+    let active = true;
+    const supabase = getSupabaseBrowserClient();
+
+    async function loadAuthoritativeProfile() {
+      let birthData: Record<string, unknown> | null = null;
+      if (supabase) {
+        try {
+          const { data } = await supabase.auth.getUser();
+          if (data.user?.user_metadata?.birth_date && data.user.user_metadata?.birth_place) {
+            const meta = (data.user.user_metadata || {}) as Record<string, unknown>;
+            birthData = {
+              name: (meta.display_name as string) || (meta.full_name as string) || (meta.name as string) || data.user.email?.split("@")[0] || "Seeker",
+              date: meta.birth_date,
+              time: meta.birth_time,
+              place: meta.birth_place,
+              latitude: meta.latitude,
+              longitude: meta.longitude,
+              ayanamsha: meta.ayanamsha,
+              lagna: meta.lagna || null,
+              nakshatra: meta.nakshatra || null,
+              pada: meta.pada || null,
+              dasha: meta.dasha || null,
+            };
+          }
+        } catch {}
       }
-    } catch {}
+
+      if (!birthData) {
+        try {
+          const saved = window.localStorage.getItem("vedic_birth_profile");
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed.date && parsed.place) {
+              birthData = parsed;
+            }
+          }
+        } catch {}
+      }
+
+      if (!active) return;
+
+      if (birthData) {
+        setHasBirthData(true);
+        setNativeName(birthData.name ? String(birthData.name) : "Seeker");
+        const calculated = Boolean(birthData.lagna && birthData.nakshatra);
+        setIsCalculated(calculated);
+        setNatalLagna(birthData.lagna ? String(birthData.lagna) : null);
+        setNatalMoon(
+          birthData.nakshatra
+            ? `${String(birthData.nakshatra)}${birthData.pada ? ` (Pada ${String(birthData.pada)})` : ""}`
+            : null
+        );
+        setNatalDasha(birthData.dasha ? String(birthData.dasha) : null);
+      } else {
+        setHasBirthData(false);
+        setIsCalculated(false);
+      }
+    }
+
+    void loadAuthoritativeProfile();
+
+    // Fetch today's live panchang from calculation service
+    fetch("/api/panchang", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        date: new Date().toISOString().slice(0, 10),
+        place: "New Delhi, India",
+        latitude: 28.6139,
+        longitude: 77.209,
+      }),
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!active || !data) return;
+        setLivePanchang({
+          nakshatra: data.nakshatra ? `${data.nakshatra}${data.nakshatraPada ? ` (Pada ${data.nakshatraPada})` : ""}` : "Sidereal Moon",
+          moonSign: data.moonSign ? `${data.moonSign} Rashi` : "Current Transit",
+          abhijit: data.abhijitMuhurta || "Midday Interval",
+          rahuKaal: data.rahuKaal || null,
+          ayanamsha: data.ayanamsha ? `${data.ayanamsha.degrees.toFixed(2)}° (${data.ayanamsha.name})` : "Lahiri Sidereal",
+        });
+      })
+      .catch(() => {});
 
     const updateTime = () => {
       const now = new Date();
@@ -61,7 +140,10 @@ export default function VedicAIDashboard() {
     };
     updateTime();
     const interval = setInterval(updateTime, 1000);
-    return () => clearInterval(interval);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
   }, []);
 
   function handlePromptSubmit(e: React.FormEvent) {
@@ -142,7 +224,7 @@ export default function VedicAIDashboard() {
                   <span className="w-1.5 h-1.5 rounded-full bg-[var(--green)] animate-pulse" />
                 </div>
                 <p className="text-[11px] text-[var(--quiet)] mt-0.5">
-                  Epoch 2026.0 · Lahiri Chitrapaksha Ayanamsha (24°09′) Synchronized
+                  Vedic Jyotish Calculations · Sidereal Zodiac & Lahiri System
                 </p>
               </div>
             </div>
@@ -152,10 +234,10 @@ export default function VedicAIDashboard() {
                 <Clock size={13} className="text-[var(--gold)]" />
                 <span className="font-mono text-[11px]">{currentTimeStr || "Live"}</span>
               </div>
-              <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--raised)] border border-[var(--line)]">
+              <Link href="/panchang" className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--raised)] border border-[var(--line)] hover:border-[var(--gold)]/40 transition-colors">
                 <Sun size={13} className="text-[#FBBF24]" />
-                <span className="text-[11px]">Rahu Kaal: Verified Safe Window</span>
-              </div>
+                <span className="text-[11px]">{livePanchang?.rahuKaal ? `Rahu Kaal: ${livePanchang.rahuKaal}` : "View Today's Panchang"}</span>
+              </Link>
             </div>
           </section>
 
@@ -201,23 +283,29 @@ export default function VedicAIDashboard() {
             ) : (
               <div className="p-5 rounded-2xl bg-[var(--panel)] border border-[var(--line2)] shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-3.5">
-                  <div className="w-10 h-10 rounded-xl bg-[var(--green)]/10 border border-[var(--green)]/30 flex items-center justify-center text-[var(--green)] shrink-0">
-                    <CheckCircle2 size={20} />
+                  <div className={`w-10 h-10 rounded-xl ${isCalculated ? "bg-[var(--green)]/10 border border-[var(--green)]/30 text-[var(--green)]" : "bg-amber-500/10 border border-amber-500/30 text-amber-500"} flex items-center justify-center shrink-0`}>
+                    {isCalculated ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
                   </div>
                   <div>
                     <h2 className="text-sm font-bold text-[var(--text)]">
-                      Chart Configured for {nativeName}
+                      Birth Profile: {nativeName}
                     </h2>
-                    <p className="text-xs text-[var(--quiet)] mt-0.5">
-                      {natalLagna} Lagna · {natalMoon} · {natalDasha}
-                    </p>
+                    {isCalculated ? (
+                      <p className="text-xs text-[var(--quiet)] mt-0.5">
+                        {natalLagna} Lagna · {natalMoon} · {natalDasha}
+                      </p>
+                    ) : (
+                      <p className="text-xs text-amber-400/90 mt-0.5">
+                        Birth coordinates saved · Janam Kundli calculation pending
+                      </p>
+                    )}
                   </div>
                 </div>
                 <Link
                   href="/chat?openBirth=1"
                   className="text-xs font-semibold text-[var(--gold)] hover:text-[var(--gold2)] underline underline-offset-4"
                 >
-                  Update Birth Profile →
+                  {isCalculated ? "Examine / Update Birth Profile →" : "Calculate Janam Kundli Now →"}
                 </Link>
               </div>
             )}
@@ -238,20 +326,20 @@ export default function VedicAIDashboard() {
                 <span className="text-[10px] text-[var(--quiet)] uppercase font-semibold block">
                   Moon Nakshatra
                 </span>
-                <span className="text-sm font-bold text-[var(--text)] mt-1 block">
-                  Rohini
+                <span className="text-sm font-bold text-[var(--text)] mt-1 block truncate">
+                  {livePanchang ? livePanchang.nakshatra : "Sidereal Moon"}
                 </span>
-                <span className="text-[10px] text-[var(--gold)]">Pada 2 · Taurus Rashi</span>
+                <span className="text-[10px] text-[var(--gold)]">{livePanchang ? livePanchang.moonSign : "Daily Transit"}</span>
               </div>
 
               <div className="p-3.5 rounded-xl bg-[var(--panel)] border border-[var(--line)] shadow-xs">
                 <span className="text-[10px] text-[var(--quiet)] uppercase font-semibold block">
-                  Current Hora
+                  Calculated Transit
                 </span>
                 <span className="text-sm font-bold text-[var(--text)] mt-1 block">
-                  Guru (Jupiter)
+                  Sidereal Transit
                 </span>
-                <span className="text-[10px] text-[#52FEB8]">Auspicious for Wisdom</span>
+                <span className="text-[10px] text-[#52FEB8]">Active Ephemeris</span>
               </div>
 
               <div className="p-3.5 rounded-xl bg-[var(--panel)] border border-[var(--line)] shadow-xs">
@@ -261,28 +349,28 @@ export default function VedicAIDashboard() {
                 <span className="text-sm font-bold text-[var(--text)] mt-1 block">
                   Abhijit Muhurta
                 </span>
-                <span className="text-[10px] text-[var(--gold)]">11:48 AM – 12:36 PM</span>
+                <span className="text-[10px] text-[var(--gold)]">{livePanchang?.abhijit || "Midday Interval"}</span>
               </div>
 
               <div className="p-3.5 rounded-xl bg-[var(--panel)] border border-[var(--line)] shadow-xs">
                 <span className="text-[10px] text-[var(--quiet)] uppercase font-semibold block">
                   Ayanamsha
                 </span>
-                <span className="text-sm font-bold text-[var(--text)] mt-1 block">
-                  24°09′14″
+                <span className="text-sm font-bold text-[var(--text)] mt-1 block truncate">
+                  {livePanchang?.ayanamsha || "Lahiri Sidereal"}
                 </span>
-                <span className="text-[10px] text-[var(--quiet)]">Chitrapaksha Lahiri</span>
+                <span className="text-[10px] text-[var(--quiet)]">Chitrapaksha Standard</span>
               </div>
 
               <div className="p-3.5 rounded-xl bg-[var(--panel)] border border-[var(--line)] shadow-xs col-span-2 sm:col-span-1">
                 <span className="text-[10px] text-[var(--quiet)] uppercase font-semibold block">
-                  Engine Synchrony
+                  Engine Status
                 </span>
                 <span className="text-sm font-bold text-[#52FEB8] mt-1 flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#52FEB8]" />
-                  Ephemeris Live
+                  {livePanchang ? "Calculated Live" : "Connecting..."}
                 </span>
-                <span className="text-[10px] text-[var(--quiet)]">Swiss/Lahiri Sidereal</span>
+                <span className="text-[10px] text-[var(--quiet)]">Astronomy Engine Ephemeris</span>
               </div>
             </div>
           </section>

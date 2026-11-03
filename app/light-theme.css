@@ -511,3 +511,25 @@ html[data-theme="light"] .palm-camera-header {
   background: #fbf8f2 !important;
   border-bottom-color: #e8e2d4 !important;
 }
+
+
+/* Desktop PC Header & Sidebar Toggle Precision (eliminates duplicate logo and navbar clutter) */
+@media (min-width: 1280px) {
+  .site-header-brand,
+  .site-header-menu,
+  .site-header-back,
+  .chat-header-brand,
+  .topbar .mobile-menu,
+  .topbar .chat-header-brand {
+    display: none !important;
+  }
+  .desktop-sidebar-toggle {
+    display: inline-grid !important;
+  }
+}
+
+@media (max-width: 1279px) {
+  .desktop-sidebar-toggle {
+    display: none !important;
+  }
+}

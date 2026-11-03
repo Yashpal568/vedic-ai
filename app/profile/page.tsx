@@ -62,6 +62,13 @@ export default function ProfilePage() {
   const [pada, setPada] = useState<number | null>(null);
   const [dasha, setDasha] = useState<string | null>(null);
 
+  function invalidateDependentChart() {
+    setLagna(null);
+    setNakshatra(null);
+    setPada(null);
+    setDasha(null);
+  }
+
   useEffect(() => {
     let active = true;
     const supabase = getSupabaseBrowserClient();
@@ -88,29 +95,62 @@ export default function ProfilePage() {
         );
         setBio(String(user.user_metadata?.bio || ""));
         setAvatar(String(user.user_metadata?.avatar_url || ""));
+
+        // Authoritative Source: Read birth profile from authenticated user_metadata
+        const meta = user.user_metadata || {};
+        if (meta.birth_date || meta.birth_place) {
+          if (meta.birth_date) setBirthDate(meta.birth_date);
+          if (meta.birth_time) setBirthTime(meta.birth_time);
+          if (meta.birth_place) setBirthPlace(meta.birth_place);
+          if (typeof meta.latitude === "number") setLatitude(meta.latitude);
+          if (typeof meta.longitude === "number") setLongitude(meta.longitude);
+          if (meta.ayanamsha) setAyanamsha(meta.ayanamsha);
+          if (meta.lagna) setLagna(meta.lagna);
+          if (meta.nakshatra) setNakshatra(meta.nakshatra);
+          if (meta.pada) setPada(meta.pada);
+          if (meta.dasha) setDasha(meta.dasha);
+
+          // Keep client cache in sync
+          try {
+            window.localStorage.setItem("vedic_birth_profile", JSON.stringify({
+              name: String(user.user_metadata?.display_name || user.user_metadata?.full_name || "Seeker"),
+              date: meta.birth_date,
+              time: meta.birth_time,
+              place: meta.birth_place,
+              latitude: meta.latitude,
+              longitude: meta.longitude,
+              ayanamsha: meta.ayanamsha || "Lahiri",
+              lagna: meta.lagna || null,
+              nakshatra: meta.nakshatra || null,
+              pada: meta.pada || null,
+              dasha: meta.dasha || null,
+            }));
+          } catch {}
+        } else {
+          // Fallback to localStorage only if database record is empty
+          try {
+            const savedBirth = window.localStorage.getItem("vedic_birth_profile");
+            if (savedBirth) {
+              const parsed = JSON.parse(savedBirth);
+              if (parsed.date) setBirthDate(parsed.date);
+              if (parsed.time) setBirthTime(parsed.time);
+              if (parsed.place) setBirthPlace(parsed.place);
+              if (parsed.latitude) setLatitude(parsed.latitude);
+              if (parsed.longitude) setLongitude(parsed.longitude);
+              if (parsed.ayanamsha) setAyanamsha(parsed.ayanamsha);
+              if (parsed.lagna) setLagna(parsed.lagna);
+              if (parsed.nakshatra) setNakshatra(parsed.nakshatra);
+              if (parsed.pada) setPada(parsed.pada);
+              if (parsed.dasha) setDasha(parsed.dasha);
+            }
+          } catch {}
+        }
+
         setLoading(false);
       });
     } else {
       setLoading(false);
     }
-
-    // 2. Load LocalStorage saved birth profile if present
-    try {
-      const savedBirth = window.localStorage.getItem("vedic_birth_profile");
-      if (savedBirth) {
-        const parsed = JSON.parse(savedBirth);
-        if (parsed.date) setBirthDate(parsed.date);
-        if (parsed.time) setBirthTime(parsed.time);
-        if (parsed.place) setBirthPlace(parsed.place);
-        if (parsed.latitude) setLatitude(parsed.latitude);
-        if (parsed.longitude) setLongitude(parsed.longitude);
-        if (parsed.ayanamsha) setAyanamsha(parsed.ayanamsha);
-        if (parsed.lagna) setLagna(parsed.lagna);
-        if (parsed.nakshatra) setNakshatra(parsed.nakshatra);
-        if (parsed.pada) setPada(parsed.pada);
-        if (parsed.dasha) setDasha(parsed.dasha);
-      }
-    } catch {}
 
     return () => {
       active = false;
@@ -181,6 +221,52 @@ export default function ProfilePage() {
         }
       }
 
+      // Recalculate dependent chart summaries if coordinates and date are available
+      let calcLagna = lagna;
+      let calcNakshatra = nakshatra;
+      let calcPada = pada;
+      let calcDasha = dasha;
+
+      if (birthDate && birthTime && typeof latitude === "number" && typeof longitude === "number") {
+        try {
+          const kRes = await fetch("/api/kundli", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              date: birthDate,
+              time: birthTime,
+              place: birthPlace || "Selected Place",
+              latitude,
+              longitude,
+            }),
+          });
+          if (kRes.ok) {
+            const kData = await kRes.json();
+            if (kData?.report) {
+              calcLagna = kData.report.ascendant?.sign || null;
+              const moon = Array.isArray(kData.report.planets) ? kData.report.planets.find((p: { name?: string; nakshatra?: string; nakshatraPada?: number }) => p.name === "Moon") : null;
+              calcNakshatra = moon?.nakshatra || null;
+              calcPada = typeof moon?.nakshatraPada === "number" ? moon.nakshatraPada : null;
+              calcDasha = kData.report.dasha?.current?.mahadasha ? `${kData.report.dasha.current.mahadasha} Mahadasha` : null;
+              setLagna(calcLagna);
+              setNakshatra(calcNakshatra);
+              setPada(calcPada);
+              setDasha(calcDasha);
+            }
+          }
+        } catch {}
+      } else {
+        // If birth coordinates are incomplete, do NOT fabricate values
+        calcLagna = null;
+        calcNakshatra = null;
+        calcPada = null;
+        calcDasha = null;
+        setLagna(null);
+        setNakshatra(null);
+        setPada(null);
+        setDasha(null);
+      }
+
       if (supabase) {
         const { error: updateError } = await supabase.auth.updateUser({
           data: {
@@ -194,12 +280,16 @@ export default function ProfilePage() {
             latitude,
             longitude,
             ayanamsha,
+            lagna: calcLagna,
+            nakshatra: calcNakshatra,
+            pada: calcPada,
+            dasha: calcDasha,
           },
         });
         if (updateError) throw updateError;
       }
 
-      // Update local storage so that chart and dashboard stay in complete synchrony
+      // Sync verified chart details to local storage
       const birthProfile = {
         name: name.trim() || displayName.trim() || "Seeker",
         date: birthDate,
@@ -208,10 +298,10 @@ export default function ProfilePage() {
         latitude,
         longitude,
         ayanamsha,
-        lagna: lagna || "Aries",
-        nakshatra: nakshatra || "Rohini",
-        pada: pada || 1,
-        dasha: dasha || "Jupiter Mahadasha",
+        lagna: calcLagna,
+        nakshatra: calcNakshatra,
+        pada: calcPada,
+        dasha: calcDasha,
       };
       window.localStorage.setItem("vedic_birth_profile", JSON.stringify(birthProfile));
 
@@ -242,7 +332,7 @@ export default function ProfilePage() {
     );
   }
 
-  const isKundliLinked = Boolean(birthDate && birthPlace);
+  const isKundliLinked = Boolean(birthDate && birthPlace && lagna && nakshatra);
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] flex flex-col font-sans-luxury">
@@ -353,7 +443,7 @@ export default function ProfilePage() {
                         Ascendant (Lagna)
                       </span>
                       <strong className="text-xs font-bold text-[var(--gold)] mt-0.5 block">
-                        {lagna || "Aries"}
+                        {lagna || "Pending"}
                       </strong>
                     </div>
                     <div className="p-2.5 rounded-xl bg-[var(--raised)] border border-[var(--line)] text-center">
@@ -361,7 +451,7 @@ export default function ProfilePage() {
                         Birth Nakshatra
                       </span>
                       <strong className="text-xs font-bold text-[var(--text)] mt-0.5 block">
-                        {nakshatra || "Rohini"} {pada ? `P${pada}` : ""}
+                        {nakshatra ? `${nakshatra}${pada ? ` P${pada}` : ""}` : "Pending"}
                       </strong>
                     </div>
                     <div className="p-2.5 rounded-xl bg-[var(--raised)] border border-[var(--line)] text-center">
@@ -369,7 +459,7 @@ export default function ProfilePage() {
                         Current Dasha
                       </span>
                       <strong className="text-xs font-bold text-[var(--text)] mt-0.5 block">
-                        {dasha || "Jupiter"}
+                        {dasha || "Pending"}
                       </strong>
                     </div>
                     <div className="p-2.5 rounded-xl bg-[var(--raised)] border border-[var(--line)] text-center">
@@ -426,7 +516,7 @@ export default function ProfilePage() {
                   <input
                     type="date"
                     value={birthDate}
-                    onChange={(e) => setBirthDate(e.target.value)}
+                    onChange={(e) => { setBirthDate(e.target.value); invalidateDependentChart(); }}
                     className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--raised)] border border-[var(--line)] text-xs text-[var(--text)] outline-none focus:border-[var(--gold)] transition-colors"
                   />
                 </div>
@@ -439,7 +529,7 @@ export default function ProfilePage() {
                   <input
                     type="time"
                     value={birthTime}
-                    onChange={(e) => setBirthTime(e.target.value)}
+                    onChange={(e) => { setBirthTime(e.target.value); invalidateDependentChart(); }}
                     className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--raised)] border border-[var(--line)] text-xs text-[var(--text)] outline-none focus:border-[var(--gold)] transition-colors"
                   />
                 </div>
@@ -498,7 +588,7 @@ export default function ProfilePage() {
                   </label>
                   <select
                     value={ayanamsha}
-                    onChange={(e) => setAyanamsha(e.target.value)}
+                    onChange={(e) => { setAyanamsha(e.target.value); invalidateDependentChart(); }}
                     className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--raised)] border border-[var(--line)] text-xs text-[var(--text)] outline-none focus:border-[var(--gold)] transition-colors cursor-pointer"
                   >
                     <option value="Lahiri">Lahiri (Chitrapaksha) — Indian National Standard</option>

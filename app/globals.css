@@ -6198,3 +6198,38 @@ html[data-theme="light"] .desktop-sidebar-toggle:hover {
   border-color: #98742f;
   color: #78591f;
 }
+
+
+/* Dark Mode: Restored Cosmic Galaxy Background across workspace panels */
+html:not([data-theme="light"]) .main-panel,
+html:not([data-theme="light"]) .app-shell .main-panel,
+.app-shell:not([data-theme="light"]) .main-panel {
+  position: relative;
+  isolation: isolate;
+  background:
+    linear-gradient(90deg, rgba(8, 10, 17, 0.90) 0%, rgba(8, 10, 17, 0.76) 48%, rgba(8, 10, 17, 0.62) 100%),
+    linear-gradient(180deg, rgba(8, 10, 17, 0.28) 0%, rgba(8, 10, 17, 0.12) 38%, rgba(8, 10, 17, 0.72) 100%),
+    url("https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=2400&q=90") center 44% / cover no-repeat !important;
+  background-attachment: scroll !important;
+}
+
+/* PC screens: Ensure no duplicate logo, no hamburger menu, and no "Back to chat" on desktop */
+@media (min-width: 1280px) {
+  .site-header-brand,
+  .site-header-menu,
+  .site-header-back,
+  .chat-header-brand,
+  .topbar .mobile-menu,
+  .topbar .chat-header-brand {
+    display: none !important;
+  }
+  .desktop-sidebar-toggle {
+    display: inline-grid !important;
+  }
+}
+
+@media (max-width: 1279px) {
+  .desktop-sidebar-toggle {
+    display: none !important;
+  }
+}

@@ -131,6 +131,7 @@ export async function POST(request: Request) {
       dayDuration: Math.floor(dayDurationMinutes / 60) + "h " + (dayDurationMinutes % 60) + "m",
       calculatedAt: new Date().toISOString(),
       engine: report.engine, engineVersion: report.engineVersion,
+      ayanamsha: report.ayanamsha,
       experimental: true,
       note: "Panchang is calculated for the selected location and date using Astronomy Engine for lunar rise/set and an approximate Lahiri sidereal conversion with a NOAA-style solar-event approximation. Rahu Kaal, Yamaganda, Gulika and Abhijit are derived from local sunrise/sunset and weekday. Cross-check against a trusted local Panchang for ritual-critical timing.",
     }, { headers: { "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" } });

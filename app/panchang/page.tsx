@@ -55,6 +55,7 @@ type Panchang = {
   calculatedAt: string;
   engine: string;
   engineVersion: string;
+  ayanamsha?: { name: string; degrees: number };
   experimental: boolean;
   note: string;
 };
@@ -86,6 +87,7 @@ export default function PanchangPage() {
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [isDefaultLocation, setIsDefaultLocation] = useState(true);
 
   async function searchPlace() {
     if (placeQuery.trim().length < 2 || searching) return;
@@ -137,7 +139,28 @@ export default function PanchangPage() {
   }
 
   useEffect(() => {
-    void calculatePanchang();
+    try {
+      const saved = window.localStorage.getItem("vedic_birth_profile");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.place && typeof parsed.latitude === "number" && typeof parsed.longitude === "number") {
+          const userPlace: Place = {
+            id: "user-profile",
+            label: parsed.place,
+            latitude: parsed.latitude,
+            longitude: parsed.longitude,
+            type: "saved",
+            importance: 1,
+          };
+          setPlace(userPlace);
+          setPlaceQuery(parsed.place);
+          setIsDefaultLocation(false);
+          void calculatePanchang(date, userPlace);
+          return;
+        }
+      }
+    } catch {}
+    void calculatePanchang(date, place);
   }, []);
 
   function handleQuickDate(offset: number) {
@@ -176,7 +199,7 @@ export default function PanchangPage() {
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[var(--panel)] border border-[var(--line2)] text-xs text-[var(--muted)] self-start sm:self-auto shadow-xs">
                 <span className="w-2 h-2 rounded-full bg-[#52FEB8] animate-pulse" />
                 <span className="font-semibold text-[var(--text)]">Ephemeris Live</span>
-                <span className="text-[10px] text-[var(--quiet)] font-mono">Lahiri 24°09′</span>
+                <span className="text-[10px] text-[var(--quiet)] font-mono">{panchang?.ayanamsha ? `${panchang.ayanamsha.degrees.toFixed(2)}° (${panchang.ayanamsha.name})` : (panchang?.engineVersion || "Lahiri Sidereal")}</span>
               </div>
             </div>
           </section>
@@ -236,7 +259,7 @@ export default function PanchangPage() {
                 <div className="sm:col-span-5 relative">
                   <label className="block text-xs font-semibold text-[var(--text)] mb-1.5 flex items-center gap-1.5">
                     <MapPin size={13} className="text-[var(--gold)]" />
-                    <span>Location (Coordinates & Timezone)</span>
+                    <span>Location {isDefaultLocation ? "(Default: New Delhi · Search to set your city)" : "(Coordinates & Timezone)"}</span>
                   </label>
                   <div className="relative">
                     <input
@@ -301,7 +324,7 @@ export default function PanchangPage() {
               </div>
 
               <div className="text-[11px] text-[var(--quiet)] flex items-center justify-between pt-1">
-                <span>Selected: {place.label}</span>
+                <span>Selected: <strong>{place.label}</strong> {isDefaultLocation && <span className="text-[var(--gold)] font-medium">(Default city)</span>}</span>
                 <span>Timezone: {panchang?.timezone || "Local Solar Time"}</span>
               </div>
             </form>

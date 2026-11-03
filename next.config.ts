@@ -3,6 +3,15 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
+  async redirects() {
+    return [
+      {
+        source: "/palm_reading",
+        destination: "/palm-reading",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {
