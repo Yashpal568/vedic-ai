@@ -3,9 +3,11 @@ import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const { getConfiguredAiProvider } = await import("@/lib/ai-config");
-  const aiProvider = getConfiguredAiProvider();
-  const aiConfigured = Boolean(aiProvider);
+  const aiProvider = (process.env.AI_PROVIDER || "groq").trim().toLowerCase();
+  const providerKey = aiProvider === "groq" ? process.env.GROQ_API_KEY
+    : aiProvider === "openai" ? process.env.OPENAI_API_KEY
+      : aiProvider === "gemini" ? process.env.GEMINI_API_KEY : undefined;
+  const aiConfigured = Boolean(providerKey?.trim());
 
   return NextResponse.json({
     status: "ok",
