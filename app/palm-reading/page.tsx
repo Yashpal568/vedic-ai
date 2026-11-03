@@ -3,8 +3,16 @@
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import MobileBottomNav from "@/components/mobile-bottom-nav";
 import SiteHeader from "@/components/site-header";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import AppDesktopSidebar from "@/components/app-desktop-sidebar";
+import PalmReportHeader from "@/components/palm/palm-report-header";
+import PalmBiometricPlate from "@/components/palm/palm-biometric-plate";
+import PalmPersonalisedReport from "@/components/palm/palm-personalised-report";
+import PalmThreeLayerAnalysis from "@/components/palm/palm-three-layer-analysis";
+import PalmRemediesUpaya from "@/components/palm/palm-remedies-upaya";
+import PalmDisclaimerMeta from "@/components/palm/palm-disclaimer-meta";
+import PalmChatDock from "@/components/palm/palm-chat-dock";
+import DossierPreviewModal from "@/components/dossier-preview-modal";
+import { parsePalmReading, type ParsedPalmReport } from "@/lib/palm-parser";
 import {
   Camera,
   ImagePlus,
@@ -17,6 +25,7 @@ import {
   CheckCircle2,
   AlertTriangle,
   Info,
+  FileDown,
 } from "lucide-react";
 
 export default function PalmReadingPage() {
@@ -26,9 +35,13 @@ export default function PalmReadingPage() {
   const [hand, setHand] = useState<"left" | "right" | "unsure">("unsure");
   const [question, setQuestion] = useState("");
   const [reading, setReading] = useState("");
+  const [parsedReport, setParsedReport] = useState<ParsedPalmReport | null>(null);
   const [error, setError] = useState("");
   const [quality, setQuality] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Modal controls
+  const [isDossierModalOpen, setIsDossierModalOpen] = useState(false);
 
   // Live camera modal states
   const [isCameraActive, setIsCameraActive] = useState(false);
@@ -166,6 +179,7 @@ export default function PalmReadingPage() {
       setError("");
       setQuality("");
       setReading("");
+      setParsedReport(null);
       closeCameraModal();
     } catch (e) {
       setCameraError(e instanceof Error ? e.message : "Failed to capture photograph.");
@@ -182,6 +196,7 @@ export default function PalmReadingPage() {
     setError("");
     setQuality("");
     setReading("");
+    setParsedReport(null);
     setImage("");
     setFileName("");
     setFileSizeStr("");
@@ -271,6 +286,7 @@ export default function PalmReadingPage() {
     setError("");
     setQuality("");
     setReading("");
+    setParsedReport(null);
   }
 
   // Open native gallery input
@@ -288,6 +304,7 @@ export default function PalmReadingPage() {
     setError("");
     setQuality("");
     setReading("");
+    setParsedReport(null);
 
     try {
       const response = await fetch("/api/palm-reading", {
@@ -310,7 +327,10 @@ export default function PalmReadingPage() {
         throw new Error("The AI returned an empty reading. Please try again with a clearer palm photo.");
       }
 
-      setReading(data.reading.trim());
+      const rawReading = data.reading.trim();
+      setReading(rawReading);
+      const parsed = parsePalmReading(rawReading, hand);
+      setParsedReport(parsed);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not analyse the image. Please try again.");
     } finally {
@@ -319,232 +339,292 @@ export default function PalmReadingPage() {
   }
 
   return (
-    <main className="palm-shell">
-      <SiteHeader section="Traditional Palmistry" backHref="/chat" />
-      <section className="palm-content">
-        <div className="palm-kicker">
-          <Sparkles size={14} /> TRADITIONAL PALMISTRY · IMAGE-BASED
-        </div>
-        <h1>
-          Read the lines.<br />
-          <em>Keep perspective.</em>
-        </h1>
-        <p className="palm-intro">
-          Upload a clear photo of your open palm. Our vision model verifies the major creases in bright, even lighting
-          before preparing a structured, beginner-friendly palm report. If lines cannot be confidently seen, it will
-          cautiously ask for a clearer photo rather than guessing.
-        </p>
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] flex flex-col font-sans-luxury">
+      {/* 280px Left Sidebar on Desktop (Reference #9) */}
+      <AppDesktopSidebar onNewConsultation={() => { removePhoto(); setQuestion(""); }} />
 
-        <div className="palm-grid">
-          <section className="palm-upload-card">
-            <div className="palm-card-title">
-              <Camera size={18} /> Your palm photo
-            </div>
+      {/* Main Panel Offset for 280px Sidebar on Large Screens */}
+      <div className="flex-1 flex flex-col xl:pl-[280px] min-w-0">
+        <SiteHeader
+          section="Traditional Palmistry"
+          backHref="/chat"
+        />
 
-            {/* Photo preview / upload dropzone */}
-            <div className={"palm-dropzone" + (image ? " has-image" : "")}>
-              {image ? (
-                <div className="palm-preview-container">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={image} alt="Selected palm preview" className="palm-preview-img" />
-                  <div className="palm-preview-meta">
-                    <CheckCircle2 size={14} className="palm-preview-icon" />
-                    <span className="palm-filename">{fileName}</span>
-                    {fileSizeStr && <span className="palm-filesize">({fileSizeStr})</span>}
+        {/* WORKSPACE AREA */}
+        <main className="flex-1 w-full max-w-[1080px] mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-28">
+          {/* IF READING IS READY: Show Approved Vedic Cosmic Luxury Report Design (Ref #2, #3, #9) */}
+          {reading && parsedReport ? (
+            <div className="space-y-6">
+              {/* Report Header */}
+              <PalmReportHeader onOpenExportModal={() => setIsDossierModalOpen(true)} />
+
+              {/* Responsive Layout: Split (5-col Biometric HUD + 7-col Report) on Desktop, Vertical Stack on Mobile */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                {/* LEFT COLUMN (5 Cols on LG): Sticky Biometric Palm HUD & Plate */}
+                <div className="lg:col-span-5 lg:sticky lg:top-24">
+                  <PalmBiometricPlate
+                    imageSrc={image}
+                    hand={hand}
+                    onRetake={() => {
+                      setReading("");
+                      setParsedReport(null);
+                      startLiveCamera("environment");
+                    }}
+                  />
+
+                  {/* Desktop Quick Dossier Download Button */}
+                  <div className="hidden lg:block mt-4 p-4 rounded-xl bg-[var(--panel)] border border-[var(--line)] shadow-sm text-center">
+                    <span className="text-xs text-[var(--muted)] block mb-2">
+                      Astrological Biometric Dossier (A4)
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setIsDossierModalOpen(true)}
+                      className="w-full py-2.5 px-4 rounded-xl bg-[var(--gold)] hover:brightness-110 text-[#0A0C13] text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-md transition-all"
+                    >
+                      <FileDown size={16} />
+                      <span>Export Hastarekha PDF</span>
+                    </button>
                   </div>
                 </div>
-              ) : (
-                <div className="palm-placeholder">
-                  <span className="palm-upload-icon">
-                    <ImagePlus size={24} />
-                  </span>
-                  <strong>Take or upload a palm photo</strong>
-                  <span>Use bright, shadow-free lighting with your open palm facing the camera</span>
+
+                {/* RIGHT COLUMN (7 Cols on LG): Structured Report Stream */}
+                <div className="lg:col-span-7 space-y-6">
+                  {/* Section A: 10-Point Personalised Report */}
+                  <PalmPersonalisedReport report={parsedReport} />
+
+                  {/* Section B: Three-Layer Analytical Framework */}
+                  <PalmThreeLayerAnalysis report={parsedReport} />
+
+                  {/* Part C: Prescribed Karmic Harmonization & Upaya Remedies */}
+                  <PalmRemediesUpaya remedies={parsedReport.remedies} />
+
+                  {/* Metadata and Ethical Boundaries Disclaimer */}
+                  <PalmDisclaimerMeta />
                 </div>
-              )}
-            </div>
-
-            {/* Native file inputs (rendered accessible in DOM without blocking click events) */}
-            <input
-              ref={cameraInputRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={chooseImage}
-              style={{ position: "absolute", width: "1px", height: "1px", opacity: 0, pointerEvents: "none" }}
-              aria-label="Take a photo with your device camera"
-            />
-            <input
-              ref={galleryInputRef}
-              type="file"
-              accept="image/*"
-              onChange={chooseImage}
-              style={{ position: "absolute", width: "1px", height: "1px", opacity: 0, pointerEvents: "none" }}
-              aria-label="Choose a palm photo from your gallery"
-            />
-
-            {/* Main Action buttons */}
-            {image ? (
-              <div className="palm-preview-actions">
-                <button
-                  type="button"
-                  className="palm-picker-button palm-replace-button"
-                  onClick={() => startLiveCamera("environment")}
-                >
-                  <Camera size={16} />
-                  <span>Retake with Camera</span>
-                </button>
-                <button
-                  type="button"
-                  className="palm-picker-button palm-gallery-button"
-                  onClick={openGalleryPicker}
-                >
-                  <RefreshCw size={16} />
-                  <span>Replace from Gallery</span>
-                </button>
-                <button
-                  type="button"
-                  className="palm-remove-button"
-                  onClick={removePhoto}
-                  aria-label="Remove selected photo"
-                >
-                  <Trash2 size={16} />
-                  <span>Remove</span>
-                </button>
               </div>
-            ) : (
-              <div className="palm-picker-actions">
-                <button
-                  type="button"
-                  className="palm-picker-button palm-camera-button"
-                  onClick={() => startLiveCamera("environment")}
-                >
-                  <Camera size={17} />
-                  <span>Take photo</span>
-                </button>
-                <button
-                  type="button"
-                  className="palm-picker-button palm-gallery-button"
-                  onClick={openGalleryPicker}
-                >
-                  <ImagePlus size={17} />
-                  <span>Choose from gallery</span>
-                </button>
-              </div>
-            )}
 
-            <p className="palm-picker-hint">
-              Take photo opens your device camera. Choose from gallery selects a saved photo.
-            </p>
-
-            {/* Hand Selection */}
-            <label className="palm-field-label">Which hand is shown?</label>
-            <div className="palm-hand-options">
-              {(["left", "right", "unsure"] as const).map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  className={hand === value ? "selected" : ""}
-                  onClick={() => setHand(value)}
-                >
-                  {value === "left" ? "Left hand" : value === "right" ? "Right hand" : "Not sure"}
-                </button>
-              ))}
+              {/* Floating Bottom Input Dock (Ref #2 & #3) */}
+              <PalmChatDock
+                onSendMessage={(msg) => {
+                  setQuestion(msg);
+                  analyse();
+                }}
+                onUploadClick={openGalleryPicker}
+              />
             </div>
-
-            {/* Optional question */}
-            <label className="palm-field-label" htmlFor="palm-question">
-              What would you like to explore? <span>(optional)</span>
-            </label>
-            <textarea
-              id="palm-question"
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              maxLength={800}
-              placeholder="e.g. Explain my visible heart, head, life and fate lines in simple terms…"
-              rows={3}
-            />
-
-            {/* Analyse Submission */}
-            <button
-              type="button"
-              className="palm-analyse-button"
-              disabled={!image || loading}
-              onClick={analyse}
-            >
-              {loading ? (
-                <>
-                  <LoaderCircle className="palm-spin" size={17} /> Assessing palm features…
-                </>
-              ) : (
-                <>
-                  <Sparkles size={17} /> Analyse my palm
-                </>
-              )}
-            </button>
-
-            {error && (
-              <p className="palm-error" role="alert">
-                <AlertTriangle size={15} style={{ display: "inline", verticalAlign: "text-bottom", marginRight: "6px" }} />
-                {error}
+          ) : (
+            /* BEFORE READING: Photo Selection / Capture Viewport */
+            <div className="palm-content">
+              <div className="palm-kicker">
+                <Sparkles size={14} /> TRADITIONAL PALMISTRY · IMAGE-BASED
+              </div>
+              <h1 className="font-serif-luxury text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-[var(--gold)] mb-3">
+                Read the lines.<br />
+                <em className="text-[var(--gold2)] font-normal italic">Keep perspective.</em>
+              </h1>
+              <p className="palm-intro">
+                Upload a clear photo of your open palm. Our vision model verifies the major creases in bright, even lighting
+                before preparing a structured, beginner-friendly palm report. If lines cannot be confidently seen, it will
+                cautiously ask for a clearer photo rather than guessing.
               </p>
-            )}
 
-            {quality && (
-              <div className="palm-quality" role="alert">
-                <div className="palm-quality-title">
-                  <Info size={16} />
-                  <strong>Photo needs another look</strong>
-                </div>
-                <p>{quality}</p>
-                <div className="palm-quality-actions">
-                  <button type="button" onClick={() => startLiveCamera("environment")}>
-                    <Camera size={14} /> Retake photo
+              <div className="palm-grid mt-6">
+                <section className="palm-upload-card">
+                  <div className="palm-card-title">
+                    <Camera size={18} /> Your palm photo
+                  </div>
+
+                  {/* Photo preview / upload dropzone */}
+                  <div className={"palm-dropzone" + (image ? " has-image" : "")}>
+                    {image ? (
+                      <div className="palm-preview-container">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={image} alt="Selected palm preview" className="palm-preview-img" />
+                        <div className="palm-preview-meta">
+                          <CheckCircle2 size={14} className="palm-preview-icon" />
+                          <span className="palm-filename">{fileName}</span>
+                          {fileSizeStr && <span className="palm-filesize">({fileSizeStr})</span>}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="palm-placeholder">
+                        <span className="palm-upload-icon">
+                          <ImagePlus size={24} />
+                        </span>
+                        <strong>Take or upload a palm photo</strong>
+                        <span>Use bright, shadow-free lighting with your open palm facing the camera</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Native file inputs (rendered accessible in DOM without blocking click events) */}
+                  <input
+                    ref={cameraInputRef}
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={chooseImage}
+                    style={{ position: "absolute", width: "1px", height: "1px", opacity: 0, pointerEvents: "none" }}
+                    aria-label="Take a photo with your device camera"
+                  />
+                  <input
+                    ref={galleryInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={chooseImage}
+                    style={{ position: "absolute", width: "1px", height: "1px", opacity: 0, pointerEvents: "none" }}
+                    aria-label="Choose a palm photo from your gallery"
+                  />
+
+                  {/* Main Action buttons */}
+                  {image ? (
+                    <div className="palm-preview-actions">
+                      <button
+                        type="button"
+                        className="palm-picker-button palm-replace-button"
+                        onClick={() => startLiveCamera("environment")}
+                      >
+                        <Camera size={16} />
+                        <span>Retake with Camera</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="palm-picker-button palm-gallery-button"
+                        onClick={openGalleryPicker}
+                      >
+                        <RefreshCw size={16} />
+                        <span>Replace from Gallery</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="palm-remove-button"
+                        onClick={removePhoto}
+                        aria-label="Remove selected photo"
+                      >
+                        <Trash2 size={16} />
+                        <span>Remove</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="palm-picker-actions">
+                      <button
+                        type="button"
+                        className="palm-picker-button palm-camera-button"
+                        onClick={() => startLiveCamera("environment")}
+                      >
+                        <Camera size={17} />
+                        <span>Take photo</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="palm-picker-button palm-gallery-button"
+                        onClick={openGalleryPicker}
+                      >
+                        <ImagePlus size={17} />
+                        <span>Choose from gallery</span>
+                      </button>
+                    </div>
+                  )}
+
+                  <p className="palm-picker-hint">
+                    Take photo opens your device camera. Choose from gallery selects a saved photo.
+                  </p>
+
+                  {/* Hand Selection */}
+                  <label className="palm-field-label">Which hand is shown?</label>
+                  <div className="palm-hand-options">
+                    {(["left", "right", "unsure"] as const).map((value) => (
+                      <button
+                        key={value}
+                        type="button"
+                        className={hand === value ? "selected" : ""}
+                        onClick={() => setHand(value)}
+                      >
+                        {value === "left" ? "Left hand" : value === "right" ? "Right hand" : "Not sure"}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Optional question */}
+                  <label className="palm-field-label" htmlFor="palm-question">
+                    What would you like to explore? <span>(optional)</span>
+                  </label>
+                  <textarea
+                    id="palm-question"
+                    value={question}
+                    onChange={(e) => setQuestion(e.target.value)}
+                    maxLength={800}
+                    placeholder="e.g. Explain my visible heart, head, life and fate lines in simple terms…"
+                    rows={3}
+                  />
+
+                  {/* Analyse Submission */}
+                  <button
+                    type="button"
+                    className="palm-analyse-button"
+                    disabled={!image || loading}
+                    onClick={analyse}
+                  >
+                    {loading ? (
+                      <>
+                        <LoaderCircle className="palm-spin" size={17} /> Assessing palm features…
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles size={17} /> Analyse my palm
+                      </>
+                    )}
                   </button>
-                  <button type="button" onClick={openGalleryPicker}>
-                    <RefreshCw size={14} /> Choose different photo
-                  </button>
-                </div>
+
+                  {error && (
+                    <p className="palm-error" role="alert">
+                      <AlertTriangle size={15} style={{ display: "inline", verticalAlign: "text-bottom", marginRight: "6px" }} />
+                      {error}
+                    </p>
+                  )}
+
+                  {quality && (
+                    <div className="palm-quality" role="alert">
+                      <div className="palm-quality-title">
+                        <Info size={16} />
+                        <strong>Photo needs another look</strong>
+                      </div>
+                      <p>{quality}</p>
+                      <div className="palm-quality-actions">
+                        <button type="button" onClick={() => startLiveCamera("environment")}>
+                          <Camera size={14} /> Retake photo
+                        </button>
+                        <button type="button" onClick={openGalleryPicker}>
+                          <RefreshCw size={14} /> Choose different photo
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </section>
+
+                {/* Guidance card */}
+                <aside className="palm-guidance">
+                  <div className="palm-guidance-icon">
+                    <Sparkles size={20} />
+                  </div>
+                  <h2>How to get a clear palm reading</h2>
+                  <ul>
+                    <li>Open your hand naturally with the palm facing directly toward the camera.</li>
+                    <li>Use bright, balanced daylight or indoor light; avoid harsh shadows across the palm.</li>
+                    <li>Keep the wrist crease and fingertips clearly within the frame.</li>
+                    <li>Ensure the camera focuses sharply on the major creases without beautify filters.</li>
+                  </ul>
+                  <div className="palm-note">
+                    <strong>Notice:</strong> Traditional palmistry is an interpretive cultural art, not a scientific or medical
+                    discipline. It cannot determine exact lifespan, health outcomes, marriage dates, wealth, or future events.
+                  </div>
+                </aside>
               </div>
-            )}
-          </section>
-
-          {/* Guidance card */}
-          <aside className="palm-guidance">
-            <div className="palm-guidance-icon">
-              <Sparkles size={20} />
             </div>
-            <h2>How to get a clear palm reading</h2>
-            <ul>
-              <li>Open your hand naturally with the palm facing directly toward the camera.</li>
-              <li>Use bright, balanced daylight or indoor light; avoid harsh shadows across the palm.</li>
-              <li>Keep the wrist crease and fingertips clearly within the frame.</li>
-              <li>Ensure the camera focuses sharply on the major creases without beautify filters.</li>
-            </ul>
-            <div className="palm-note">
-              <strong>Notice:</strong> Traditional palmistry is an interpretive cultural art, not a scientific or medical
-              discipline. It cannot determine exact lifespan, health outcomes, marriage dates, wealth, or future events.
-            </div>
-          </aside>
-        </div>
-
-        {/* Structured Reading Results */}
-        {reading && (
-          <section className="palm-result">
-            <div className="palm-result-kicker">
-              <Sparkles size={14} /> STRUCTURED PALM READING
-            </div>
-            <h2>What your palm reveals</h2>
-            <div className="palm-reading-card">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{reading}</ReactMarkdown>
-            </div>
-            <p className="palm-note">
-              This report provides traditional symbolic interpretations of visible creases. Decisions and personal
-              efforts remain the primary influences in shaping your life.
-            </p>
-          </section>
-        )}
-      </section>
+          )}
+        </main>
+      </div>
 
       {/* Live Camera Viewfinder Modal */}
       {isCameraActive && (
@@ -632,7 +712,19 @@ export default function PalmReadingPage() {
         </div>
       )}
 
+      {/* 3-Column Desktop Dossier Preview & Export Modal (Ref #5) */}
+      {parsedReport && (
+        <DossierPreviewModal
+          isOpen={isDossierModalOpen}
+          onClose={() => setIsDossierModalOpen(false)}
+          report={parsedReport}
+          imageSrc={image}
+          hand={hand}
+        />
+      )}
+
+      {/* Mobile Bottom Navigation Bar */}
       <MobileBottomNav />
-    </main>
+    </div>
   );
 }

@@ -20,8 +20,15 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
-export const viewport: Viewport = { themeColor: "#f7f5ef", colorScheme: "light dark" };
+export const viewport: Viewport = { themeColor: "#11131a", colorScheme: "light dark" };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body><ThemeSync />{children}</body></html>;
+  return (
+    <html lang="en">
+      <body>
+        <ThemeSync />
+        {children}
+      </body>
+    </html>
+  );
 }
