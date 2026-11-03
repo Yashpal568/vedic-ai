@@ -121,17 +121,15 @@ export async function POST(request: Request) {
     const prompt = buildPalmPrompt(hand, question);
     const provider = (process.env.AI_PROVIDER || "").toLowerCase();
     const useGroqVision = provider === "groq" || (!process.env.GEMINI_API_KEY && Boolean(process.env.GROQ_API_KEY));
-    let response: Response;
-    let selectedProvider: "Groq" | "Gemini";
 
-    if (useGroqVision) {
-      selectedProvider = "Groq";
+    let selectedProvider: "Groq" | "Gemini" = useGroqVision ? "Groq" : "Gemini";
+    let raw: string | undefined;
+    let lastError = "The palm-reading service could not analyse this image. Please try again with a clear, well-lit photo.";
+    let lastStatus = 502;
+
+    const tryGroq = async (): Promise<boolean> => {
       const key = process.env.GROQ_API_KEY;
-      if (!key) {
-        return NextResponse.json({ error: "Palm reading requires GROQ_API_KEY or GEMINI_API_KEY configured on the server." }, { status: 503 });
-      }
-
-      // Automatically migrate old, retired or mistyped model names to supported qwen/qwen3.8-27b
+      if (!key) return false;
       const configuredModel = process.env.PALM_GROQ_MODEL?.trim();
       const invalidOrRetiredModels = [
         "qwen/qwen3.6-27b",
@@ -144,45 +142,47 @@ export async function POST(request: Request) {
         ? "qwen/qwen3.8-27b"
         : configuredModel;
 
-      response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: "Bearer " + key },
-        body: JSON.stringify({
-          model,
-          messages: [{
-            role: "user",
-            content: [
-              { type: "text", text: prompt },
-              { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}` } }
-            ]
-          }],
-          temperature: 0.2,
-          max_completion_tokens: 2200,
-          response_format: { type: "json_object" }
-        }),
-        signal: AbortSignal.timeout(40_000),
-      });
-
-      if (!response.ok) {
-        const upstream = await response.json().catch(() => ({}));
-        console.error("[palm-reading] Groq vision provider status:", response.status, "code:", upstream?.error?.code || upstream?.error?.type || "unknown", "model:", model);
-        return NextResponse.json({ error: errorMessage(response.status, "Groq") }, { status: response.status === 429 ? 429 : response.status === 401 || response.status === 403 ? 503 : 502 });
+      try {
+        const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: "Bearer " + key },
+          body: JSON.stringify({
+            model,
+            messages: [{
+              role: "user",
+              content: [
+                { type: "text", text: prompt },
+                { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}` } }
+              ]
+            }],
+            temperature: 0.2,
+            max_completion_tokens: 2200,
+            response_format: { type: "json_object" }
+          }),
+          signal: AbortSignal.timeout(40_000),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          raw = data?.choices?.[0]?.message?.content;
+          selectedProvider = "Groq";
+          return Boolean(raw?.trim());
+        }
+        lastStatus = res.status;
+        lastError = errorMessage(res.status, "Groq");
+      } catch (e) {
+        console.warn("[palm-reading] Groq attempt failed:", e);
       }
-    } else {
-      selectedProvider = "Gemini";
+      return false;
+    };
+
+    const tryGemini = async (): Promise<boolean> => {
       const key = process.env.GEMINI_API_KEY;
-      if (!key) {
-        return NextResponse.json({ error: "Palm reading requires GEMINI_API_KEY or GROQ_API_KEY configured on the server." }, { status: 503 });
-      }
-
+      if (!key) return false;
       const candidateModels = [
         process.env.PALM_GEMINI_MODEL?.trim() || "gemini-2.5-flash",
         "gemini-2.0-flash",
         "gemini-1.5-flash",
       ].filter(Boolean);
-
-      let lastErrorStatus = 502;
-      let finalData: unknown = null;
 
       for (const model of candidateModels) {
         try {
@@ -195,34 +195,39 @@ export async function POST(request: Request) {
             }),
             signal: AbortSignal.timeout(35_000),
           });
-
           if (geminiRes.ok) {
-            finalData = await geminiRes.json();
-            break;
+            const data = await geminiRes.json();
+            raw = data?.candidates?.[0]?.content?.parts?.map((part: { text?: string }) => part.text || "").join("");
+            selectedProvider = "Gemini";
+            return Boolean(raw?.trim());
           }
-
-          lastErrorStatus = geminiRes.status;
-          const upstream = await geminiRes.json().catch(() => ({}));
-          console.warn("[palm-reading] Gemini model", model, "returned status:", geminiRes.status, "code:", upstream?.error?.status);
-          if (geminiRes.status === 429 || geminiRes.status === 401 || geminiRes.status === 403) {
-            return NextResponse.json({ error: errorMessage(geminiRes.status, "Gemini") }, { status: geminiRes.status === 429 ? 429 : 503 });
-          }
+          lastStatus = geminiRes.status;
+          lastError = errorMessage(geminiRes.status, "Gemini");
         } catch (e) {
           console.warn("[palm-reading] Gemini attempt failed for model:", model, e);
         }
       }
+      return false;
+    };
 
-      if (!finalData) {
-        return NextResponse.json({ error: errorMessage(lastErrorStatus, "Gemini") }, { status: 502 });
+    if (useGroqVision) {
+      const ok = await tryGroq();
+      if (!ok && process.env.GEMINI_API_KEY) {
+        await tryGemini();
       }
-
-      response = new Response(JSON.stringify(finalData), { status: 200, headers: { "Content-Type": "application/json" } });
+    } else {
+      const ok = await tryGemini();
+      if (!ok && process.env.GROQ_API_KEY) {
+        await tryGroq();
+      }
     }
 
-    const data = await response.json();
-    const raw = useGroqVision
-      ? data?.choices?.[0]?.message?.content
-      : data?.candidates?.[0]?.content?.parts?.map((part: { text?: string }) => part.text || "").join("");
+    if (!raw || !raw.trim()) {
+      if (!process.env.GROQ_API_KEY && !process.env.GEMINI_API_KEY) {
+        return NextResponse.json({ error: "Palm reading requires GEMINI_API_KEY or GROQ_API_KEY configured on the server." }, { status: 503 });
+      }
+      return NextResponse.json({ error: lastError }, { status: lastStatus === 429 ? 429 : lastStatus === 401 || lastStatus === 403 ? 503 : 502 });
+    }
 
     if (typeof raw !== "string" || !raw.trim()) {
       console.error("[palm-reading] Empty model response from", selectedProvider);
