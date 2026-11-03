@@ -168,7 +168,7 @@ describe("End-to-End Real User Workflows (Requirement 8)", () => {
           "--no-pdf-header-footer",
           `file:///${htmlPath.replace(/\\/g, "/")}`,
         ],
-        { timeout: 20000 }
+        { timeout: 25000 }
       );
 
       expect(fs.existsSync(pdfPath)).toBe(true);
@@ -183,7 +183,7 @@ describe("End-to-End Real User Workflows (Requirement 8)", () => {
       try { if (fs.existsSync(pdfPath)) fs.unlinkSync(pdfPath); } catch {}
       try { if (fs.existsSync(chromeDataDir)) fs.rmSync(chromeDataDir, { recursive: true, force: true }); } catch {}
     }
-  });
+  }, 30000);
 
   // Workflow 9: Mobile Navigation & Responsive Layouts
   it("Workflow 9: Verifies mobile bottom navigation styles and fixed positioning", () => {

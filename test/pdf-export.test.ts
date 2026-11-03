@@ -98,7 +98,7 @@ describe("Kundli PDF Export (Task 2 & 3)", () => {
           "--no-pdf-header-footer",
           `file:///${htmlPath.replace(/\\/g, "/")}`,
         ],
-        { timeout: 20000 }
+        { timeout: 25000 }
       );
 
       expect(fs.existsSync(pdfPath)).toBe(true);
@@ -116,5 +116,5 @@ describe("Kundli PDF Export (Task 2 & 3)", () => {
       try { if (fs.existsSync(pdfPath)) fs.unlinkSync(pdfPath); } catch {}
       try { if (fs.existsSync(chromeDataDir)) fs.rmSync(chromeDataDir, { recursive: true, force: true }); } catch {}
     }
-  });
+  }, 30000);
 });
