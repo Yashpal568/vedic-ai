@@ -152,8 +152,8 @@ export default function PanchangPage() {
       <AppDesktopSidebar />
 
       {/* Main Panel Offset for 280px Sidebar on Large Screens */}
-      <div className="flex-1 flex flex-col xl:pl-[280px] min-w-0">
-        <SiteHeader section="Panchang Almanac" backHref="/chat" />
+      <div className="flex-1 flex flex-col app-sidebar-offset min-w-0">
+        <SiteHeader section="Panchang Almanac" />
 
         <main className="flex-1 w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10 py-8 pb-28">
           {/* Header & Kaala Engine Status */}
@@ -320,12 +320,89 @@ export default function PanchangPage() {
 
           {panchang && (
             <div className="space-y-8">
-              {/* Daily Solar and Lunar Summary (4 Compact Cards) */}
+              {/* Daily Solar and Lunar Summary (Visual Cards with Celestial Imagery) */}
               <section>
-                <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--gold)] mb-3 flex items-center gap-2">
+                <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--gold)] mb-4 flex items-center gap-2">
                   <Sun size={14} />
                   <span>Surya & Chandra Horizon Summary</span>
                 </h2>
+
+                {/* Celestial Horizon Visual Showcases */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  {/* Surya (Sun) Celestial Showcase Card */}
+                  <div className="relative overflow-hidden p-5 rounded-2xl bg-gradient-to-br from-[var(--panel)] via-[var(--panel)] to-[var(--raised)] border border-[var(--line2)] shadow-sm flex items-center justify-between gap-4">
+                    <div className="space-y-2 z-10 min-w-0">
+                      <div className="flex items-center gap-2 text-[var(--gold)]">
+                        <Sun size={16} className="text-amber-400" />
+                        <span className="text-[11px] font-bold uppercase tracking-widest font-mono">Surya Mandala</span>
+                      </div>
+                      <h3 className="font-serif-luxury text-xl sm:text-2xl font-bold text-[var(--text)]">
+                        Solar Dawn & Twilight
+                      </h3>
+                      <p className="text-xs text-[var(--muted)]">
+                        Surya Rashi: <strong className="text-[var(--gold)] font-medium">{panchang.sunSign || "Sidereal Sun"}</strong> · Day Length: {panchang.dayDuration}
+                      </p>
+                      <div className="flex items-center gap-4 pt-1">
+                        <div>
+                          <span className="text-[10px] text-[var(--quiet)] uppercase block">Sunrise</span>
+                          <span className="text-sm font-bold text-[var(--text)] font-mono">{panchang.sunrise}</span>
+                        </div>
+                        <div className="w-[1px] h-6 bg-[var(--line)]" />
+                        <div>
+                          <span className="text-[10px] text-[var(--quiet)] uppercase block">Sunset</span>
+                          <span className="text-sm font-bold text-[var(--text)] font-mono">{panchang.sunset}</span>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Visual Celestial Sun Illustration */}
+                    <div className="relative w-36 h-28 sm:w-44 sm:h-32 shrink-0 flex items-center justify-center">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src="/panchang/surya-horizon.svg"
+                        alt="Surya Horizon Celestial Illustration"
+                        className="w-full h-full object-contain filter drop-shadow-[0_0_12px_rgba(229,196,107,0.25)]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Chandra (Moon) Celestial Showcase Card */}
+                  <div className="relative overflow-hidden p-5 rounded-2xl bg-gradient-to-br from-[var(--panel)] via-[var(--panel)] to-[var(--raised)] border border-[var(--line2)] shadow-sm flex items-center justify-between gap-4">
+                    <div className="space-y-2 z-10 min-w-0">
+                      <div className="flex items-center gap-2 text-indigo-300">
+                        <MoonStar size={16} />
+                        <span className="text-[11px] font-bold uppercase tracking-widest font-mono">Chandra Mandala</span>
+                      </div>
+                      <h3 className="font-serif-luxury text-xl sm:text-2xl font-bold text-[var(--text)]">
+                        Lunar Phase & Orbit
+                      </h3>
+                      <p className="text-xs text-[var(--muted)]">
+                        Chandra Rashi: <strong className="text-indigo-300 font-medium">{panchang.moonSign || "Sidereal Moon"}</strong> · {panchang.paksha} Paksha
+                      </p>
+                      <div className="flex items-center gap-4 pt-1">
+                        <div>
+                          <span className="text-[10px] text-[var(--quiet)] uppercase block">Moonrise</span>
+                          <span className="text-sm font-bold text-[var(--text)] font-mono">{panchang.moonrise || "No Rise"}</span>
+                        </div>
+                        <div className="w-[1px] h-6 bg-[var(--line)]" />
+                        <div>
+                          <span className="text-[10px] text-[var(--quiet)] uppercase block">Moonset</span>
+                          <span className="text-sm font-bold text-[var(--text)] font-mono">{panchang.moonset || "No Set"}</span>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Visual Celestial Moon Illustration */}
+                    <div className="relative w-36 h-28 sm:w-44 sm:h-32 shrink-0 flex items-center justify-center">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src="/panchang/chandra-horizon.svg"
+                        alt="Chandra Horizon Celestial Illustration"
+                        className="w-full h-full object-contain filter drop-shadow-[0_0_12px_rgba(199,210,254,0.25)]"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4 Detail Metrics Cards */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
                   <div className="p-3.5 rounded-xl bg-[var(--panel)] border border-[var(--line)] shadow-xs">
                     <div className="flex items-center gap-2 text-amber-400 mb-1">
@@ -390,11 +467,26 @@ export default function PanchangPage() {
               </section>
 
               {/* Panchangam Tatva — Five Essential Limbs */}
-              <section>
-                <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--gold)] mb-3 flex items-center gap-2">
-                  <Compass size={14} />
-                  <span>Panchangam Tatva (Five Essential Limbs of Time)</span>
-                </h2>
+              <section className="relative overflow-hidden p-5 sm:p-6 rounded-2xl bg-[var(--panel)] border border-[var(--line2)] shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5 pb-4 border-b border-[var(--line)]">
+                  <div>
+                    <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--gold)] flex items-center gap-2">
+                      <Compass size={15} />
+                      <span>Panchangam Tatva (Five Essential Limbs of Time)</span>
+                    </h2>
+                    <p className="text-xs text-[var(--muted)] mt-1 max-w-[640px]">
+                      Sidereal alignment of lunar phases, planetary day lords, lunar mansions, and practical situational momentum.
+                    </p>
+                  </div>
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 opacity-80 hover:opacity-100 transition-opacity flex items-center justify-center">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src="/panchang/nakshatra-wheel.svg"
+                      alt="27 Nakshatra Sacred Zodiac Wheel"
+                      className="w-full h-full object-contain filter drop-shadow-[0_0_10px_rgba(229,196,107,0.25)]"
+                    />
+                  </div>
+                </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
                   {/* 1. Tithi */}
@@ -483,11 +575,21 @@ export default function PanchangPage() {
               <section className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {/* Benefic Windows */}
                 <div className="p-5 rounded-2xl bg-[var(--panel)] border border-[var(--green)]/30 shadow-sm">
-                  <div className="flex items-center gap-2 mb-3 text-[var(--green)]">
-                    <CheckCircle2 size={16} />
-                    <h3 className="text-xs font-bold uppercase tracking-wider">
-                      Shubh Muhuratas (Benefic Windows)
-                    </h3>
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <div className="flex items-center gap-2 text-[var(--green)]">
+                      <CheckCircle2 size={16} />
+                      <h3 className="text-xs font-bold uppercase tracking-wider">
+                        Shubh Muhuratas (Benefic Windows)
+                      </h3>
+                    </div>
+                    <div className="w-16 h-8 opacity-75 shrink-0 hidden sm:block">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src="/panchang/muhurata-dial.svg"
+                        alt="Muhurata Kaala Dial"
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
                   </div>
                   <div className="space-y-3">
                     <div className="p-3 rounded-xl bg-[var(--raised)] border border-[var(--line)] flex items-center justify-between">

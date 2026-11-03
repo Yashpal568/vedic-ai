@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200" fill="none">
+  <defs>
+    <linearGradient id="dialGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.3"/>
+      <stop offset="35%" stop-color="#E5C46B" stop-opacity="0.8"/>
+      <stop offset="50%" stop-color="#52FEB8" stop-opacity="0.9"/>
+      <stop offset="65%" stop-color="#E5C46B" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#8B5CF6" stop-opacity="0.3"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Arch of Time (Diurnal Sky Arc) -->
+  <path d="M 40 170 A 160 140 0 0 1 360 170" stroke="url(#dialGrad)" stroke-width="4" stroke-linecap="round"/>
+  <path d="M 60 170 A 140 120 0 0 1 340 170" stroke="#FFE192" stroke-opacity="0.25" stroke-width="1" stroke-dasharray="3 5"/>
+
+  <!-- Golden Zenith: Abhijit Muhurata Marker -->
+  <g transform="translate(200, 30)">
+    <circle cx="0" cy="0" r="14" fill="#11131A" stroke="#52FEB8" stroke-width="2"/>
+    <circle cx="0" cy="0" r="6" fill="#52FEB8"/>
+    <line x1="0" y1="16" x2="0" y2="35" stroke="#52FEB8" stroke-width="1.5" stroke-dasharray="2 2"/>
+  </g>
+
+  <!-- Brahma Muhurata Dawn Marker -->
+  <g transform="translate(95, 80)">
+    <circle cx="0" cy="0" r="10" fill="#11131A" stroke="#E5C46B" stroke-width="1.5"/>
+    <circle cx="0" cy="0" r="4" fill="#E5C46B"/>
+  </g>
+
+  <!-- Sunset Twilight Marker -->
+  <g transform="translate(305, 80)">
+    <circle cx="0" cy="0" r="10" fill="#11131A" stroke="#F59E0B" stroke-width="1.5"/>
+    <circle cx="0" cy="0" r="4" fill="#F59E0B"/>
+  </g>
+
+  <!-- Base Baseline with Radiance -->
+  <line x1="20" y1="170" x2="380" y2="170" stroke="rgba(229,196,107,0.25)" stroke-width="1"/>
+  <circle cx="200" cy="170" r="2" fill="#FFE192"/>
+</svg>

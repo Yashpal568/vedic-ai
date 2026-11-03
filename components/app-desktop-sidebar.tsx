@@ -19,6 +19,7 @@ import {
   ShieldCheck,
   LogOut,
   Trash2,
+  PanelLeftClose,
 } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 
@@ -48,6 +49,39 @@ export default function AppDesktopSidebar({
   const [userEmail, setUserEmail] = useState("");
   const [userAvatar, setUserAvatar] = useState("");
   const [isSignedIn, setIsSignedIn] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem("vedic-sidebar-collapsed") === "1";
+      setIsCollapsed(saved);
+      if (saved) {
+        document.documentElement.dataset.sidebarCollapsed = "true";
+      } else {
+        delete document.documentElement.dataset.sidebarCollapsed;
+      }
+    } catch {}
+
+    const handleToggle = () => {
+      setIsCollapsed(document.documentElement.dataset.sidebarCollapsed === "true");
+    };
+    window.addEventListener("vedic-sidebar-toggle", handleToggle);
+    return () => window.removeEventListener("vedic-sidebar-toggle", handleToggle);
+  }, []);
+
+  function toggleSidebar() {
+    const next = !isCollapsed;
+    setIsCollapsed(next);
+    if (next) {
+      document.documentElement.dataset.sidebarCollapsed = "true";
+    } else {
+      delete document.documentElement.dataset.sidebarCollapsed;
+    }
+    try {
+      window.localStorage.setItem("vedic-sidebar-collapsed", next ? "1" : "0");
+    } catch {}
+    window.dispatchEvent(new CustomEvent("vedic-sidebar-toggle", { detail: { collapsed: next } }));
+  }
 
   useEffect(() => {
     let active = true;
@@ -189,7 +223,9 @@ export default function AppDesktopSidebar({
 
   return (
     <aside
-      className={`hidden xl:flex fixed left-0 top-0 bottom-0 w-[280px] bg-[var(--panel)]/95 backdrop-blur-2xl z-40 flex-col justify-between border-r border-[var(--line)] shadow-xl font-sans-luxury select-none ${className}`}
+      className={`hidden xl:flex fixed left-0 top-0 bottom-0 w-[280px] bg-[var(--panel)]/95 backdrop-blur-2xl z-40 flex-col justify-between border-r border-[var(--line)] shadow-xl font-sans-luxury select-none transition-transform duration-200 ease-in-out ${
+        isCollapsed ? "-translate-x-full pointer-events-none" : "translate-x-0"
+      } ${className}`}
       data-purpose="desktop-master-sidebar"
     >
       <div className="flex flex-col min-h-0 flex-1 overflow-hidden">
@@ -208,6 +244,17 @@ export default function AppDesktopSidebar({
               </span>
             </div>
           </Link>
+
+          {/* Close Sidebar Toggle Button (PanelLeftClose matching user reference) */}
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            className="desktop-sidebar-toggle"
+            aria-label="Collapse sidebar"
+            title="Collapse sidebar"
+          >
+            <PanelLeftClose size={18} />
+          </button>
         </div>
 
         {/* Primary Action: New Consultation CTA Button (⌘N) */}

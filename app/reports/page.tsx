@@ -20,8 +20,8 @@ export default async function ReportsPage() {
     return (
       <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] flex flex-col font-sans-luxury">
         <AppDesktopSidebar />
-        <div className="flex-1 flex flex-col xl:pl-[280px] min-w-0">
-          <SiteHeader section="Saved Reports & Kundlis" backHref="/chat" />
+        <div className="flex-1 flex flex-col app-sidebar-offset min-w-0">
+          <SiteHeader section="Saved Reports & Kundlis" />
           <main className="flex-1 w-full max-w-[1280px] mx-auto px-6 py-12 text-center">
             <div className="p-10 rounded-2xl bg-[var(--panel)] border border-[var(--line2)] max-w-md mx-auto">
               <BookOpen size={36} className="text-[var(--gold)] mx-auto mb-4" />
@@ -67,8 +67,8 @@ export default async function ReportsPage() {
       <AppDesktopSidebar />
 
       {/* Main Panel Offset for 280px Sidebar on Large Screens */}
-      <div className="flex-1 flex flex-col xl:pl-[280px] min-w-0">
-        <SiteHeader section="Saved Kundlis & Reports" backHref="/chat" />
+      <div className="flex-1 flex flex-col app-sidebar-offset min-w-0">
+        <SiteHeader section="Saved Kundlis & Reports" />
 
         <main className="flex-1 w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10 py-8 pb-28">
           {/* Page Header */}

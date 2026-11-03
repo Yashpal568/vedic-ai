@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 240" fill="none">
+  <defs>
+    <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFE192" stop-opacity="0.85"/>
+      <stop offset="35%" stop-color="#E5C46B" stop-opacity="0.45"/>
+      <stop offset="70%" stop-color="#D97706" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#B45309" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="goldBeam" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE192"/>
+      <stop offset="50%" stop-color="#E5C46B"/>
+      <stop offset="100%" stop-color="#D97706"/>
+    </linearGradient>
+    <linearGradient id="horizonGlow" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#E5C46B" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#E5C46B" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Atmospheric Horizon Base -->
+  <rect y="160" width="400" height="80" fill="url(#horizonGlow)"/>
+  <line x1="0" y1="180" x2="400" y2="180" stroke="#E5C46B" stroke-opacity="0.35" stroke-dasharray="4 6"/>
+  <line x1="20" y1="180" x2="380" y2="180" stroke="#FFE192" stroke-opacity="0.6" stroke-width="1.5"/>
+
+  <!-- Sun Glow Aura -->
+  <circle cx="200" cy="140" r="110" fill="url(#sunGlow)"/>
+
+  <!-- Mandala Solar Ray Rings -->
+  <circle cx="200" cy="140" r="75" stroke="#E5C46B" stroke-opacity="0.25" stroke-width="1" stroke-dasharray="2 4"/>
+  <circle cx="200" cy="140" r="62" stroke="#FFE192" stroke-opacity="0.35" stroke-width="1.2"/>
+  <circle cx="200" cy="140" r="48" stroke="#E5C46B" stroke-opacity="0.4" stroke-width="1" stroke-dasharray="3 3"/>
+
+  <!-- 12 Sacred Surya Rays (Adityas) -->
+  <g stroke="url(#goldBeam)" stroke-width="1.8" stroke-linecap="round" opacity="0.85">
+    <line x1="200" y1="65" x2="200" y2="82"/>
+    <line x1="200" y1="198" x2="200" y2="215"/>
+    <line x1="125" y1="140" x2="142" y2="140"/>
+    <line x1="258" y1="140" x2="275" y2="140"/>
+    <line x1="147" y1="87" x2="159" y2="99"/>
+    <line x1="241" y1="181" x2="253" y2="193"/>
+    <line x1="147" y1="193" x2="159" y2="181"/>
+    <line x1="241" y1="99" x2="253" y2="87"/>
+    <line x1="171" y1="72" x2="178" y2="86"/>
+    <line x1="222" y1="194" x2="229" y2="208"/>
+    <line x1="132" y1="169" x2="146" y2="162"/>
+    <line x1="254" y1="118" x2="268" y2="111"/>
+  </g>
+
+  <!-- Secondary Fine Ray Stars -->
+  <g fill="#FFE192" opacity="0.75">
+    <polygon points="200,88 203,96 200,94 197,96"/>
+    <polygon points="200,184 203,192 200,190 197,192"/>
+    <polygon points="148,140 156,143 154,140 156,137"/>
+    <polygon points="244,140 252,143 250,140 252,137"/>
+  </g>
+
+  <!-- Central Golden Sun Disk -->
+  <circle cx="200" cy="140" r="34" fill="#1A1C24" stroke="url(#goldBeam)" stroke-width="2.5"/>
+  <circle cx="200" cy="140" r="26" fill="url(#goldBeam)" opacity="0.3"/>
+  <circle cx="200" cy="140" r="16" fill="#FFE192"/>
+
+  <!-- Gayatri / Surya Center Core -->
+  <circle cx="200" cy="140" r="8" fill="#FFFBEB"/>
+
+  <!-- Ambient Stars -->
+  <circle cx="60" cy="50" r="1" fill="#FFE192" opacity="0.6"/>
+  <circle cx="110" cy="35" r="1.5" fill="#FFF" opacity="0.8"/>
+  <circle cx="310" cy="45" r="1.2" fill="#FFE192" opacity="0.7"/>
+  <circle cx="350" cy="70" r="1" fill="#FFF" opacity="0.6"/>
+  <circle cx="80" cy="110" r="0.8" fill="#FFE192" opacity="0.5"/>
+  <circle cx="330" cy="120" r="1" fill="#FFF" opacity="0.5"/>
+</svg>

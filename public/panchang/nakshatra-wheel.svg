@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" fill="none">
+  <defs>
+    <radialGradient id="wheelCore" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#E5C46B" stop-opacity="0.18"/>
+      <stop offset="60%" stop-color="#191B23" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#11131A" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="goldRing" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE192"/>
+      <stop offset="50%" stop-color="#E5C46B"/>
+      <stop offset="100%" stop-color="#9A7028"/>
+    </linearGradient>
+  </defs>
+
+  <circle cx="250" cy="250" r="230" fill="url(#wheelCore)"/>
+  <circle cx="250" cy="250" r="220" stroke="url(#goldRing)" stroke-width="1.5" stroke-opacity="0.4"/>
+  <circle cx="250" cy="250" r="200" stroke="#E5C46B" stroke-width="1" stroke-opacity="0.25" stroke-dasharray="2 6"/>
+  <circle cx="250" cy="250" r="175" stroke="url(#goldRing)" stroke-width="1.8" stroke-opacity="0.6"/>
+  <circle cx="250" cy="250" r="150" stroke="#FFE192" stroke-width="1" stroke-opacity="0.3" stroke-dasharray="4 4"/>
+  <circle cx="250" cy="250" r="100" stroke="url(#goldRing)" stroke-width="1.5" stroke-opacity="0.5"/>
+  <circle cx="250" cy="250" r="60" stroke="#E5C46B" stroke-width="1" stroke-opacity="0.4"/>
+
+  <!-- 12 Bhavas / Rashis Dividing Rays -->
+  <g stroke="url(#goldRing)" stroke-width="1" stroke-opacity="0.35">
+    <line x1="250" y1="30" x2="250" y2="470"/>
+    <line x1="30" y1="250" x2="470" y2="250"/>
+    <line x1="94" y1="94" x2="406" y2="406"/>
+    <line x1="94" y1="406" x2="406" y2="94"/>
+    <line x1="140" y1="59" x2="360" y2="441"/>
+    <line x1="59" y1="140" x2="441" y2="360"/>
+    <line x1="360" y1="59" x2="140" y2="441"/>
+    <line x1="441" y1="140" x2="59" y2="360"/>
+  </g>
+
+  <!-- 27 Nakshatras Points along outer rim -->
+  <g fill="#FFE192" opacity="0.8">
+    <circle cx="250" cy="30" r="3"/>
+    <circle cx="295" cy="35" r="2"/>
+    <circle cx="340" cy="51" r="2.5"/>
+    <circle cx="380" cy="78" r="2"/>
+    <circle cx="415" cy="113" r="2.5"/>
+    <circle cx="440" cy="155" r="2"/>
+    <circle cx="455" cy="202" r="2.5"/>
+    <circle cx="455" cy="250" r="3"/>
+    <circle cx="455" cy="298" r="2.5"/>
+    <circle cx="440" cy="345" r="2"/>
+    <circle cx="415" cy="387" r="2.5"/>
+    <circle cx="380" cy="422" r="2"/>
+    <circle cx="340" cy="449" r="2.5"/>
+    <circle cx="295" cy="465" r="2"/>
+    <circle cx="250" cy="470" r="3"/>
+    <circle cx="205" cy="465" r="2"/>
+    <circle cx="160" cy="449" r="2.5"/>
+    <circle cx="120" cy="422" r="2"/>
+    <circle cx="85" cy="387" r="2.5"/>
+    <circle cx="60" cy="345" r="2"/>
+    <circle cx="45" cy="298" r="2.5"/>
+    <circle cx="45" cy="250" r="3"/>
+    <circle cx="45" cy="202" r="2.5"/>
+    <circle cx="60" cy="155" r="2"/>
+    <circle cx="85" cy="113" r="2.5"/>
+    <circle cx="120" cy="78" r="2"/>
+    <circle cx="160" cy="51" r="2.5"/>
+    <circle cx="205" cy="35" r="2"/>
+  </g>
+
+  <!-- Center Golden Bindu & Ashtakon Yantra -->
+  <polygon points="250,210 278,222 290,250 278,278 250,290 222,278 210,250 222,222" stroke="url(#goldRing)" stroke-width="1.5" fill="#FFE192" fill-opacity="0.12"/>
+  <circle cx="250" cy="250" r="6" fill="#FFE192"/>
+  <circle cx="250" cy="250" r="2" fill="#FFF"/>
+</svg>

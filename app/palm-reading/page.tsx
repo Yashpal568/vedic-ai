@@ -417,10 +417,9 @@ These are traditional symbolic interpretations, not scientifically validated per
       <AppDesktopSidebar onNewConsultation={() => { removePhoto(); setQuestion(""); }} />
 
       {/* Main Panel Offset for 280px Sidebar on Large Screens */}
-      <div className="flex-1 flex flex-col xl:pl-[280px] min-w-0">
+      <div className="flex-1 flex flex-col app-sidebar-offset min-w-0">
         <SiteHeader
           section="Traditional Palmistry"
-          backHref="/chat"
         />
 
         {/* WORKSPACE AREA */}

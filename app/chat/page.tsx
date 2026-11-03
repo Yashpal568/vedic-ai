@@ -7,14 +7,15 @@ import remarkGfm from "remark-gfm";
 import Link from "next/link";
 import MobileBottomNav from "@/components/mobile-bottom-nav";
 import AppNavigationDrawer from "@/components/app-navigation-drawer";
+import AppDesktopSidebar from "@/components/app-desktop-sidebar";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import type { KundliReport } from "@/lib/astrology";
 import { printKundliReport } from "@/lib/print-report";
 import { buildKundliHouseSummary, buildKundliPlanetSummary, buildKundliSimpleSummary } from "@/lib/kundli-summary";
 import { build15PointVedicReport, calculatePlanetaryAspects } from "@/lib/vedic-15-point-report";
 import {
-  ArrowDown, ArrowUp, Mic, MicOff, BookOpen, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight,
-  CircleHelp, Gem, History, LogOut, Menu, MessageCircle, MoonStar, Orbit, Plus, Sun,
+  ArrowDown, ArrowUp, Mic, MicOff, CalendarDays, Check, ChevronLeft, ChevronRight,
+  CircleHelp, Gem, History, LogOut, Menu, MoonStar, Orbit, Plus, Sun,
   ShieldCheck, Sparkles, UserRound, X, BriefcaseBusiness, Heart, Compass, Trash2, RefreshCw, PanelLeftClose, PanelLeftOpen, Bell, Clock3,
 } from "lucide-react";
 
@@ -346,7 +347,6 @@ export default function Home() {
   const accountUserIdRef = useRef<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [workspaceExpanded, setWorkspaceExpanded] = useState(true);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [toast, setToast] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -500,10 +500,24 @@ export default function Home() {
     return () => window.clearTimeout(timer);
   }, [toast]);
 
+  useEffect(() => {
+    const handleToggle = () => {
+      setSidebarCollapsed(document.documentElement.dataset.sidebarCollapsed === "true");
+    };
+    window.addEventListener("vedic-sidebar-toggle", handleToggle);
+    return () => window.removeEventListener("vedic-sidebar-toggle", handleToggle);
+  }, []);
+
   function toggleDesktopSidebar() {
     setSidebarCollapsed((current) => {
       const next = !current;
       try { window.localStorage.setItem("vedic-sidebar-collapsed", next ? "1" : "0"); } catch {}
+      if (next) {
+        document.documentElement.dataset.sidebarCollapsed = "true";
+      } else {
+        delete document.documentElement.dataset.sidebarCollapsed;
+      }
+      window.dispatchEvent(new CustomEvent("vedic-sidebar-toggle", { detail: { collapsed: next } }));
       return next;
     });
   }
@@ -976,6 +990,15 @@ export default function Home() {
     } finally { setMemorySaving(false); }
   }
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("openMemory") === "1" && isSignedIn) {
+        void openMemory();
+      }
+    }
+  }, [isSignedIn]);
+
   async function deleteMemory() {
     if (!window.confirm("Delete your saved context memory? Your chat history will not be deleted.")) return;
     setMemorySaving(true);
@@ -1118,48 +1141,12 @@ export default function Home() {
 
   return (
     <main className={"app-shell" + (sidebarCollapsed ? " sidebar-is-collapsed" : "")} data-theme={theme} data-sidebar-collapsed={sidebarCollapsed ? "true" : "false"}>
-      <aside className="sidebar">
-        <div className="sidebar-head">
-        <button className="brand sidebar-brand-premium" onClick={startNewChat} aria-label="Vedic AI home" style={{ border: 0, background: "transparent", textAlign: "left", color: "inherit" }}>
-          <span className="brand-mark"><img src="/vedic-ai-emblem.svg" alt="" /></span>
-          <span className="sidebar-brand-copy"><span className="sidebar-brand-line"><span className="brand-name">vedic<span style={{ color: "var(--gold)" }}>.</span>ai</span></span><span className="brand-sub">Your Jyotish space</span></span>
-        </button>
-        <div className="sidebar-head-actions"><button type="button" className="sidebar-theme-toggle" onClick={() => { const next = theme === "dark" ? "light" : "dark"; setTheme(next); document.documentElement.dataset.theme = next; try { window.localStorage.setItem("vedic-chat-theme", next); } catch {} }} aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} title={theme === "dark" ? "Light mode" : "Dark mode"}>{theme === "dark" ? <Sun size={15}/> : <MoonStar size={15}/>}</button>        <button type="button" className="sidebar-collapse-toggle" onClick={toggleDesktopSidebar} aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"} title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}>{sidebarCollapsed ? <PanelLeftOpen size={17}/> : <PanelLeftClose size={17}/>}</button></div>
-        </div>
-                <div className="sidebar-scroll-area">
-<button className="new-chat sidebar-new-chat" onClick={startNewChat}><Plus size={17} /> <span>New conversation</span></button>
-        <button type="button" className="side-label sidebar-workspace-label sidebar-workspace-toggle" aria-expanded={workspaceExpanded} onClick={() => setWorkspaceExpanded((expanded) => !expanded)}><span>Workspace</span><span className="sidebar-workspace-toggle-right"><span className="sidebar-tool-count">7 Tools</span><ChevronDown size={15} className={workspaceExpanded ? "workspace-chevron expanded" : "workspace-chevron"} /></span></button>
-        {workspaceExpanded && <div className="sidebar-workspace-items">
-        <button className="side-link active" onClick={startNewChat}><MessageCircle size={17} /> <span>Astrology chat</span><span className="sidebar-active-dot" /></button>
-        <button className="side-link" onClick={() => setIsBirthOpen(true)}><Orbit size={17} /> <span>My birth profile</span>{savedBirth && <Check size={13} style={{ marginLeft: "auto", color: "var(--green)" }} />}</button>
-        <button className="side-link" onClick={() => { window.location.href = "/palm-reading"; }}><Sparkles size={17} /> <span>Palm reading</span></button>
-        <button className="side-link" onClick={() => { window.location.href = "/profile"; }}><UserRound size={17} /> <span>My profile</span></button>
-        <button className="side-link" onClick={() => { window.location.href = "/reports"; }}><BookOpen size={17} /> <span>Kundli & reports</span></button>
-        <button className="side-link" onClick={() => void openMemory()}><ShieldCheck size={17} /> <span>AI memory</span></button>
-        </div>}
-        <section className="sidebar-history" aria-label="Conversation history">
-          <div className="side-label sidebar-history-label"><span>All conversations</span><span className="sidebar-history-count">{historyItems.length}</span></div>
-          <div className="sidebar-history-list">
-            {isSignedIn && historyItems.length ? historyItems.map((item) => <div className="history-item-row" key={item.id}><button type="button" className={"side-link history-item-open " + (activeConversationId === item.id ? "active" : "")} onClick={() => void loadConversation(item.id)} disabled={loadingConversationId === item.id}><History size={15} /><span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{loadingConversationId === item.id ? "Opening…" : item.title}</span></button><button type="button" className="history-delete" aria-label={"Delete " + item.title} title={"Delete " + item.title} onClick={() => requestDeleteConversation(item.id)}><Trash2 size={15}/></button></div>) : <p className="history-empty">{isSignedIn ? "Your saved conversations will appear here." : "Sign in to save private conversations."}</p>}
-          </div>
-        </section>
-        </div>
-        <div className="sidebar-bottom">
-          <div className="plan-card">
-            <div className="plan-top"><Gem size={14} /> YOUR COSMIC JOURNEY</div>
-            <p>A more thoughtful way to explore your birth chart, one question at a time.</p>
-            <button className="plan-action" onClick={() => setToast("Plans and billing will be added after the core experience is ready.")}>Explore the experience <ArrowDown size={12} style={{ display: "inline", marginLeft: 4 }} /></button>
-          </div>
-          <div className="profile-row">
-{accountAvatar ? <img className="profile-avatar" src={accountAvatar} alt="" /> : <span className="profile-avatar profile-avatar-fallback">{(accountName || savedBirth?.name || (isSignedIn ? accountEmail : "Guest explorer") || "G").trim().charAt(0).toUpperCase()}</span>}
-            <div style={{ minWidth: 0 }}><div className="profile-name">{isSignedIn ? (accountName || "My profile") : (savedBirth?.name || "Guest explorer")}</div><div className="profile-caption">{isSignedIn ? (accountEmail || "Signed in · private library") : savedBirth ? "Birth profile added · session only" : "Personal astrology workspace"}</div></div>
-            <div className="sidebar-profile-actions">
-              {isSignedIn && <span className="sidebar-google-mark" title="Account connected">G</span>}
-              {isSignedIn ? <button className="sidebar-logout" aria-label="Sign out" title="Sign out" onClick={() => { void signOut(); }}><LogOut size={16} /></button> : <Link className="sidebar-logout" href="/login" aria-label="Sign in" title="Sign in"><LogOut size={16} /></Link>}
-            </div>
-          </div>
-        </div>
-      </aside>
+      {/* 280px Unified Left Sidebar for Desktop PC */}
+      <AppDesktopSidebar
+        onNewConsultation={startNewChat}
+        activeConversationId={activeConversationId}
+        onSelectConversation={(id) => void loadConversation(id)}
+      />
 
       <AppNavigationDrawer
         open={mobileMenuOpen}
@@ -1193,12 +1180,12 @@ export default function Home() {
         }
       />
 
-      <section className="main-panel">
+      <section className="main-panel app-sidebar-offset">
         <header className="topbar">
           <div className="topbar-left">
-            <button type="button" className="desktop-sidebar-toggle" onClick={toggleDesktopSidebar} aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"} title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}>{sidebarCollapsed ? <PanelLeftOpen size={18}/> : <PanelLeftClose size={18}/>}</button>
-            <button className="icon-button mobile-menu" onClick={() => setMobileMenuOpen(true)} aria-label="Open menu"><Menu size={18} /></button>
-            <div className="chat-header-brand"><span className="brand-mark"><img src="/vedic-ai-emblem.svg" alt="" /></span><span className="brand-name">vedic<span style={{ color: "var(--gold)" }}>.</span>ai</span></div>
+            <button type="button" className="desktop-sidebar-toggle hidden xl:inline-grid" onClick={toggleDesktopSidebar} aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"} title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}>{sidebarCollapsed ? <PanelLeftOpen size={18}/> : <PanelLeftClose size={18}/>}</button>
+            <button className="icon-button mobile-menu xl:hidden" onClick={() => setMobileMenuOpen(true)} aria-label="Open menu"><Menu size={18} /></button>
+            <div className="chat-header-brand flex xl:hidden"><span className="brand-mark"><img src="/vedic-ai-emblem.svg" alt="" /></span><span className="brand-name">vedic<span style={{ color: "var(--gold)" }}>.</span>ai</span></div>
             <div className="mode-pill" aria-label="Vedic AI preview status"><span className="status-dot" /> <span className="mode-pill-name">Vedic AI</span> <span className="mode-pill-preview" style={{ color: "var(--quiet)" }}>· Preview</span></div>
           </div>
           <div className="topbar-actions">

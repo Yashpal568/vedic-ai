@@ -6086,3 +6086,75 @@ html[data-theme="light"] .birth-calendar-layer .birth-calendar-today { color:#73
   box-shadow: none !important;
 }
 
+
+
+/* =========================================================================
+   VEDIC-AI DESKTOP LUXURY ENHANCEMENTS:
+   1. Restored Cosmic Galaxy Background in Dark Mode
+   2. Responsive Desktop Sidebar Collapse & Smooth Layout Offset
+   3. Unified Header Sidebar Toggle Controls
+   ========================================================================= */
+
+/* 1. Restored Cosmic Galaxy Background in Dark Mode */
+html:not([data-theme="light"]) body,
+html[data-theme="dark"] body {
+  background-color: #0b0f19 !important;
+  background-image: 
+    radial-gradient(ellipse at 50% 0%, rgba(229, 196, 107, 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 50%, rgba(86, 255, 185, 0.04) 0%, transparent 50%),
+    linear-gradient(180deg, rgba(11, 15, 25, 0.85) 0%, rgba(11, 15, 25, 0.94) 100%),
+    url("/cosmic-jyotish-desktop.svg") !important;
+  background-position: center top !important;
+  background-size: cover !important;
+  background-attachment: fixed !important;
+  background-repeat: no-repeat !important;
+}
+
+html:not([data-theme="light"]) .min-h-screen.bg-\[var\(--bg\)\],
+html:not([data-theme="light"]) .app-shell {
+  background-color: transparent !important;
+}
+
+/* 2. Responsive Desktop Sidebar Offset */
+@media (min-width: 1280px) {
+  .app-sidebar-offset {
+    padding-left: 280px !important;
+    transition: padding-left 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
+  html[data-sidebar-collapsed="true"] .app-sidebar-offset {
+    padding-left: 0 !important;
+  }
+}
+
+/* 3. Desktop Sidebar Toggle Button & Header Refinement */
+.desktop-sidebar-toggle {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line2);
+  border-radius: 11px;
+  color: var(--muted);
+  background: var(--raised);
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.desktop-sidebar-toggle:hover {
+  color: var(--gold);
+  border-color: var(--gold);
+  background: var(--wash);
+  transform: translateY(-1px);
+}
+
+html[data-theme="light"] .desktop-sidebar-toggle {
+  background: #ffffff;
+  border-color: rgba(45, 42, 32, 0.16);
+  color: #5e6058;
+}
+
+html[data-theme="light"] .desktop-sidebar-toggle:hover {
+  background: rgba(168, 132, 58, 0.09);
+  border-color: #98742f;
+  color: #78591f;
+}
