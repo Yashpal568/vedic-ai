@@ -1053,13 +1053,79 @@ export function generateKundliPrintHtml(report: KundliReport, reportId?: string)
 
 export function printKundliReport(report: KundliReport, reportId?: string) {
   const html = generateKundliPrintHtml(report, reportId);
+
+  if (typeof window === "undefined") return;
+
+  // 1. Try invisible iframe print first (never blocked by browser pop-up blockers)
+  try {
+    const existing = document.getElementById("vedic-kundli-print-frame");
+    if (existing) existing.remove();
+
+    const iframe = document.createElement("iframe");
+    iframe.id = "vedic-kundli-print-frame";
+    iframe.style.position = "fixed";
+    iframe.style.right = "0";
+    iframe.style.bottom = "0";
+    iframe.style.width = "0";
+    iframe.style.height = "0";
+    iframe.style.border = "0";
+    iframe.style.opacity = "0";
+    iframe.setAttribute("aria-hidden", "true");
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow?.document || iframe.contentDocument;
+    if (doc) {
+      doc.open();
+      doc.write(html);
+      doc.close();
+
+      setTimeout(() => {
+        try {
+          iframe.contentWindow?.focus();
+          iframe.contentWindow?.print();
+        } catch {
+          // Fallback to window.open if iframe printing was restricted
+          openPreviewWindow(html);
+        }
+      }, 350);
+      return;
+    }
+  } catch {
+    // Fallback to window.open
+  }
+
+  openPreviewWindow(html);
+}
+
+function openPreviewWindow(html: string) {
   const preview = window.open("", "_blank", "width=980,height=860");
   if (!preview) {
-    throw new Error("Report preview window was blocked by your browser. Please allow pop-ups for this site, then try again.");
+    // If popup blocked, download the standalone printable HTML file directly
+    downloadKundliHtmlFile(html, "vedic-ai-kundli.html");
+    return;
   }
   preview.opener = null;
   preview.document.open();
   preview.document.write(html);
   preview.document.close();
   preview.focus();
+}
+
+function downloadKundliHtmlFile(html: string, filename: string) {
+  if (typeof window === "undefined") return;
+  const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+export function downloadKundliPdfFile(report: KundliReport, reportId?: string) {
+  const html = generateKundliPrintHtml(report, reportId);
+  const filename = `vedic-ai-kundli-${report.ascendant.sign.toLowerCase()}-${Date.now()}.html`;
+  downloadKundliHtmlFile(html, filename);
 }

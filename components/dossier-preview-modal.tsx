@@ -13,8 +13,10 @@ import {
   Sparkles,
   Layers,
   Award,
+  LoaderCircle,
 } from "lucide-react";
 import type { ParsedPalmReport } from "@/lib/palm-parser";
+import { downloadPalmDossierPdf, printPalmDossier } from "@/lib/palm-print-report";
 
 interface DossierPreviewModalProps {
   isOpen: boolean;
@@ -41,17 +43,35 @@ export default function DossierPreviewModal({
 
   if (!isOpen) return null;
 
-  function handlePrint() {
-    if (typeof window !== "undefined") {
-      window.print();
+  async function handlePrint() {
+    setIsExporting(true);
+    try {
+      await printPalmDossier(report, {
+        imageSrc,
+        hand,
+        texture: selectedTexture,
+        paperWeight,
+        format: selectedFormat,
+      });
+    } catch (err) {
+      console.error("Print error:", err);
+    } finally {
+      setIsExporting(false);
     }
   }
 
   async function handleDownloadPdf() {
     setIsExporting(true);
     try {
-      // Direct print trigger configured for exact A4 print styles
-      window.print();
+      await downloadPalmDossierPdf(report, {
+        imageSrc,
+        hand,
+        texture: selectedTexture,
+        paperWeight,
+        format: selectedFormat,
+      });
+    } catch (err) {
+      console.error("Download PDF error:", err);
     } finally {
       setIsExporting(false);
     }
@@ -424,16 +444,17 @@ export default function DossierPreviewModal({
                 type="button"
                 onClick={handleDownloadPdf}
                 disabled={isExporting}
-                className="w-full py-3 px-4 rounded-xl bg-[var(--gold)] hover:brightness-110 text-[#0A0C13] text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg transition-all"
+                className="w-full py-3 px-4 rounded-xl bg-[var(--gold)] hover:brightness-110 text-[#0A0C13] text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg transition-all disabled:opacity-50 cursor-pointer"
               >
-                <Download size={16} />
-                <span>Download Archival PDF (A4)</span>
+                {isExporting ? <LoaderCircle size={16} className="animate-spin" /> : <Download size={16} />}
+                <span>{isExporting ? "Preparing Archival PDF…" : "Download Archival PDF (A4)"}</span>
               </button>
 
               <button
                 type="button"
                 onClick={handlePrint}
-                className="w-full py-2.5 px-4 rounded-xl bg-[var(--raised)] hover:bg-[var(--panel)] border border-[var(--line2)] text-[var(--text)] text-xs font-semibold flex items-center justify-center gap-2 transition-all"
+                disabled={isExporting}
+                className="w-full py-2.5 px-4 rounded-xl bg-[var(--raised)] hover:bg-[var(--panel)] border border-[var(--line2)] text-[var(--text)] text-xs font-semibold flex items-center justify-center gap-2 transition-all disabled:opacity-50 cursor-pointer"
               >
                 <Printer size={15} />
                 <span>Print Dossier Directly</span>
