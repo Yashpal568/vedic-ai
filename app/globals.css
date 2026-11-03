@@ -6233,3 +6233,19 @@ html:not([data-theme="light"]) .app-shell .main-panel,
     display: none !important;
   }
 }
+
+
+/* Compact expandable Kundli and transit panels in chat */
+.chart-panel-collapsible{margin:18px 0 24px;border:1px solid rgba(212,183,122,.2);border-radius:16px;background:linear-gradient(145deg,rgba(212,183,122,.045),rgba(255,255,255,.012) 60%);overflow:hidden}
+.chart-panel-summary{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:76px;padding:15px 18px;cursor:pointer;list-style:none;transition:background .2s ease}
+.chart-panel-summary::-webkit-details-marker{display:none}
+.chart-panel-summary:hover{background:rgba(212,183,122,.045)}
+.chart-panel-summary>span:first-child{display:grid;gap:5px;min-width:0}
+.chart-summary-kicker{color:var(--gold);font-size:9px;font-weight:700;letter-spacing:1.7px}
+.chart-panel-summary strong{color:var(--text);font-size:14px;font-weight:650;overflow-wrap:anywhere}
+.chart-summary-action{display:inline-flex;align-items:center;gap:7px;flex-shrink:0;color:var(--gold);font-size:11px;font-weight:600}
+.chart-panel-collapsible[open]>.chart-panel{margin:0;padding:18px;border:0;border-top:1px solid var(--line)}
+.chart-panel-collapsible[open]>.chart-panel-summary .chart-summary-action svg{transform:rotate(90deg)}
+.chart-summary-action svg{transition:transform .2s ease}
+@media(max-width:640px){.chart-panel-summary{align-items:flex-start;padding:13px}.chart-summary-action{font-size:10px}.chart-panel-collapsible[open]>.chart-panel{padding:12px}.chart-panel-head{flex-wrap:wrap}}
+@media(prefers-reduced-motion:reduce){.chart-panel-summary,.chart-summary-action svg{transition:none}}

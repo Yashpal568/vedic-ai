@@ -935,8 +935,8 @@ export default function Home() {
       };
       const nextMessages = [...messages, userMessage];
       setMessages(nextMessages);
-      let conversationIdForTurn = activeConversationId;
-      conversationIdForTurn = await persistConversation(nextMessages, [userMessage], activeConversationId);
+      // Persist the birth-details turn without blocking the AI request or chat UI.
+      const initialSave = persistConversation(nextMessages, [userMessage], activeConversationId);
       try {
         const aiResponse = await fetch("/api/chat", {
           method: "POST",
@@ -948,18 +948,29 @@ export default function Home() {
           }),
         });
         const aiData = await aiResponse.json();
-        if (!aiResponse.ok) throw new Error(aiData.error || "AI chat is not configured.");
-        const assistantMessage: Message = { id: makeId(), role: "assistant", content: aiData.reply };
+        if (!aiResponse.ok) throw new Error(aiData.error || "The AI service could not generate your reading.");
+        if (typeof aiData.reply !== "string" || !aiData.reply.trim()) {
+          throw new Error("The AI returned an empty reading. Please try again.");
+        }
+        const assistantMessage: Message = { id: makeId(), role: "assistant", content: aiData.reply, animated: true };
         const completeMessages = [...nextMessages, assistantMessage];
         setMessages(completeMessages);
-        await persistConversation(completeMessages, [assistantMessage], conversationIdForTurn);
-      } catch {
+        setIsLoading(false);
+        void initialSave.then((conversationId) =>
+          persistConversation(completeMessages, [assistantMessage], conversationId)
+        ).catch((saveError) => console.error("[vedic-ai] Could not persist completed birth-chat turn.", saveError));
+      } catch (aiError) {
+        const reason = aiError instanceof Error ? aiError.message : "The AI service is temporarily unavailable.";
         const assistantMessage: Message = {
-          id: makeId(), role: "assistant",
-          content: "Your chart has been calculated and is shown above. To enable personalised AI explanations and follow-up questions, configure GEMINI_API_KEY or OPENAI_API_KEY in the server environment. The chart engine currently uses an approximate Lahiri ayanamsha and should be validated against trusted reference charts before high-accuracy or commercial use.",
+          id: makeId(), role: "assistant", animated: true,
+          content: "Your birth chart was calculated successfully, but I couldn't generate the interpretation this time. " + reason + " You can retry the question; your calculated chart remains available below.",
         };
-        setMessages((current) => [...current, assistantMessage]);
-        await persistConversation([...nextMessages, assistantMessage], [assistantMessage], conversationIdForTurn);
+        const failedMessages = [...nextMessages, assistantMessage];
+        setMessages(failedMessages);
+        setIsLoading(false);
+        void initialSave.then((conversationId) =>
+          persistConversation(failedMessages, [assistantMessage], conversationId)
+        ).catch((saveError) => console.error("[vedic-ai] Could not persist failed birth-chat turn.", saveError));
       }
     } catch (error) {
       setToast(error instanceof Error ? error.message : "Kundli calculation failed. Please verify your details.");
@@ -1282,7 +1293,25 @@ export default function Home() {
             })}</div>
             <div className="home-guidance-note"><Sparkles size={17}/><span>Traditional Jyotish interpretations are for reflection. Personal chart insights require precise birth details and calculated chart data.</span></div>
           </section> : <section className="chat-area" aria-live="polite">
-            {chartReport && <section className="chart-panel">
+            {messages.map((message, messageIndex) => <div className={"message-row " + message.role + (message.animated ? " is-new" : "")} key={message.id}>
+              {message.role === "assistant" && <div className="message-avatar"><MoonStar size={16} /></div>}
+              {message.role === "assistant" ? <div className="message-content">
+                <div className="message-meta">VEDIC AI <span style={{ color: "#5f6057", margin: "0 5px" }}>·</span> ASTROLOGY COMPANION</div>
+                <div className="assistant-response-card">
+                  <StructuredMessageView content={message.content} />
+                  <div className="assistant-footer-row">
+                    <div className="assistant-note"><Sparkles size={14} style={{ flexShrink: 0, color: "var(--gold)", marginTop: 2 }} /><span>Traditional Jyotish interpretations are for reflection, not certainty.</span></div>
+                    {messageIndex === messages.length - 1 && !isLoading && (
+                      <button type="button" className="message-retry-btn" onClick={retryLastTurn} title="Retry last response">
+                        <RefreshCw size={12} />
+                        <span>Retry</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div> : <div className="user-bubble">{message.content}</div>}
+            </div>)}
+            {isLoading && <div className="message-row assistant"><div className="message-avatar"><MoonStar size={16} /></div><div className="message-content"><div className="message-meta">VEDIC AI · ANALYZING CHART</div><div className="assistant-response-card is-loading"><div className="ai-thinking-pulse"><div className="pulse-dot"/><div className="pulse-dot"/><div className="pulse-dot"/></div><p className="ai-thinking-text">Examining planetary placements, houses, and traditional Jyotish indicators…</p></div></div></div>}{chartReport && <details className="chart-panel-collapsible"><summary className="chart-panel-summary"><span><span className="chart-summary-kicker">YOUR VEDIC BIRTH CHART</span><strong>{chartReport.ascendant.sign} Ascendant · {chartReport.birth.place}</strong></span><span className="chart-summary-action">View calculated chart <ChevronRight size={15}/></span></summary><section className="chart-panel">
               <div className="chart-panel-head"><div><div className="eyebrow"><span className="eyebrow-line" /> YOUR VEDIC BIRTH CHART</div><h2 className="chart-title">{chartReport.ascendant.sign} Ascendant <span>· {chartReport.birth.place.split(",").slice(0, 2).join(",")}</span></h2><p className="chart-subtitle">Lahiri sidereal · Whole-sign houses · {chartReport.birth.timezone}</p></div><button className="secondary-button chart-export" onClick={() => { const blob = new Blob([JSON.stringify(chartReport, null, 2)], { type: "application/json" }); const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.href = url; link.download = "vedic-ai-kundli.json"; link.click(); URL.revokeObjectURL(url); }}>Export chart <ArrowDown size={13}/></button><button className="secondary-button chart-export" onClick={() => { try { printKundliReport(chartReport); } catch (error) { setToast(error instanceof Error ? error.message : "Could not open PDF preview."); } }}>Print / Save PDF</button><button className="primary-button chart-save" onClick={saveChartReport}>Save kundli <Check size={13}/></button><button className="secondary-button chart-export" onClick={loadCurrentTransits} disabled={transitLoading}>{transitLoading ? <RefreshCw size={13} className="spin-icon"/> : <Orbit size={13}/>} {transitLoading ? "Calculating…" : "Current transits"}</button></div>
               <div className="chart-stats"><div className="chart-stat"><span>Ascendant / Lagna</span><strong>{chartReport.ascendant.sign}</strong><small>{chartReport.ascendant.degreeInSign.toFixed(2)}° · {chartReport.ascendant.nakshatra}</small></div><div className="chart-stat"><span>Moon Nakshatra</span><strong>{chartReport.planets.find((planet) => planet.name === "Moon")?.nakshatra || "—"}</strong><small>Pada {chartReport.planets.find((planet) => planet.name === "Moon")?.nakshatraPada || "—"}</small></div><div className="chart-stat"><span>Current Mahadasha</span><strong>{chartReport.vimshottari.currentMahadasha.lord}</strong><small>{new Date(chartReport.vimshottari.currentMahadasha.start).toLocaleDateString()} – {new Date(chartReport.vimshottari.currentMahadasha.end).toLocaleDateString()}</small></div></div>
               <div className="chart-secondary-grid">
@@ -1365,31 +1394,13 @@ export default function Home() {
                   ))}
                 </div>
 </section>
-            </section>}
-            {transitReport && chartReport && <section className="chart-panel transit-panel">
+            </section></details>}
+            {transitReport && chartReport && <details className="chart-panel-collapsible"><summary className="chart-panel-summary"><span><span className="chart-summary-kicker">CURRENT SKY</span><strong>Transit snapshot</strong></span><span className="chart-summary-action">View transits <ChevronRight size={15}/></span></summary><section className="chart-panel transit-panel">
               <div className="chart-panel-head"><div><div className="eyebrow"><span className="eyebrow-line" /> CURRENT SKY · EXPERIMENTAL</div><h2 className="chart-title">Transit snapshot <span>· {transitReport.birth.timezone}</span></h2><p className="chart-subtitle">Calculated at {new Date(transitReport.birth.utc).toLocaleString()} · compared with natal Lagna</p></div><button className="secondary-button" onClick={loadCurrentTransits} disabled={transitLoading}>{transitLoading ? "Refreshing…" : "Refresh"}</button></div>
               <p className="chart-disclaimer"><ShieldCheck size={13}/> Transit positions use the experimental calculation engine and are not independently validated. Treat this as a preview, not a predictive reading.</p>
               <div className="chart-table-wrap"><table className="chart-table"><thead><tr><th>Graha</th><th>Current sign</th><th>Degree</th><th>House from natal Lagna</th><th>Natal sign</th></tr></thead><tbody>{transitReport.planets.map((planet) => { const natal = chartReport.planets.find((item) => item.name === planet.name); return <tr key={planet.name}><td>{planet.name}</td><td>{planet.sign}</td><td>{planet.degreeInSign.toFixed(2)}°</td><td>{(planet.signIndex - chartReport.ascendant.signIndex + 12) % 12 + 1}</td><td>{natal?.sign || "—"}</td></tr>; })}</tbody></table></div>
-            </section>}
-            {messages.map((message, messageIndex) => <div className={"message-row " + message.role + (message.animated ? " is-new" : "")} key={message.id}>
-              {message.role === "assistant" && <div className="message-avatar"><MoonStar size={16} /></div>}
-              {message.role === "assistant" ? <div className="message-content">
-                <div className="message-meta">VEDIC AI <span style={{ color: "#5f6057", margin: "0 5px" }}>·</span> ASTROLOGY COMPANION</div>
-                <div className="assistant-response-card">
-                  <StructuredMessageView content={message.content} />
-                  <div className="assistant-footer-row">
-                    <div className="assistant-note"><Sparkles size={14} style={{ flexShrink: 0, color: "var(--gold)", marginTop: 2 }} /><span>Traditional Jyotish interpretations are for reflection, not certainty.</span></div>
-                    {messageIndex === messages.length - 1 && !isLoading && (
-                      <button type="button" className="message-retry-btn" onClick={retryLastTurn} title="Retry last response">
-                        <RefreshCw size={12} />
-                        <span>Retry</span>
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div> : <div className="user-bubble">{message.content}</div>}
-            </div>)}
-            {isLoading && <div className="message-row assistant"><div className="message-avatar"><MoonStar size={16} /></div><div className="message-content"><div className="message-meta">VEDIC AI · ANALYZING CHART</div><div className="assistant-response-card is-loading"><div className="ai-thinking-pulse"><div className="pulse-dot"/><div className="pulse-dot"/><div className="pulse-dot"/></div><p className="ai-thinking-text">Examining planetary placements, houses, and traditional Jyotish indicators…</p></div></div></div>}<div ref={bottomRef} />
+            </section></details>}
+            <div ref={bottomRef} />
           </section>}
         </div>
 
