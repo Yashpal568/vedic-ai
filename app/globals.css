@@ -3692,6 +3692,46 @@ body:has(.app-shell[data-theme="light"]) {
   box-shadow: 0 10px 30px rgba(36, 38, 56, .055);
 }
 .message-row.assistant .message-content { flex: 1 1 auto; width: min(100%, 720px); }
+
+/* Premium, restrained entrance for newly generated assistant replies. */
+.message-row.assistant.is-new .message-avatar {
+  animation: assistant-avatar-enter 420ms cubic-bezier(.2,.75,.25,1) both;
+}
+.message-row.assistant.is-new .assistant-response-card:not(.is-loading) {
+  transform-origin: 18% 0%;
+  animation: assistant-reply-enter 520ms cubic-bezier(.2,.75,.25,1) both;
+}
+.message-row.assistant.is-new .message-meta {
+  animation: assistant-meta-enter 360ms ease-out both;
+}
+@keyframes assistant-reply-enter {
+  from { opacity: 0; transform: translate3d(0, 12px, 0) scale(.992); filter: blur(3px); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); filter: blur(0); }
+}
+@keyframes assistant-avatar-enter {
+  from { opacity: 0; transform: translateY(6px) scale(.92); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes assistant-meta-enter {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.assistant-response-card:not(.is-loading) {
+  transition: border-color 220ms ease, box-shadow 220ms ease, transform 220ms ease;
+}
+.assistant-response-card:not(.is-loading):hover {
+  border-color: rgba(212, 183, 122, .25);
+  box-shadow: 0 16px 38px rgba(0, 0, 0, .15);
+}
+@media (prefers-reduced-motion: reduce) {
+  .message-row.assistant.is-new .message-avatar,
+  .message-row.assistant.is-new .assistant-response-card:not(.is-loading),
+  .message-row.assistant.is-new .message-meta {
+    animation: none !important;
+    filter: none !important;
+    transform: none !important;
+  }
+}
 .message-row.assistant .message-meta {
   display: flex;
   align-items: center;
