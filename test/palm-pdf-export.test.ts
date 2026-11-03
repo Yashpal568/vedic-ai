@@ -115,6 +115,24 @@ Traditional Hastarekha observations offer symbolic lenses for contemplation; con
       const pdfBytes = fs.readFileSync(pdfPath);
       expect(pdfBytes.length).toBeGreaterThan(15000);
 
+      // Save live screenshot of the rendered A4 print document
+      const imgPath = path.resolve("C:/Users/hp/.gemini/antigravity/brain/df355cbb-8b43-4434-bd55-f527cbd6b92a/screenshots/live_exported_dossier_a4.png");
+      try {
+        execFileSync(
+          chromePath!,
+          [
+            "--headless=new",
+            "--disable-gpu",
+            "--no-sandbox",
+            `--user-data-dir=${chromeDataDir}`,
+            "--window-size=1000,1400",
+            `--screenshot=${imgPath}`,
+            `file:///${htmlPath.replace(/\\/g, "/")}`,
+          ],
+          { timeout: 25000 }
+        );
+      } catch {}
+
       // Verify exact 2-page PDF
       const pdfText = pdfBytes.toString("latin1");
       const pageMatches = pdfText.match(/\/Type\s*\/Page\b/g);
