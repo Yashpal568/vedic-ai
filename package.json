@@ -12,17 +12,19 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@photostructure/tz-lookup": "^11.7.0",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.57.4",
+    "astronomy-engine": "^2.1.19",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
     "lucide-react": "^0.468.0",
     "next": "^15.5.3",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "zod": "^4.1.5",
     "react-markdown": "^10.1.0",
-    "astronomy-engine": "^2.1.19",
-    "@photostructure/tz-lookup": "^11.7.0",
-    "remark-gfm": "^4.0.1"
+    "remark-gfm": "^4.0.1",
+    "zod": "^4.1.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.13",

@@ -156,4 +156,46 @@ Samudrika Shastra provides symbolic reflections of inherent tendencies, not unal
     expect(voidHtml).toContain("Page 01 of 02");
     expect(voidHtml).toContain("Page 02 of 02");
   });
+
+  it("verifies responsive mobile layout for mobile screens without clipping or overflow", () => {
+    const parsed = parsePalmReading(sampleMarkdown, "left");
+    const html = generatePalmPrintHtml(parsed, {
+      hand: "left",
+      texture: "parchment",
+      reportId: "VD-PALM-MOBILE-001",
+      format: "A4",
+    });
+
+    expect(html).toContain("@media screen and (max-width: 768px)");
+    expect(html).toContain("width: 100% !important;");
+
+    const htmlPath = path.resolve(__dirname, "temp-palm-mobile.html");
+    const screenPath = path.resolve("C:/Users/hp/.gemini/antigravity/brain/df355cbb-8b43-4434-bd55-f527cbd6b92a/screenshots/audit_palm_dossier_mobile_390.png");
+    const chromeDataDir = path.resolve(__dirname, "temp-palm-mobile-chrome");
+
+    fs.writeFileSync(htmlPath, html, "utf-8");
+
+    try {
+      const chromePath = findChromePath();
+      if (chromePath) {
+        execFileSync(
+          chromePath,
+          [
+            "--headless=new",
+            "--disable-gpu",
+            "--no-sandbox",
+            `--user-data-dir=${chromeDataDir}`,
+            "--window-size=390,844",
+            `--screenshot=${screenPath}`,
+            `file:///${htmlPath.replace(/\\/g, "/")}`,
+          ],
+          { timeout: 15000 }
+        );
+        expect(fs.existsSync(screenPath)).toBe(true);
+      }
+    } finally {
+      try { if (fs.existsSync(htmlPath)) fs.unlinkSync(htmlPath); } catch {}
+      try { if (fs.existsSync(chromeDataDir)) fs.rmSync(chromeDataDir, { recursive: true, force: true }); } catch {}
+    }
+  });
 });

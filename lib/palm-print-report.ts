@@ -1,3 +1,4 @@
+import { downloadRealPdfFile } from "@/lib/pdf-export-service";
 import type { ParsedPalmReport } from "@/lib/palm-parser";
 
 export interface PalmPrintOptions {
@@ -458,6 +459,90 @@ export function generatePalmPrintHtml(report: ParsedPalmReport, options: PalmPri
       color: #666;
     }
 
+
+    /* =========================================================
+       RESPONSIVE MOBILE VIEWPORT ADAPTATIONS (< 768px)
+       Allows the dossier to be read naturally on phones without breaking
+       ========================================================= */
+    @media screen and (max-width: 768px) {
+      body {
+        background: ${bg} !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow-x: hidden !important;
+      }
+      .toolbar {
+        padding: 10px 14px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        position: relative;
+      }
+      .toolbar-info {
+        text-align: center;
+      }
+      .toolbar-actions {
+        display: flex;
+        width: 100%;
+        gap: 8px;
+      }
+      .toolbar-actions .btn {
+        flex: 1;
+        justify-content: center;
+        padding: 10px 12px;
+      }
+      .print-stage {
+        padding: 12px 8px 40px !important;
+        gap: 18px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        overflow-x: hidden !important;
+      }
+      .pdf-page {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: auto !important;
+        max-height: none !important;
+        padding: 16px 12px !important;
+        margin: 0 !important;
+        box-sizing: border-box !important;
+        overflow: visible !important;
+        border-radius: 12px !important;
+      }
+      .header-top {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 4px !important;
+      }
+      .dossier-title {
+        font-size: 16px !important;
+      }
+      .subject-ribbon {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 6px !important;
+      }
+      .plate-grid {
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+      }
+      .plate-container {
+        width: 100% !important;
+        height: auto !important;
+        min-height: 220px !important;
+        max-height: 280px !important;
+      }
+      .findings-grid {
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+      }
+      .footer-strip {
+        margin-top: 14px;
+        flex-direction: column;
+        gap: 4px;
+        text-align: center;
+      }
+    }
+
     @page {
       size: ${options.format === "US_Letter" ? "letter" : "A4"} portrait;
       margin: 8mm 10mm;
@@ -852,13 +937,16 @@ export function downloadHtmlFile(html: string, filename: string): void {
  */
 export async function downloadPalmDossierPdf(report: ParsedPalmReport, options: PalmPrintOptions = {}): Promise<void> {
   const html = generatePalmPrintHtml(report, options);
-  const filename = `vedic-ai-hastarekha-dossier-${options.hand || "palm"}-${Date.now()}.html`;
-  
-  // Download the standalone file
-  downloadHtmlFile(html, filename);
+  const cleanHand = options.hand || "palm";
+  const filename = `vedic-ai-hastarekha-dossier-${cleanHand}-${Date.now()}.pdf`;
 
-  // Simultaneously trigger native print / save as PDF
-  await printHtmlViaIframe(html);
+  try {
+    // Generate and download genuine multi-page binary PDF (application/pdf)
+    await downloadRealPdfFile(html, filename, { format: options.format });
+  } catch (error) {
+    console.error("[Vedic AI] Binary PDF generation fallback to native print:", error);
+    await printHtmlViaIframe(html);
+  }
 }
 
 /**

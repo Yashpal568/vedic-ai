@@ -80,10 +80,10 @@ export default function DossierPreviewModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/80 backdrop-blur-xl animate-fade-in font-sans-luxury">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-5 bg-black/80 backdrop-blur-xl animate-fade-in font-sans-luxury">
       <div className="relative w-full max-w-6xl max-h-[92vh] bg-[var(--panel)] border border-[var(--line2)] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--line)] bg-[var(--raised)]">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-[var(--line)] bg-[var(--raised)]">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-[var(--wash)] border border-[var(--line2)] flex items-center justify-center text-[var(--gold)] shadow-sm">
               <Award size={22} />
@@ -109,7 +109,7 @@ export default function DossierPreviewModal({
         </div>
 
         {/* Modal Body: 2-Column Split Composition (Matching Reference #5) */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
           {/* LEFT COLUMN: Realistic A4 Document Page Preview (7 Cols) */}
           <div className="lg:col-span-7 flex flex-col items-center">
             {/* Viewport Toolbar: Pagination & Zoom */}
@@ -158,7 +158,7 @@ export default function DossierPreviewModal({
             {/* Realistic A4 Document Sheet Container */}
             <div
               style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: "top center" }}
-              className={`w-full max-w-[520px] aspect-[1/1.4142] rounded-lg shadow-2xl p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 relative border overflow-hidden ${
+              className={`w-full max-w-[520px] aspect-[1/1.4142] rounded-lg shadow-2xl p-4 sm:p-8 flex flex-col justify-between transition-all duration-300 relative border overflow-hidden ${
                 selectedTexture === "parchment"
                   ? "bg-[#FAF7EE] text-[#1E2229] border-[#DFCBB0]"
                   : selectedTexture === "clean"
@@ -214,7 +214,7 @@ export default function DossierPreviewModal({
                   </div>
 
                   {/* Quantitative Mount Strength Barometers */}
-                  <div className="grid grid-cols-2 gap-2 text-[10px]">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2 text-[9px] sm:text-[10px]">
                     <div className="p-2 rounded bg-current/5 border border-current/10">
                       <strong>Mount of Jupiter (Guru):</strong>
                       <p className="opacity-80 mt-0.5 text-[9px]">Strong ethical vision & leadership clarity.</p>
@@ -449,7 +449,7 @@ export default function DossierPreviewModal({
                 className="w-full py-3 px-4 rounded-xl bg-[var(--gold)] hover:brightness-110 text-[#0A0C13] text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg transition-all disabled:opacity-50 cursor-pointer"
               >
                 {isExporting ? <LoaderCircle size={16} className="animate-spin" /> : <Download size={16} />}
-                <span>{isExporting ? "Preparing Archival PDF…" : "Download Archival PDF (A4)"}</span>
+                <span>{isExporting ? "Generating Archival PDF (.pdf)…" : "Download Archival PDF (A4)"}</span>
               </button>
 
               <button

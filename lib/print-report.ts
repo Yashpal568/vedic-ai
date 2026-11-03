@@ -1,3 +1,4 @@
+import { downloadRealPdfFile } from "@/lib/pdf-export-service";
 import { SIGNS, type KundliReport, type PlanetPosition } from "@/lib/astrology";
 
 const htmlEntities: Record<string, string> = {
@@ -787,6 +788,59 @@ export function generateKundliPrintHtml(report: KundliReport, reportId?: string)
     }
 
     /* PRINT RULES */
+
+    /* =========================================================
+       RESPONSIVE MOBILE VIEWPORT ADAPTATIONS (< 768px)
+       Allows Kundli report to be read naturally on phones without breaking
+       ========================================================= */
+    @media screen and (max-width: 768px) {
+      body {
+        background: #f8fafc !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow-x: hidden !important;
+      }
+      .toolbar {
+        margin: 8px !important;
+        padding: 10px 14px !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 8px !important;
+      }
+      .toolbar button {
+        width: 100% !important;
+        justify-content: center !important;
+      }
+      .pdf-page {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: auto !important;
+        min-height: auto !important;
+        max-height: none !important;
+        margin: 0 0 16px 0 !important;
+        padding: 14px 10px !important;
+        overflow: visible !important;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.06) !important;
+      }
+      .hero-grid {
+        grid-template-columns: 1fr !important;
+      }
+      .kundli-chart-block {
+        width: 100% !important;
+        max-width: 280px !important;
+        margin: 0 auto 12px !important;
+      }
+      .mid-split-grid,
+      .life-areas-grid {
+        grid-template-columns: 1fr !important;
+      }
+      .planet-table th,
+      .planet-table td {
+        padding: 4px 5px !important;
+        font-size: 6.8pt !important;
+      }
+    }
+
     @page {
       size: A4 portrait;
       margin: 8mm 10mm;
@@ -1124,8 +1178,13 @@ function downloadKundliHtmlFile(html: string, filename: string) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-export function downloadKundliPdfFile(report: KundliReport, reportId?: string) {
+export async function downloadKundliPdfFile(report: KundliReport, reportId?: string): Promise<void> {
   const html = generateKundliPrintHtml(report, reportId);
-  const filename = `vedic-ai-kundli-${report.ascendant.sign.toLowerCase()}-${Date.now()}.html`;
-  downloadKundliHtmlFile(html, filename);
+  const filename = `vedic-ai-kundli-${report.ascendant.sign.toLowerCase()}-${Date.now()}.pdf`;
+  try {
+    await downloadRealPdfFile(html, filename, { format: "A4" });
+  } catch (error) {
+    console.error("[Vedic AI] Falling back to print sheet:", error);
+    printKundliReport(report, reportId);
+  }
 }
