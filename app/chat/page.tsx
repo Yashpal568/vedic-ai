@@ -15,7 +15,7 @@ import { build15PointVedicReport, calculatePlanetaryAspects } from "@/lib/vedic-
 import {
   ArrowDown, ArrowUp, Mic, MicOff, BookOpen, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight,
   CircleHelp, Gem, History, LogOut, Menu, MessageCircle, MoonStar, Orbit, Plus, Sun,
-  ShieldCheck, Sparkles, UserRound, X, BriefcaseBusiness, Heart, Compass, Trash2, RefreshCw, PanelLeftClose, PanelLeftOpen, Bell,
+  ShieldCheck, Sparkles, UserRound, X, BriefcaseBusiness, Heart, Compass, Trash2, RefreshCw, PanelLeftClose, PanelLeftOpen, Bell, Clock3,
 } from "lucide-react";
 
 type Message = { id: string; role: "user" | "assistant"; content: string };
@@ -26,11 +26,54 @@ type VoiceRecognition = { lang: string; interimResults: boolean; continuous: boo
 type VoiceWindow = Window & { SpeechRecognition?: new () => VoiceRecognition; webkitSpeechRecognition?: new () => VoiceRecognition };
 
 const suggestions = [
-  { title: "Generate Your Birth Chart", description: "Explore your Vedic birth chart, ascendant and houses.", prompt: "Give me a personalised overview of my calculated Vedic birth chart, including Lagna, houses and planetary placements. Use only values present in my calculated chart.", icon: Orbit },
-  { title: "Relationship & marriage compatibility", description: "Explore traditional relationship themes and compatibility.", prompt: "Analyse traditional relationship themes from my calculated birth chart using the 7th house and lord, Venus, Moon, and Navamsa only if validated data is available. Separate chart facts from symbolic interpretation and do not guarantee events.", icon: Heart },
-  { title: "Career & 10th house direction", description: "Explore career indicators and traditional timing factors.", prompt: "Analyse career and work themes from my calculated birth chart. Examine the 10th house and lord, 6th house, 2nd and 11th houses, Lagna and lord, and current Vimshottari dasha only where calculated data supports it. Do not invent placements or dates.", icon: BriefcaseBusiness },
-  { title: "Current Mahadasha & remedies", description: "Understand calculated dasha periods and optional traditions.", prompt: "Explain my calculated Vimshottari Mahadasha and Antardasha if available. Suggest only optional, low-risk traditional practices and clearly distinguish symbolism from evidence.", icon: Gem },
-  { title: "Today's Auspicious Timings & Panchang", description: "View lunar day, nakshatra, yoga and local daily timings.", prompt: "Help me understand today's Panchang and traditional timing concepts. Direct me to the live Panchang page for location-based timings.", icon: CalendarDays },
+  {
+    title: "Career & Wealth",
+    description: "Analyze 10th house Karma Bhava, 2nd Dhana bhava, and financial growth prospects.",
+    prompt: "Analyze my 10th house and 2nd/11th houses for career trajectory, profession indications, and wealth potential based on my calculated chart.",
+    icon: BriefcaseBusiness,
+  },
+  {
+    title: "Love & Matchmaking",
+    description: "Explore 7th house dynamics, Venus placement, and marital compatibility factors.",
+    prompt: "Examine traditional relationship indicators from my chart including 7th house, Venus, and marital harmony themes.",
+    icon: Heart,
+  },
+  {
+    title: "Sade Sati & Dasha",
+    description: "Evaluate Saturn's 7.5-year cycle and your active Vimshottari Mahadasha timeline.",
+    prompt: "Explain my current Vimshottari Mahadasha and Antardasha periods and evaluate where I stand regarding Saturn's Sade Sati cycle.",
+    icon: Clock3,
+  },
+  {
+    title: "Vedic Remedies & Gems",
+    description: "Explore traditional Parashara Upayas, mantras, charity (daan), and gemstone guidance.",
+    prompt: "What traditional Vedic remedies (mantras, seva, gemstone precautions) are recommended for my planetary placements?",
+    icon: Gem,
+  },
+  {
+    title: "10th House Transit & Promotion",
+    description: "Assess current planetary transits over the 10th house and upcoming professional shifts.",
+    prompt: "Assess how current planetary transits affect my 10th house of career and professional opportunities.",
+    icon: Orbit,
+  },
+  {
+    title: "D9 Navamsha Destiny Chart",
+    description: "Inspect the divisional D9 chart for inner soul blueprint and planetary dignities.",
+    prompt: "Analyze my D9 Navamsha chart placements, Vargottama planets, and inner spiritual potential.",
+    icon: Compass,
+  },
+  {
+    title: "Saturn Sade Sati Analysis",
+    description: "Detailed breakdown of the rising, peak, and setting phases of Shani transit.",
+    prompt: "Provide an in-depth analysis of Saturn's transit relative to my natal Moon sign (Sade Sati status and practical guidance).",
+    icon: Sparkles,
+  },
+  {
+    title: "Kundli Milan & Ashtakoota",
+    description: "Traditional 36 Guna compatibility framework, Nadi, Bhakoot, and Ganadosha.",
+    prompt: "Explain how traditional Ashtakoota 36 Guna Milan works and what factors matter most for lifelong synastry.",
+    icon: Heart,
+  },
 ];
 const makeId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
@@ -1189,7 +1232,37 @@ export default function Home() {
                 <button type="button" onClick={() => setIsBirthOpen(true)}><CalendarDays size={16}/>{savedBirth && chartReport ? "Review birth details" : "Enter birth details"} <span>✦</span></button>
               </div>
             </div>
-            <div className="home-pathway-heading"><span><Sparkles size={14}/> CHOOSE A PATHWAY TO EXPLORE</span><small>5 Presets</small></div>
+
+            {/* Last Consultation Card if history exists */}
+            {historyItems.length > 0 && (
+              <div className="p-4 rounded-xl bg-[var(--panel)] border border-[var(--line2)] mb-5 flex items-center justify-between gap-4 shadow-sm">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-lg bg-[var(--wash)] text-[var(--gold)] flex items-center justify-center shrink-0">
+                    <History size={18} />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-[10px] uppercase font-bold text-[var(--gold)] tracking-wider block">
+                      Resume Previous Consultation
+                    </span>
+                    <strong className="block text-xs text-[var(--text)] font-semibold mt-0.5 truncate max-w-[420px]">
+                      {historyItems[0].title}
+                    </strong>
+                    <span className="text-[10px] text-[var(--quiet)] block">
+                      {formatConversationDate(historyItems[0].updated_at)}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void loadConversation(historyItems[0].id)}
+                  className="px-3 py-1.5 rounded-lg bg-[var(--gold)] text-[#11131A] text-xs font-bold hover:bg-[var(--gold2)] transition-colors cursor-pointer shrink-0"
+                >
+                  Resume Chat →
+                </button>
+              </div>
+            )}
+
+            <div className="home-pathway-heading"><span><Sparkles size={14}/> CHOOSE A PATHWAY TO EXPLORE</span><small>8 Presets</small></div>
             <div className="prompt-grid">{suggestions.map((item) => {
               const Icon = item.icon;
               return <button className="prompt-card" key={item.title} onClick={() => {

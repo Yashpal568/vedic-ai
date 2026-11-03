@@ -1,53 +1,109 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, ArrowUpRight, BookOpen, CalendarDays, MoonStar, Orbit, ShieldCheck } from "lucide-react";
+import { BookOpen, ShieldCheck } from "lucide-react";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import type { KundliReport } from "@/lib/astrology";
-import ReportActions from "./report-actions";
+import AppDesktopSidebar from "@/components/app-desktop-sidebar";
 import SiteHeader from "@/components/site-header";
 import MobileBottomNav from "@/components/mobile-bottom-nav";
+import ReportsLibraryClient, { type SavedReportItem } from "@/components/reports/reports-library-client";
 
-type SavedReport = {
-  id: string;
-  calculation_engine: string;
-  engine_version: string | null;
-  created_at: string;
-  calculation_payload: KundliReport;
+export const metadata = {
+  title: "Saved Kundlis & Reports — Vedic AI",
+  description: "Personal astrological library of calculated Janam Kundlis, palm dossiers, and consultation records.",
+  robots: { index: false, follow: false },
 };
-
-export const metadata = { title: "Saved Kundlis", robots: { index: false, follow: false } };
 
 export default async function ReportsPage() {
   const supabase = await createSupabaseServerClient();
-  if (!supabase) {
-    return <main className="reports-shell"><Link className="auth-back" href="/"><ArrowLeft size={15}/> Back to Vedic AI</Link><section className="reports-empty"><MoonStar size={28}/><h1>Saved kundlis</h1><p>Connect Supabase to enable secure account-based report storage.</p><Link className="primary-button" href="/login">Sign in <ArrowUpRight size={14}/></Link></section></main>;
-  }
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-  const { data, error } = await supabase.from("kundli_reports")
-    .select("id, calculation_engine, engine_version, created_at, calculation_payload")
-    .eq("user_id", user.id).order("created_at", { ascending: false }).limit(50);
-  const reports = (data || []) as unknown as SavedReport[];
 
-  return <main className="reports-shell">
-    <SiteHeader section="Saved Kundlis & Reports" backHref="/chat" />
-    <section className="reports-content">
-      <div className="eyebrow"><span className="eyebrow-line"/> YOUR PERSONAL LIBRARY</div>
-      <h1 className="reports-title">Saved <span>kundlis.</span></h1>
-      <p className="reports-description">Your birth charts, stored privately in your account.</p>
-      {error ? <div className="reports-alert">We couldn&apos;t load saved reports. Check the Supabase migration and Row Level Security policies.</div> :
-        reports.length === 0 ? <div className="reports-empty"><BookOpen size={25}/><h2>Your library is waiting.</h2><p>Calculate a birth chart, then select <strong>Save kundli</strong> to keep it here.</p><Link className="primary-button" href="/">Create your first kundli <ArrowUpRight size={14}/></Link></div> :
-        <div className="reports-grid">{reports.map((report) => {
-          const chart = report.calculation_payload;
-          return <article className="report-card" key={report.id}>
-            <div className="report-card-top"><span className="report-icon"><Orbit size={17}/></span><span className="report-date"><CalendarDays size={12}/>{new Date(report.created_at).toLocaleDateString()}</span></div>
-            <h2>{chart?.ascendant?.sign || "Vedic birth chart"} Ascendant</h2>
-            <p className="report-place">{chart?.birth?.place || "Birthplace not available"}</p><ReportActions id={report.id} report={chart}/>
-            <div className="report-details"><div><span>Moon nakshatra</span><strong>{chart?.planets?.find((planet) => planet.name === "Moon")?.nakshatra || "—"}</strong></div><div><span>Mahadasha at save</span><strong>{chart?.vimshottari?.currentMahadasha?.lord || "—"}</strong></div></div>
-            <details className="report-payload"><summary>View planetary placements</summary><div className="chart-table-wrap"><table className="chart-table"><thead><tr><th>Graha</th><th>Rashi</th><th>House</th><th>Degree</th></tr></thead><tbody>{(chart?.planets || []).map((planet) => <tr key={planet.name}><td>{planet.name}</td><td>{planet.sign}</td><td>{planet.house}</td><td>{planet.degreeInSign.toFixed(2)}°</td></tr>)}</tbody></table></div><p className="chart-disclaimer"><ShieldCheck size={13}/>{chart?.disclaimer}</p><pre>{JSON.stringify(chart, null, 2)}</pre></details>
-          </article>;
-        })}</div>}
-    </section>
-    <MobileBottomNav />
-  </main>;
+  if (!supabase) {
+    return (
+      <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] flex flex-col font-sans-luxury">
+        <AppDesktopSidebar />
+        <div className="flex-1 flex flex-col xl:pl-[280px] min-w-0">
+          <SiteHeader section="Saved Reports & Kundlis" backHref="/chat" />
+          <main className="flex-1 w-full max-w-[1280px] mx-auto px-6 py-12 text-center">
+            <div className="p-10 rounded-2xl bg-[var(--panel)] border border-[var(--line2)] max-w-md mx-auto">
+              <BookOpen size={36} className="text-[var(--gold)] mx-auto mb-4" />
+              <h1 className="text-xl font-bold font-serif-luxury text-[var(--text)]">
+                Secure Account Storage
+              </h1>
+              <p className="text-xs text-[var(--muted)] mt-2 leading-relaxed">
+                Connect your account to save, search, and export Janam Kundlis and Palmistry Dossiers in your private vault.
+              </p>
+              <Link
+                href="/login"
+                className="mt-6 inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[var(--gold)] text-[#11131A] text-xs font-bold hover:bg-[var(--gold2)] transition-colors"
+              >
+                Sign In to View Library
+              </Link>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const { data } = await supabase
+    .from("kundli_reports")
+    .select("id, calculation_engine, engine_version, created_at, calculation_payload")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  const reports = (data || []) as unknown as SavedReportItem[];
+
+  return (
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] flex flex-col font-sans-luxury">
+      {/* 280px Left Navigation Sidebar for Desktop PC */}
+      <AppDesktopSidebar />
+
+      {/* Main Panel Offset for 280px Sidebar on Large Screens */}
+      <div className="flex-1 flex flex-col xl:pl-[280px] min-w-0">
+        <SiteHeader section="Saved Kundlis & Reports" backHref="/chat" />
+
+        <main className="flex-1 w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10 py-8 pb-28">
+          {/* Page Header */}
+          <section className="mb-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--gold)] flex items-center gap-1.5 mb-1.5">
+                  <ShieldCheck size={14} />
+                  <span>Your Personal Library · Secure Vault</span>
+                </span>
+                <h1 className="text-2xl sm:text-3xl font-bold font-serif-luxury text-[var(--text)] tracking-tight">
+                  Saved Kundlis & Reports
+                </h1>
+                <p className="text-xs sm:text-sm text-[var(--muted)] mt-1.5 max-w-[720px] leading-relaxed">
+                  Your calculated birth charts, palm dossiers, and consultation records, stored securely in your celestial vault.
+                </p>
+              </div>
+
+              {/* Vault Storage Status Badge */}
+              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[var(--panel)] border border-[var(--line2)] text-xs text-[var(--muted)]">
+                <span className="w-2 h-2 rounded-full bg-[#52FEB8] animate-pulse" />
+                <span className="font-semibold text-[var(--text)]">Vault Synced</span>
+                <span className="text-[10px] text-[var(--quiet)] font-mono">
+                  ({reports.length} records)
+                </span>
+              </div>
+            </div>
+          </section>
+
+          {/* Interactive Client Library (Search, Filter, Sort & 3-Col PC Grid) */}
+          <ReportsLibraryClient initialReports={reports} />
+        </main>
+
+        <MobileBottomNav />
+      </div>
+    </div>
+  );
 }
