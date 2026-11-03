@@ -31,6 +31,10 @@ export default function PalmBiometricPlate({
           <img
             src={imageSrc}
             alt="Authentic AI Biometric Palmistry Scan"
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = "/sample-palm.svg";
+            }}
             className="w-full h-full object-cover object-center filter brightness-[1.05] contrast-[1.08] transition-transform duration-500"
           />
 

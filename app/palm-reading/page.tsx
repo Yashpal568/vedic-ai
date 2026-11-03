@@ -339,8 +339,7 @@ export default function PalmReadingPage() {
   }
 
   function loadSampleProfile() {
-    const sampleImg =
-      "https://lh3.googleusercontent.com/aida/AEtjO1WQ27xp-ulmlF2tb_TduyxoS9bIqQ8ZHtmXKWd6BncWOe6AO45wnB1LIOrwle5hBtvcxHk0htQaxmMYsezrmhXFjHajGe1T_AJg5vTx88eef_flWzTyCZlL-n5lfF7suOnrWPZ7ceXOVzVG3RvBH6D4MsxtUNm0jXgiBeb1s5nUnnu1JRsSWtKtvutYLHBG7JsglSK0dXyA_Ultp4tk6TKb7bxt-Qu-WwsZLv7WjhBAGA";
+    const sampleImg = "/sample-palm.svg";
     const sampleMarkdown = `## 1. Palm Overview & Photo Observations
 Authentic left hand with earth-type squared palm and balanced finger length indicating grounded pragmatism, stability, and thoughtful deliberate action.
 
