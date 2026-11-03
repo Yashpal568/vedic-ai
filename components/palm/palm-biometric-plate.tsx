@@ -16,92 +16,115 @@ export default function PalmBiometricPlate({
   onRetake,
   className = "",
 }: PalmBiometricPlateProps) {
+  const isRealisticPalm =
+    imageSrc.includes("realistic-palm") || imageSrc.includes("sample-palm");
+
   const handLabel =
     hand === "left"
-      ? "Left Hand (Passive Hastarekha)"
+      ? "Left Hand (Passive Hand)"
       : hand === "right"
-      ? "Right Hand (Active Hastarekha)"
-      : "Open Palm (Hastarekha)";
+      ? "Right Hand (Active Hand)"
+      : "Open Palm";
 
   return (
-    <section className={`mb-7 ${className}`} data-purpose="palm-diagram-card">
-      <div className="relative w-full rounded-2xl border border-[var(--line2)] bg-[var(--panel)] overflow-hidden shadow-2xl p-2.5 flex flex-col items-center justify-center group">
-        <div className="relative w-full aspect-[4/3.5] rounded-xl overflow-hidden bg-[#0C0E15] border border-[var(--line)]">
+    <section className={`mb-8 ${className}`} data-purpose="palm-diagram-card">
+      {/* Header matching approved reference format */}
+      <div className="text-center mb-3">
+        <h2 className="text-[18px] sm:text-[20px] font-bold tracking-[0.18em] uppercase text-[var(--gold)] font-serif-luxury">
+          YOUR PALMISTRY PROFILE
+        </h2>
+        <p className="text-[13px] text-[var(--muted)] font-normal mt-0.5 tracking-wide">
+          Traditional Palmistry Interpretation
+        </p>
+      </div>
+
+      {/* Telemetry subtitle bar */}
+      <div className="flex items-center justify-between text-[11px] text-[var(--muted)] px-2 mb-2">
+        <span className="flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-[var(--green)] animate-pulse" />
+          Live Palm Scan • 99.4% Match
+        </span>
+        <span className="font-semibold text-[var(--gold)]/80 uppercase tracking-wider text-[10px]">
+          AI Biometrics
+        </span>
+      </div>
+
+      <div className="relative w-full rounded-2xl border border-[var(--gold)]/30 bg-[#FAF7F0] dark:bg-[#191B23] overflow-hidden shadow-xl p-2 sm:p-3 flex flex-col items-center justify-center transition-all">
+        {/* Palm presentation container with clean warm background */}
+        <div className="relative w-full aspect-[4/3.8] max-h-[460px] rounded-xl overflow-hidden bg-[#FAF6EE] dark:bg-[#14161F] flex items-center justify-center border border-[var(--gold)]/20 shadow-inner">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={imageSrc}
-            alt="Authentic AI Biometric Palmistry Scan"
+            src={imageSrc || "/realistic-palm.jpg"}
+            alt="Traditional Hastarekha Palm Reading"
             onError={(e) => {
               e.currentTarget.onerror = null;
-              e.currentTarget.src = "/sample-palm.svg";
+              e.currentTarget.src = "/realistic-palm.jpg";
             }}
-            className="w-full h-full object-cover object-center filter brightness-[1.05] contrast-[1.08] transition-transform duration-500"
+            className="w-full h-full object-contain object-center transition-all duration-300"
           />
 
-          {/* Vignettes and Radiative Starlight Overlays */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0C0E15]/85 via-transparent to-[#0C0E15]/35 pointer-events-none" />
-          <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_45%,rgba(11,13,20,0.5)_100%)]" />
+          {/* Interactive line pointers for custom uploaded images (realistic palm already has crisp annotations) */}
+          {!isRealisticPalm && (
+            <>
+              {/* Heart Line callout */}
+              <div className="absolute right-[12%] top-[34%] pointer-events-none flex items-center gap-2">
+                <span className="w-12 h-px bg-[var(--gold)] opacity-80" />
+                <span className="text-[11px] font-semibold tracking-wide text-[var(--text)] bg-[var(--panel)]/95 px-2.5 py-0.5 rounded-full border border-[var(--gold)]/40 shadow-sm">
+                  Heart Line
+                </span>
+              </div>
 
-          {/* Biometric Reticle Corner Markers */}
-          <div className="absolute top-2.5 left-2.5 w-5 h-5 border-t-2 border-l-2 border-[#52FEB8] pointer-events-none rounded-tl-sm" />
-          <div className="absolute top-2.5 right-2.5 w-5 h-5 border-t-2 border-r-2 border-[#52FEB8] pointer-events-none rounded-tr-sm" />
-          <div className="absolute bottom-2.5 left-2.5 w-5 h-5 border-b-2 border-l-2 border-[#52FEB8] pointer-events-none rounded-bl-sm" />
-          <div className="absolute bottom-2.5 right-2.5 w-5 h-5 border-b-2 border-r-2 border-[#52FEB8] pointer-events-none rounded-br-sm" />
+              {/* Head Line callout */}
+              <div className="absolute left-[8%] top-[46%] pointer-events-none flex items-center gap-2">
+                <span className="text-[11px] font-semibold tracking-wide text-[var(--text)] bg-[var(--panel)]/95 px-2.5 py-0.5 rounded-full border border-[var(--gold)]/40 shadow-sm">
+                  Head Line
+                </span>
+                <span className="w-12 h-px bg-[var(--gold)] opacity-80" />
+              </div>
 
-          {/* Live Scan Telemetry Badge */}
-          <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#11131A]/90 backdrop-blur-md border border-[#52FEB8]/30 shadow-md">
-            <span className="w-2 h-2 rounded-full bg-[#52FEB8] animate-pulse" />
-            <span className="text-[10px] font-semibold tracking-wider uppercase text-[#52FEB8]">
-              Live Palm Scan • 99.4% Match
-            </span>
-          </div>
+              {/* Life Line callout */}
+              <div className="absolute right-[12%] top-[56%] pointer-events-none flex items-center gap-2">
+                <span className="w-12 h-px bg-[var(--gold)] opacity-80" />
+                <span className="text-[11px] font-semibold tracking-wide text-[var(--text)] bg-[var(--panel)]/95 px-2.5 py-0.5 rounded-full border border-[var(--gold)]/40 shadow-sm">
+                  Life Line
+                </span>
+              </div>
 
-          {/* AI Biometrics Tag */}
-          <div className="absolute top-3 right-3 flex items-center gap-1">
-            <span className="px-2.5 py-0.5 bg-[#191B23]/90 backdrop-blur-md text-[var(--gold)] text-[10px] font-semibold tracking-wider uppercase rounded border border-[var(--gold)]/30">
-              AI Biometrics
-            </span>
-          </div>
+              {/* Fate Line callout */}
+              <div className="absolute right-[14%] bottom-[20%] pointer-events-none flex items-center gap-2">
+                <span className="w-12 h-px bg-[var(--gold)] opacity-80" />
+                <span className="text-[11px] font-semibold tracking-wide text-[var(--text)] bg-[var(--panel)]/95 px-2.5 py-0.5 rounded-full border border-[var(--gold)]/40 shadow-sm">
+                  Fate Line
+                </span>
+              </div>
 
-          {/* Line Annotation Pins on Palm Surface */}
-          <div className="absolute left-[42%] top-[38%] pointer-events-none -translate-x-1/2 flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-[var(--gold)] shadow-[0_0_8px_#FFE192]" />
-            <span className="text-[9px] font-semibold tracking-wide text-[var(--gold2)] bg-[#11131A]/85 px-1.5 py-0.5 rounded border border-[var(--gold)]/40 backdrop-blur-sm">
-              Heart Line
-            </span>
-          </div>
+              {/* Passive/Active Hand label callout */}
+              <div className="absolute left-[12%] bottom-[14%] pointer-events-none flex items-center gap-2">
+                <span className="text-[11px] font-semibold tracking-wide text-[var(--text)] bg-[var(--panel)]/95 px-2.5 py-0.5 rounded-full border border-[var(--gold)]/40 shadow-sm">
+                  {handLabel}
+                </span>
+              </div>
 
-          <div className="absolute left-[45%] top-[50%] pointer-events-none -translate-x-1/2 flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-[#52FEB8] shadow-[0_0_8px_#52FEB8]" />
-            <span className="text-[9px] font-semibold tracking-wide text-[#52FEB8] bg-[#11131A]/85 px-1.5 py-0.5 rounded border border-[#52FEB8]/40 backdrop-blur-sm">
-              Head Line
-            </span>
-          </div>
+              {/* Horoscope badge matching reference */}
+              <div className="absolute left-3 bottom-3 pointer-events-none">
+                <span className="px-2.5 py-1 bg-[#8E8B82]/85 text-white text-[11px] font-medium tracking-wide rounded-md shadow-sm">
+                  horoscope
+                </span>
+              </div>
+            </>
+          )}
 
-          <div className="absolute left-[34%] top-[62%] pointer-events-none -translate-x-1/2 flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-[var(--gold)] shadow-[0_0_8px_#FFE192]" />
-            <span className="text-[9px] font-semibold tracking-wide text-[var(--gold2)] bg-[#11131A]/85 px-1.5 py-0.5 rounded border border-[var(--gold)]/40 backdrop-blur-sm">
-              Life Line
-            </span>
-          </div>
-
-          {/* Bottom Left Hand Tag */}
-          <div className="absolute left-3 bottom-3">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#11131A]/90 backdrop-blur-md text-[var(--gold2)] text-[11px] font-medium rounded-full border border-[var(--gold)]/40 shadow-md">
-              <span className="w-1.5 h-1.5 rounded-full bg-[var(--gold)]" />
-              {handLabel}
-            </span>
-          </div>
-
-          {/* Bottom Right Retake Action */}
-          <div className="absolute right-3 bottom-3">
+          {/* Action Overlay: Retake Button */}
+          <div className="absolute top-3 right-3 flex items-center gap-2 z-10">
             <button
               type="button"
               onClick={onRetake}
-              className="inline-flex items-center gap-1 px-3 py-1 bg-[var(--raised)]/90 hover:bg-[var(--raised)] backdrop-blur-md text-[var(--text)] hover:text-[var(--gold)] text-[11px] font-medium rounded-full border border-[var(--line2)] transition-colors shadow-md"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--panel)]/90 backdrop-blur-md text-[var(--gold)] hover:text-white border border-[var(--gold)]/30 hover:border-[var(--gold)] text-xs font-semibold shadow-md transition-all active:scale-95"
+              aria-label="Upload or take another palm photo"
+              title="Upload or take another photo"
             >
-              <RefreshCw size={12} className="text-[var(--gold)]" />
-              <span>Retake photo</span>
+              <RefreshCw size={12} />
+              <span>Retake</span>
             </button>
           </div>
         </div>

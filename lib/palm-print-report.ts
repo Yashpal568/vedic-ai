@@ -866,3 +866,4 @@ export async function printPalmDossier(report: ParsedPalmReport, options: PalmPr
   const html = generatePalmPrintHtml(report, options);
   await printHtmlViaIframe(html);
 }
+

@@ -339,7 +339,7 @@ export default function PalmReadingPage() {
   }
 
   function loadSampleProfile() {
-    const sampleImg = "/sample-palm.svg";
+    const sampleImg = "/realistic-palm.jpg";
     const sampleMarkdown = `## 1. Palm Overview & Photo Observations
 Authentic left hand with earth-type squared palm and balanced finger length indicating grounded pragmatism, stability, and thoughtful deliberate action.
 

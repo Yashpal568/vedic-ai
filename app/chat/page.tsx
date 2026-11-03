@@ -11,6 +11,7 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import type { KundliReport } from "@/lib/astrology";
 import { printKundliReport } from "@/lib/print-report";
 import { buildKundliHouseSummary, buildKundliPlanetSummary, buildKundliSimpleSummary } from "@/lib/kundli-summary";
+import { build15PointVedicReport, calculatePlanetaryAspects } from "@/lib/vedic-15-point-report";
 import {
   ArrowDown, ArrowUp, Mic, MicOff, BookOpen, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight,
   CircleHelp, Gem, History, LogOut, Menu, MessageCircle, MoonStar, Orbit, Plus, Sun,
@@ -1231,7 +1232,67 @@ export default function Home() {
                 <div className="kundli-planet-summary-grid">{buildKundliPlanetSummary(chartReport).map((planet) => <article className="kundli-planet-summary-card" key={planet.name}><div className="kundli-planet-summary-top"><strong>{planet.name}</strong><span>{planet.sign} · House {planet.house}</span></div><p>{planet.explanation}</p><small>Star group (Nakshatra): {planet.nakshatra || "Not available"}</small></article>)}</div>
                 <div className="kundli-summary-subheading"><span>03</span><div><h3>Your 12 life areas</h3><p>In astrology, each house represents one area of everyday life. Empty houses are normal.</p></div></div>
                 <div className="kundli-house-summary-grid">{buildKundliHouseSummary(chartReport).map((house) => <article className="kundli-house-summary-card" key={house.house}><div className="kundli-house-summary-top"><span>HOUSE {house.house}</span><strong>{house.sign}</strong></div><h4>{house.title}</h4><p>{house.explanation}</p><small>Planets here: {house.planets.length ? house.planets.join(", ") : "None listed"}</small></article>)}</div>
-              </section>
+              
+                {/* Planetary Aspects (Parashari Drishti) */}
+                <div className="kundli-summary-subheading mt-8"><span>04</span><div><h3>Planetary Aspects (Parashari Drishti)</h3><p>Traditional drishtis cast by grahas across the 12 houses with special aspects for Mars, Jupiter, and Saturn.</p></div></div>
+                <div className="chart-table-wrap mt-3">
+                  <table className="chart-table">
+                    <thead>
+                      <tr>
+                        <th>Graha</th>
+                        <th>From House</th>
+                        <th>Aspects House</th>
+                        <th>Drishti Strength</th>
+                        <th>Impacted Occupants</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {calculatePlanetaryAspects(chartReport).slice(0, 16).map((aspect, aspectIdx) => (
+                        <tr key={aspectIdx}>
+                          <td><strong>{aspect.planet}</strong></td>
+                          <td>House {aspect.fromHouse}</td>
+                          <td>House {aspect.aspectsHouse} {aspect.specialDrishti ? <span style={{ fontSize: "10px", background: "rgba(229,196,107,0.18)", color: "var(--gold)", padding: "2px 6px", borderRadius: "4px", fontWeight: 600, marginLeft: "6px" }}>Special Drishti</span> : null}</td>
+                          <td>{aspect.aspectDegree}</td>
+                          <td>{aspect.impactedPlanets.length ? aspect.impactedPlanets.join(", ") : <span style={{ opacity: 0.5 }}>Empty house</span>}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Official 15-Point Indian Vedic Astrology Report */}
+                <div className="kundli-summary-subheading mt-8"><span>05</span><div><h3>The 15-Point Indian Vedic Astrology Report</h3><p>Comprehensive traditional analysis structured across the 15 approved core sections.</p></div></div>
+                <div className="space-y-3 mt-4">
+                  {build15PointVedicReport(chartReport).map((item) => (
+                    <article key={item.number} className="p-4 rounded-xl bg-[var(--panel)] border border-[var(--line)] hover:border-[var(--gold)]/50 transition-colors shadow-sm">
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <div className="flex items-center gap-2.5">
+                          <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[var(--gold)]/15 text-[var(--gold)] text-xs font-bold border border-[var(--gold)]/30">
+                            {item.number}
+                          </span>
+                          <span className="text-xs uppercase tracking-wider font-semibold text-[var(--muted)]">
+                            {item.section}
+                          </span>
+                        </div>
+                        {item.tag && (
+                          <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-[var(--raised)] border border-[var(--line2)] text-[var(--gold2)]">
+                            {item.tag}
+                          </span>
+                        )}
+                      </div>
+                      <h4 className="text-sm font-bold text-[var(--text)] mb-1">
+                        {item.title}
+                      </h4>
+                      <p className="text-xs text-[var(--gold)] font-medium mb-1.5">
+                        {item.summary}
+                      </p>
+                      <p className="text-xs text-[var(--muted)] leading-relaxed pl-2.5 border-l-2 border-[var(--gold)]/40">
+                        {item.details}
+                      </p>
+                    </article>
+                  ))}
+                </div>
+</section>
             </section>}
             {transitReport && chartReport && <section className="chart-panel transit-panel">
               <div className="chart-panel-head"><div><div className="eyebrow"><span className="eyebrow-line" /> CURRENT SKY · EXPERIMENTAL</div><h2 className="chart-title">Transit snapshot <span>· {transitReport.birth.timezone}</span></h2><p className="chart-subtitle">Calculated at {new Date(transitReport.birth.utc).toLocaleString()} · compared with natal Lagna</p></div><button className="secondary-button" onClick={loadCurrentTransits} disabled={transitLoading}>{transitLoading ? "Refreshing…" : "Refresh"}</button></div>
