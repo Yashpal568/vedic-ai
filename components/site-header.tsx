@@ -80,10 +80,10 @@ export default function SiteHeader({ section, onSignOut }: Props) {
   return <>
     <header className="site-header">
       <div className="site-header-left">
-        {/* Desktop Sidebar Toggle Button (PanelLeftClose / PanelLeftOpen matching user reference) */}
+        {/* Desktop Sidebar Toggle Button: Visible on PC screens (>= 1024px) */}
         <button
           type="button"
-          className="desktop-sidebar-toggle hidden xl:inline-grid"
+          className="desktop-sidebar-toggle"
           onClick={toggleSidebar}
           aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
@@ -91,10 +91,10 @@ export default function SiteHeader({ section, onSignOut }: Props) {
           {sidebarCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
         </button>
 
-        {/* Mobile Navigation Menu Button */}
+        {/* Mobile Navigation Menu Button: Only on Mobile (< 1024px) */}
         <button
           type="button"
-          className="site-header-menu xl:hidden"
+          className="site-header-menu"
           aria-label={drawerOpen ? "Close navigation menu" : "Open navigation menu"}
           aria-expanded={drawerOpen}
           onClick={() => setDrawerOpen((open) => !open)}
@@ -102,8 +102,8 @@ export default function SiteHeader({ section, onSignOut }: Props) {
           {drawerOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
 
-        {/* Mobile Brand (Only shown on mobile/tablet when sidebar is hidden — avoids double logo on PC) */}
-        <Link href="/chat" className="site-header-brand flex xl:hidden" aria-label="Vedic AI home">
+        {/* Mobile Brand: Only visible on mobile/tablet when sidebar is hidden — NEVER duplicate on PC */}
+        <Link href="/chat" className="site-header-brand" aria-label="Vedic AI home">
           <span className="site-header-mark"><MoonStar size={19} strokeWidth={1.6}/></span>
           <strong>vedic<span>.</span>ai</strong>
         </Link>

@@ -5,21 +5,22 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Sparkles,
-  PlusCircle,
-  Hand,
-  MessageSquare,
-  Compass,
+  Plus,
+  MessageCircle,
+  Orbit,
   Calendar,
   BookOpen,
-  User,
+  UserRound,
   Sun,
-  Moon,
-  Search,
+  MoonStar,
   History,
   ShieldCheck,
   LogOut,
   Trash2,
   PanelLeftClose,
+  PanelLeftOpen,
+  ChevronDown,
+  Check,
 } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 
@@ -44,29 +45,47 @@ export default function AppDesktopSidebar({
 }: AppDesktopSidebarProps) {
   const pathname = usePathname();
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [userName, setUserName] = useState("Guest Explorer");
+  const [userName, setUserName] = useState("Guest explorer");
   const [userEmail, setUserEmail] = useState("");
   const [userAvatar, setUserAvatar] = useState("");
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [workspaceExpanded, setWorkspaceExpanded] = useState(true);
+  const [savedBirth, setSavedBirth] = useState<Record<string, unknown> | null>(null);
 
   useEffect(() => {
     try {
-      const saved = window.localStorage.getItem("vedic-sidebar-collapsed") === "1";
-      setIsCollapsed(saved);
-      if (saved) {
+      const savedCollapsed = window.localStorage.getItem("vedic-sidebar-collapsed") === "1";
+      setIsCollapsed(savedCollapsed);
+      if (savedCollapsed) {
         document.documentElement.dataset.sidebarCollapsed = "true";
       } else {
         delete document.documentElement.dataset.sidebarCollapsed;
       }
+
+      const savedTheme = window.localStorage.getItem("vedic-chat-theme");
+      const currentTheme = savedTheme === "light" ? "light" : "dark";
+      setTheme(currentTheme);
+      document.documentElement.dataset.theme = currentTheme;
     } catch {}
 
     const handleToggle = () => {
       setIsCollapsed(document.documentElement.dataset.sidebarCollapsed === "true");
     };
     window.addEventListener("vedic-sidebar-toggle", handleToggle);
-    return () => window.removeEventListener("vedic-sidebar-toggle", handleToggle);
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === "vedic-chat-theme" && e.newValue) {
+        setTheme(e.newValue === "light" ? "light" : "dark");
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+
+    return () => {
+      window.removeEventListener("vedic-sidebar-toggle", handleToggle);
+      window.removeEventListener("storage", handleStorage);
+    };
   }, []);
 
   function toggleSidebar() {
@@ -81,6 +100,18 @@ export default function AppDesktopSidebar({
       window.localStorage.setItem("vedic-sidebar-collapsed", next ? "1" : "0");
     } catch {}
     window.dispatchEvent(new CustomEvent("vedic-sidebar-toggle", { detail: { collapsed: next } }));
+  }
+
+  function toggleTheme() {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    document.documentElement.dataset.theme = next;
+    try {
+      window.localStorage.setItem("vedic-chat-theme", next);
+      window.dispatchEvent(
+        new StorageEvent("storage", { key: "vedic-chat-theme", newValue: next })
+      );
+    } catch {}
   }
 
   useEffect(() => {
@@ -101,6 +132,13 @@ export default function AppDesktopSidebar({
       });
     }
 
+    try {
+      const birth = window.localStorage.getItem("vedic_birth_profile");
+      if (birth) {
+        setSavedBirth(JSON.parse(birth));
+      }
+    } catch {}
+
     // Load recent conversations
     fetch("/api/conversations")
       .then((r) => (r.ok ? r.json() : null))
@@ -116,20 +154,6 @@ export default function AppDesktopSidebar({
       active = false;
     };
   }, []);
-
-  function toggleTheme() {
-    if (typeof window !== "undefined") {
-      const current = document.documentElement.dataset.theme;
-      const next = current === "light" ? "dark" : "light";
-      document.documentElement.dataset.theme = next;
-      try {
-        window.localStorage.setItem("vedic-chat-theme", next);
-        window.dispatchEvent(
-          new StorageEvent("storage", { key: "vedic-chat-theme", newValue: next })
-        );
-      } catch {}
-    }
-  }
 
   async function handleSignOut() {
     const supabase = getSupabaseBrowserClient();
@@ -153,313 +177,232 @@ export default function AppDesktopSidebar({
     } catch {}
   }
 
-  function formatRelativeTime(dateStr: string) {
-    try {
-      const diffMs = Date.now() - new Date(dateStr).getTime();
-      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-      if (diffHours < 1) return "Just now";
-      if (diffHours < 24) return `${diffHours}h ago`;
-      const diffDays = Math.floor(diffHours / 24);
-      if (diffDays === 1) return "Yesterday";
-      if (diffDays < 7) return `${diffDays}d ago`;
-      return new Date(dateStr).toLocaleDateString("en-IN", {
-        month: "short",
-        day: "numeric",
-      });
-    } catch {
-      return "";
-    }
-  }
-
-  const sacredWorkspaces = [
-    {
-      label: "Astrology Chat",
-      href: "/chat",
-      icon: MessageSquare,
-      active: pathname === "/chat",
-    },
-    {
-      label: "Birth Chart (Kundli)",
-      href: "/chat?openBirth=1",
-      icon: Compass,
-      active: false,
-    },
-    {
-      label: "Palm Reading (Hastarekha)",
-      href: "/palm-reading",
-      icon: Hand,
-      active: pathname === "/palm-reading",
-      badge: "Vision AI",
-    },
-    {
-      label: "Panchang Almanac",
-      href: "/panchang",
-      icon: Calendar,
-      active: pathname === "/panchang",
-    },
-    {
-      label: "Saved Reports & Kundlis",
-      href: "/reports",
-      icon: BookOpen,
-      active: pathname === "/reports",
-    },
-    {
-      label: "AI Memory",
-      href: "/chat?openMemory=1",
-      icon: ShieldCheck,
-      active: false,
-    },
-    {
-      label: "Account Profile",
-      href: "/profile",
-      icon: User,
-      active: pathname === "/profile",
-    },
-  ];
-
-  const filteredConversations = conversations.filter((c) =>
-    c.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   return (
     <aside
-      className={`hidden xl:flex fixed left-0 top-0 bottom-0 w-[280px] bg-[var(--panel)]/95 backdrop-blur-2xl z-40 flex-col justify-between border-r border-[var(--line)] shadow-xl font-sans-luxury select-none transition-transform duration-200 ease-in-out ${
-        isCollapsed ? "-translate-x-full pointer-events-none" : "translate-x-0"
-      } ${className}`}
+      className={`sidebar desktop-master-sidebar ${isCollapsed ? "sidebar-is-collapsed" : ""} ${className}`}
       data-purpose="desktop-master-sidebar"
     >
-      <div className="flex flex-col min-h-0 flex-1 overflow-hidden">
-        {/* Sidebar Brand Header */}
-        <div className="h-20 px-6 flex items-center justify-between border-b border-[var(--line)] shrink-0">
-          <Link href="/chat" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-[var(--wash)] border border-[var(--line2)] flex items-center justify-center text-[var(--gold)] shadow-[0_0_16px_rgba(229,196,107,0.15)] group-hover:scale-105 transition-transform">
-              <Sparkles size={20} />
-            </div>
-            <div className="flex flex-col">
-              <span className="font-serif-luxury text-lg font-bold text-[var(--gold)] tracking-wide leading-none">
-                Vedic AI
+      {/* Brand Header with Emblem, Subtitle, and Top Controls */}
+      <div className="sidebar-head">
+        <Link
+          href="/chat"
+          className="brand sidebar-brand-premium"
+          aria-label="Vedic AI home"
+          style={{ border: 0, background: "transparent", textAlign: "left", color: "inherit", textDecoration: "none" }}
+        >
+          <span className="brand-mark">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/vedic-ai-emblem.svg" alt="" />
+          </span>
+          <span className="sidebar-brand-copy">
+            <span className="sidebar-brand-line">
+              <span className="brand-name">
+                vedic<span style={{ color: "var(--gold)" }}>.</span>ai
               </span>
-              <span className="text-[10px] uppercase tracking-widest text-[var(--quiet)] mt-1 font-semibold">
-                Jyotish Intelligence
-              </span>
-            </div>
-          </Link>
-
-          {/* Close Sidebar Toggle Button (PanelLeftClose matching user reference) */}
+            </span>
+            <span className="brand-sub">Your Jyotish space</span>
+          </span>
+        </Link>
+        <div className="sidebar-head-actions">
           <button
             type="button"
+            className="sidebar-theme-toggle"
+            onClick={toggleTheme}
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            title={theme === "dark" ? "Light mode" : "Dark mode"}
+          >
+            {theme === "dark" ? <Sun size={15} /> : <MoonStar size={15} />}
+          </button>
+          <button
+            type="button"
+            className="sidebar-collapse-toggle"
             onClick={toggleSidebar}
-            className="desktop-sidebar-toggle"
-            aria-label="Collapse sidebar"
-            title="Collapse sidebar"
+            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
-            <PanelLeftClose size={18} />
+            {isCollapsed ? <PanelLeftOpen size={17} /> : <PanelLeftClose size={17} />}
           </button>
         </div>
+      </div>
 
-        {/* Primary Action: New Consultation CTA Button (⌘N) */}
-        <div className="px-5 py-3.5 shrink-0">
-          <button
-            type="button"
-            onClick={
-              onNewConsultation ||
-              (() => {
-                window.location.href = "/chat";
-              })
-            }
-            className="w-full flex items-center justify-between px-4 py-2.5 bg-[var(--raised)] border border-[var(--line2)] rounded-xl hover:border-[var(--gold)] hover:bg-[var(--wash)] transition-all group shadow-sm cursor-pointer"
-          >
-            <div className="flex items-center gap-2.5">
-              <PlusCircle
-                size={18}
-                className="text-[var(--gold)] group-hover:rotate-90 transition-transform"
-              />
-              <span className="text-xs font-semibold text-[var(--text)] group-hover:text-[var(--gold)] transition-colors">
-                New Consultation
-              </span>
-            </div>
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--panel)] border border-[var(--line)] text-[var(--quiet)] font-mono">
-              ⌘N
-            </span>
-          </button>
-        </div>
+      {/* Scroll Area with New Conversation CTA, Workspace items, and Conversations History */}
+      <div className="sidebar-scroll-area">
+        <button
+          type="button"
+          className="new-chat sidebar-new-chat"
+          onClick={
+            onNewConsultation ||
+            (() => {
+              window.location.href = "/chat";
+            })
+          }
+        >
+          <Plus size={17} /> <span>New conversation</span>
+        </button>
 
-        {/* Scrollable Middle: Sacred Workspaces + Recent Consultations */}
-        <div className="flex-1 overflow-y-auto px-5 space-y-4 custom-scrollbar">
-          {/* Sacred Workspaces Section */}
-          <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--quiet)] px-3 mb-2 block">
-              Sacred Workspaces
-            </span>
-            <nav className="space-y-1">
-              {sacredWorkspaces.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.label}
-                    href={item.href}
-                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all ${
-                      item.active
-                        ? "bg-[var(--wash)] text-[var(--gold)] border border-[var(--line2)] shadow-sm font-semibold"
-                        : "text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--raised)] border border-transparent"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Icon
-                        size={17}
-                        className={item.active ? "text-[var(--gold)]" : "text-[var(--quiet)]"}
-                      />
-                      <span>{item.label}</span>
-                    </div>
-                    {item.badge ? (
-                      <span className="text-[9px] px-2 py-0.5 rounded-full bg-[#52FEB8]/10 text-[#52FEB8] border border-[#52FEB8]/30 font-semibold uppercase">
-                        {item.badge}
-                      </span>
-                    ) : item.active ? (
-                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--gold)] shadow-[0_0_6px_#FFE192]" />
-                    ) : null}
-                  </Link>
-                );
-              })}
-            </nav>
+        {/* Workspace Dropdown */}
+        <button
+          type="button"
+          className="side-label sidebar-workspace-label sidebar-workspace-toggle"
+          aria-expanded={workspaceExpanded}
+          onClick={() => setWorkspaceExpanded(!workspaceExpanded)}
+        >
+          <span>Workspace</span>
+          <span className="sidebar-workspace-toggle-right">
+            <span className="sidebar-tool-count">7 Tools</span>
+            <ChevronDown
+              size={15}
+              className={workspaceExpanded ? "workspace-chevron expanded" : "workspace-chevron"}
+            />
+          </span>
+        </button>
+
+        {workspaceExpanded && (
+          <div className="sidebar-workspace-items">
+            <Link
+              href="/chat"
+              className={"side-link" + (pathname === "/chat" ? " active" : "")}
+            >
+              <MessageCircle size={17} /> <span>Astrology chat</span>
+              {pathname === "/chat" && <span className="sidebar-active-dot" />}
+            </Link>
+            <Link
+              href="/chat?openBirth=1"
+              className="side-link"
+            >
+              <Orbit size={17} /> <span>My birth profile</span>
+              {savedBirth && <Check size={13} style={{ marginLeft: "auto", color: "var(--green)" }} />}
+            </Link>
+            <Link
+              href="/palm-reading"
+              className={"side-link" + (pathname === "/palm-reading" ? " active" : "")}
+            >
+              <Sparkles size={17} /> <span>Palm reading</span>
+              {pathname === "/palm-reading" && <span className="sidebar-active-dot" />}
+            </Link>
+            <Link
+              href="/panchang"
+              className={"side-link" + (pathname === "/panchang" ? " active" : "")}
+            >
+              <Calendar size={17} /> <span>Panchang almanac</span>
+              {pathname === "/panchang" && <span className="sidebar-active-dot" />}
+            </Link>
+            <Link
+              href="/reports"
+              className={"side-link" + (pathname === "/reports" ? " active" : "")}
+            >
+              <BookOpen size={17} /> <span>Kundli & reports</span>
+              {pathname === "/reports" && <span className="sidebar-active-dot" />}
+            </Link>
+            <Link
+              href="/profile"
+              className={"side-link" + (pathname === "/profile" ? " active" : "")}
+            >
+              <UserRound size={17} /> <span>My profile</span>
+              {pathname === "/profile" && <span className="sidebar-active-dot" />}
+            </Link>
+            <button
+              type="button"
+              className="side-link"
+              onClick={() => {
+                window.location.href = "/chat?openMemory=1";
+              }}
+            >
+              <ShieldCheck size={17} /> <span>AI memory</span>
+            </button>
           </div>
+        )}
 
-          {/* Recent Consultations Section with Search */}
-          <div className="pt-2 border-t border-[var(--line)]">
-            <div className="flex items-center justify-between px-3 mb-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--quiet)]">
-                Recent Consultations
-              </span>
-              <span className="text-[10px] text-[var(--quiet)] font-mono">
-                {conversations.length}
-              </span>
-            </div>
-
-            {/* Search consultations */}
-            {conversations.length > 3 && (
-              <div className="relative mb-2">
-                <Search
-                  size={12}
-                  className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--quiet)] pointer-events-none"
-                />
-                <input
-                  type="text"
-                  placeholder="Search consultations..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-8 pr-2 py-1.5 rounded-lg bg-[var(--raised)] border border-[var(--line)] text-[11px] text-[var(--text)] placeholder-[var(--quiet)] outline-none focus:border-[var(--gold)] transition-colors"
-                />
-              </div>
-            )}
-
-            <div className="space-y-1 max-h-[180px] overflow-y-auto">
-              {filteredConversations.length > 0 ? (
-                filteredConversations.map((item) => (
-                  <div
-                    key={item.id}
+        {/* History List */}
+        <section className="sidebar-history" aria-label="Conversation history">
+          <div className="side-label sidebar-history-label">
+            <span>All conversations</span>
+            <span className="sidebar-history-count">{conversations.length}</span>
+          </div>
+          <div className="sidebar-history-list">
+            {conversations.length > 0 ? (
+              conversations.map((item) => (
+                <div className="history-item-row" key={item.id}>
+                  <button
+                    type="button"
+                    className={
+                      "side-link history-item-open " +
+                      (activeConversationId === item.id ? "active" : "")
+                    }
                     onClick={() => {
                       if (onSelectConversation) {
                         onSelectConversation(item.id);
                       } else {
-                        window.location.href = `/chat?c=${item.id}`;
+                        window.location.href = `/chat?id=${encodeURIComponent(item.id)}`;
                       }
                     }}
-                    className={`group flex items-center justify-between px-3 py-2 rounded-lg text-xs cursor-pointer transition-colors ${
-                      activeConversationId === item.id
-                        ? "bg-[var(--wash)] text-[var(--gold)] font-medium border border-[var(--line2)]"
-                        : "text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--raised)] border border-transparent"
-                    }`}
                   >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <History size={13} className="text-[var(--quiet)] shrink-0" />
-                      <div className="truncate">
-                        <span className="block truncate text-[11px]">{item.title}</span>
-                        <span className="block text-[9px] text-[var(--quiet)]">
-                          {formatRelativeTime(item.updated_at)}
-                        </span>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={(e) => handleDeleteConversation(e, item.id)}
-                      className="opacity-0 group-hover:opacity-100 p-1 text-[var(--quiet)] hover:text-red-400 transition-opacity"
-                      title="Delete consultation"
-                    >
-                      <Trash2 size={12} />
-                    </button>
-                  </div>
-                ))
-              ) : (
-                <p className="px-3 py-2 text-[11px] text-[var(--quiet)] italic">
-                  {searchQuery ? "No matches" : "No saved consultations yet."}
-                </p>
-              )}
-            </div>
+                    <History size={15} />
+                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {item.title}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    className="history-delete"
+                    aria-label={"Delete " + item.title}
+                    title={"Delete " + item.title}
+                    onClick={(e) => handleDeleteConversation(e, item.id)}
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </div>
+              ))
+            ) : (
+              <p className="history-empty">
+                {isSignedIn
+                  ? "Your saved conversations will appear here."
+                  : "Sign in to save private conversations."}
+              </p>
+            )}
           </div>
-        </div>
+        </section>
       </div>
 
-      {/* Sidebar Footer: Theme Toggle & Account Section */}
-      <div className="p-4 border-t border-[var(--line)] bg-[var(--raised)]/40 shrink-0 space-y-3">
-        {/* Theme Controls */}
-        <div className="flex items-center justify-between px-2">
-          <button
-            type="button"
-            onClick={toggleTheme}
-            className="flex items-center gap-2 text-xs text-[var(--muted)] hover:text-[var(--gold)] transition-colors cursor-pointer"
-          >
-            <Sun size={15} className="dark:hidden text-[var(--gold)]" />
-            <Moon size={15} className="hidden dark:inline text-[var(--gold)]" />
-            <span>Theme Toggle</span>
-          </button>
-          <span className="text-[10px] text-[var(--quiet)] font-mono">Vedic 4.0</span>
-        </div>
-
-        {/* Account Section */}
-        <div className="pt-2 border-t border-[var(--line)] flex items-center justify-between">
-          <Link
-            href="/profile"
-            className="flex items-center gap-2.5 min-w-0 hover:opacity-90 transition-opacity"
-          >
-            {userAvatar ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={userAvatar}
-                alt={userName}
-                className="w-7 h-7 rounded-full object-cover border border-[var(--gold)]/40 shrink-0"
-              />
-            ) : (
-              <div className="w-7 h-7 rounded-full bg-[var(--wash)] border border-[var(--line2)] flex items-center justify-center text-[var(--gold)] text-xs font-bold shrink-0">
-                {userName.charAt(0).toUpperCase()}
-              </div>
-            )}
-            <div className="min-w-0">
-              <span className="block text-xs font-medium text-[var(--text)] truncate">
-                {userName}
-              </span>
-              <span className="block text-[10px] text-[var(--quiet)] truncate">
-                {isSignedIn ? userEmail || "Account Active" : "Guest Mode"}
-              </span>
-            </div>
-          </Link>
-
-          {isSignedIn ? (
-            <button
-              type="button"
-              onClick={handleSignOut}
-              className="p-1.5 rounded-lg text-[var(--quiet)] hover:text-red-400 hover:bg-[var(--panel)] transition-colors cursor-pointer"
-              title="Sign Out"
-            >
-              <LogOut size={15} />
-            </button>
+      {/* Sidebar Footer with Profile and Session Status */}
+      <div className="sidebar-bottom">
+        <div className="profile-row">
+          {userAvatar ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img className="profile-avatar" src={userAvatar} alt="" />
           ) : (
-            <Link
-              href="/login"
-              className="px-2 py-1 text-[10px] font-semibold text-[var(--gold)] border border-[var(--gold)]/30 rounded-md hover:bg-[var(--wash)] transition-colors"
-            >
-              Sign In
-            </Link>
+            <span className="profile-avatar profile-avatar-fallback">
+              {userName.trim().charAt(0).toUpperCase()}
+            </span>
           )}
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div className="profile-name">{userName}</div>
+            <div className="profile-caption">
+              {isSignedIn ? userEmail || "Signed in · private library" : "Guest session"}
+            </div>
+          </div>
+          <div className="sidebar-profile-actions">
+            {isSignedIn && <span className="sidebar-google-mark" title="Account connected">G</span>}
+            {isSignedIn ? (
+              <button
+                className="sidebar-logout"
+                aria-label="Sign out"
+                title="Sign out"
+                onClick={handleSignOut}
+              >
+                <LogOut size={16} />
+              </button>
+            ) : (
+              <Link
+                className="sidebar-logout"
+                href="/login"
+                aria-label="Sign in"
+                title="Sign in"
+              >
+                <UserRound size={16} />
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     </aside>

@@ -144,3 +144,4 @@ export async function downloadRealPdfFile(
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
+
