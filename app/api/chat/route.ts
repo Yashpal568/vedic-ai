@@ -290,14 +290,14 @@ export async function POST(request: Request) {
       }
     }
 
-    const provider = (process.env.AI_PROVIDER || "").toLowerCase();
-    const useGroq = provider === "groq" || (!process.env.GEMINI_API_KEY && Boolean(process.env.GROQ_API_KEY));
-    const useOpenAI = provider === "openai" || (!process.env.GEMINI_API_KEY && !process.env.GROQ_API_KEY && Boolean(process.env.OPENAI_API_KEY));
+    const { getConfiguredAiProvider } = await import("@/lib/ai-config");
+    const provider = getConfiguredAiProvider();
+    if (!provider) throw new Error("AI_NOT_CONFIGURED");
 
     let reply = "";
-    if (useGroq) {
+    if (provider === "groq") {
       reply = await callGroq(body.messages, body.birthProfile, calculatedChart, savedMemory);
-    } else if (useOpenAI) {
+    } else if (provider === "openai") {
       reply = await callOpenAI(body.messages, body.birthProfile, calculatedChart, savedMemory);
     } else {
       reply = await callGemini(body.messages, body.birthProfile, calculatedChart, savedMemory);
