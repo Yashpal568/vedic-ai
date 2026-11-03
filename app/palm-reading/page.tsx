@@ -381,9 +381,16 @@ These are traditional symbolic interpretations, not scientifically validated per
         id="palm-gallery-input"
         ref={galleryInputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp,image/heic,image/heif,image/*"
+        accept="image/*"
         onChange={chooseImage}
-        className="sr-only"
+        style={{
+          position: "fixed",
+          top: "-9999px",
+          left: "-9999px",
+          width: "1px",
+          height: "1px",
+          opacity: 0.001,
+        }}
         tabIndex={-1}
         aria-label="Upload palm photo from device gallery"
       />
@@ -391,10 +398,17 @@ These are traditional symbolic interpretations, not scientifically validated per
         id="palm-camera-input"
         ref={cameraInputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp,image/*"
+        accept="image/*"
         capture="environment"
         onChange={chooseImage}
-        className="sr-only"
+        style={{
+          position: "fixed",
+          top: "-9999px",
+          left: "-9999px",
+          width: "1px",
+          height: "1px",
+          opacity: 0.001,
+        }}
         tabIndex={-1}
         aria-label="Capture palm photo with device camera"
       />
@@ -547,10 +561,7 @@ These are traditional symbolic interpretations, not scientifically validated per
                       <label
                         htmlFor="palm-gallery-input"
                         className="palm-picker-button palm-gallery-button cursor-pointer"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openGalleryPicker();
-                        }}
+                        onClick={(e) => e.stopPropagation()}
                       >
                         <RefreshCw size={16} />
                         <span>Replace from Gallery</span>
@@ -578,10 +589,7 @@ These are traditional symbolic interpretations, not scientifically validated per
                       <label
                         htmlFor="palm-gallery-input"
                         className="palm-picker-button palm-gallery-button cursor-pointer"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openGalleryPicker();
-                        }}
+                        onClick={(e) => e.stopPropagation()}
                       >
                         <ImagePlus size={17} />
                         <span>Choose from gallery</span>

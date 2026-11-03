@@ -18,13 +18,11 @@ export default function PalmBiometricPlate({
 }: PalmBiometricPlateProps) {
   const [showOverlay, setShowOverlay] = useState(true);
 
-  const isSamplePalm = imageSrc.includes("sample-palm");
-
   const handLabel =
     hand === "left"
-      ? "Left Hand (Passive Hand)"
+      ? "Passive Hand"
       : hand === "right"
-      ? "Right Hand (Active Hand)"
+      ? "Active Hand"
       : "Open Palm";
 
   return (
@@ -68,6 +66,19 @@ export default function PalmBiometricPlate({
           {/* Subtle warm studio backdrop lighting */}
           <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.45)_0%,rgba(240,233,219,0.75)_100%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(28,30,42,0.55)_0%,rgba(14,16,23,0.92)_100%)]" />
 
+          {/* Subtle celestial compass watermark rings behind palm (matching reference plate) */}
+          <svg
+            className="absolute inset-0 w-full h-full pointer-events-none text-[var(--gold)]/20 dark:text-[var(--gold)]/15 z-0"
+            viewBox="0 0 600 600"
+            preserveAspectRatio="xMidYMid meet"
+          >
+            <circle cx="300" cy="300" r="250" fill="none" stroke="currentColor" strokeWidth="0.8" strokeDasharray="3 4" />
+            <circle cx="300" cy="300" r="195" fill="none" stroke="currentColor" strokeWidth="0.6" />
+            <circle cx="300" cy="300" r="140" fill="none" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2 3" />
+            <line x1="40" y1="300" x2="560" y2="300" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2 4" />
+            <line x1="300" y1="40" x2="300" y2="560" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2 4" />
+          </svg>
+
           {/* User's Hand Photograph */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -81,7 +92,7 @@ export default function PalmBiometricPlate({
           />
 
           {/* SVG Overlay: Highlighted Hastarekha lines & planetary mounts directly on the user's hand */}
-          {showOverlay && !isSamplePalm && (
+          {showOverlay && (
             <svg
               className="absolute inset-0 w-full h-full pointer-events-none z-10"
               viewBox="0 0 800 700"
@@ -169,7 +180,7 @@ export default function PalmBiometricPlate({
           )}
 
           {/* Callout badges matching reference image composition */}
-          {showOverlay && !isSamplePalm && (
+          {showOverlay && (
             <div className="absolute inset-0 pointer-events-none z-20">
               {/* Heart Line callout (Right upper) */}
               <div className="absolute right-[4%] sm:right-[7%] top-[37%] flex items-center gap-1.5">
