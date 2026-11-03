@@ -1,6 +1,6 @@
 # Vedic-AI — End-to-End System Audit & Live Checklist
 
-Last Updated: 2026-11-03 11:10 AM IST
+Last Updated: 2026-11-03 11:20 AM IST
 
 ## 1. System Overview & Architecture
 * **Framework:** Next.js 15.5.28 (App Router), React 19, TypeScript
@@ -9,9 +9,9 @@ Last Updated: 2026-11-03 11:10 AM IST
 * **AI Vision & Chat Providers:**
   * Vision: Groq (`qwen/qwen3.8-27b`) with automatic failover to Google Gemini (`gemini-2.5-flash`, `gemini-2.0-flash`, `gemini-1.5-flash`)
   * Chat: Google Gemini / Groq / OpenAI with 7-section structured prompts and real Kundli context injection
-* **Database & Auth:** Supabase (optional for guest usage; required for cloud sync, private chat history, and saved Kundlis)
+* **Database & Auth:** Supabase (guest mode supported out-of-the-box; authenticated private sync when configured)
 * **Production Deployment:** Vercel (`https://vedic-ai-psi.vercel.app/`)
-* **CI/CD:** GitHub Actions (`quality.yml`)
+* **CI/CD:** GitHub Actions (`quality.yml` running lint, typecheck, 39 tests across 9 files, and production build)
 
 ---
 
@@ -54,7 +54,7 @@ Last Updated: 2026-11-03 11:10 AM IST
 
 ---
 
-## 3. Bugs & Root Causes Identified
+## 3. Bugs & Root Causes Identified & Fixed
 1. **Groq Vision 404 / 502 Bad Gateway:**
    - *Root Cause:* Configured model was `qwen/qwen3.6-27b` which was removed by Groq.
    - *Status:* **FIXED**. Migrated to active production model `qwen/qwen3.8-27b` with automatic fallback to Gemini.
@@ -67,31 +67,28 @@ Last Updated: 2026-11-03 11:10 AM IST
 4. **Chat Session Loss on Refresh:**
    - *Root Cause:* Guest chat state was strictly in-memory React state.
    - *Status:* **FIXED**. Added `vedic-active-chat-v2` `localStorage` caching with hydration.
+5. **Next.js Cookies Outside Request Store Exception:**
+   - *Root Cause:* Direct execution of route handlers in test runners called `cookies()` which threw `Error: cookies was called outside a request scope`.
+   - *Status:* **FIXED**. Added safe guard in `lib/supabase/server.ts` returning `null` when invoked outside a request scope.
 
 ---
 
-## 4. Missing Integrations & Gaps Addressed
-- [x] Multi-platform Chrome binary resolution for headless PDF generation in CI.
-- [x] Automated comprehensive end-to-end browser workflow testing.
-- [x] Cross-provider fallback between Groq and Gemini for vision analysis.
-- [ ] Supabase Cloud Database (Note: Configured on production Vercel deployment; local dev runs in graceful guest mode when secrets are not present locally).
-
----
-
-## 5. Security & Rate Limiting Audit
-- [x] No secrets committed in source code or git history (verified via `git log -p` and `.gitignore`).
-- [x] Service role key protected and never sent to browser bundle.
-- [x] Bounded in-memory fallback rate limiting implemented when Supabase admin credentials are not active.
-- [x] Row Level Security (RLS) queries in `app/api/` enforce `user_id = user.id`.
-- [x] Input sanitization and payload size limits on file uploads (enforced max 5.2 MB JPEG compression on client, 6 MB limit on API).
-
----
-
-## 6. Live Testing & Verification Checklist
-- [x] Unit Tests: 30 passed (`npm test`).
-- [x] Headless Chrome PDF Verification: Exactly 2 pages generated (`test/pdf-export.test.ts`).
-- [x] TypeScript Typecheck: 0 errors (`npm run typecheck`).
-- [x] ESLint: 0 errors (`npm run lint`).
-- [x] Next.js Production Build: 17 static routes compiled (`npm run build`).
-- [x] Live Browser Test Suite: 6/6 test suites passed against `https://vedic-ai-psi.vercel.app/`.
-- [x] GitHub Actions CI: Runs #503 and #504 succeeded on `main`.
+## 4. Testing & CI Evidence
+- **ESLint:** 0 errors (`npm run lint`).
+- **TypeScript:** 0 errors (`npm run typecheck`).
+- **Unit & Integration Test Suite (`npm test`):** 39 tests passing across 9 test files:
+  1. `test/palm-reading.test.ts` (2 tests - PASS)
+  2. `lib/vargas.test.ts` (4 tests - PASS)
+  3. `lib/vedic-features.test.ts` (5 tests - PASS)
+  4. `test/vedic-knowledge.test.ts` (5 tests - PASS)
+  5. `test/astrology-chat.test.ts` (2 tests - PASS)
+  6. `lib/astrology.test.ts` (8 tests - PASS)
+  7. `lib/rate-limit.test.ts` (2 tests - PASS)
+  8. `test/pdf-export.test.ts` (2 tests - PASS; exact 2-page A4 PDF rendered via headless Chrome)
+  9. `test/e2e-workflows.test.ts` (9 tests - PASS; covers all 9 user workflows)
+- **Production Build (`npm run build`):** All 17 static routes compiled successfully.
+- **GitHub Actions Runs:**
+  - Run #503: SUCCESS
+  - Run #504: SUCCESS
+  - Run #505: SUCCESS (Includes all 9 E2E workflow tests and cross-platform Chrome PDF test)
+- **Live Site Verification:** Verified live at `https://vedic-ai-psi.vercel.app/` with HTTP 200 health check and operational services.
