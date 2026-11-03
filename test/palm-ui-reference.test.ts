@@ -77,3 +77,4 @@ Traditional palmistry reflects symbolic tendencies rather than set-in-stone outc
     expect(modalCode).toContain("Download Archival PDF (A4)");
   });
 });
+

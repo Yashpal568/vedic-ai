@@ -128,3 +128,4 @@ export function parsePalmReading(markdown: string, hand: "left" | "right" | "uns
     rawMarkdown: text,
   };
 }
+

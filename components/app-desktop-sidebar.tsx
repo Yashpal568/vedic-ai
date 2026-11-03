@@ -180,3 +180,4 @@ export default function AppDesktopSidebar({ onNewConsultation }: AppDesktopSideb
     </aside>
   );
 }
+

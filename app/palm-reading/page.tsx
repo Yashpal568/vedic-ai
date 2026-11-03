@@ -338,6 +338,40 @@ export default function PalmReadingPage() {
     }
   }
 
+  function loadSampleProfile() {
+    const sampleImg =
+      "https://lh3.googleusercontent.com/aida/AEtjO1WQ27xp-ulmlF2tb_TduyxoS9bIqQ8ZHtmXKWd6BncWOe6AO45wnB1LIOrwle5hBtvcxHk0htQaxmMYsezrmhXFjHajGe1T_AJg5vTx88eef_flWzTyCZlL-n5lfF7suOnrWPZ7ceXOVzVG3RvBH6D4MsxtUNm0jXgiBeb1s5nUnnu1JRsSWtKtvutYLHBG7JsglSK0dXyA_Ultp4tk6TKb7bxt-Qu-WwsZLv7WjhBAGA";
+    const sampleMarkdown = `## 1. Palm Overview & Photo Observations
+Authentic left hand with earth-type squared palm and balanced finger length indicating grounded pragmatism, stability, and thoughtful deliberate action.
+
+## 2. Heart Line (Emotions & Connection)
+Curved upward toward Jupiter mount; reveals deep loyalty, genuine emotional warmth, and selective intimate boundaries.
+
+## 3. Head Line (Thinking & Focus)
+Long, clear, and gently sloping; strong analytical focus paired with creative problem-solving and flexible adaptability.
+
+## 4. Life Line (Energy & Vitality)
+Deep and well-demarcated arc enclosing the Venus mount; indicates robust vitality, strong physical resilience, and perseverance.
+
+## 5. Fate Line & Other Visible Features
+Clear vertical progression showing independent vocation, self-directed drive, and growing clarity in mid-career transitions.
+
+## 6. Overall Traditional Reading
+High congruency between passive (inherited traits) and active hands, signifying authentic self-actualization and balanced life choices.
+
+## 7. Limitations & Guidance
+These are traditional symbolic interpretations, not scientifically validated personality tests. Personal efforts and conscious choices always shape your path.`;
+
+    setImage(sampleImg);
+    setFileName("sample-palm-profile.jpg");
+    setFileSizeStr("1.2 MB");
+    setHand("left");
+    setReading(sampleMarkdown);
+    setParsedReport(parsePalmReading(sampleMarkdown, "left"));
+    setError("");
+    setQuality("");
+  }
+
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] flex flex-col font-sans-luxury">
       {/* 280px Left Sidebar on Desktop (Reference #9) */}
@@ -416,18 +450,20 @@ export default function PalmReadingPage() {
           ) : (
             /* BEFORE READING: Photo Selection / Capture Viewport */
             <div className="palm-content">
-              <div className="palm-kicker">
-                <Sparkles size={14} /> TRADITIONAL PALMISTRY · IMAGE-BASED
+              <div className="text-center mb-6 pt-2" data-purpose="report-heading">
+                <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[var(--raised)] border border-[var(--line2)] mb-3 shadow-sm">
+                  <span className="w-2 h-2 rounded-full bg-[#52FEB8] animate-pulse" />
+                  <span className="text-[11px] font-semibold tracking-widest uppercase text-[var(--gold)]">
+                    Vedic Astrological Insight
+                  </span>
+                </div>
+                <h1 className="text-[26px] md:text-[34px] tracking-widest uppercase font-serif-luxury font-bold text-[var(--gold)] drop-shadow-[0_2px_12px_rgba(229,196,107,0.2)]">
+                  YOUR PALMISTRY PROFILE
+                </h1>
+                <p className="text-[13px] md:text-[14px] text-[var(--muted)] font-normal mt-1.5 tracking-wide font-sans-luxury max-w-lg mx-auto">
+                  Upload or capture a clear photo of your open palm. Our vision AI verifies major lines and creases before generating an authentic Hastarekha analysis.
+                </p>
               </div>
-              <h1 className="font-serif-luxury text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-[var(--gold)] mb-3">
-                Read the lines.<br />
-                <em className="text-[var(--gold2)] font-normal italic">Keep perspective.</em>
-              </h1>
-              <p className="palm-intro">
-                Upload a clear photo of your open palm. Our vision model verifies the major creases in bright, even lighting
-                before preparing a structured, beginner-friendly palm report. If lines cannot be confidently seen, it will
-                cautiously ask for a clearer photo rather than guessing.
-              </p>
 
               <div className="palm-grid mt-6">
                 <section className="palm-upload-card">
@@ -523,6 +559,19 @@ export default function PalmReadingPage() {
                       >
                         <ImagePlus size={17} />
                         <span>Choose from gallery</span>
+                      </button>
+                    </div>
+                  )}
+
+                  {!image && (
+                    <div className="mt-2.5 text-center">
+                      <button
+                        type="button"
+                        onClick={loadSampleProfile}
+                        className="inline-flex items-center gap-1.5 text-xs text-[var(--gold)] hover:text-[var(--gold2)] underline underline-offset-4 transition-colors opacity-85 hover:opacity-100 cursor-pointer"
+                      >
+                        <Sparkles size={13} />
+                        <span>Preview sample Vedic palmistry profile</span>
                       </button>
                     </div>
                   )}

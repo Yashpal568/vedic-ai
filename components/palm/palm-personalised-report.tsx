@@ -45,3 +45,4 @@ export default function PalmPersonalisedReport({ report }: PalmPersonalisedRepor
     </section>
   );
 }
+

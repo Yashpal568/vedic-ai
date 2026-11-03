@@ -86,3 +86,4 @@ export default function PalmChatDock({ onSendMessage, onUploadClick }: PalmChatD
     </>
   );
 }
+

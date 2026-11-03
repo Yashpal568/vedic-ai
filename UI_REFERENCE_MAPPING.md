@@ -88,3 +88,4 @@ This document maps all 10 approved Stitch visual references to their correspondi
 3. Real AI backend connectivity (Groq + Gemini vision fallback) feeding actual user palm images into the approved report design.
 4. Exported PDF matching the preview with exact 2-page A4 dimensions without text clipping or overflowing.
 5. All CI checks (Lint, Typecheck, 39 Vitest tests, Next.js build) green.
+
