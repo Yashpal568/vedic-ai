@@ -7,7 +7,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "ESLINT_USE_FLAT_CONFIG=false eslint .",
+    "lint": "node -e \"process.env.ESLINT_USE_FLAT_CONFIG='false'; require('child_process').execSync('eslint .', {stdio:'inherit'});\"",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },

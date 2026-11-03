@@ -483,3 +483,31 @@ html[data-theme="light"] .kundli-planet-summary-card small,
 html[data-theme="light"] .kundli-house-summary-heading p { color:#73766e !important; }
 html[data-theme="light"] .kundli-planet-summary-card p { color:#424a54 !important; }
 @media (max-width:620px) { .kundli-planet-summary-grid { grid-template-columns:1fr; } }
+
+
+/* PALM READING LIGHT THEME */
+html[data-theme="light"] .palm-upload-card,
+html[data-theme="light"] .palm-guidance,
+html[data-theme="light"] .palm-result,
+html[data-theme="light"] .palm-camera-modal,
+html[data-theme="light"] .palm-reading-card {
+  background: #ffffff !important;
+  border-color: #e4dfd3 !important;
+}
+html[data-theme="light"] .palm-reading-card p,
+html[data-theme="light"] .palm-reading-card li {
+  color: #2e3540 !important;
+}
+html[data-theme="light"] .palm-preview-meta {
+  background: #fbf7ee !important;
+  border-color: #e7dfcd !important;
+  color: #795b21 !important;
+}
+html[data-theme="light"] .palm-camera-controls {
+  background: #ffffff !important;
+  border-top-color: #e8e2d4 !important;
+}
+html[data-theme="light"] .palm-camera-header {
+  background: #fbf8f2 !important;
+  border-bottom-color: #e8e2d4 !important;
+}

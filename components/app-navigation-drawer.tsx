@@ -3,9 +3,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
 import {
-  BookOpen, CalendarDays, ChevronDown, Hand, House, MessageCircle, Orbit, UserRound, X,
+  BookOpen, CalendarDays, Hand, House, MessageCircle, Orbit, UserRound, X,
 } from "lucide-react";
 
 const links = [
@@ -20,8 +19,7 @@ const links = [
 
 export default function AppNavigationDrawer({ open, onClose, extraContent, accountContent, onHome, onKundli, onWorkspace }: { open: boolean; onClose: () => void; extraContent?: ReactNode; accountContent?: ReactNode; onHome?: () => void; onKundli?: () => void; onWorkspace?: () => void }) {
   const pathname = usePathname();
-  const [workspaceOpen, setWorkspaceOpen] = useState(false);
-  if (!open) return null;
+    if (!open) return null;
   const activeKey = pathname === "/panchang" ? "panchang"
     : pathname === "/palm-reading" ? "palm"
     : pathname === "/profile" ? "profile"

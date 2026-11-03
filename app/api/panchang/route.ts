@@ -68,9 +68,6 @@ function lunarEvents(date: string, latitude: number, longitude: number, timezone
 function formatTime(date: Date, timezone: string) {
   return new Intl.DateTimeFormat("en-IN", { timeZone: timezone, hour: "2-digit", minute: "2-digit", hour12: true }).format(date);
 }
-function formatDateTime(date: Date, timezone: string) {
-  return new Intl.DateTimeFormat("en-IN", { timeZone: timezone, dateStyle: "medium", timeStyle: "short" }).format(date);
-}
 function muhurta(start: Date, end: Date, timezone: string) {
   return formatTime(start, timezone) + " – " + formatTime(end, timezone);
 }

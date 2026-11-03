@@ -4,68 +4,122 @@ import { z } from "zod";
 export const runtime = "nodejs";
 export const maxDuration = 45;
 
-const schema = z.object({
-  image: z.string().min(1).max(8_000_000),
+const jsonSchema = z.object({
+  image: z.string().min(1).max(10_000_000),
   hand: z.enum(["left", "right", "unsure"]).default("unsure"),
   question: z.string().max(800).optional(),
 });
 
 function buildPalmPrompt(hand: "left" | "right" | "unsure", question?: string) {
-  return `You are a careful visual assistant producing a detailed, beginner-friendly traditional palmistry report from the supplied palm photograph. Palmistry is cultural symbolism, not a scientifically validated way to predict a person's life.
-
+  const userFocus = question?.trim() ? `\nUser's specific inquiry: "${question.trim()}"\n` : "";
+  return `You are a careful visual assistant producing a structured, beginner-friendly traditional palmistry report from the supplied palm photograph. Palmistry is a cultural interpretive practice, not a scientifically validated way to predict a person's life or future.
+${userFocus}
 IMAGE QUALITY GATE:
-First decide whether this is clearly a real palm photo, with the open palm, major creases and enough focus/light to inspect. If not, return {"clear":false,"reason":"..."} with one practical instruction. Do not guess lines from blur, shadows, jewellery, tattoos, scars or image artifacts.
+First, inspect the photo to verify that it clearly shows a human open palm, with fingers and major creases in sufficient lighting and focus.
+- If the image is NOT clearly an open palm, is severely blurry, too dark, washed out, or missing key line areas, return:
+  {"clear":false,"reason":"..."}
+  where reason provides a practical, polite instruction (e.g. "The photo is too blurry or dark to see your palm lines clearly. Please hold your hand steady in bright, even light with your palm facing the camera.").
+- Do NOT guess or fabricate lines from blur, shadows, jewellery, tattoos, or digital artifacts.
 
-Hand identified by the user: ${hand}.
-User's question: ${question?.trim() || "Explain the visible major palm lines in simple language."}
+IF CLEAR, generate a structured, respectful report in plain, everyday English using these exact markdown sections:
 
-IF CLEAR, write a detailed but cautious report in plain English, using these headings:
-## Photo and hand observations
-Describe only what is visibly clear; say when a feature cannot be assessed.
-## Heart line
-Explain where it appears to run and its visible shape, then clearly label any traditional symbolic interpretation.
-## Head line
-Describe only visible features and explain the traditional symbolism.
-## Life line
-Describe its visible path. Explicitly explain that it does NOT measure lifespan or predict death or health.
-## Fate line and other visible lines
-Discuss only if clearly visible; otherwise say "not clear enough to assess".
-## Overall traditional reading
-Give a balanced summary without certainty or dramatic claims.
-## Important note
-Remind the user this is a cultural/reflective interpretation, not a factual assessment or prediction.
+## 1. Palm Overview & Photo Observations
+State the observed hand (${hand !== "unsure" ? `${hand} hand` : "hand shown"}), overall palm shape, and visible clarity level. Distinguish clearly what is visible from what cannot be assessed.
 
-Use short paragraphs and bullet points. Distinguish "What I can see" from "Traditional meaning". Do not claim certainty about health, lifespan, death, marriage dates, pregnancy, wealth, or exact future events. Do not diagnose any medical condition. Do not invent line features.
+## 2. Heart Line (Emotions & Connection)
+Describe its visible starting point, curve, depth, and length. Provide the traditional symbolic interpretation (how you express care, sensitivity, and connection) in simple, accessible language.
 
-Return ONLY valid JSON:
+## 3. Head Line (Thinking & Focus)
+Describe the visible path across the palm (e.g. straight vs gently sloped). Provide the traditional symbolic meaning (decision-making style, curiosity, and mental focus).
+
+## 4. Life Line (Energy & Vitality)
+Describe its arc around the thumb base. EXPLICITLY CLARIFY that the life line does NOT predict lifespan, health diagnoses, or death; it traditionally symbolizes vitality, routine, and lifestyle rhythm.
+
+## 5. Fate Line & Other Visible Features
+If the fate line or other features (e.g. Sun line, Mount of Venus, Mount of Jupiter) are visible, describe them simply. If not clearly visible, explicitly state: "Not clearly distinguishable in this photo."
+
+## 6. Overall Traditional Reading
+Synthesize the observations into a balanced, empowering overview of your natural style and tendencies. Do not make dramatic promises or alarming claims.
+
+## 7. Limitations & Guidance
+Explain that palmistry is a reflective, symbolic art rather than a fixed destiny. Remind the reader that real-life actions, choices, and environment always take precedence.
+
+Return ONLY a valid JSON object:
 {"clear":true,"reading":"..."}
 or
 {"clear":false,"reason":"..."}
-Escape quotation marks correctly. No markdown fences around the JSON.`;
+Do not enclose the JSON in markdown code blocks or add text outside the JSON object.`;
 }
 
 function errorMessage(status: number, provider: "Groq" | "Gemini") {
   if (status === 429) return "The palm-reading service is busy or at its usage limit. Please wait a moment and try again.";
-  if (status === 401 || status === 403) return provider + " rejected the server API key. Check the corresponding key in your production environment variables.";
+  if (status === 401 || status === 403) return `${provider} rejected the server API key. Please check your API key in environment variables.`;
   if (status === 404) return "The configured vision model is unavailable. Update the palm vision model configuration and redeploy.";
   return "The palm-reading service could not analyse this image. Please try again with a clear, well-lit photo.";
 }
 
 export async function POST(request: Request) {
   try {
-    const body = schema.parse(await request.json());
-    const match = body.image.match(/^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/);
-    if (!match) return NextResponse.json({ error: "Upload a JPG, PNG, or WebP palm photo." }, { status: 400 });
-    const mimeType = match[1];
-    const base64 = match[2];
-    if (base64.length > 6_000_000) return NextResponse.json({ error: "Image is too large. Please upload a photo under 4 MB." }, { status: 413 });
-    const imageBytes = Buffer.from(base64, "base64");
-    if (!imageBytes.length || imageBytes.length > 4 * 1024 * 1024) {
-      return NextResponse.json({ error: "The image data is invalid or exceeds 4 MB. Please choose another photo." }, { status: 413 });
+    let base64 = "";
+    let mimeType = "image/jpeg";
+    let hand: "left" | "right" | "unsure" = "unsure";
+    let question = "";
+
+    const contentType = request.headers.get("content-type") || "";
+
+    if (contentType.includes("multipart/form-data")) {
+      const formData = await request.formData();
+      const file = formData.get("file") || formData.get("image");
+      if (!file || !(file instanceof Blob)) {
+        return NextResponse.json({ error: "Please select a palm photo to upload." }, { status: 400 });
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        return NextResponse.json({ error: "Image is larger than 10 MB. Please upload a smaller photo." }, { status: 413 });
+      }
+      const rawType = file.type || "image/jpeg";
+      if (!rawType.startsWith("image/") && !/\.(jpe?g|png|webp|heic|heif)$/i.test((file as File).name || "")) {
+        return NextResponse.json({ error: "Upload a JPG, PNG, WebP, or HEIC palm photo." }, { status: 400 });
+      }
+      mimeType = rawType.startsWith("image/") ? rawType : "image/jpeg";
+      const arrayBuffer = await file.arrayBuffer();
+      base64 = Buffer.from(arrayBuffer).toString("base64");
+
+      const rawHand = formData.get("hand");
+      if (rawHand === "left" || rawHand === "right" || rawHand === "unsure") {
+        hand = rawHand;
+      }
+      const rawQuestion = formData.get("question");
+      if (typeof rawQuestion === "string") {
+        question = rawQuestion.slice(0, 800);
+      }
+    } else {
+      const rawBody = await request.json().catch(() => null);
+      if (!rawBody) {
+        return NextResponse.json({ error: "Invalid request payload. Please send a valid palm image." }, { status: 400 });
+      }
+      const body = jsonSchema.parse(rawBody);
+      hand = body.hand;
+      question = body.question || "";
+
+      const match = body.image.match(/^data:(image\/(?:jpeg|png|webp|jpg));base64,([A-Za-z0-9+/=]+)$/i);
+      if (!match) {
+        return NextResponse.json({ error: "Upload a valid JPG, PNG, or WebP palm photo." }, { status: 400 });
+      }
+      mimeType = match[1].toLowerCase() === "image/jpg" ? "image/jpeg" : match[1].toLowerCase();
+      base64 = match[2];
     }
 
-    const prompt = buildPalmPrompt(body.hand, body.question);
-    const provider = (process.env.AI_PROVIDER || "gemini").toLowerCase();
+    if (!base64 || base64.length < 50) {
+      return NextResponse.json({ error: "No readable image data received. Please select a photo again." }, { status: 400 });
+    }
+
+    const imageBytes = Buffer.from(base64, "base64");
+    if (!imageBytes.length || imageBytes.length > 6 * 1024 * 1024) {
+      return NextResponse.json({ error: "The image data is invalid or exceeds 6 MB. Please choose a smaller photo." }, { status: 413 });
+    }
+
+    const prompt = buildPalmPrompt(hand, question);
+    const provider = (process.env.AI_PROVIDER || "").toLowerCase();
     const useGroqVision = provider === "groq" || (!process.env.GEMINI_API_KEY && Boolean(process.env.GROQ_API_KEY));
     let response: Response;
     let selectedProvider: "Groq" | "Gemini";
@@ -73,13 +127,21 @@ export async function POST(request: Request) {
     if (useGroqVision) {
       selectedProvider = "Groq";
       const key = process.env.GROQ_API_KEY;
-      if (!key) return NextResponse.json({ error: "Palm reading needs GROQ_API_KEY or GEMINI_API_KEY configured on the server." }, { status: 503 });
+      if (!key) {
+        return NextResponse.json({ error: "Palm reading requires GROQ_API_KEY or GEMINI_API_KEY configured on the server." }, { status: 503 });
+      }
 
-      // Llama 4 Scout was shut down on Groq in July 2026. Migrate old env overrides too.
+      // Automatically migrate old, retired or mistyped model names to supported qwen/qwen3.8-27b
       const configuredModel = process.env.PALM_GROQ_MODEL?.trim();
-      const retiredModels = ["meta-llama/llama-4-scout-17b-16e-instruct", "meta-llama/llama-4-maverick-17b-128e-instruct"];
-      const model = !configuredModel || retiredModels.includes(configuredModel)
-        ? "qwen/qwen3.6-27b"
+      const invalidOrRetiredModels = [
+        "qwen/qwen3.6-27b",
+        "meta-llama/llama-4-scout-17b-16e-instruct",
+        "meta-llama/llama-4-maverick-17b-128e-instruct",
+        "llama-3.2-11b-vision-preview",
+        "llama-3.2-90b-vision-preview",
+      ];
+      const model = !configuredModel || invalidOrRetiredModels.includes(configuredModel)
+        ? "qwen/qwen3.8-27b"
         : configuredModel;
 
       response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -87,16 +149,20 @@ export async function POST(request: Request) {
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + key },
         body: JSON.stringify({
           model,
-          messages: [{ role: "user", content: [
-            { type: "text", text: prompt },
-            { type: "image_url", image_url: { url: "data:" + mimeType + ";base64," + base64 } }
-          ] }],
+          messages: [{
+            role: "user",
+            content: [
+              { type: "text", text: prompt },
+              { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}` } }
+            ]
+          }],
           temperature: 0.2,
-          max_completion_tokens: 1800,
+          max_completion_tokens: 2200,
           response_format: { type: "json_object" }
         }),
-        signal: AbortSignal.timeout(35_000),
+        signal: AbortSignal.timeout(40_000),
       });
+
       if (!response.ok) {
         const upstream = await response.json().catch(() => ({}));
         console.error("[palm-reading] Groq vision provider status:", response.status, "code:", upstream?.error?.code || upstream?.error?.type || "unknown", "model:", model);
@@ -105,30 +171,61 @@ export async function POST(request: Request) {
     } else {
       selectedProvider = "Gemini";
       const key = process.env.GEMINI_API_KEY;
-      if (!key) return NextResponse.json({ error: "Palm reading needs GEMINI_API_KEY or GROQ_API_KEY configured on the server." }, { status: 503 });
-      const model = process.env.PALM_GEMINI_MODEL?.trim() || "gemini-2.5-flash";
-      response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-goog-api-key": key },
-        body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ text: prompt }, { inline_data: { mime_type: mimeType, data: base64 } }] }],
-          generationConfig: { temperature: 0.2, responseMimeType: "application/json", maxOutputTokens: 1800 }
-        }),
-        signal: AbortSignal.timeout(35_000),
-      });
-      if (!response.ok) {
-        const upstream = await response.json().catch(() => ({}));
-        console.error("[palm-reading] Gemini provider status:", response.status, "code:", upstream?.error?.status || "unknown", "model:", model);
-        return NextResponse.json({ error: errorMessage(response.status, "Gemini") }, { status: response.status === 429 ? 429 : response.status === 401 || response.status === 403 ? 503 : 502 });
+      if (!key) {
+        return NextResponse.json({ error: "Palm reading requires GEMINI_API_KEY or GROQ_API_KEY configured on the server." }, { status: 503 });
       }
+
+      const candidateModels = [
+        process.env.PALM_GEMINI_MODEL?.trim() || "gemini-2.5-flash",
+        "gemini-2.0-flash",
+        "gemini-1.5-flash",
+      ].filter(Boolean);
+
+      let lastErrorStatus = 502;
+      let finalData: unknown = null;
+
+      for (const model of candidateModels) {
+        try {
+          const geminiRes = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+            body: JSON.stringify({
+              contents: [{ role: "user", parts: [{ text: prompt }, { inline_data: { mime_type: mimeType, data: base64 } }] }],
+              generationConfig: { temperature: 0.2, responseMimeType: "application/json", maxOutputTokens: 2200 }
+            }),
+            signal: AbortSignal.timeout(35_000),
+          });
+
+          if (geminiRes.ok) {
+            finalData = await geminiRes.json();
+            break;
+          }
+
+          lastErrorStatus = geminiRes.status;
+          const upstream = await geminiRes.json().catch(() => ({}));
+          console.warn("[palm-reading] Gemini model", model, "returned status:", geminiRes.status, "code:", upstream?.error?.status);
+          if (geminiRes.status === 429 || geminiRes.status === 401 || geminiRes.status === 403) {
+            return NextResponse.json({ error: errorMessage(geminiRes.status, "Gemini") }, { status: geminiRes.status === 429 ? 429 : 503 });
+          }
+        } catch (e) {
+          console.warn("[palm-reading] Gemini attempt failed for model:", model, e);
+        }
+      }
+
+      if (!finalData) {
+        return NextResponse.json({ error: errorMessage(lastErrorStatus, "Gemini") }, { status: 502 });
+      }
+
+      response = new Response(JSON.stringify(finalData), { status: 200, headers: { "Content-Type": "application/json" } });
     }
 
     const data = await response.json();
     const raw = useGroqVision
       ? data?.choices?.[0]?.message?.content
       : data?.candidates?.[0]?.content?.parts?.map((part: { text?: string }) => part.text || "").join("");
+
     if (typeof raw !== "string" || !raw.trim()) {
-      console.error("[palm-reading] Empty model response from", selectedProvider, "finish reason:", data?.candidates?.[0]?.finishReason || data?.choices?.[0]?.finish_reason || "unknown");
+      console.error("[palm-reading] Empty model response from", selectedProvider);
       return NextResponse.json({ error: "The vision model returned no readable analysis. Please try again with a sharper, well-lit palm photo." }, { status: 422 });
     }
 
@@ -137,20 +234,35 @@ export async function POST(request: Request) {
       const cleaned = raw.trim().replace(/^\s*```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "");
       result = JSON.parse(cleaned);
     } catch {
-      console.error("[palm-reading] Could not parse model JSON response from", selectedProvider);
-      return NextResponse.json({ error: "The image result was inconclusive. Please upload a clearer palm photo and try again." }, { status: 422 });
+      console.error("[palm-reading] Could not parse model JSON response from", selectedProvider, raw.slice(0, 200));
+      return NextResponse.json({ error: "The image analysis was inconclusive. Please upload a clearer palm photo and try again." }, { status: 422 });
     }
+
     if (result.clear !== true) {
-      return NextResponse.json({ clear: false, reason: String(result.reason || "The main palm lines are not clear enough to interpret.") });
+      return NextResponse.json({
+        clear: false,
+        reason: String(result.reason || "The main palm lines could not be clearly seen. Please upload a brighter, sharper photo of your open palm.")
+      });
     }
+
     if (typeof result.reading !== "string" || !result.reading.trim()) {
-      return NextResponse.json({ clear: false, reason: "The main palm lines are not clear enough to interpret. Please upload a sharper photo." });
+      return NextResponse.json({
+        clear: false,
+        reason: "The main palm lines are not clear enough to interpret. Please take a sharper photo in bright light."
+      });
     }
+
     return NextResponse.json({ clear: true, reading: result.reading.trim() });
   } catch (error) {
-    if (error instanceof z.ZodError) return NextResponse.json({ error: "Invalid request. Upload a supported image under 4 MB." }, { status: 400 });
-    if (error instanceof Error && error.name === "TimeoutError") return NextResponse.json({ error: "Image analysis timed out. Please try again with a smaller photo." }, { status: 504 });
-    if (error instanceof SyntaxError) return NextResponse.json({ error: "The request could not be read. Please choose the palm image again." }, { status: 400 });
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: "Invalid request payload. Please upload a supported image under 6 MB." }, { status: 400 });
+    }
+    if (error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError")) {
+      return NextResponse.json({ error: "Image analysis timed out. Please try again with a clear photo." }, { status: 504 });
+    }
+    if (error instanceof SyntaxError) {
+      return NextResponse.json({ error: "The request could not be read. Please choose the palm image again." }, { status: 400 });
+    }
     console.error("[palm-reading] request failed:", error instanceof Error ? error.message : "unknown error");
     return NextResponse.json({ error: "Could not analyse this image right now. Please try again." }, { status: 500 });
   }

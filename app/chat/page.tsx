@@ -12,9 +12,9 @@ import type { KundliReport } from "@/lib/astrology";
 import { printKundliReport } from "@/lib/print-report";
 import { buildKundliHouseSummary, buildKundliPlanetSummary, buildKundliSimpleSummary } from "@/lib/kundli-summary";
 import {
-  ArrowDown, ArrowUp, AudioLines, Mic, MicOff, BookOpen, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight,
-  CircleHelp, Gem, Hand, History, House, LogOut, Menu, MessageCircle, MoonStar, Orbit, Plus, Sun,
-  ShieldCheck, Sparkles, Stars, UserRound, X, BriefcaseBusiness, Heart, Compass, Trash2, RefreshCw, PanelLeftClose, PanelLeftOpen, Bell,
+  ArrowDown, ArrowUp, Mic, MicOff, BookOpen, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight,
+  CircleHelp, Gem, History, LogOut, Menu, MessageCircle, MoonStar, Orbit, Plus, Sun,
+  ShieldCheck, Sparkles, UserRound, X, BriefcaseBusiness, Heart, Compass, Trash2, RefreshCw, PanelLeftClose, PanelLeftOpen, Bell,
 } from "lucide-react";
 
 type Message = { id: string; role: "user" | "assistant"; content: string };
@@ -224,23 +224,37 @@ function normalizeAssistantMarkdown(raw: string) {
   return normalized.join("\\n").replace(/\\n{3,}/g, "\\n\\n");
 }
 
-function StreamingMarkdown({ content }: { content: string }) {
+function StructuredMessageView({ content }: { content: string }) {
   const normalizedContent = normalizeAssistantMarkdown(content);
-  const [visibleText, setVisibleText] = useState("");
-  useEffect(() => {
-    let index = 0;
-    let timer = 0;
-    setVisibleText("");
-    const tick = () => {
-      const step = normalizedContent[index] === "\\n" ? 1 : 3;
-      index = Math.min(normalizedContent.length, index + step);
-      setVisibleText(normalizedContent.slice(0, index));
-      if (index < normalizedContent.length) timer = window.setTimeout(tick, 10);
-    };
-    timer = window.setTimeout(tick, 80);
-    return () => window.clearTimeout(timer);
-  }, [normalizedContent]);
-  return <><ReactMarkdown remarkPlugins={[remarkGfm]}>{visibleText}</ReactMarkdown>{visibleText.length < normalizedContent.length && <span className="typing-caret" aria-label="Writing response" />}</>;
+  return (
+    <div className="message-text markdown-body ai-structured-body">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          h3({ children }) {
+            const raw = String(children || "");
+            const match = raw.match(/^([1-7])\.\s*(.+)$/);
+            if (match) {
+              const num = match[1];
+              const title = match[2];
+              return (
+                <div className={`ai-structured-heading ai-section-${num}`}>
+                  <span className="ai-heading-pill">Section {num}</span>
+                  <h3 className="ai-heading-text">{title}</h3>
+                </div>
+              );
+            }
+            return <h3 className="ai-heading-text">{children}</h3>;
+          },
+          blockquote({ children }) {
+            return <div className="ai-quote-card">{children}</div>;
+          },
+        }}
+      >
+        {normalizedContent}
+      </ReactMarkdown>
+    </div>
+  );
 }
 
 export default function Home() {
@@ -302,6 +316,30 @@ export default function Home() {
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [messages]);
   useEffect(() => { try { const saved = window.localStorage.getItem("vedic-chat-theme"); if (saved === "light" || saved === "dark") setTheme(saved); } catch {} }, []);
   useEffect(() => { try { window.localStorage.setItem("vedic-chat-theme", theme); } catch {} }, [theme]);
+  useEffect(() => {
+    try {
+      const cached = window.localStorage.getItem("vedic-active-chat-v2");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed.messages) && parsed.messages.length > 0) {
+          setMessages(parsed.messages);
+        }
+        if (parsed.savedBirth) setSavedBirth(parsed.savedBirth);
+        if (parsed.chartReport) setChartReport(parsed.chartReport);
+      }
+    } catch {}
+  }, []);
+  useEffect(() => {
+    if (messages.length > 0 || chartReport) {
+      try {
+        window.localStorage.setItem("vedic-active-chat-v2", JSON.stringify({
+          messages,
+          savedBirth,
+          chartReport,
+        }));
+      } catch {}
+    }
+  }, [messages, savedBirth, chartReport]);
   useEffect(() => {
     try {
       setSidebarCollapsed(window.localStorage.getItem("vedic-sidebar-collapsed") === "1");
@@ -435,7 +473,15 @@ export default function Home() {
     setActiveConversationId(null);
     setLoadingConversationId(null);
     setMobileMenuOpen(false);
+    try { window.localStorage.removeItem("vedic-active-chat-v2"); } catch {}
     if (typeof window !== "undefined") window.history.replaceState({}, "", "/chat");
+  }
+
+  function retryLastTurn() {
+    const lastUserMsg = [...messages].reverse().find((m) => m.role === "user");
+    if (lastUserMsg && !isLoading) {
+      sendMessage(lastUserMsg.content);
+    }
   }
 
   async function loadConversation(id: string) {
@@ -1045,6 +1091,7 @@ export default function Home() {
         <button className="side-link" onClick={() => { window.location.href = "/palm-reading"; }}><Sparkles size={17} /> <span>Palm reading</span></button>
         <button className="side-link" onClick={() => { window.location.href = "/profile"; }}><UserRound size={17} /> <span>My profile</span></button>
         <button className="side-link" onClick={() => { window.location.href = "/reports"; }}><BookOpen size={17} /> <span>Kundli & reports</span></button>
+        <button className="side-link" onClick={() => void openMemory()}><ShieldCheck size={17} /> <span>AI memory</span></button>
         </div>}
         <section className="sidebar-history" aria-label="Conversation history">
           <div className="side-label sidebar-history-label"><span>All conversations</span><span className="sidebar-history-count">{historyItems.length}</span></div>
@@ -1196,12 +1243,20 @@ export default function Home() {
               {message.role === "assistant" ? <div className="message-content">
                 <div className="message-meta">VEDIC AI <span style={{ color: "#5f6057", margin: "0 5px" }}>·</span> ASTROLOGY COMPANION</div>
                 <div className="assistant-response-card">
-                  <div className="message-text markdown-body">{message.role === "assistant" && messageIndex === messages.length - 1 ? <StreamingMarkdown content={message.content} /> : <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>}</div>
-                  <div className="assistant-note"><Sparkles size={14} style={{ flexShrink: 0, color: "var(--gold)", marginTop: 2 }} /><span>Traditional Jyotish interpretations are for reflection, not certainty. Personalised chart insights require your correct birth details and calculated chart.</span></div>
+                  <StructuredMessageView content={message.content} />
+                  <div className="assistant-footer-row">
+                    <div className="assistant-note"><Sparkles size={14} style={{ flexShrink: 0, color: "var(--gold)", marginTop: 2 }} /><span>Traditional Jyotish interpretations are for reflection, not certainty.</span></div>
+                    {messageIndex === messages.length - 1 && !isLoading && (
+                      <button type="button" className="message-retry-btn" onClick={retryLastTurn} title="Retry last response">
+                        <RefreshCw size={12} />
+                        <span>Retry</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div> : <div className="user-bubble">{message.content}</div>}
             </div>)}
-            {isLoading && <div className="message-row"><div className="message-avatar"><MoonStar size={16} /></div><div className="message-content"><div className="message-meta">VEDIC AI · THINKING</div><div className="message-text">Preparing a thoughtful response…</div></div></div>}<div ref={bottomRef} />
+            {isLoading && <div className="message-row assistant"><div className="message-avatar"><MoonStar size={16} /></div><div className="message-content"><div className="message-meta">VEDIC AI · ANALYZING CHART</div><div className="assistant-response-card is-loading"><div className="ai-thinking-pulse"><div className="pulse-dot"/><div className="pulse-dot"/><div className="pulse-dot"/></div><p className="ai-thinking-text">Examining planetary placements, houses, and traditional Jyotish indicators…</p></div></div></div>}<div ref={bottomRef} />
           </section>}
         </div>
 
