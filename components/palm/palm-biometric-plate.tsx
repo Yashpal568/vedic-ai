@@ -310,9 +310,11 @@ export default function PalmBiometricPlate({
                       <span>{line.name}</span>
                     </span>
                     {line.visible ? (
-                      <CheckCircle2 size={11} className="text-[#52FEB8]" />
+                      <span className="inline-flex items-center gap-1 text-[9px] text-[#52FEB8] font-medium">
+                        <CheckCircle2 size={11} /> Mapped
+                      </span>
                     ) : (
-                      <span className="text-[9px] text-[var(--quiet)]">Faint</span>
+                      <span className="text-[9px] text-[var(--quiet)] font-medium">Not clearly detected</span>
                     )}
                   </div>
                   <span className="text-[10px] text-[var(--quiet)] mt-0.5 truncate">
