@@ -45,8 +45,18 @@ Synthesize the observations into a balanced, empowering overview of your natural
 Explain that palmistry is a reflective, symbolic art rather than a fixed destiny. Remind the reader that real-life actions, choices, and environment always take precedence.
 
 Return ONLY a valid JSON object:
-{"clear":true,"reading":"..."}
-or
+{
+  "clear": true,
+  "reading": "...",
+  "detectedLines": {
+    "heartLine": { "visible": true, "clarity": "clear" },
+    "headLine": { "visible": true, "clarity": "clear" },
+    "lifeLine": { "visible": true, "clarity": "clear" },
+    "fateLine": { "visible": true, "clarity": "clear" }
+  }
+}
+Note for detectedLines: If the Fate line or any line is faint, broken, or not clearly identifiable in this photo, set "visible": false and "clarity": "not_detected" honestly. Do NOT fabricate missing lines.
+or if the image is NOT a clear palm:
 {"clear":false,"reason":"..."}
 Do not enclose the JSON in markdown code blocks or add text outside the JSON object.`;
 }
@@ -234,10 +244,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "The vision model returned no readable analysis. Please try again with a sharper, well-lit palm photo." }, { status: 422 });
     }
 
-    let result: { clear?: boolean; reason?: string; reading?: string };
+    interface PalmModelResponse {
+      clear?: boolean;
+      reason?: string;
+      reading?: string;
+      detectedLines?: {
+        heartLine?: { visible?: boolean; clarity?: string };
+        headLine?: { visible?: boolean; clarity?: string };
+        lifeLine?: { visible?: boolean; clarity?: string };
+        fateLine?: { visible?: boolean; clarity?: string };
+      };
+      mounts?: Record<string, { x: number; y: number }>;
+    }
+
+    let result: PalmModelResponse;
     try {
       const cleaned = raw.trim().replace(/^\s*```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "");
-      result = JSON.parse(cleaned);
+      result = JSON.parse(cleaned) as PalmModelResponse;
     } catch {
       console.error("[palm-reading] Could not parse model JSON response from", selectedProvider, raw.slice(0, 200));
       return NextResponse.json({ error: "The image analysis was inconclusive. Please upload a clearer palm photo and try again." }, { status: 422 });
@@ -257,7 +280,12 @@ export async function POST(request: Request) {
       });
     }
 
-    return NextResponse.json({ clear: true, reading: result.reading.trim() });
+    return NextResponse.json({
+      clear: true,
+      reading: result.reading.trim(),
+      detectedLines: result.detectedLines || null,
+      mounts: result.mounts || null,
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: "Invalid request payload. Please upload a supported image under 6 MB." }, { status: 400 });

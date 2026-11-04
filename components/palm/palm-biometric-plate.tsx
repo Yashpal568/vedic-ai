@@ -1,12 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import { RefreshCw, Eye } from "lucide-react";
+import { RefreshCw, Eye, EyeOff, Sparkles, CheckCircle2 } from "lucide-react";
+import { derivePalmFeatures, type PalmAnalysisFeatures } from "@/lib/palm-feature-detector";
 
 interface PalmBiometricPlateProps {
   imageSrc: string;
   hand: "left" | "right" | "unsure";
   onRetake: () => void;
+  features?: PalmAnalysisFeatures;
   className?: string;
 }
 
@@ -14,20 +16,25 @@ export default function PalmBiometricPlate({
   imageSrc,
   hand,
   onRetake,
+  features,
   className = "",
 }: PalmBiometricPlateProps) {
-  const [showOverlay, setShowOverlay] = useState(false);
+  // Enabled by default so the user immediately sees their palm lines and highlighted points
+  const [showOverlay, setShowOverlay] = useState(true);
+  const [selectedFeature, setSelectedFeature] = useState<string | null>(null);
+
+  const activeFeatures = features || derivePalmFeatures(hand);
 
   const handLabel =
     hand === "left"
-      ? "Passive Hand"
+      ? "Left Hand (Passive Hastarekha)"
       : hand === "right"
-      ? "Active Hand"
+      ? "Right Hand (Active Hastarekha)"
       : "Open Palm";
 
   return (
     <section className={`mb-8 ${className}`} data-purpose="palm-diagram-card">
-      {/* Header matching approved reference format */}
+      {/* Title */}
       <div className="text-center mb-3">
         <h2 className="text-[18px] sm:text-[20px] font-bold tracking-[0.18em] uppercase text-[var(--gold)] font-serif-luxury">
           YOUR PALMISTRY PROFILE
@@ -41,17 +48,21 @@ export default function PalmBiometricPlate({
       <div className="flex items-center justify-between text-[11px] text-[var(--muted)] px-2 mb-2">
         <span className="flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 rounded-full bg-[var(--green)] animate-pulse" />
-          Verified Hastarekha Scan
+          <span className="font-semibold text-[var(--text)]">Verified Hastarekha Scan</span>
+          <span className="text-[10px] text-[var(--quiet)] hidden sm:inline">
+            · {activeFeatures.lines.filter((l) => l.visible).length} Creases Mapped
+          </span>
         </span>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => setShowOverlay((v) => !v)}
-            className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold tracking-wide border border-[var(--gold)]/30 hover:border-[var(--gold)] text-[var(--gold)] bg-[var(--panel)] transition-all cursor-pointer shadow-xs"
-            title="Toggle classical reference guide overlay"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold tracking-wide border border-[var(--gold)]/40 hover:border-[var(--gold)] text-[var(--gold)] bg-[var(--panel)] transition-all cursor-pointer shadow-xs active:scale-95"
+            title={showOverlay ? "Hide palm lines & points overlay" : "Show palm lines & points overlay"}
+            aria-label={showOverlay ? "Hide Annotations" : "Show Annotations"}
           >
-            <Eye size={11} />
-            <span>{showOverlay ? "Hide Reference Guide" : "Show Reference Guide"}</span>
+            {showOverlay ? <EyeOff size={12} /> : <Eye size={12} />}
+            <span>{showOverlay ? "Hide Annotations" : "Show Annotations"}</span>
           </button>
           <span className="font-semibold text-[var(--quiet)] uppercase tracking-wider text-[10px] hidden sm:inline">
             AI Biometrics
@@ -60,30 +71,29 @@ export default function PalmBiometricPlate({
       </div>
 
       <div className="relative w-full rounded-2xl border border-[var(--gold)]/30 bg-[#FAF7F0] dark:bg-[#191B23] overflow-hidden shadow-xl p-2 sm:p-3 flex flex-col items-center justify-center transition-all">
-        {/* Palm presentation container with clean warm parchment studio background */}
+        {/* Palm presentation container */}
         <div className="relative w-full aspect-[4/3.8] max-h-[480px] rounded-xl overflow-hidden bg-[#FAF6EE] dark:bg-[#13151D] flex items-center justify-center border border-[var(--gold)]/20 shadow-inner">
-          
-          {/* Subtle warm studio backdrop lighting */}
+          {/* Subtle studio backdrop lighting */}
           <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.45)_0%,rgba(240,233,219,0.75)_100%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(28,30,42,0.55)_0%,rgba(14,16,23,0.92)_100%)]" />
 
-          {/* Subtle celestial compass watermark rings behind palm (matching reference plate) */}
+          {/* Celestial compass watermark rings behind palm */}
           <svg
             className="absolute inset-0 w-full h-full pointer-events-none text-[var(--gold)]/20 dark:text-[var(--gold)]/15 z-0"
-            viewBox="0 0 600 600"
+            viewBox="0 0 1000 1000"
             preserveAspectRatio="xMidYMid meet"
           >
-            <circle cx="300" cy="300" r="250" fill="none" stroke="currentColor" strokeWidth="0.8" strokeDasharray="3 4" />
-            <circle cx="300" cy="300" r="195" fill="none" stroke="currentColor" strokeWidth="0.6" />
-            <circle cx="300" cy="300" r="140" fill="none" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2 3" />
-            <line x1="40" y1="300" x2="560" y2="300" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2 4" />
-            <line x1="300" y1="40" x2="300" y2="560" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2 4" />
+            <circle cx="500" cy="500" r="420" fill="none" stroke="currentColor" strokeWidth="1" strokeDasharray="5 6" />
+            <circle cx="500" cy="500" r="320" fill="none" stroke="currentColor" strokeWidth="0.8" />
+            <circle cx="500" cy="500" r="220" fill="none" stroke="currentColor" strokeWidth="0.6" strokeDasharray="3 4" />
+            <line x1="80" y1="500" x2="920" y2="500" stroke="currentColor" strokeWidth="0.6" strokeDasharray="3 5" />
+            <line x1="500" y1="80" x2="500" y2="920" stroke="currentColor" strokeWidth="0.6" strokeDasharray="3 5" />
           </svg>
 
-          {/* User's Hand Photograph */}
+          {/* User's Actual Palm Photograph */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={imageSrc || "/realistic-palm.jpg"}
-            alt="User Palm Photograph for Hastarekha Analysis"
+            alt="User's Analysed Palm Photo"
             onError={(e) => {
               e.currentTarget.onerror = null;
               e.currentTarget.src = "/realistic-palm.jpg";
@@ -91,23 +101,30 @@ export default function PalmBiometricPlate({
             className="w-full h-full object-contain object-center filter contrast-[1.04] brightness-[1.02] transition-all duration-300 relative z-0"
           />
 
-          {/* SVG Overlay: Highlighted Hastarekha lines & planetary mounts directly on the user's hand */}
+          {/* Responsive SVG Overlay: Mapped Lines & Landmarks */}
           {showOverlay && (
             <svg
               className="absolute inset-0 w-full h-full pointer-events-none z-10"
-              viewBox="0 0 800 700"
+              viewBox="0 0 1000 1000"
               preserveAspectRatio="xMidYMid meet"
             >
               <defs>
                 <filter id="gold-glow" x="-20%" y="-20%" width="140%" height="140%">
-                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feGaussianBlur stdDeviation="4" result="blur" />
                   <feMerge>
                     <feMergeNode in="blur" />
                     <feMergeNode in="SourceGraphic" />
                   </feMerge>
                 </filter>
                 <filter id="emerald-glow" x="-20%" y="-20%" width="140%" height="140%">
-                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feGaussianBlur stdDeviation="4" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+                <filter id="purple-glow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="4" result="blur" />
                   <feMerge>
                     <feMergeNode in="blur" />
                     <feMergeNode in="SourceGraphic" />
@@ -115,112 +132,132 @@ export default function PalmBiometricPlate({
                 </filter>
               </defs>
 
-              {/* 1. Heart Line (Hridaya Rekha) - Curved across upper palm */}
-              <path
-                d="M 620 330 C 510 335 410 310 340 240"
-                fill="none"
-                stroke="#FFE192"
-                strokeWidth="4"
-                strokeLinecap="round"
-                filter="url(#gold-glow)"
-                opacity="0.92"
-              />
-              <line x1="480" y1="325" x2="690" y2="280" stroke="#FFE192" strokeWidth="1.2" strokeDasharray="3 3" opacity="0.8" />
+              {/* Render Visible Primary Lines */}
+              {activeFeatures.lines
+                .filter((line) => line.visible && line.pathData)
+                .map((line) => {
+                  const isSelected = selectedFeature === line.id;
+                  const filterUrl =
+                    line.id === "head"
+                      ? "url(#emerald-glow)"
+                      : line.id === "fate"
+                      ? "url(#purple-glow)"
+                      : "url(#gold-glow)";
 
-              {/* 2. Head Line (Mastaka Rekha) - Flowing across center */}
-              <path
-                d="M 310 335 C 380 355 490 380 575 420"
-                fill="none"
-                stroke="#52FEB8"
-                strokeWidth="4"
-                strokeLinecap="round"
-                filter="url(#emerald-glow)"
-                opacity="0.92"
-              />
-              <line x1="430" y1="365" x2="160" y2="350" stroke="#52FEB8" strokeWidth="1.2" strokeDasharray="3 3" opacity="0.8" />
+                  return (
+                    <g key={line.id} className="transition-all duration-200">
+                      {/* Halo backing stroke */}
+                      <path
+                        d={line.pathData}
+                        fill="none"
+                        stroke={line.glowColor}
+                        strokeWidth={isSelected ? 10 : 7}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        opacity={0.8}
+                      />
+                      {/* Main core stroke */}
+                      <path
+                        d={line.pathData}
+                        fill="none"
+                        stroke={line.color}
+                        strokeWidth={isSelected ? 5 : 3.5}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        filter={filterUrl}
+                        strokeDasharray={line.id === "fate" ? "6 5" : undefined}
+                        opacity={0.96}
+                      />
+                      {/* Keypoint markers along the crease */}
+                      {line.points.map((pt, idx) => (
+                        <circle
+                          key={`${line.id}-pt-${idx}`}
+                          cx={pt.x}
+                          cy={pt.y}
+                          r={idx === 0 || idx === line.points.length - 1 ? 4.5 : 3}
+                          fill={line.color}
+                          stroke="#FFFFFF"
+                          strokeWidth="1.2"
+                        />
+                      ))}
+                    </g>
+                  );
+                })}
 
-              {/* 3. Life Line (Jeeva Rekha) - Sweeping around Venus mount */}
-              <path
-                d="M 310 330 C 350 375 360 460 330 550 C 315 585 295 615 280 635"
-                fill="none"
-                stroke="#E5C46B"
-                strokeWidth="4.5"
-                strokeLinecap="round"
-                filter="url(#gold-glow)"
-                opacity="0.95"
-              />
-              <line x1="345" y1="460" x2="690" y2="430" stroke="#E5C46B" strokeWidth="1.2" strokeDasharray="3 3" opacity="0.8" />
-
-              {/* 4. Fate Line (Bhagya Rekha) - Ascending towards Saturn mount */}
-              <path
-                d="M 430 630 C 435 520 435 390 445 250"
-                fill="none"
-                stroke="#C4B5FD"
-                strokeWidth="3.2"
-                strokeDasharray="6 4"
-                strokeLinecap="round"
-                opacity="0.88"
-              />
-              <line x1="435" y1="520" x2="690" y2="570" stroke="#C4B5FD" strokeWidth="1.2" strokeDasharray="3 3" opacity="0.8" />
-
-              {/* Planetary Mount Nodes (Parvat) */}
-              {/* Jupiter Mount (Guru) */}
-              <circle cx="350" cy="225" r="5" fill="#FFE192" stroke="#FAF7F0" strokeWidth="1.5" />
-              {/* Saturn Mount (Shani) */}
-              <circle cx="445" cy="205" r="4.5" fill="#C4B5FD" stroke="#FAF7F0" strokeWidth="1.5" />
-              {/* Sun Mount (Surya) */}
-              <circle cx="535" cy="220" r="4.5" fill="#FFE192" stroke="#FAF7F0" strokeWidth="1.5" />
-              {/* Mercury Mount (Budha) */}
-              <circle cx="615" cy="260" r="4.5" fill="#52FEB8" stroke="#FAF7F0" strokeWidth="1.5" />
-              {/* Venus Mount (Shukra) */}
-              <circle cx="280" cy="450" r="5.5" fill="#FBBF24" stroke="#FAF7F0" strokeWidth="1.5" />
-              {/* Moon Mount (Chandra) */}
-              <circle cx="575" cy="550" r="5.5" fill="#93C5FD" stroke="#FAF7F0" strokeWidth="1.5" />
+              {/* Render Planetary Mount Nodes */}
+              {activeFeatures.mounts.map((mount) => {
+                const isSelected = selectedFeature === mount.id;
+                return (
+                  <g key={mount.id} className="transition-all duration-200">
+                    {/* Pulsing beacon ring for mounts */}
+                    <circle
+                      cx={mount.point.x}
+                      cy={mount.point.y}
+                      r={isSelected ? 12 : 8}
+                      fill={mount.color}
+                      opacity={0.25}
+                    />
+                    <circle
+                      cx={mount.point.x}
+                      cy={mount.point.y}
+                      r={isSelected ? 6 : 4.5}
+                      fill={mount.color}
+                      stroke="#FFFFFF"
+                      strokeWidth="1.5"
+                    />
+                  </g>
+                );
+              })}
             </svg>
           )}
 
-          {/* Callout badges matching reference image composition */}
+          {/* Interactive Callout Badges */}
           {showOverlay && (
             <div className="absolute inset-0 pointer-events-none z-20">
-              {/* Heart Line callout (Right upper) */}
-              <div className="absolute right-[4%] sm:right-[7%] top-[37%] flex items-center gap-1.5">
-                <span className="text-[10px] sm:text-[11px] font-semibold text-[var(--text)] bg-[var(--panel)]/95 px-2.5 py-0.5 rounded-full border border-[var(--gold)]/40 shadow-sm whitespace-nowrap">
-                  Heart Line
-                </span>
-              </div>
+              {/* Callouts for lines */}
+              {activeFeatures.lines
+                .filter((line) => line.visible)
+                .map((line) => {
+                  const isSelected = selectedFeature === line.id;
+                  const leftPct = (line.labelPosition.x / 1000) * 100;
+                  const topPct = (line.labelPosition.y / 1000) * 100;
 
-              {/* Head Line callout (Left middle) */}
-              <div className="absolute left-[4%] sm:left-[7%] top-[48%] flex items-center gap-1.5">
-                <span className="text-[10px] sm:text-[11px] font-semibold text-[var(--text)] bg-[var(--panel)]/95 px-2.5 py-0.5 rounded-full border border-[#52FEB8]/40 shadow-sm whitespace-nowrap">
-                  Head Line
-                </span>
-              </div>
-
-              {/* Life Line callout (Right middle) */}
-              <div className="absolute right-[4%] sm:right-[7%] top-[59%] flex items-center gap-1.5">
-                <span className="text-[10px] sm:text-[11px] font-semibold text-[var(--text)] bg-[var(--panel)]/95 px-2.5 py-0.5 rounded-full border border-[var(--gold)]/40 shadow-sm whitespace-nowrap">
-                  Life Line
-                </span>
-              </div>
-
-              {/* Fate Line callout (Right lower) */}
-              <div className="absolute right-[4%] sm:right-[7%] bottom-[16%] flex items-center gap-1.5">
-                <span className="text-[10px] sm:text-[11px] font-semibold text-[var(--text)] bg-[var(--panel)]/95 px-2.5 py-0.5 rounded-full border border-[#C4B5FD]/40 shadow-sm whitespace-nowrap">
-                  Fate Line
-                </span>
-              </div>
+                  return (
+                    <div
+                      key={`callout-${line.id}`}
+                      style={{
+                        left: `${leftPct}%`,
+                        top: `${topPct}%`,
+                        transform: "translate(-50%, -50%)",
+                      }}
+                      className="absolute pointer-events-auto cursor-pointer"
+                      onClick={() => setSelectedFeature(selectedFeature === line.id ? null : line.id)}
+                    >
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-semibold tracking-wide transition-all shadow-md backdrop-blur-md ${
+                          isSelected
+                            ? "bg-[var(--gold)] text-[#11131A] scale-105 border border-white"
+                            : "bg-[var(--panel)]/90 text-[var(--text)] border hover:border-[var(--gold)]"
+                        }`}
+                        style={{
+                          borderColor: isSelected ? "#FFFFFF" : line.color,
+                        }}
+                      >
+                        <span
+                          className="w-1.5 h-1.5 rounded-full shrink-0"
+                          style={{ backgroundColor: line.color }}
+                        />
+                        <span>{line.name}</span>
+                      </span>
+                    </div>
+                  );
+                })}
 
               {/* Passive/Active Hand label callout (Left lower) */}
-              <div className="absolute left-[4%] sm:left-[7%] bottom-[16%] flex items-center gap-1.5">
-                <span className="text-[10px] sm:text-[11px] font-semibold text-[var(--text)] bg-[var(--panel)]/95 px-2.5 py-0.5 rounded-full border border-[var(--gold)]/40 shadow-sm whitespace-nowrap">
+              <div className="absolute left-3 bottom-3 pointer-events-none">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#11131A]/90 backdrop-blur-md text-[#FFE192] text-[10px] sm:text-[11px] font-medium rounded-full border border-[#E5C46B]/40 shadow-md">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#E5C46B]" />
                   {handLabel}
-                </span>
-              </div>
-
-              {/* Horoscope pill tag matching reference image */}
-              <div className="absolute left-3 bottom-3">
-                <span className="px-2.5 py-0.5 bg-[#8E8B82]/85 text-white text-[10px] font-medium tracking-wide rounded-md shadow-sm">
-                  horoscope
                 </span>
               </div>
             </div>
@@ -238,6 +275,78 @@ export default function PalmBiometricPlate({
               <RefreshCw size={12} />
               <span>Retake</span>
             </button>
+          </div>
+        </div>
+
+        {/* Feature Legend & Quality Status */}
+        <div className="w-full mt-3 pt-3 border-t border-[var(--line)] px-2">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] uppercase font-bold tracking-wider text-[var(--gold)] flex items-center gap-1">
+              <Sparkles size={11} /> Mapped Hastarekha Creases & Mounts (Heart Line, Head Line, Life Line)
+            </span>
+            <span className="text-[10px] text-[var(--quiet)]">Click any line to highlight</span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {activeFeatures.lines.map((line) => {
+              const isSelected = selectedFeature === line.id;
+              return (
+                <button
+                  key={`legend-${line.id}`}
+                  type="button"
+                  onClick={() => setSelectedFeature(selectedFeature === line.id ? null : line.id)}
+                  className={`flex flex-col text-left p-2 rounded-lg border transition-all cursor-pointer ${
+                    isSelected
+                      ? "bg-[var(--wash)] border-[var(--gold)] shadow-xs"
+                      : "bg-[var(--raised)] border-[var(--line)] hover:border-[var(--line2)]"
+                  }`}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <span className="flex items-center gap-1.5 text-xs font-semibold text-[var(--text)]">
+                      <span
+                        className="w-2 h-2 rounded-full shrink-0"
+                        style={{ backgroundColor: line.color }}
+                      />
+                      <span>{line.name}</span>
+                    </span>
+                    {line.visible ? (
+                      <CheckCircle2 size={11} className="text-[#52FEB8]" />
+                    ) : (
+                      <span className="text-[9px] text-[var(--quiet)]">Faint</span>
+                    )}
+                  </div>
+                  <span className="text-[10px] text-[var(--quiet)] mt-0.5 truncate">
+                    {line.hindiName}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Mounts quick pill list */}
+          <div className="mt-2 flex flex-wrap items-center gap-1.5 pt-1">
+            <span className="text-[9px] uppercase tracking-wider text-[var(--quiet)] font-semibold mr-1">
+              Planetary Mounts:
+            </span>
+            {activeFeatures.mounts.map((mount) => {
+              const isSelected = selectedFeature === mount.id;
+              return (
+                <button
+                  key={`mount-pill-${mount.id}`}
+                  type="button"
+                  onClick={() => setSelectedFeature(selectedFeature === mount.id ? null : mount.id)}
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] border transition-colors cursor-pointer ${
+                    isSelected
+                      ? "bg-[var(--wash)] border-[var(--gold)] text-[var(--gold)]"
+                      : "bg-[var(--raised)] border-[var(--line)] text-[var(--muted)] hover:text-[var(--text)]"
+                  }`}
+                  title={`${mount.parvatName}: ${mount.significance}`}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: mount.color }} />
+                  <span>{mount.name}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>

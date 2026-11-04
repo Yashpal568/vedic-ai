@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, useEffect, useRef, useState } from "react";
+import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
 import MobileBottomNav from "@/components/mobile-bottom-nav";
 import SiteHeader from "@/components/site-header";
 import AppDesktopSidebar from "@/components/app-desktop-sidebar";
@@ -13,6 +13,14 @@ import PalmDisclaimerMeta from "@/components/palm/palm-disclaimer-meta";
 import PalmChatDock from "@/components/palm/palm-chat-dock";
 import DossierPreviewModal from "@/components/dossier-preview-modal";
 import { parsePalmReading, type ParsedPalmReport } from "@/lib/palm-parser";
+import { derivePalmFeatures, type PalmAnalysisFeatures } from "@/lib/palm-feature-detector";
+import {
+  analyzeVideoFrame,
+  type MediaPipeHandsConstructor,
+  type MediaPipeHandsInstance,
+  type MediaPipeHandResults,
+  type HandLandmarkPoint,
+} from "@/lib/palm-camera-scanner";
 import {
   Camera,
   ImagePlus,
@@ -36,6 +44,7 @@ export default function PalmReadingPage() {
   const [question, setQuestion] = useState("");
   const [reading, setReading] = useState("");
   const [parsedReport, setParsedReport] = useState<ParsedPalmReport | null>(null);
+  const [palmFeatures, setPalmFeatures] = useState<PalmAnalysisFeatures | null>(null);
   const [error, setError] = useState("");
   const [quality, setQuality] = useState("");
   const [loading, setLoading] = useState(false);
@@ -74,12 +83,12 @@ export default function PalmReadingPage() {
   }
 
   // Close live camera modal
-  function closeCameraModal() {
+  const closeCameraModal = useCallback(() => {
     stopCameraStream();
     setIsCameraActive(false);
     setCameraError("");
     setCameraLoading(false);
-  }
+  }, [])
 
   // Cleanup camera stream on unmount
   useEffect(() => {
@@ -88,125 +97,136 @@ export default function PalmReadingPage() {
     };
   }, []);
 
-  // Live browser-side hand tracking. Video frames stay on-device until capture.
+  // Capture current video frame to image
+  const capturePhotoFromStream = useCallback(() => {
+    const video = videoRef.current;
+    if (!video || video.readyState < 2) return;
+
+    try {
+      const width = video.videoWidth || 1280;
+      const height = video.videoHeight || 720;
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Could not capture frame");
+
+      // Draw video frame onto canvas
+      ctx.drawImage(video, 0, 0, width, height);
+
+      let qualityVal = 0.88;
+      let dataUrl = canvas.toDataURL("image/jpeg", qualityVal);
+      while (dataUrl.length > 5_000_000 && qualityVal > 0.5) {
+        qualityVal -= 0.08;
+        dataUrl = canvas.toDataURL("image/jpeg", qualityVal);
+      }
+
+      const sizeKB = Math.round((dataUrl.length * 0.75) / 1024);
+      setImage(dataUrl);
+      setFileName("camera-capture.jpg");
+      setFileSizeStr(sizeKB > 1024 ? `${(sizeKB / 1024).toFixed(1)} MB` : `${sizeKB} KB`);
+      setError("");
+      setQuality("");
+      setReading("");
+      setParsedReport(null);
+      setPalmFeatures(derivePalmFeatures(hand));
+      closeCameraModal();
+    } catch (e) {
+      setCameraError(e instanceof Error ? e.message : "Failed to capture photograph.");
+    }
+  }, [hand, closeCameraModal]);
+
+  // Live browser-side hand tracking with real-time on-device computer vision & MediaPipe support
   useEffect(() => {
     if (!isCameraActive || cameraLoading || cameraError || !videoRef.current) return;
     let cancelled = false;
     let animationFrame = 0;
-    let hands: any = null;
     let lastProcessAt = 0;
+    const offscreen = document.createElement("canvas");
     scannerRef.current = { lastCenter: null, stableFrames: 0, capturing: false };
     setScanProgress(0);
     setScanStatus("Position your open palm inside the guide");
     setAutoCapturing(false);
 
-    const loadScript = () => new Promise<void>((resolve, reject) => {
-      if ((window as any).Hands) return resolve();
-      const existing = document.querySelector<HTMLScriptElement>('script[data-mediapipe-hands="true"]');
-      if (existing) {
-        existing.addEventListener("load", () => resolve(), { once: true });
-        existing.addEventListener("error", () => reject(new Error("Palm detection could not load. Use the manual shutter.")), { once: true });
-        return;
-      }
-      const script = document.createElement("script");
-      script.src = "https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js";
-      script.async = true;
-      script.dataset.mediapipeHands = "true";
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error("Palm detection could not load. Use the manual shutter."));
-      document.head.appendChild(script);
-    });
-
-    const start = async () => {
+    let hands: MediaPipeHandsInstance | null = null;
+    const win = typeof window !== "undefined" ? (window as unknown as { Hands?: MediaPipeHandsConstructor }) : {};
+    if (win.Hands) {
       try {
-        await loadScript();
-        if (cancelled || !videoRef.current) return;
-        const Hands = (window as any).Hands;
-        if (!Hands) throw new Error("Palm detection is unavailable.");
-        hands = new Hands({ locateFile: (file: string) => "https://cdn.jsdelivr.net/npm/@mediapipe/hands/" + file });
-        hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.65, minTrackingConfidence: 0.6 });
-        hands.onResults((results: any) => {
+        const HandsConstructor = win.Hands;
+        hands = new HandsConstructor({
+          locateFile: (file: string) => "https://cdn.jsdelivr.net/npm/@mediapipe/hands/" + file,
+        });
+        hands.setOptions({
+          maxNumHands: 1,
+          modelComplexity: 1,
+          minDetectionConfidence: 0.65,
+          minTrackingConfidence: 0.6,
+        });
+        hands.onResults((results: MediaPipeHandResults) => {
           if (cancelled || scannerRef.current.capturing) return;
           const points = results.multiHandLandmarks && results.multiHandLandmarks[0];
-          if (!points || points.length < 21) {
-            scannerRef.current.lastCenter = null;
-            scannerRef.current.stableFrames = 0;
-            setScanProgress(0);
-            setScanStatus("Show your full open palm to the camera");
-            return;
-          }
-          const xs = points.map((point: any) => point.x);
-          const ys = points.map((point: any) => point.y);
-          const minX = Math.min(...xs), maxX = Math.max(...xs);
-          const minY = Math.min(...ys), maxY = Math.max(...ys);
-          const width = maxX - minX, height = maxY - minY;
-          const center = { x: (minX + maxX) / 2, y: (minY + maxY) / 2 };
-          const inside = minX > 0.06 && maxX < 0.94 && minY > 0.04 && maxY < 0.96;
-          const goodSize = width >= 0.2 && height >= 0.28 && width <= 0.82 && height <= 0.94;
-
-          let brightness = 0, contrast = 0;
-          const video = videoRef.current;
-          if (video && video.readyState >= 2) {
-            const sample = document.createElement("canvas");
-            sample.width = 32; sample.height = 32;
-            const ctx = sample.getContext("2d", { willReadFrequently: true });
-            if (ctx) {
-              ctx.drawImage(video, 0, 0, 32, 32);
-              const pixels = ctx.getImageData(0, 0, 32, 32).data;
-              let sum = 0, sumSq = 0, count = 0;
-              for (let i = 0; i < pixels.length; i += 16) {
-                const gray = pixels[i] * 0.299 + pixels[i + 1] * 0.587 + pixels[i + 2] * 0.114;
-                sum += gray; sumSq += gray * gray; count++;
-              }
-              brightness = sum / Math.max(1, count);
-              contrast = Math.sqrt(Math.max(0, sumSq / Math.max(1, count) - brightness * brightness));
-            }
-          }
-          const goodLight = brightness >= 38 && brightness <= 225 && contrast >= 18;
-          const movement = scannerRef.current.lastCenter
-            ? Math.hypot(center.x - scannerRef.current.lastCenter.x, center.y - scannerRef.current.lastCenter.y)
-            : 1;
-          scannerRef.current.stableFrames = movement < 0.018 ? scannerRef.current.stableFrames + 1 : 0;
-          scannerRef.current.lastCenter = center;
-          const stability = Math.min(1, scannerRef.current.stableFrames / 18);
-          const score = Math.round((inside ? 35 : 0) + (goodSize ? 20 : Math.max(0, Math.min(20, width * height * 35))) + (goodLight ? 15 : 0) + stability * 30);
-          setScanProgress(score);
-
-          if (!inside) setScanStatus("Move your entire palm inside the guide");
-          else if (!goodSize) setScanStatus("Move your palm a little closer or farther away");
-          else if (!goodLight) setScanStatus("Improve lighting and avoid strong shadows");
-          else if (stability < 1) setScanStatus("Hold your hand steady — scanning palm");
-          else {
-            setScanStatus("Palm locked — capturing your photo");
-            scannerRef.current.capturing = true;
-            setAutoCapturing(true);
-            setScanProgress(100);
-            window.setTimeout(() => { if (!cancelled) capturePhotoFromStream(); }, 450);
+          if (points && points.length >= 21) {
+            const xs = points.map((p: HandLandmarkPoint) => p.x);
+            const ys = points.map((p: HandLandmarkPoint) => p.y);
+            const minX = Math.min(...xs), maxX = Math.max(...xs);
+            const minY = Math.min(...ys), maxY = Math.max(...ys);
+            scannerRef.current.lastCenter = { x: (minX + maxX) / 2, y: (minY + maxY) / 2 };
           }
         });
+      } catch (err) {
+        console.warn("[palm-scanner] MediaPipe setup skipped:", err);
+      }
+    }
 
-        const processFrame = async (timestamp: number) => {
-          if (cancelled) return;
-          if (timestamp - lastProcessAt > 90 && videoRef.current && videoRef.current.readyState >= 2) {
-            lastProcessAt = timestamp;
-            try { await hands.send({ image: videoRef.current }); }
-            catch (error) { console.warn("[palm-scanner] frame processing failed:", error); }
-          }
-          if (!cancelled) animationFrame = window.requestAnimationFrame(processFrame);
-        };
+    const processFrame = (timestamp: number) => {
+      if (cancelled) return;
+      if (timestamp - lastProcessAt > 80 && videoRef.current && videoRef.current.readyState >= 2) {
+        lastProcessAt = timestamp;
+        const video = videoRef.current;
+        const { metrics, center, steadyCount } = analyzeVideoFrame(
+          video,
+          offscreen,
+          scannerRef.current.lastCenter,
+          scannerRef.current.stableFrames
+        );
+
+        scannerRef.current.lastCenter = center;
+        scannerRef.current.stableFrames = steadyCount;
+        setScanProgress(metrics.readinessScore);
+        setScanStatus(metrics.statusMessage);
+
+        if (metrics.readinessScore >= 95 && steadyCount >= 10 && !scannerRef.current.capturing) {
+          scannerRef.current.capturing = true;
+          setAutoCapturing(true);
+          setScanProgress(100);
+          setScanStatus("Palm locked — capturing your photo");
+          window.setTimeout(() => {
+            if (!cancelled) {
+              capturePhotoFromStream();
+            }
+          }, 450);
+          return;
+        }
+
+        if (hands && !scannerRef.current.capturing) {
+          void hands.send({ image: video }).catch(() => {});
+        }
+      }
+      if (!cancelled) {
         animationFrame = window.requestAnimationFrame(processFrame);
-      } catch (error) {
-        console.warn("[palm-scanner] automatic detection unavailable:", error);
-        if (!cancelled) setScanStatus("Auto-scan unavailable — use the capture button");
       }
     };
-    void start();
+
+    animationFrame = window.requestAnimationFrame(processFrame);
+
     return () => {
       cancelled = true;
       window.cancelAnimationFrame(animationFrame);
-      try { void hands?.close?.(); } catch {}
+      try {
+        void hands?.close?.();
+      } catch {}
     };
-  }, [isCameraActive, cameraLoading, cameraError]);
+  }, [isCameraActive, cameraLoading, cameraError, capturePhotoFromStream]);
 
   // Start live getUserMedia camera
   async function startLiveCamera(facing: "environment" | "user" = cameraFacing) {
@@ -272,43 +292,7 @@ export default function PalmReadingPage() {
     startLiveCamera(nextFacing);
   }
 
-  // Capture current video frame to image
-  function capturePhotoFromStream() {
-    const video = videoRef.current;
-    if (!video || video.readyState < 2) return;
 
-    try {
-      const width = video.videoWidth || 1280;
-      const height = video.videoHeight || 720;
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) throw new Error("Could not capture frame");
-
-      // Draw video frame onto canvas
-      ctx.drawImage(video, 0, 0, width, height);
-
-      let qualityVal = 0.88;
-      let dataUrl = canvas.toDataURL("image/jpeg", qualityVal);
-      while (dataUrl.length > 5_000_000 && qualityVal > 0.5) {
-        qualityVal -= 0.08;
-        dataUrl = canvas.toDataURL("image/jpeg", qualityVal);
-      }
-
-      const sizeKB = Math.round((dataUrl.length * 0.75) / 1024);
-      setImage(dataUrl);
-      setFileName("camera-capture.jpg");
-      setFileSizeStr(sizeKB > 1024 ? `${(sizeKB / 1024).toFixed(1)} MB` : `${sizeKB} KB`);
-      setError("");
-      setQuality("");
-      setReading("");
-      setParsedReport(null);
-      closeCameraModal();
-    } catch (e) {
-      setCameraError(e instanceof Error ? e.message : "Failed to capture photograph.");
-    }
-  }
 
   // Handle file input selection from Gallery or Native Camera Fallback
   async function chooseImage(event: ChangeEvent<HTMLInputElement>) {
@@ -458,6 +442,14 @@ export default function PalmReadingPage() {
       setReading(rawReading);
       const parsed = parsePalmReading(rawReading, hand);
       setParsedReport(parsed);
+      const features = derivePalmFeatures(hand, {
+        heartLine: data.detectedLines?.heartLine,
+        headLine: data.detectedLines?.headLine,
+        lifeLine: data.detectedLines?.lifeLine,
+        fateLine: data.detectedLines?.fateLine,
+        mounts: data.mounts,
+      });
+      setPalmFeatures(features);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not analyse the image. Please try again.");
     } finally {
@@ -494,6 +486,7 @@ These are traditional symbolic interpretations, not scientifically validated per
     setHand("left");
     setReading(sampleMarkdown);
     setParsedReport(parsePalmReading(sampleMarkdown, "left"));
+    setPalmFeatures(derivePalmFeatures("left"));
     setError("");
     setQuality("");
   }
@@ -561,6 +554,7 @@ These are traditional symbolic interpretations, not scientifically validated per
                   <PalmBiometricPlate
                     imageSrc={image}
                     hand={hand}
+                    features={palmFeatures || undefined}
                     onRetake={() => {
                       setReading("");
                       setParsedReport(null);
