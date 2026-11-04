@@ -17942,6 +17942,49 @@ html[data-theme="light"] .birth-calendar-layer .birth-calendar-today {
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.15);
 }
+
+.palm-guide-outline.is-scanning {
+  border-color: #45e0a2;
+  border-style: solid;
+  box-shadow: 0 0 0 5px rgba(69,224,162,.12), 0 0 28px rgba(69,224,162,.42);
+  animation: palm-guide-pulse 1.3s ease-in-out infinite;
+}
+.palm-guide-outline.is-locked {
+  border-color: #45e0a2;
+  box-shadow: 0 0 0 7px rgba(69,224,162,.16), 0 0 34px rgba(69,224,162,.6);
+}
+.palm-scan-meter {
+  position: absolute; top: 14px; right: 14px;
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 11px; border-radius: 16px;
+  background: rgba(5,8,12,.78); border: 1px solid rgba(212,183,122,.32);
+  backdrop-filter: blur(10px);
+}
+.palm-scan-ring {
+  --scan-progress: 0deg; width: 58px; height: 58px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: conic-gradient(#45e0a2 var(--scan-progress), rgba(255,255,255,.16) 0);
+  transition: background .18s linear;
+}
+.palm-scan-ring-inner {
+  width: 48px; height: 48px; border-radius: 50%; background: #10151b;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  color: #fff; line-height: 1;
+}
+.palm-scan-ring-inner strong { font-size: 16px; font-variant-numeric: tabular-nums; }
+.palm-scan-ring-inner span { margin-top: 3px; font-size: 7px; letter-spacing: .12em; color: #9ca3af; }
+.palm-scan-status { max-width: 116px; color: #fff; font-size: 10px; line-height: 1.35; font-weight: 600; }
+@keyframes palm-guide-pulse {
+  0%,100% { box-shadow: 0 0 0 3px rgba(69,224,162,.10), 0 0 18px rgba(69,224,162,.22); }
+  50% { box-shadow: 0 0 0 7px rgba(69,224,162,.18), 0 0 30px rgba(69,224,162,.42); }
+}
+@media (max-width: 480px) {
+  .palm-camera-viewfinder { height: min(62vh, 520px); }
+  .palm-guide-outline { width: min(54vw, 200px); height: min(39vh, 250px); }
+  .palm-scan-meter { top: 10px; right: 10px; gap: 7px; padding: 7px 8px; }
+  .palm-scan-ring { width: 52px; height: 52px; }
+  .palm-scan-ring-inner { width: 43px; height: 43px; }
+}
 .palm-camera-loader {
   position: absolute;
   inset: 0;
