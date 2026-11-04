@@ -76,5 +76,31 @@ Traditional palmistry reflects symbolic tendencies rather than set-in-stone outc
     expect(modalCode).toContain("Cosmic Void");
     expect(modalCode).toContain("Download Archival PDF (A4)");
   });
+
+  it("verifies AppDesktopSidebar contains Sacred Workspaces, Recent Consultations search, and fixed bottom profile", () => {
+    const sidebarCode = fs.readFileSync(path.resolve(__dirname, "../components/app-desktop-sidebar.tsx"), "utf-8");
+    expect(sidebarCode).toContain("Sacred Workspaces");
+    expect(sidebarCode).toContain("Astrology Chat");
+    expect(sidebarCode).toContain("Birth Chart (Kundli)");
+    expect(sidebarCode).toContain("Palm Reading (Hastarekha)");
+    expect(sidebarCode).toContain("Vision AI");
+    expect(sidebarCode).toContain("Panchang Almanac");
+    expect(sidebarCode).toContain("Saved Reports & Kundlis");
+    expect(sidebarCode).toContain("Recent Consultations");
+    expect(sidebarCode).toContain("Search consultations...");
+    expect(sidebarCode).toContain("sidebar-fixed-footer");
+    expect(sidebarCode).toContain("Theme Toggle");
+    expect(sidebarCode).toContain("Vedic 4.0");
+    expect(sidebarCode).toContain("New Consultation");
+  });
+
+  it("verifies AppNavigationDrawer is dismissible via backdrop and explicit close button", () => {
+    const drawerCode = fs.readFileSync(path.resolve(__dirname, "../components/app-navigation-drawer.tsx"), "utf-8");
+    expect(drawerCode).toContain("stitch-close-button");
+    expect(drawerCode).toContain("mobile-nav-backdrop");
+    expect(drawerCode).toContain("onClick={onClose}");
+    expect(drawerCode).toContain("onTouchEnd");
+    expect(drawerCode).toContain("Close navigation");
+  });
 });
 
