@@ -4,6 +4,7 @@ import {
   verifyPalmOrientation,
   verifyFingersExtended,
   verifyWristVisible,
+  evaluatePalmRoiQuality,
   calculateLaplacianVariance,
   type Landmark21,
 } from "../lib/palm-camera-scanner";
@@ -63,6 +64,23 @@ function createMockRightPalmLandmarks(
     { x: cx + 0.19 * s * flip, y: cy - 0.20 * s, z: 0 },
     { x: cx + 0.19 * s * flip, y: isFist ? cy + 0.05 * s : cy - 0.29 * s, z: 0 },
   ];
+}
+
+// Helper to generate a realistic open left palm facing camera
+function createMockLeftPalmLandmarks(
+  options: {
+    centerX?: number;
+    centerY?: number;
+    scale?: number;
+    isDorsalBackOfHand?: boolean;
+  } = {}
+): Landmark21[] {
+  const right = createMockRightPalmLandmarks(options);
+  const cx = options.centerX ?? 0.5;
+  return right.map((pt) => ({
+    ...pt,
+    x: cx - (pt.x - cx),
+  }));
 }
 
 // Generates a mock synthetic video element and offscreen canvas for Node test environment
@@ -366,10 +384,17 @@ describe("Vedic-AI Mandatory Palm CV Recognition & Quality Test Suite (Requireme
 
   // 14. Two different palm images: coordinates are strictly image-dependent
   it("Test 14: Two different palm images produce genuinely distinct image-dependent crease coordinates", () => {
-    // Image A: Left hand
-    const extractionA = extractGroundedPalmFeatures("left");
-    // Image B: Right hand
-    const extractionB = extractGroundedPalmFeatures("right");
+    const verifiedDetections = {
+      heartLine: { visible: true, clarity: "clear" },
+      headLine: { visible: true, clarity: "clear" },
+      lifeLine: { visible: true, clarity: "clear" },
+      fateLine: { visible: true, clarity: "clear" },
+    };
+
+    // Image A: Left hand with verified detections
+    const extractionA = extractGroundedPalmFeatures("left", null, verifiedDetections);
+    // Image B: Right hand with verified detections
+    const extractionB = extractGroundedPalmFeatures("right", null, verifiedDetections);
 
     expect(extractionA.hand).toBe("left");
     expect(extractionB.hand).toBe("right");
@@ -377,6 +402,8 @@ describe("Vedic-AI Mandatory Palm CV Recognition & Quality Test Suite (Requireme
     const heartA = extractionA.lines.find((l) => l.id === "heart")!;
     const heartB = extractionB.lines.find((l) => l.id === "heart")!;
 
+    expect(heartA.visible).toBe(true);
+    expect(heartB.visible).toBe(true);
     // In Left Hand, Heart line originates on right side (below pinky at x ~ 735)
     // In Right Hand, Heart line originates on left side (below pinky at x ~ 265)
     expect(heartA.points[0].x).not.toEqual(heartB.points[0].x);
@@ -389,7 +416,12 @@ describe("Vedic-AI Mandatory Palm CV Recognition & Quality Test Suite (Requireme
 
   // 15. Responsive coordinate scaling for mobile and desktop
   it("Test 15: Normalizes coordinates to 0..1000 SVG viewBox preserving aspect ratio across screens", () => {
-    const extraction = extractGroundedPalmFeatures("left");
+    const verifiedDetections = {
+      heartLine: { visible: true },
+      headLine: { visible: true },
+      lifeLine: { visible: true },
+    };
+    const extraction = extractGroundedPalmFeatures("left", null, verifiedDetections);
 
     for (const line of extraction.lines) {
       if (line.visible) {
@@ -409,6 +441,139 @@ describe("Vedic-AI Mandatory Palm CV Recognition & Quality Test Suite (Requireme
       expect(mount.point.x).toBeLessThanOrEqual(1000);
       expect(mount.point.y).toBeGreaterThanOrEqual(0);
       expect(mount.point.y).toBeLessThanOrEqual(1000);
+    }
+  });
+
+  // 16. Palm Orientation Rigorous Dual-Verification (Chirality & Mirroring)
+  it("Test 16: Rigorously verifies palm orientation across mirrored/non-mirrored feeds and rejects dorsal & ambiguous hands", () => {
+    // 16a. Non-mirrored Right palm facing camera
+    const rightPalmar = createMockRightPalmLandmarks();
+    expect(verifyPalmOrientation(rightPalmar, "Right", false)).toBe(true);
+
+    // 16b. Non-mirrored Right dorsal (back of hand) -> must be rejected
+    const rightDorsal = createMockRightPalmLandmarks({ isDorsalBackOfHand: true });
+    expect(verifyPalmOrientation(rightDorsal, "Right", false)).toBe(false);
+
+    // 16c. Non-mirrored Left palm facing camera
+    const leftPalmar = createMockLeftPalmLandmarks();
+    expect(verifyPalmOrientation(leftPalmar, "Left", false)).toBe(true);
+
+    // 16d. Non-mirrored Left dorsal -> must be rejected
+    const leftDorsal = createMockLeftPalmLandmarks({ isDorsalBackOfHand: true });
+    expect(verifyPalmOrientation(leftDorsal, "Left", false)).toBe(false);
+
+    // 16e. Mirrored feed (selfie camera): x-coordinates inverted
+    const mirroredRight = rightPalmar.map((pt) => ({ ...pt, x: 1 - pt.x }));
+    expect(verifyPalmOrientation(mirroredRight, "Right", true)).toBe(true);
+
+    const mirroredLeft = leftPalmar.map((pt) => ({ ...pt, x: 1 - pt.x }));
+    expect(verifyPalmOrientation(mirroredLeft, "Left", true)).toBe(true);
+
+    // 16f. Mirrored dorsal -> must be rejected
+    const mirroredRightDorsal = rightDorsal.map((pt) => ({ ...pt, x: 1 - pt.x }));
+    expect(verifyPalmOrientation(mirroredRightDorsal, "Right", true)).toBe(false);
+
+    // 16g. Ambiguous geometry (flat cross product near 0) -> must reject, not guess
+    const flatLandmarks = rightPalmar.map((pt) => ({ ...pt, x: 0.5 })); // perfectly vertical line
+    expect(verifyPalmOrientation(flatLandmarks, "Right", false)).toBe(false);
+  });
+
+  // 17. Fail-Closed Image Quality Protection
+  it("Test 17: Fails closed when canvas context is missing or image processing throws", () => {
+    const video = { videoWidth: 640, videoHeight: 480 } as HTMLVideoElement;
+    const landmarks = createMockRightPalmLandmarks();
+
+    // Canvas returning null context
+    const canvasNoCtx = {
+      getContext: () => null,
+    } as unknown as HTMLCanvasElement;
+
+    const qualityNoCtx = evaluatePalmRoiQuality(video, landmarks, canvasNoCtx);
+    expect(qualityNoCtx.qualityAvailable).toBe(false);
+    expect(qualityNoCtx.isSharp).toBe(false);
+    expect(qualityNoCtx.goodLighting).toBe(false);
+    expect(qualityNoCtx.sharpness).toBe(0);
+    expect(qualityNoCtx.brightness).toBe(0);
+
+    // Canvas throwing exception during getImageData
+    const canvasThrowing = {
+      getContext: () => ({
+        drawImage: () => {},
+        getImageData: () => {
+          throw new Error("Canvas context lost");
+        },
+      }),
+    } as unknown as HTMLCanvasElement;
+
+    const qualityThrow = evaluatePalmRoiQuality(video, landmarks, canvasThrowing);
+    expect(qualityThrow.qualityAvailable).toBe(false);
+    expect(qualityThrow.isSharp).toBe(false);
+    expect(qualityThrow.goodLighting).toBe(false);
+    expect(qualityThrow.sharpness).toBe(0);
+  });
+
+  // 18. Fail-Closed Crease Extraction on Blank / Non-Hand Image
+  it("Test 18: Rejects blank image with 0 detected lines and never injects fabricated nominal fallbacks", () => {
+    // 128x128 completely blank black image (all zeros)
+    const blankData = new Uint8ClampedArray(128 * 128 * 4);
+    const result = extractGroundedPalmFeatures("right", {
+      data: blankData,
+      width: 128,
+      height: 128,
+    });
+
+    // Zero lines detected
+    const visibleLines = result.lines.filter((l) => l.visible);
+    expect(visibleLines.length).toBe(0);
+    for (const line of result.lines) {
+      expect(line.visible).toBe(false);
+      expect(line.clarity).toBe("not_detected");
+      expect(line.points).toEqual([]);
+      expect(line.pathData).toBe("");
+    }
+  });
+
+  // 19. Genuine Ridge Detection along Crease Corridors without Fallback Injection
+  it("Test 19: Only preserves verified ridge points along crease corridors and drops undetected samples", () => {
+    const w = 128;
+    const h = 128;
+    const testImage = new Uint8ClampedArray(w * h * 4);
+    // Fill with base skin brightness = 150
+    testImage.fill(150);
+
+    // Carve a dark valley (crease) along y = 60 with brightness = 70 (high contrast)
+    for (let x = 30; x < 90; x++) {
+      const idx = (60 * w + x) * 4;
+      testImage[idx] = 70;
+      testImage[idx + 1] = 70;
+      testImage[idx + 2] = 70;
+    }
+
+    const result = extractGroundedPalmFeatures("right", {
+      data: testImage,
+      width: w,
+      height: h,
+    });
+
+    // If a line is detected, all its points must be grounded and non-empty
+    for (const line of result.lines) {
+      if (line.visible) {
+        expect(line.points.length).toBeGreaterThanOrEqual(4);
+        expect(line.pathData.length).toBeGreaterThan(0);
+      } else {
+        expect(line.points).toEqual([]);
+      }
+    }
+  });
+
+  // 20. Planetary Mounts Verified as Estimated Anatomical Regions
+  it("Test 20: Explicitly labels planetary mounts as estimated anatomical regions and does not claim detection", () => {
+    const result = extractGroundedPalmFeatures("right");
+
+    expect(result.mounts.length).toBe(6);
+    for (const mount of result.mounts) {
+      expect(mount.detected).toBe(false);
+      expect(mount.significance).toContain("Estimated anatomical region");
     }
   });
 });

@@ -182,19 +182,15 @@ function traceCreaseInCorridor(
         x: Math.round(detectedX),
         y: Math.round(detectedY),
       });
-    } else {
-      // Fallback: use slightly modulated nominal point if line is partially visible
-      detectedPoints.push({
-        x: Math.round(nominalNormX * 1000),
-        y: Math.round(nominalNormY * 1000),
-      });
     }
+    // Never inject nominal coordinates for undetected samples. Only verified points are preserved.
   }
 
   const detectionRatio = foundCount / SAMPLES;
   const avgContrast = foundCount > 0 ? totalContrast / foundCount : 0;
 
-  if (detectionRatio < minDetectionRatio) {
+  // Minimum 4 verified points and sufficient coverage required
+  if (foundCount < 4 || detectionRatio < minDetectionRatio) {
     return {
       detected: false,
       clarity: "not_detected",
@@ -294,7 +290,7 @@ export function extractGroundedPalmFeatures(
     { x: 495, y: 390 },
   ];
 
-  // Planetary mounts
+  // Planetary mounts — labeled as estimated anatomical regions
   const mounts: ExtractedMountResult[] = [
     {
       id: "jupiter",
@@ -302,8 +298,8 @@ export function extractGroundedPalmFeatures(
       parvatName: "Guru Parvat",
       point: isLeft ? { x: 380, y: 320 } : { x: 620, y: 320 },
       color: "#FFE192",
-      detected: true,
-      significance: "Leadership, wisdom, ambition, and ethical strength",
+      detected: false,
+      significance: "Estimated anatomical region: Leadership, wisdom, and ethical strength",
     },
     {
       id: "saturn",
@@ -311,8 +307,8 @@ export function extractGroundedPalmFeatures(
       parvatName: "Shani Parvat",
       point: { x: 500, y: 295 },
       color: "#C4B5FD",
-      detected: true,
-      significance: "Discipline, perseverance, focus, and life karmas",
+      detected: false,
+      significance: "Estimated anatomical region: Discipline, perseverance, focus, and life karmas",
     },
     {
       id: "sun",
@@ -320,8 +316,8 @@ export function extractGroundedPalmFeatures(
       parvatName: "Surya Parvat",
       point: isLeft ? { x: 610, y: 315 } : { x: 390, y: 315 },
       color: "#FFE192",
-      detected: true,
-      significance: "Creativity, public honour, vitality, and brilliance",
+      detected: false,
+      significance: "Estimated anatomical region: Creativity, public honour, vitality, and brilliance",
     },
     {
       id: "mercury",
@@ -329,8 +325,8 @@ export function extractGroundedPalmFeatures(
       parvatName: "Budha Parvat",
       point: isLeft ? { x: 710, y: 360 } : { x: 290, y: 360 },
       color: "#52FEB8",
-      detected: true,
-      significance: "Commerce, sharp communication, quick wit, and discernment",
+      detected: false,
+      significance: "Estimated anatomical region: Commerce, sharp communication, quick wit, and discernment",
     },
     {
       id: "venus",
@@ -338,8 +334,8 @@ export function extractGroundedPalmFeatures(
       parvatName: "Shukra Parvat",
       point: isLeft ? { x: 340, y: 640 } : { x: 660, y: 640 },
       color: "#FBBF24",
-      detected: true,
-      significance: "Love, artistic appreciation, vitality, and empathy",
+      detected: false,
+      significance: "Estimated anatomical region: Love, artistic appreciation, vitality, and empathy",
     },
     {
       id: "moon",
@@ -347,8 +343,8 @@ export function extractGroundedPalmFeatures(
       parvatName: "Chandra Parvat",
       point: isLeft ? { x: 690, y: 730 } : { x: 310, y: 730 },
       color: "#93C5FD",
-      detected: true,
-      significance: "Intuition, emotional depth, subconscious imagination",
+      detected: false,
+      significance: "Estimated anatomical region: Intuition, emotional depth, subconscious imagination",
     },
   ];
 
@@ -359,10 +355,11 @@ export function extractGroundedPalmFeatures(
     points: ExtractedPoint[];
   };
 
-  let heartTrace: TraceResult = { detected: true, clarity: "clear", confidence: 0.88, points: heartCorridor };
-  let headTrace: TraceResult = { detected: true, clarity: "clear", confidence: 0.86, points: headCorridor };
-  let lifeTrace: TraceResult = { detected: true, clarity: "clear", confidence: 0.90, points: lifeCorridor };
-  let fateTrace: TraceResult = { detected: apiDetections?.fateLine?.visible !== false, clarity: "faint", confidence: 0.72, points: fateCorridor };
+  // Ground truth: strictly fail-closed. If no image data and no explicit positive detection, lines are not detected
+  let heartTrace: TraceResult = { detected: false, clarity: "not_detected", confidence: 0, points: [] };
+  let headTrace: TraceResult = { detected: false, clarity: "not_detected", confidence: 0, points: [] };
+  let lifeTrace: TraceResult = { detected: false, clarity: "not_detected", confidence: 0, points: [] };
+  let fateTrace: TraceResult = { detected: false, clarity: "not_detected", confidence: 0, points: [] };
 
   if (imageData && imageData.width >= 32 && imageData.height >= 32) {
     const totalPixels = imageData.width * imageData.height;
@@ -383,17 +380,37 @@ export function extractGroundedPalmFeatures(
     fateTrace = traceCreaseInCorridor(gray, imageData.width, imageData.height, fateCorridor, radius, 0.45);
   } else if (apiDetections) {
     // Ground in API vision detection model results
-    if (apiDetections.heartLine?.visible === false) {
-      heartTrace = { detected: false, clarity: "not_detected", confidence: 0, points: [] };
+    if (apiDetections.heartLine?.visible) {
+      heartTrace = {
+        detected: true,
+        clarity: (apiDetections.heartLine.clarity as "clear" | "faint") || "faint",
+        confidence: 0.76,
+        points: heartCorridor,
+      };
     }
-    if (apiDetections.headLine?.visible === false) {
-      headTrace = { detected: false, clarity: "not_detected", confidence: 0, points: [] };
+    if (apiDetections.headLine?.visible) {
+      headTrace = {
+        detected: true,
+        clarity: (apiDetections.headLine.clarity as "clear" | "faint") || "faint",
+        confidence: 0.74,
+        points: headCorridor,
+      };
     }
-    if (apiDetections.lifeLine?.visible === false) {
-      lifeTrace = { detected: false, clarity: "not_detected", confidence: 0, points: [] };
+    if (apiDetections.lifeLine?.visible) {
+      lifeTrace = {
+        detected: true,
+        clarity: (apiDetections.lifeLine.clarity as "clear" | "faint") || "faint",
+        confidence: 0.78,
+        points: lifeCorridor,
+      };
     }
-    if (apiDetections.fateLine?.visible === false) {
-      fateTrace = { detected: false, clarity: "not_detected", confidence: 0, points: [] };
+    if (apiDetections.fateLine?.visible) {
+      fateTrace = {
+        detected: true,
+        clarity: (apiDetections.fateLine.clarity as "clear" | "faint") || "faint",
+        confidence: 0.65,
+        points: fateCorridor,
+      };
     }
   }
 

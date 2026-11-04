@@ -23,31 +23,43 @@ let landmarkerInstance: HandLandmarkerType | null = null;
 let initPromise: Promise<HandLandmarkerType | null> | null = null;
 let initializationError: string | null = null;
 
+export function getInitializationError(): string | null {
+  return initializationError;
+}
+
+export function resetHandLandmarker(): void {
+  landmarkerInstance = null;
+  initPromise = null;
+  initializationError = null;
+}
+
 /**
  * Initializes the MediaPipe Tasks Vision HandLandmarker singleton.
+ * Pinned against @mediapipe/tasks-vision resolved runtime (0.10.14).
  */
 export async function getHandLandmarker(): Promise<HandLandmarkerType | null> {
   if (typeof window === "undefined") return null;
   if (landmarkerInstance) return landmarkerInstance;
   if (initPromise) return initPromise;
 
+  initializationError = null;
   initPromise = (async () => {
     try {
       const { FilesetResolver, HandLandmarker } = await import(
         "@mediapipe/tasks-vision"
       );
 
-      // Attempt 1: Local wasm path, Attempt 2: CDN wasm path
+      // Attempt 1: Local wasm path, Attempt 2: Version-pinned CDN wasm path
       let visionFileset;
       try {
         visionFileset = await FilesetResolver.forVisionTasks("/mediapipe/wasm");
       } catch (localWasmErr) {
         console.warn(
-          "[mediapipe] Local wasm failed, falling back to CDN:",
+          "[mediapipe] Local wasm failed, falling back to version-pinned CDN:",
           localWasmErr
         );
         visionFileset = await FilesetResolver.forVisionTasks(
-          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
         );
       }
 

@@ -20,6 +20,7 @@ import {
 import {
   getHandLandmarker,
   detectHandInVideo,
+  resetHandLandmarker,
   type HandDetectionOutput,
 } from "@/lib/mediapipe-hand-landmarker";
 import type { HandLandmarker as HandLandmarkerInstance } from "@mediapipe/tasks-vision";
@@ -59,6 +60,7 @@ export default function PalmReadingPage() {
   const [cameraFacing, setCameraFacing] = useState<"environment" | "user">("environment");
   const [cameraError, setCameraError] = useState("");
   const [cameraLoading, setCameraLoading] = useState(false);
+  const [landmarkerError, setLandmarkerError] = useState("");
   const [scanProgress, setScanProgress] = useState(0);
   const [scanStatus, setScanStatus] = useState("Position your open palm inside the guide");
   const [autoCapturing, setAutoCapturing] = useState(false);
@@ -157,15 +159,24 @@ export default function PalmReadingPage() {
     setScanProgress(0);
     setScanStatus("Show your open palm in front of the camera");
     setAutoCapturing(false);
+    setLandmarkerError("");
 
     let landmarker: HandLandmarkerInstance | null = null;
     void (async () => {
       try {
         landmarker = await getHandLandmarker();
+        if (!landmarker && !cancelled) {
+          setLandmarkerError("Hand detection could not be initialized. You can retry or take a photo manually.");
+        }
       } catch (err) {
         console.warn("[palm-scanner] MediaPipe loader warning:", err);
+        if (!cancelled) {
+          setLandmarkerError("Hand detection could not be initialized. You can retry or take a photo manually.");
+        }
       }
     })();
+
+    const isMirrored = cameraFacing === "user";
 
     const processFrame = (timestamp: number) => {
       if (cancelled) return;
@@ -183,7 +194,8 @@ export default function PalmReadingPage() {
           offscreen,
           handDetection,
           scannerRef.current.lastCenter,
-          scannerRef.current.stableFrames
+          scannerRef.current.stableFrames,
+          isMirrored
         );
 
         scannerRef.current.lastCenter = center;
@@ -215,7 +227,7 @@ export default function PalmReadingPage() {
       cancelled = true;
       window.cancelAnimationFrame(animationFrame);
     };
-  }, [isCameraActive, cameraLoading, cameraError, capturePhotoFromStream]);
+  }, [isCameraActive, cameraLoading, cameraError, cameraFacing, capturePhotoFromStream]);
 
   // Start live getUserMedia camera
   async function startLiveCamera(facing: "environment" | "user" = cameraFacing) {
@@ -879,6 +891,41 @@ These are traditional symbolic interpretations, not scientifically validated per
                   >
                     Use native file capture instead
                   </button>
+                </div>
+              )}
+
+              {landmarkerError && !cameraError && (
+                <div className="palm-camera-error-banner" style={{ background: "rgba(35, 20, 15, 0.94)", border: "1px solid rgba(212, 183, 122, 0.4)" }}>
+                  <AlertTriangle size={18} className="text-[var(--gold)]" />
+                  <p style={{ color: "#f5e6c8", fontSize: "12px", lineHeight: 1.4 }}>{landmarkerError}</p>
+                  <div style={{ display: "flex", gap: "8px", marginTop: "6px", flexWrap: "wrap", justifyContent: "center" }}>
+                    <button
+                      type="button"
+                      className="palm-camera-fallback-btn"
+                      onClick={() => {
+                        resetHandLandmarker();
+                        setLandmarkerError("");
+                        setScanStatus("Retrying hand detection initialization...");
+                        void (async () => {
+                          const l = await getHandLandmarker();
+                          if (!l) {
+                            setLandmarkerError("Hand detection could not be initialized. You can retry or take a photo manually.");
+                          } else {
+                            setScanStatus("Show your open palm in front of the camera");
+                          }
+                        })();
+                      }}
+                    >
+                      Retry Hand Detection
+                    </button>
+                    <button
+                      type="button"
+                      className="palm-camera-fallback-btn"
+                      onClick={capturePhotoFromStream}
+                    >
+                      Take photo manually
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

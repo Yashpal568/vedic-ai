@@ -65,11 +65,14 @@ export interface MediaPipeHandsConstructor {
 /**
  * Validates that the palmar (front) surface of the hand is facing the camera,
  * rather than the dorsal (back) surface.
- * Uses 2D/3D cross products of palm vectors and thumb lateral relationships.
+ * Uses 2D cross product of anatomical vectors and lateral thumb-to-pinky relationship.
+ * Enforces dual-condition agreement (both chirality AND thumb position must align).
+ * Rejects ambiguous landmarks where orientation cannot be decisively determined.
  */
 export function verifyPalmOrientation(
   landmarks: Landmark21[],
-  handedness: "Left" | "Right"
+  handedness: "Left" | "Right",
+  isMirrored = false
 ): boolean {
   if (!landmarks || landmarks.length < 21) return false;
 
@@ -92,20 +95,29 @@ export function verifyPalmOrientation(
   const cp2d = ux * vy - uy * vx;
 
   // Lateral relationship: thumb vs pinky
-  const thumbIsLeftOfPinky = thumbTip.x < pinkyTip.x;
+  const thumbDx = thumbTip.x - pinkyTip.x;
 
-  if (handedness === "Right") {
-    // For a camera-facing right palm (fingers pointing generally up, uy < 0):
-    // Index MCP is to the left of Pinky MCP (vx > 0), so cp2d > 0.
-    // Thumb is to the left of Pinky (thumbIsLeftOfPinky === true).
-    const isPalmar = cp2d > 0.005 || thumbIsLeftOfPinky;
-    return isPalmar;
+  // Account for camera mirroring (front/selfie camera vs back camera)
+  const effectiveHandedness = isMirrored
+    ? (handedness === "Right" ? "Left" : "Right")
+    : handedness;
+
+  if (effectiveHandedness === "Right") {
+    // For an upright right palm facing camera (uy < 0):
+    // Index MCP is to the left of Pinky MCP (vx > 0), resulting in positive cp2d.
+    // Thumb tip extends clearly to the left of pinky tip (thumbDx < -0.02).
+    // BOTH conditions must be satisfied — reject if indicators contradict or if chirality is ambiguous.
+    const hasPalmarChirality = cp2d > 0.012;
+    const hasPalmarThumb = thumbDx < -0.02;
+    return hasPalmarChirality && hasPalmarThumb;
   } else {
-    // For a camera-facing left palm:
-    // Pinky MCP is to the left of Index MCP (vx < 0), so cp2d < 0.
-    // Thumb is to the right of Pinky (thumbIsLeftOfPinky === false).
-    const isPalmar = cp2d < -0.005 || !thumbIsLeftOfPinky;
-    return isPalmar;
+    // For an upright left palm facing camera (uy < 0):
+    // Pinky MCP is to the left of Index MCP (vx < 0), resulting in negative cp2d.
+    // Thumb tip extends clearly to the right of pinky tip (thumbDx > 0.02).
+    // BOTH conditions must be satisfied — reject if indicators contradict or if chirality is ambiguous.
+    const hasPalmarChirality = cp2d < -0.012;
+    const hasPalmarThumb = thumbDx > 0.02;
+    return hasPalmarChirality && hasPalmarThumb;
   }
 }
 
@@ -201,20 +213,36 @@ export function calculateLaplacianVariance(
   return variance;
 }
 
+export interface PalmRoiQuality {
+  isSharp: boolean;
+  goodLighting: boolean;
+  qualityAvailable: boolean;
+  sharpness: number;
+  brightness: number;
+  contrast: number;
+}
+
 /**
  * Evaluates the ROI quality (sharpness, brightness, contrast) of the palm region.
+ * FAIL-CLOSED: Returns isSharp: false, goodLighting: false, qualityAvailable: false
+ * if canvas context is missing or image processing fails. Never fabricates numbers.
  */
 export function evaluatePalmRoiQuality(
   video: HTMLVideoElement,
   landmarks: Landmark21[],
   offscreenCanvas: HTMLCanvasElement
-): {
-  isSharp: boolean;
-  goodLighting: boolean;
-  sharpness: number;
-  brightness: number;
-  contrast: number;
-} {
+): PalmRoiQuality {
+  if (!landmarks || landmarks.length < 21 || !offscreenCanvas) {
+    return {
+      isSharp: false,
+      goodLighting: false,
+      qualityAvailable: false,
+      sharpness: 0,
+      brightness: 0,
+      contrast: 0,
+    };
+  }
+
   const palmLandmarkIndices = [0, 1, 2, 5, 9, 13, 17];
   const xs = palmLandmarkIndices.map((i) => landmarks[i].x);
   const ys = palmLandmarkIndices.map((i) => landmarks[i].y);
@@ -240,11 +268,12 @@ export function evaluatePalmRoiQuality(
 
   if (!ctx) {
     return {
-      isSharp: true,
-      goodLighting: true,
-      sharpness: 100,
-      brightness: 128,
-      contrast: 30,
+      isSharp: false,
+      goodLighting: false,
+      qualityAvailable: false,
+      sharpness: 0,
+      brightness: 0,
+      contrast: 0,
     };
   }
 
@@ -284,17 +313,19 @@ export function evaluatePalmRoiQuality(
     return {
       isSharp,
       goodLighting,
+      qualityAvailable: true,
       sharpness,
       brightness,
       contrast,
     };
   } catch {
     return {
-      isSharp: true,
-      goodLighting: true,
-      sharpness: 80,
-      brightness: 120,
-      contrast: 28,
+      isSharp: false,
+      goodLighting: false,
+      qualityAvailable: false,
+      sharpness: 0,
+      brightness: 0,
+      contrast: 0,
     };
   }
 }
@@ -312,7 +343,8 @@ export function evaluatePalmScannerFrame(
     totalHandsDetected: number;
   } | null,
   lastCenter: { x: number; y: number } | null,
-  consecutiveSteady: number
+  consecutiveSteady: number,
+  isMirrored = false
 ): {
   metrics: ScannerMetrics;
   center: { x: number; y: number } | null;
@@ -381,7 +413,7 @@ export function evaluatePalmScannerFrame(
   const handedness = handDetection.handedness;
 
   // Gate 3: Orientation verification (palmar vs dorsal / back of hand)
-  const isPalmar = verifyPalmOrientation(landmarks, handedness);
+  const isPalmar = verifyPalmOrientation(landmarks, handedness, isMirrored);
   if (!isPalmar) {
     return {
       metrics: {
@@ -569,6 +601,32 @@ export function evaluatePalmScannerFrame(
 
   // Gate 8 & 9: Real image-quality analysis on Palm ROI (sharpness, lighting, contrast)
   const roiQuality = evaluatePalmRoiQuality(video, landmarks, offscreenCanvas);
+
+  if (!roiQuality.qualityAvailable) {
+    return {
+      metrics: {
+        hasHand: true,
+        state: "IMAGE_BLURRY",
+        readinessScore: 25,
+        statusMessage: "Hold steady — evaluating image quality...",
+        insideGuide: true,
+        optimalDistance: true,
+        goodLighting: false,
+        isSharp: false,
+        isSteady: false,
+        palmFacingCamera: true,
+        fingersVisible: true,
+        wristVisible: true,
+        sharpnessValue: 0,
+        brightnessValue: 0,
+        contrastValue: 0,
+        handedness,
+        landmarks,
+      },
+      center: palmCenter,
+      steadyCount: 0,
+    };
+  }
 
   if (!roiQuality.goodLighting) {
     const isDark = roiQuality.brightness < 38;

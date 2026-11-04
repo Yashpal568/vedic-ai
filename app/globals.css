@@ -16934,6 +16934,49 @@ html[data-theme="light"] .birth-calendar-layer .birth-calendar-today {
   ) !important;
 }
 
+/* Light Theme Integration for Desktop Sidebar Footer and Profile */
+.app-shell[data-theme="light"] > aside.sidebar > .sidebar-bottom,
+.app-shell[data-theme="light"] > .sidebar > .sidebar-bottom,
+html[data-theme="light"] .sidebar-bottom,
+html[data-theme="light"] .app-shell > aside.sidebar > .sidebar-bottom,
+html[data-theme="light"] .app-shell > .sidebar > .sidebar-bottom {
+  border-top: 1px solid rgba(40, 30, 20, 0.09) !important;
+  background: #faf8f5 !important;
+}
+
+.app-shell[data-theme="light"] > aside.sidebar > .sidebar-bottom .profile-row,
+.app-shell[data-theme="light"] > .sidebar > .sidebar-bottom .profile-row,
+html[data-theme="light"] .sidebar-bottom .profile-row,
+html[data-theme="light"] .app-shell > aside.sidebar > .sidebar-bottom .profile-row,
+html[data-theme="light"] .app-shell > .sidebar > .sidebar-bottom .profile-row {
+  border: 1px solid rgba(40, 30, 20, 0.08) !important;
+  background: #f0ede6 !important;
+}
+
+.app-shell[data-theme="light"] > aside.sidebar > .sidebar-bottom .profile-name,
+html[data-theme="light"] .sidebar-bottom .profile-name {
+  color: #1a1813 !important;
+}
+
+.app-shell[data-theme="light"] > aside.sidebar > .sidebar-bottom .profile-caption,
+html[data-theme="light"] .sidebar-bottom .profile-caption {
+  color: #726b5d !important;
+}
+
+.app-shell[data-theme="light"] > aside.sidebar > .sidebar-bottom .sidebar-logout,
+html[data-theme="light"] .sidebar-bottom .sidebar-logout {
+  background: #e6e1d5 !important;
+  border: 1px solid rgba(40, 30, 20, 0.12) !important;
+  color: #555146 !important;
+}
+
+.app-shell[data-theme="light"] > aside.sidebar > .sidebar-bottom .sidebar-google-mark,
+html[data-theme="light"] .sidebar-bottom .sidebar-google-mark {
+  background: #e6e1d5 !important;
+  border: 1px solid rgba(40, 30, 20, 0.12) !important;
+  color: #555146 !important;
+}
+
 /* Stitch-inspired premium mobile drawer. Content scrolls as one column;
    engine status and account card remain anchored in the footer. */
 .mobile-nav-drawer.stitch-mobile-drawer {
