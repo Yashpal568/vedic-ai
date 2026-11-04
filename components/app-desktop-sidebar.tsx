@@ -56,7 +56,8 @@ export default function AppDesktopSidebar({
 
   useEffect(() => {
     try {
-      const savedCollapsed = window.localStorage.getItem("vedic-sidebar-collapsed") === "1";
+      const urlCollapsed = new URLSearchParams(window.location.search).get("collapsed");
+      const savedCollapsed = urlCollapsed === "1" || (urlCollapsed === null && window.localStorage.getItem("vedic-sidebar-collapsed") === "1");
       setIsCollapsed(savedCollapsed);
       if (savedCollapsed) {
         document.documentElement.dataset.sidebarCollapsed = "true";
@@ -65,7 +66,8 @@ export default function AppDesktopSidebar({
       }
 
       const savedTheme = window.localStorage.getItem("vedic-chat-theme");
-      const currentTheme = savedTheme === "light" ? "light" : "dark";
+      const urlTheme = new URLSearchParams(window.location.search).get("theme");
+      const currentTheme = urlTheme === "light" || urlTheme === "dark" ? urlTheme : (savedTheme === "light" ? "light" : "dark");
       setTheme(currentTheme);
       document.documentElement.dataset.theme = currentTheme;
     } catch {}
@@ -190,9 +192,8 @@ export default function AppDesktopSidebar({
           aria-label="Vedic AI home"
           style={{ border: 0, background: "transparent", textAlign: "left", color: "inherit", textDecoration: "none" }}
         >
-          <span className="brand-mark">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/vedic-ai-emblem.svg" alt="" />
+          <span className="brand-mark" aria-hidden="true">
+            <img src="/vedic-ai-emblem.svg" alt="" width={22} height={22} style={{ display: "block" }} />
           </span>
           <span className="sidebar-brand-copy">
             <span className="sidebar-brand-line">
@@ -200,7 +201,7 @@ export default function AppDesktopSidebar({
                 vedic<span style={{ color: "var(--gold)" }}>.</span>ai
               </span>
             </span>
-            <span className="brand-sub">Your Jyotish space</span>
+            <span className="brand-sub">YOUR JYOTISH SPACE</span>
           </span>
         </Link>
         <div className="sidebar-head-actions">
@@ -220,7 +221,7 @@ export default function AppDesktopSidebar({
             aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
-            {isCollapsed ? <PanelLeftOpen size={17} /> : <PanelLeftClose size={17} />}
+            {isCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
           </button>
         </div>
       </div>

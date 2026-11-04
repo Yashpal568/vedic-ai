@@ -18668,3 +18668,403 @@ html:not([data-theme="light"]) .app-shell .main-panel,
 .chart-summary-action svg{transition:transform .2s ease}
 @media(max-width:640px){.chart-panel-summary{align-items:flex-start;padding:13px}.chart-summary-action{font-size:10px}.chart-panel-collapsible[open]>.chart-panel{padding:12px}.chart-panel-head{flex-wrap:wrap}}
 @media(prefers-reduced-motion:reduce){.chart-panel-summary,.chart-summary-action svg{transition:none}}
+
+
+/* =========================================================================
+   VEDIC-AI DESKTOP & LIGHT MODE MASTER POLISH:
+   1. Clean shadcn-style Sidebar Controls (Theme Toggle & Collapse Button)
+   2. Light Mode System-Merged Sidebar Palette (Luxury Ivory Parchment)
+   3. Astrological Chat Light Mode Complete Overhaul (Fixes Dark Leaks)
+   ========================================================================= */
+
+/* 1. Sidebar Header Controls Alignment & Styling */
+.sidebar-head {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  padding: 0 4px 18px !important;
+  border-bottom: 1px solid var(--line) !important;
+}
+
+.sidebar-head-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  flex-shrink: 0 !important;
+}
+
+.sidebar-theme-toggle,
+.sidebar-collapse-toggle {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 8px !important;
+  border: 1px solid rgba(229, 196, 107, 0.22) !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  color: var(--gold) !important;
+  cursor: pointer !important;
+  transition: all 0.16s ease !important;
+}
+
+.sidebar-theme-toggle:hover,
+.sidebar-collapse-toggle:hover {
+  background: rgba(229, 196, 107, 0.14) !important;
+  border-color: rgba(229, 196, 107, 0.45) !important;
+  color: #FFF !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Collapsed Sidebar Alignment */
+html[data-sidebar-collapsed="true"] .sidebar-head {
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 0 0 14px !important;
+}
+
+html[data-sidebar-collapsed="true"] .sidebar-head-actions {
+  flex-direction: column !important;
+  gap: 8px !important;
+}
+
+/* 2. Light Mode Sidebar System Merge */
+html[data-theme="light"] .desktop-master-sidebar,
+html[data-theme="light"] .sidebar,
+.app-shell[data-theme="light"] aside.sidebar {
+  background: #FAF8F5 !important;
+  border-right: 1px solid rgba(40, 30, 20, 0.09) !important;
+  color: #1A1813 !important;
+}
+
+html[data-theme="light"] .sidebar-head {
+  border-bottom-color: rgba(40, 30, 20, 0.08) !important;
+}
+
+html[data-theme="light"] .sidebar-theme-toggle,
+html[data-theme="light"] .sidebar-collapse-toggle {
+  background: #F0EDE6 !important;
+  border: 1px solid rgba(40, 30, 20, 0.12) !important;
+  color: #555146 !important;
+}
+
+html[data-theme="light"] .sidebar-theme-toggle:hover,
+html[data-theme="light"] .sidebar-collapse-toggle:hover {
+  background: #E6E1D5 !important;
+  border-color: #B8860B !important;
+  color: #8F680D !important;
+}
+
+html[data-theme="light"] .sidebar-brand-premium .brand-name {
+  color: #1A1813 !important;
+}
+
+html[data-theme="light"] .sidebar-brand-premium .brand-sub {
+  color: #7A7465 !important;
+}
+
+html[data-theme="light"] .sidebar-brand-premium .brand-mark {
+  background: linear-gradient(145deg, rgba(212, 183, 122, 0.28), rgba(212, 183, 122, 0.08)) !important;
+  border: 1px solid rgba(184, 134, 11, 0.35) !important;
+  color: #B8860B !important;
+}
+
+html[data-theme="light"] .sidebar-new-chat,
+html[data-theme="light"] .new-chat {
+  background: #EFECE4 !important;
+  color: #1A1813 !important;
+  border: 1px solid rgba(40, 30, 20, 0.12) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+}
+
+html[data-theme="light"] .sidebar-new-chat:hover,
+html[data-theme="light"] .new-chat:hover {
+  background: #E6E1D5 !important;
+  border-color: rgba(184, 134, 11, 0.35) !important;
+  color: #8F680D !important;
+}
+
+html[data-theme="light"] .side-label {
+  color: #7A7465 !important;
+}
+
+html[data-theme="light"] .sidebar-tool-count,
+html[data-theme="light"] .sidebar-history-count {
+  background: #EBE7DF !important;
+  color: #5A554A !important;
+}
+
+html[data-theme="light"] .side-link {
+  color: #4A463D !important;
+}
+
+html[data-theme="light"] .side-link:hover {
+  background: rgba(184, 134, 11, 0.08) !important;
+  color: #1A1813 !important;
+}
+
+html[data-theme="light"] .side-link.active {
+  background: rgba(184, 134, 11, 0.12) !important;
+  color: #8F680D !important;
+  border-left: 2px solid #B8860B !important;
+  font-weight: 600 !important;
+}
+
+html[data-theme="light"] .sidebar-bottom,
+html[data-theme="light"] .app-shell > aside.sidebar > .sidebar-bottom,
+.app-shell[data-theme="light"] > aside.sidebar > .sidebar-bottom {
+  background: #FAF8F5 !important;
+  border-top: 1px solid rgba(40, 30, 20, 0.08) !important;
+}
+
+html[data-theme="light"] .profile-row,
+.app-shell[data-theme="light"] .profile-row,
+html[data-theme="light"] .sidebar-bottom .profile-row,
+html[data-theme="light"] .app-shell > aside.sidebar > .sidebar-bottom .profile-row,
+.app-shell[data-theme="light"] > aside.sidebar > .sidebar-bottom .profile-row {
+  background: #F0EDE6 !important;
+  border: 1px solid rgba(40, 30, 20, 0.08) !important;
+  color: #1A1813 !important;
+  border-radius: 12px !important;
+}
+
+html[data-theme="light"] .sidebar-bottom .sidebar-logout,
+html[data-theme="light"] .app-shell > aside.sidebar > .sidebar-bottom .sidebar-logout,
+html[data-theme="light"] .profile-row .sidebar-logout,
+html[data-theme="light"] .profile-row .sidebar-google-mark {
+  background: #E8E4DA !important;
+  border: 1px solid rgba(40, 30, 20, 0.12) !important;
+  color: #555146 !important;
+}
+
+html[data-theme="light"] .profile-name {
+  color: #1A1813 !important;
+}
+
+html[data-theme="light"] .profile-caption {
+  color: #7A7465 !important;
+}
+
+html[data-theme="light"] .profile-avatar-fallback {
+  background: #E8E3D8 !important;
+  color: #8F680D !important;
+  border: 1px solid rgba(184, 134, 11, 0.25) !important;
+}
+
+/* 3. Astrological Chat Light Mode Fix: Eliminate dark background image leaks */
+html[data-theme="light"] .main-panel,
+html[data-theme="light"] .app-shell .main-panel,
+.app-shell[data-theme="light"] .main-panel,
+.app-shell[data-theme="light"] .main-panel:has(.welcome-wrap),
+.app-shell[data-theme="light"] .main-panel:has(.chat-area),
+html[data-theme="light"] .content-scroll,
+.app-shell[data-theme="light"] .content-scroll {
+  background-color: #FAF7F0 !important;
+  background-image: none !important;
+  background: #FAF7F0 !important;
+  color: #1A1813 !important;
+}
+
+html[data-theme="light"] .topbar {
+  background: #FAF7F0 !important;
+  border-bottom: 1px solid rgba(40, 30, 20, 0.08) !important;
+  color: #1A1813 !important;
+}
+
+html[data-theme="light"] .topbar-link,
+html[data-theme="light"] .topbar-theme-toggle {
+  background: #F0EDE6 !important;
+  border: 1px solid rgba(40, 30, 20, 0.1) !important;
+  color: #4A463D !important;
+}
+
+html[data-theme="light"] .home-engine-status {
+  background: #FFFFFF !important;
+  border: 1px solid rgba(40, 30, 20, 0.1) !important;
+  color: #1A1813 !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important;
+}
+
+html[data-theme="light"] .home-engine-copy strong {
+  color: #1A1813 !important;
+}
+
+html[data-theme="light"] .home-welcome-brand strong {
+  color: #1A1813 !important;
+}
+
+html[data-theme="light"] .home-welcome-brand small {
+  color: #7A7465 !important;
+}
+
+html[data-theme="light"] .prompt-card,
+html[data-theme="light"] .chart-panel,
+html[data-theme="light"] .report-card {
+  background: #FFFFFF !important;
+  border: 1px solid rgba(40, 30, 20, 0.1) !important;
+  color: #1A1813 !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important;
+}
+
+html[data-theme="light"] .prompt-card strong {
+  color: #1A1813 !important;
+}
+
+html[data-theme="light"] .prompt-card span {
+  color: #6B6557 !important;
+}
+
+html[data-theme="light"] .composer {
+  background: #FFFFFF !important;
+  border: 1px solid rgba(40, 30, 20, 0.14) !important;
+  color: #1A1813 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06) !important;
+}
+
+html[data-theme="light"] .composer textarea {
+  color: #1A1813 !important;
+}
+
+html[data-theme="light"] .composer textarea::placeholder {
+  color: #8C8472 !important;
+}
+
+html[data-theme="light"] .chat-footer {
+  background: linear-gradient(180deg, rgba(250, 247, 240, 0) 0%, rgba(250, 247, 240, 0.94) 30%, #FAF7F0 100%) !important;
+}
+
+html[data-theme="light"] .profile-row,
+.app-shell[data-theme="light"] .profile-row,
+html[data-theme="light"] .sidebar-bottom .profile-row {
+  background: #F0EDE6 !important;
+  color: #1A1813 !important;
+  border-radius: 12px !important;
+}
+html[data-theme="light"] .profile-row .profile-name {
+  color: #1A1813 !important;
+}
+html[data-theme="light"] .profile-row .profile-caption {
+  color: #7A7465 !important;
+}
+html[data-theme="light"] .profile-row .sidebar-logout,
+html[data-theme="light"] .profile-row .sidebar-google-mark {
+  color: #555146 !important;
+}
+
+/* ========================================================
+   MASTER COLLAPSED SIDEBAR RULES (Across ALL Pages)
+   ======================================================== */
+.sidebar.sidebar-is-collapsed,
+html[data-sidebar-collapsed="true"] .desktop-master-sidebar,
+html[data-sidebar-collapsed="true"] .sidebar,
+.app-shell.sidebar-is-collapsed .sidebar {
+  width: 80px !important;
+  flex-basis: 80px !important;
+  padding-inline: 8px !important;
+}
+
+.sidebar.sidebar-is-collapsed .sidebar-head,
+html[data-sidebar-collapsed="true"] .sidebar-head,
+.app-shell.sidebar-is-collapsed .sidebar-head {
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 12px 0 14px !important;
+}
+
+.sidebar.sidebar-is-collapsed .sidebar-head .sidebar-brand-premium,
+html[data-sidebar-collapsed="true"] .sidebar-head .sidebar-brand-premium,
+.app-shell.sidebar-is-collapsed .sidebar-head .sidebar-brand-premium {
+  justify-content: center !important;
+  padding: 0 !important;
+}
+
+.sidebar.sidebar-is-collapsed .sidebar-brand-copy,
+html[data-sidebar-collapsed="true"] .sidebar-brand-copy,
+.app-shell.sidebar-is-collapsed .sidebar-brand-copy,
+.sidebar.sidebar-is-collapsed .sidebar-workspace-label,
+html[data-sidebar-collapsed="true"] .sidebar-workspace-label,
+.app-shell.sidebar-is-collapsed .sidebar-workspace-label,
+.sidebar.sidebar-is-collapsed .sidebar-workspace-toggle,
+html[data-sidebar-collapsed="true"] .sidebar-workspace-toggle,
+.app-shell.sidebar-is-collapsed .sidebar-workspace-toggle,
+.sidebar.sidebar-is-collapsed .sidebar-history-label,
+html[data-sidebar-collapsed="true"] .sidebar-history-label,
+.app-shell.sidebar-is-collapsed .sidebar-history-label,
+.sidebar.sidebar-is-collapsed .history-item-row,
+html[data-sidebar-collapsed="true"] .history-item-row,
+.app-shell.sidebar-is-collapsed .history-item-row,
+.sidebar.sidebar-is-collapsed .history-empty,
+html[data-sidebar-collapsed="true"] .history-empty,
+.app-shell.sidebar-is-collapsed .history-empty,
+.sidebar.sidebar-is-collapsed .sidebar-bottom,
+html[data-sidebar-collapsed="true"] .sidebar-bottom,
+.app-shell.sidebar-is-collapsed .sidebar-bottom,
+.sidebar.sidebar-is-collapsed .sidebar-new-chat span,
+html[data-sidebar-collapsed="true"] .sidebar-new-chat span,
+.app-shell.sidebar-is-collapsed .sidebar-new-chat span,
+.sidebar.sidebar-is-collapsed .side-link span,
+html[data-sidebar-collapsed="true"] .side-link span,
+.app-shell.sidebar-is-collapsed .side-link span,
+.sidebar.sidebar-is-collapsed .sidebar-history,
+html[data-sidebar-collapsed="true"] .sidebar-history,
+.app-shell.sidebar-is-collapsed .sidebar-history {
+  display: none !important;
+}
+
+.sidebar.sidebar-is-collapsed .sidebar-head-actions,
+html[data-sidebar-collapsed="true"] .sidebar-head-actions,
+.app-shell.sidebar-is-collapsed .sidebar-head-actions {
+  flex-direction: column !important;
+  gap: 6px !important;
+  align-items: center !important;
+}
+
+.sidebar.sidebar-is-collapsed .sidebar-new-chat,
+html[data-sidebar-collapsed="true"] .sidebar-new-chat,
+.app-shell.sidebar-is-collapsed .sidebar-new-chat {
+  width: 44px !important;
+  height: 44px !important;
+  margin: 10px auto !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.sidebar.sidebar-is-collapsed .sidebar-workspace-items,
+html[data-sidebar-collapsed="true"] .sidebar-workspace-items,
+.app-shell.sidebar-is-collapsed .sidebar-workspace-items {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+  align-items: center !important;
+  margin-top: 8px !important;
+}
+
+.sidebar.sidebar-is-collapsed .sidebar-workspace-items .side-link,
+html[data-sidebar-collapsed="true"] .sidebar-workspace-items .side-link,
+.app-shell.sidebar-is-collapsed .sidebar-workspace-items .side-link {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 44px !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+}
+
+.sidebar.sidebar-is-collapsed .sidebar-workspace-items .side-link svg,
+html[data-sidebar-collapsed="true"] .sidebar-workspace-items .side-link svg,
+.app-shell.sidebar-is-collapsed .sidebar-workspace-items .side-link svg {
+  width: 18px !important;
+  height: 18px !important;
+  margin: 0 !important;
+}
+
+html[data-sidebar-collapsed="true"] .app-sidebar-offset {
+  padding-left: 80px !important;
+}

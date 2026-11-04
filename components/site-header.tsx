@@ -7,8 +7,6 @@ import {
   LogOut,
   Menu,
   MoonStar,
-  PanelLeftClose,
-  PanelLeftOpen,
   Sun,
   UserRound,
   X,
@@ -19,29 +17,23 @@ type Props = { section?: string; backHref?: string; backLabel?: string; onSignOu
 export default function SiteHeader({ section, onSignOut }: Props) {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     try {
       const savedTheme = window.localStorage.getItem("vedic-chat-theme");
-      const nextTheme = savedTheme === "light" ? "light" : "dark";
+      const urlTheme = new URLSearchParams(window.location.search).get("theme");
+      const nextTheme = urlTheme === "light" || urlTheme === "dark" ? urlTheme : (savedTheme === "light" ? "light" : "dark");
       setTheme(nextTheme);
       document.documentElement.dataset.theme = nextTheme;
-
-      const isCollapsed = window.localStorage.getItem("vedic-sidebar-collapsed") === "1";
-      setSidebarCollapsed(isCollapsed);
-      if (isCollapsed) {
-        document.documentElement.dataset.sidebarCollapsed = "true";
-      } else {
-        delete document.documentElement.dataset.sidebarCollapsed;
-      }
     } catch {}
 
-    const handleSidebarToggle = () => {
-      setSidebarCollapsed(document.documentElement.dataset.sidebarCollapsed === "true");
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === "vedic-chat-theme" && e.newValue) {
+        setTheme(e.newValue === "light" ? "light" : "dark");
+      }
     };
-    window.addEventListener("vedic-sidebar-toggle", handleSidebarToggle);
-    return () => window.removeEventListener("vedic-sidebar-toggle", handleSidebarToggle);
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
   }, []);
 
   useEffect(() => {
@@ -63,61 +55,53 @@ export default function SiteHeader({ section, onSignOut }: Props) {
     try { window.localStorage.setItem("vedic-chat-theme", next); } catch {}
   }
 
-  function toggleSidebar() {
-    const next = !sidebarCollapsed;
-    setSidebarCollapsed(next);
-    if (next) {
-      document.documentElement.dataset.sidebarCollapsed = "true";
-    } else {
-      delete document.documentElement.dataset.sidebarCollapsed;
-    }
-    try {
-      window.localStorage.setItem("vedic-sidebar-collapsed", next ? "1" : "0");
-    } catch {}
-    window.dispatchEvent(new CustomEvent("vedic-sidebar-toggle", { detail: { collapsed: next } }));
-  }
+  return (
+    <>
+      <header className="site-header">
+        <div className="site-header-left">
+          {/* Mobile Navigation Menu Button: Only on Mobile (< 1024px) */}
+          <button
+            type="button"
+            className="site-header-menu"
+            aria-label={drawerOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={drawerOpen}
+            onClick={() => setDrawerOpen((open) => !open)}
+          >
+            {drawerOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
 
-  return <>
-    <header className="site-header">
-      <div className="site-header-left">
-        {/* Desktop Sidebar Toggle Button: Visible on PC screens (>= 1024px) */}
-        <button
-          type="button"
-          className="desktop-sidebar-toggle"
-          onClick={toggleSidebar}
-          aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          {sidebarCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
-        </button>
+          {/* Mobile Brand: Only visible on mobile/tablet when sidebar is hidden — NEVER duplicate on PC */}
+          <Link href="/chat" className="site-header-brand" aria-label="Vedic AI home">
+            <span className="site-header-mark"><MoonStar size={19} strokeWidth={1.6}/></span>
+            <strong>vedic<span>.</span>ai</strong>
+          </Link>
+        </div>
 
-        {/* Mobile Navigation Menu Button: Only on Mobile (< 1024px) */}
-        <button
-          type="button"
-          className="site-header-menu"
-          aria-label={drawerOpen ? "Close navigation menu" : "Open navigation menu"}
-          aria-expanded={drawerOpen}
-          onClick={() => setDrawerOpen((open) => !open)}
-        >
-          {drawerOpen ? <X size={20} /> : <Menu size={20} />}
-        </button>
+        {section && <span className="site-header-section">{section}</span>}
 
-        {/* Mobile Brand: Only visible on mobile/tablet when sidebar is hidden — NEVER duplicate on PC */}
-        <Link href="/chat" className="site-header-brand" aria-label="Vedic AI home">
-          <span className="site-header-mark"><MoonStar size={19} strokeWidth={1.6}/></span>
-          <strong>vedic<span>.</span>ai</strong>
-        </Link>
-      </div>
-
-      {section && <span className="site-header-section">{section}</span>}
-
-      <div className="site-header-actions">
-        <button type="button" className="site-theme-toggle" onClick={toggleTheme} aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"} title={theme === "dark" ? "Light theme" : "Dark theme"}>
-          {theme === "dark" ? <Sun size={17}/> : <MoonStar size={17}/>}<span>{theme === "dark" ? "Light" : "Dark"}</span>
-        </button>
-        {onSignOut ? <button type="button" className="site-header-profile" onClick={onSignOut}><LogOut size={15}/><span>Sign out</span></button> : <Link href="/profile" className="site-header-profile"><UserRound size={15}/><span>My profile</span></Link>}
-      </div>
-    </header>
-    <AppNavigationDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
-  </>;
+        <div className="site-header-actions">
+          <button
+            type="button"
+            className="site-theme-toggle"
+            onClick={toggleTheme}
+            aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+            title={theme === "dark" ? "Light theme" : "Dark theme"}
+          >
+            {theme === "dark" ? <Sun size={17}/> : <MoonStar size={17}/>}
+            <span>{theme === "dark" ? "Light" : "Dark"}</span>
+          </button>
+          {onSignOut ? (
+            <button type="button" className="site-header-profile" onClick={onSignOut}>
+              <LogOut size={15}/><span>Sign out</span>
+            </button>
+          ) : (
+            <Link href="/profile" className="site-header-profile">
+              <UserRound size={15}/><span>My profile</span>
+            </Link>
+          )}
+        </div>
+      </header>
+      <AppNavigationDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+    </>
+  );
 }

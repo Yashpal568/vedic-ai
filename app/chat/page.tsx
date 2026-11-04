@@ -16,7 +16,7 @@ import { build15PointVedicReport, calculatePlanetaryAspects } from "@/lib/vedic-
 import {
   ArrowDown, ArrowUp, Mic, MicOff, CalendarDays, Check, ChevronLeft, ChevronRight,
   CircleHelp, Gem, History, LogOut, Menu, MoonStar, Orbit, Plus, Sun,
-  ShieldCheck, Sparkles, UserRound, X, BriefcaseBusiness, Heart, Compass, Trash2, RefreshCw, PanelLeftClose, PanelLeftOpen, Bell, Clock3,
+  ShieldCheck, Sparkles, UserRound, X, BriefcaseBusiness, Heart, Compass, Trash2, RefreshCw, Bell, Clock3,
 } from "lucide-react";
 
 type Message = { id: string; role: "user" | "assistant"; content: string; animated?: boolean };
@@ -358,7 +358,15 @@ export default function Home() {
   const hasConversation = messages.length > 0;
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [messages]);
-  useEffect(() => { try { const saved = window.localStorage.getItem("vedic-chat-theme"); if (saved === "light" || saved === "dark") setTheme(saved); } catch {} }, []);
+  useEffect(() => {
+    try {
+      const urlTheme = new URLSearchParams(window.location.search).get("theme");
+      const saved = window.localStorage.getItem("vedic-chat-theme");
+      const current = urlTheme === "light" || urlTheme === "dark" ? urlTheme : (saved === "light" ? "light" : "dark");
+      setTheme(current);
+      document.documentElement.dataset.theme = current;
+    } catch {}
+  }, []);
   useEffect(() => { try { window.localStorage.setItem("vedic-chat-theme", theme); } catch {} }, [theme]);
   useEffect(() => {
     try {
@@ -508,19 +516,7 @@ export default function Home() {
     return () => window.removeEventListener("vedic-sidebar-toggle", handleToggle);
   }, []);
 
-  function toggleDesktopSidebar() {
-    setSidebarCollapsed((current) => {
-      const next = !current;
-      try { window.localStorage.setItem("vedic-sidebar-collapsed", next ? "1" : "0"); } catch {}
-      if (next) {
-        document.documentElement.dataset.sidebarCollapsed = "true";
-      } else {
-        delete document.documentElement.dataset.sidebarCollapsed;
-      }
-      window.dispatchEvent(new CustomEvent("vedic-sidebar-toggle", { detail: { collapsed: next } }));
-      return next;
-    });
-  }
+ 
 
   function startNewChat() {
     conversationLoadRequestRef.current += 1;
@@ -1206,7 +1202,7 @@ export default function Home() {
       <section className="main-panel app-sidebar-offset">
         <header className="topbar">
           <div className="topbar-left">
-            <button type="button" className="desktop-sidebar-toggle hidden xl:inline-grid" onClick={toggleDesktopSidebar} aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"} title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}>{sidebarCollapsed ? <PanelLeftOpen size={18}/> : <PanelLeftClose size={18}/>}</button>
+            
             <button className="icon-button mobile-menu xl:hidden" onClick={() => setMobileMenuOpen(true)} aria-label="Open menu"><Menu size={18} /></button>
             <div className="chat-header-brand flex xl:hidden"><span className="brand-mark"><img src="/vedic-ai-emblem.svg" alt="" /></span><span className="brand-name">vedic<span style={{ color: "var(--gold)" }}>.</span>ai</span></div>
             <div className="mode-pill" aria-label="Vedic AI preview status"><span className="status-dot" /> <span className="mode-pill-name">Vedic AI</span> <span className="mode-pill-preview" style={{ color: "var(--quiet)" }}>· Preview</span></div>
