@@ -12,10 +12,14 @@ import PalmRemediesUpaya from "@/components/palm/palm-remedies-upaya";
 import PalmDisclaimerMeta from "@/components/palm/palm-disclaimer-meta";
 import PalmChatDock from "@/components/palm/palm-chat-dock";
 import DossierPreviewModal from "@/components/dossier-preview-modal";
+import { PalmCameraGuide } from "@/components/palm/palm-camera-guide";
+import { PalmPreScanModal } from "@/components/palm/palm-pre-scan-modal";
+import { PalmCapturePreviewModal } from "@/components/palm/palm-capture-preview-modal";
 import { parsePalmReading, type ParsedPalmReport } from "@/lib/palm-parser";
 import { derivePalmFeatures, type PalmAnalysisFeatures } from "@/lib/palm-feature-detector";
 import {
   evaluatePalmScannerFrame,
+  type PalmReadinessState,
 } from "@/lib/palm-camera-scanner";
 import {
   getHandLandmarker,
@@ -54,6 +58,11 @@ export default function PalmReadingPage() {
 
   // Modal controls
   const [isDossierModalOpen, setIsDossierModalOpen] = useState(false);
+  const [isPreScanModalOpen, setIsPreScanModalOpen] = useState(false);
+  const [isCapturePreviewOpen, setIsCapturePreviewOpen] = useState(false);
+  const [capturedImageTemp, setCapturedImageTemp] = useState<string>("");
+  const [capturedFeaturesTemp, setCapturedFeaturesTemp] = useState<PalmAnalysisFeatures | null>(null);
+  const [isAutoCaptured, setIsAutoCaptured] = useState(false);
 
   // Live camera modal states
   const [isCameraActive, setIsCameraActive] = useState(false);
@@ -62,7 +71,9 @@ export default function PalmReadingPage() {
   const [cameraLoading, setCameraLoading] = useState(false);
   const [landmarkerError, setLandmarkerError] = useState("");
   const [scanProgress, setScanProgress] = useState(0);
-  const [scanStatus, setScanStatus] = useState("Position your open palm inside the guide");
+  const [scanStatus, setScanStatus] = useState("Show your open hand to the camera");
+  const [guideColor, setGuideColor] = useState<"red" | "amber" | "green">("amber");
+  const [detectionState, setDetectionState] = useState<PalmReadinessState>("NO_HAND");
   const [autoCapturing, setAutoCapturing] = useState(false);
   const scannerRef = useRef({ lastCenter: null as { x: number; y: number } | null, stableFrames: 0, capturing: false });
 
@@ -92,7 +103,7 @@ export default function PalmReadingPage() {
     setIsCameraActive(false);
     setCameraError("");
     setCameraLoading(false);
-  }, [])
+  }, []);
 
   // Cleanup camera stream on unmount
   useEffect(() => {
@@ -101,8 +112,8 @@ export default function PalmReadingPage() {
     };
   }, []);
 
-  // Capture current video frame to image
-  const capturePhotoFromStream = useCallback(() => {
+  // Capture current video frame to preview state
+  const capturePhotoFromStream = useCallback((isAuto = false) => {
     const video = videoRef.current;
     if (!video || video.readyState < 2) return;
 
@@ -126,27 +137,110 @@ export default function PalmReadingPage() {
         dataUrl = canvas.toDataURL("image/jpeg", qualityVal);
       }
 
-      const sizeKB = Math.round((dataUrl.length * 0.75) / 1024);
-      setImage(dataUrl);
-      setFileName("camera-capture.jpg");
-      setFileSizeStr(sizeKB > 1024 ? `${(sizeKB / 1024).toFixed(1)} MB` : `${sizeKB} KB`);
-      setError("");
-      setQuality("");
-      setReading("");
-      setParsedReport(null);
       // Derive genuine image-grounded features directly from frame pixels
-      setPalmFeatures(
-        derivePalmFeatures(hand, undefined, {
-          data: imgData.data,
-          width,
-          height,
-        })
-      );
-      closeCameraModal();
+      const features = derivePalmFeatures(hand, undefined, {
+        data: imgData.data,
+        width,
+        height,
+      });
+
+      // Stop active video stream immediately
+      stopCameraStream();
+      setIsCameraActive(false);
+
+      // Open captured image preview dialog with Retake / Continue options
+      setCapturedImageTemp(dataUrl);
+      setCapturedFeaturesTemp(features);
+      setIsAutoCaptured(isAuto);
+      setIsCapturePreviewOpen(true);
     } catch (e) {
       setCameraError(e instanceof Error ? e.message : "Failed to capture photograph.");
     }
-  }, [hand, closeCameraModal]);
+  }, [hand]);
+
+  // User confirms captured photo in preview modal
+  const confirmCapturedPhoto = useCallback(() => {
+    if (!capturedImageTemp) return;
+    const sizeKB = Math.round((capturedImageTemp.length * 0.75) / 1024);
+    setImage(capturedImageTemp);
+    setFileName("camera-capture.jpg");
+    setFileSizeStr(sizeKB > 1024 ? `${(sizeKB / 1024).toFixed(1)} MB` : `${sizeKB} KB`);
+    setError("");
+    setQuality("");
+    setReading("");
+    setParsedReport(null);
+    if (capturedFeaturesTemp) {
+      setPalmFeatures(capturedFeaturesTemp);
+    }
+    setIsCapturePreviewOpen(false);
+  }, [capturedImageTemp, capturedFeaturesTemp]);
+
+  // Start live getUserMedia camera
+  const startLiveCamera = useCallback(async (facing: "environment" | "user" = cameraFacing) => {
+    setError("");
+    setCameraError("");
+    setCameraLoading(true);
+    setIsCameraActive(true);
+    stopCameraStream();
+
+    if (
+      typeof navigator === "undefined" ||
+      !navigator.mediaDevices ||
+      typeof navigator.mediaDevices.getUserMedia !== "function"
+    ) {
+      // Fallback directly to native capture file input
+      setCameraLoading(false);
+      setIsCameraActive(false);
+      if (cameraInputRef.current) {
+        cameraInputRef.current.click();
+      } else {
+        setError("Camera is not directly accessible in this browser. Please choose an image from your gallery.");
+      }
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { ideal: facing },
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+        },
+        audio: false,
+      });
+
+      mediaStreamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play().catch(() => {});
+      }
+      setCameraLoading(false);
+    } catch (err: unknown) {
+      console.warn("[palm-reading] getUserMedia error:", err);
+      setCameraLoading(false);
+      let message = "Could not access device camera.";
+      if (err instanceof Error) {
+        if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
+          message = "Camera permission was denied. Please allow camera access in browser site settings or choose a photo from your gallery.";
+        } else if (err.name === "NotFoundError" || err.name === "DevicesNotFoundError") {
+          message = "No camera was detected on this device. You can choose a photo from your gallery.";
+        } else if (err.name === "NotReadableError" || err.name === "TrackStartError") {
+          message = "Your camera is already in use by another application or browser tab. Please close other camera apps and retry.";
+        } else if (err.name === "OverconstrainedError") {
+          message = "Requested camera configuration is not supported on this device. Please retry or choose from gallery.";
+        } else {
+          message = `Camera error: ${err.message || "Failed to initialize video stream"}. You can choose a photo from your gallery.`;
+        }
+      }
+      setCameraError(message);
+    }
+  }, [cameraFacing]);
+
+  // User retakes photo from preview modal
+  const retakeCapturedPhoto = useCallback(() => {
+    setIsCapturePreviewOpen(false);
+    void startLiveCamera("environment");
+  }, [startLiveCamera]);
 
   // Live browser-side palm tracking powered by Google MediaPipe Tasks Vision
   useEffect(() => {
@@ -195,22 +289,25 @@ export default function PalmReadingPage() {
           handDetection,
           scannerRef.current.lastCenter,
           scannerRef.current.stableFrames,
-          isMirrored
+          isMirrored,
+          hand
         );
 
         scannerRef.current.lastCenter = center;
         scannerRef.current.stableFrames = steadyCount;
         setScanProgress(metrics.readinessScore);
         setScanStatus(metrics.statusMessage);
+        setGuideColor(metrics.guideColor);
+        setDetectionState(metrics.state);
 
         if (metrics.state === "READY_TO_CAPTURE" && !scannerRef.current.capturing) {
           scannerRef.current.capturing = true;
           setAutoCapturing(true);
           setScanProgress(100);
-          setScanStatus("Palm locked — capturing your photo");
+          setScanStatus("Perfect! Hold still, capturing automatically...");
           window.setTimeout(() => {
             if (!cancelled) {
-              capturePhotoFromStream();
+              capturePhotoFromStream(true);
             }
           }, 350);
           return;
@@ -227,70 +324,13 @@ export default function PalmReadingPage() {
       cancelled = true;
       window.cancelAnimationFrame(animationFrame);
     };
-  }, [isCameraActive, cameraLoading, cameraError, cameraFacing, capturePhotoFromStream]);
-
-  // Start live getUserMedia camera
-  async function startLiveCamera(facing: "environment" | "user" = cameraFacing) {
-    setError("");
-    setCameraError("");
-    setCameraLoading(true);
-    setIsCameraActive(true);
-    stopCameraStream();
-
-    if (
-      typeof navigator === "undefined" ||
-      !navigator.mediaDevices ||
-      typeof navigator.mediaDevices.getUserMedia !== "function"
-    ) {
-      // Fallback directly to native capture file input
-      setCameraLoading(false);
-      setIsCameraActive(false);
-      if (cameraInputRef.current) {
-        cameraInputRef.current.click();
-      } else {
-        setError("Camera is not directly accessible in this browser. Please choose an image from your gallery.");
-      }
-      return;
-    }
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: { ideal: facing },
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
-        },
-        audio: false,
-      });
-
-      mediaStreamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play().catch(() => {});
-      }
-      setCameraLoading(false);
-    } catch (err: unknown) {
-      console.warn("[palm-reading] getUserMedia error:", err);
-      setCameraLoading(false);
-      let message = "Could not access device camera.";
-      if (err instanceof Error) {
-        if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
-          message = "Camera permission was denied. Please allow camera access in browser site settings or use file upload.";
-        } else if (err.name === "NotFoundError" || err.name === "DevicesNotFoundError") {
-          message = "No camera was detected on this device.";
-        } else if (err.name === "NotReadableError" || err.name === "TrackStartError") {
-          message = "Your camera is already in use by another app or browser tab.";
-        }
-      }
-      setCameraError(message);
-    }
-  }
+  }, [isCameraActive, cameraLoading, cameraError, cameraFacing, capturePhotoFromStream, hand]);
 
   // Switch between rear and front camera in modal
   function toggleCameraFacing() {
     const nextFacing = cameraFacing === "environment" ? "user" : "environment";
     setCameraFacing(nextFacing);
-    startLiveCamera(nextFacing);
+    void startLiveCamera(nextFacing);
   }
 
 
@@ -707,7 +747,7 @@ These are traditional symbolic interpretations, not scientifically validated per
                       <button
                         type="button"
                         className="palm-picker-button palm-camera-button"
-                        onClick={() => startLiveCamera("environment")}
+                        onClick={() => setIsPreScanModalOpen(true)}
                       >
                         <Camera size={17} />
                         <span>Take photo</span>
@@ -855,19 +895,17 @@ These are traditional symbolic interpretations, not scientifically validated per
 
             <div className="palm-camera-viewfinder">
               <video ref={videoRef} autoPlay playsInline muted className="palm-camera-video" />
-              {/* Live palm alignment and scan feedback */}
-              <div className="palm-camera-guide" aria-hidden="true">
-                <div className={"palm-guide-outline " + (scanProgress >= 70 ? "is-scanning " : "") + (autoCapturing ? "is-locked" : "")} />
-                <div className="palm-scan-meter">
-                  <div className="palm-scan-ring" style={{ "--scan-progress": (scanProgress * 3.6) + "deg" } as React.CSSProperties}>
-                    <div className="palm-scan-ring-inner">
-                      <strong>{scanProgress}%</strong>
-                      <span>{autoCapturing ? "CAPTURING" : "SCAN"}</span>
-                    </div>
-                  </div>
-                  <span className="palm-scan-status">{scanStatus}</span>
-                </div>
-                <span className="palm-guide-hint">Keep your palm open, fully visible and steady</span>
+
+              {/* Strict palm CV anatomical alignment guide with dynamic status & live percentage */}
+              <div className="palm-guide-outline">
+                <PalmCameraGuide
+                  progress={scanProgress}
+                  status={scanStatus}
+                  state={detectionState}
+                  guideColor={guideColor}
+                  autoCapturing={autoCapturing}
+                  onShowInstructions={() => setIsPreScanModalOpen(true)}
+                />
               </div>
 
               {cameraLoading && (
@@ -921,7 +959,7 @@ These are traditional symbolic interpretations, not scientifically validated per
                     <button
                       type="button"
                       className="palm-camera-fallback-btn"
-                      onClick={capturePhotoFromStream}
+                      onClick={() => capturePhotoFromStream(false)}
                     >
                       Take photo manually
                     </button>
@@ -944,7 +982,7 @@ These are traditional symbolic interpretations, not scientifically validated per
               <button
                 type="button"
                 className="palm-camera-shutter-btn"
-                onClick={capturePhotoFromStream}
+                onClick={() => capturePhotoFromStream(false)}
                 disabled={cameraLoading || Boolean(cameraError) || autoCapturing}
                 aria-label="Capture photo manually"
               >
@@ -964,6 +1002,26 @@ These are traditional symbolic interpretations, not scientifically validated per
           </div>
         </div>
       )}
+
+      {/* Pre-Scan Instructions Guidance Modal */}
+      <PalmPreScanModal
+        isOpen={isPreScanModalOpen}
+        onClose={() => setIsPreScanModalOpen(false)}
+        onStartScan={() => {
+          setIsPreScanModalOpen(false);
+          startLiveCamera("environment");
+        }}
+      />
+
+      {/* Captured Image Preview Modal with Retake / Continue actions */}
+      <PalmCapturePreviewModal
+        isOpen={isCapturePreviewOpen}
+        imageSrc={capturedImageTemp}
+        isAutoCaptured={isAutoCaptured}
+        onRetake={retakeCapturedPhoto}
+        onConfirm={confirmCapturedPhoto}
+        onClose={() => setIsCapturePreviewOpen(false)}
+      />
 
       {/* 3-Column Desktop Dossier Preview & Export Modal (Ref #5) */}
       {parsedReport && (
