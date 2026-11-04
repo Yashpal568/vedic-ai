@@ -188,20 +188,17 @@ export default function AppDesktopSidebar({
       <div className="sidebar-head">
         <Link
           href="/chat"
-          className="brand sidebar-brand-premium"
+          className="brand sidebar-brand-clean"
           aria-label="Vedic AI home"
           style={{ border: 0, background: "transparent", textAlign: "left", color: "inherit", textDecoration: "none" }}
         >
           <span className="brand-mark" aria-hidden="true">
-            <img src="/vedic-ai-emblem.svg" alt="" width={22} height={22} style={{ display: "block" }} />
+            <MoonStar size={19} strokeWidth={1.6} />
           </span>
           <span className="sidebar-brand-copy">
-            <span className="sidebar-brand-line">
-              <span className="brand-name">
-                vedic<span style={{ color: "var(--gold)" }}>.</span>ai
-              </span>
+            <span className="brand-name">
+              vedic<span style={{ color: "var(--gold)" }}>.</span>ai
             </span>
-            <span className="brand-sub">YOUR JYOTISH SPACE</span>
           </span>
         </Link>
         <div className="sidebar-head-actions">

@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import {
-  BookOpen, CalendarDays, Hand, House, MessageCircle, Orbit, UserRound, X,
+  BookOpen, CalendarDays, Hand, House, MessageCircle, MoonStar, Orbit, UserRound, X,
 } from "lucide-react";
 
 const links = [
@@ -29,8 +29,8 @@ export default function AppNavigationDrawer({ open, onClose, extraContent, accou
     <aside className="mobile-nav-drawer shared-navigation-drawer stitch-mobile-drawer" aria-label="App navigation" onClick={(event) => event.stopPropagation()}>
       <header className="mobile-nav-head shared-navigation-head stitch-drawer-head">
         <Link href="/chat" className="brand sidebar-brand-premium" onClick={onClose} aria-label="Vedic AI home">
-          <span className="brand-mark"><img src="/vedic-ai-emblem.svg" alt="" /></span>
-          <span className="sidebar-brand-copy"><span className="sidebar-brand-line"><span className="brand-name">vedic<span style={{ color: "var(--gold)" }}>.</span>ai</span></span><span className="brand-sub">Your Jyotish space</span></span>
+          <span className="brand-mark"><MoonStar size={19} strokeWidth={1.6} /></span>
+          <span className="sidebar-brand-name">vedic<span style={{ color: "var(--gold)" }}>.</span>ai</span>
         </Link>
         <button type="button" className="icon-button stitch-close-button" onClick={onClose} aria-label="Close navigation"><X size={18}/></button>
       </header>

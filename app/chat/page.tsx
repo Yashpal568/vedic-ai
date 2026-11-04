@@ -1204,7 +1204,7 @@ export default function Home() {
           <div className="topbar-left">
             
             <button className="icon-button mobile-menu xl:hidden" onClick={() => setMobileMenuOpen(true)} aria-label="Open menu"><Menu size={18} /></button>
-            <div className="chat-header-brand flex xl:hidden"><span className="brand-mark"><img src="/vedic-ai-emblem.svg" alt="" /></span><span className="brand-name">vedic<span style={{ color: "var(--gold)" }}>.</span>ai</span></div>
+            <div className="chat-header-brand flex xl:hidden"><span className="brand-mark"><MoonStar size={19} strokeWidth={1.6} /></span><span className="brand-name">vedic<span style={{ color: "var(--gold)" }}>.</span>ai</span></div>
             <div className="mode-pill" aria-label="Vedic AI preview status"><span className="status-dot" /> <span className="mode-pill-name">Vedic AI</span> <span className="mode-pill-preview" style={{ color: "var(--quiet)" }}>· Preview</span></div>
           </div>
           <div className="topbar-actions">
