@@ -48,6 +48,10 @@ export default function PalmReadingPage() {
   const [cameraFacing, setCameraFacing] = useState<"environment" | "user">("environment");
   const [cameraError, setCameraError] = useState("");
   const [cameraLoading, setCameraLoading] = useState(false);
+  const [scanProgress, setScanProgress] = useState(0);
+  const [scanStatus, setScanStatus] = useState("Position your open palm inside the guide");
+  const [autoCapturing, setAutoCapturing] = useState(false);
+  const scannerRef = useRef({ lastCenter: null as { x: number; y: number } | null, stableFrames: 0, capturing: false });
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
@@ -83,6 +87,126 @@ export default function PalmReadingPage() {
       stopCameraStream();
     };
   }, []);
+
+  // Live browser-side hand tracking. Video frames stay on-device until capture.
+  useEffect(() => {
+    if (!isCameraActive || cameraLoading || cameraError || !videoRef.current) return;
+    let cancelled = false;
+    let animationFrame = 0;
+    let hands: any = null;
+    let lastProcessAt = 0;
+    scannerRef.current = { lastCenter: null, stableFrames: 0, capturing: false };
+    setScanProgress(0);
+    setScanStatus("Position your open palm inside the guide");
+    setAutoCapturing(false);
+
+    const loadScript = () => new Promise<void>((resolve, reject) => {
+      if ((window as any).Hands) return resolve();
+      const existing = document.querySelector<HTMLScriptElement>('script[data-mediapipe-hands="true"]');
+      if (existing) {
+        existing.addEventListener("load", () => resolve(), { once: true });
+        existing.addEventListener("error", () => reject(new Error("Palm detection could not load. Use the manual shutter.")), { once: true });
+        return;
+      }
+      const script = document.createElement("script");
+      script.src = "https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js";
+      script.async = true;
+      script.dataset.mediapipeHands = "true";
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error("Palm detection could not load. Use the manual shutter."));
+      document.head.appendChild(script);
+    });
+
+    const start = async () => {
+      try {
+        await loadScript();
+        if (cancelled || !videoRef.current) return;
+        const Hands = (window as any).Hands;
+        if (!Hands) throw new Error("Palm detection is unavailable.");
+        hands = new Hands({ locateFile: (file: string) => "https://cdn.jsdelivr.net/npm/@mediapipe/hands/" + file });
+        hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.65, minTrackingConfidence: 0.6 });
+        hands.onResults((results: any) => {
+          if (cancelled || scannerRef.current.capturing) return;
+          const points = results.multiHandLandmarks && results.multiHandLandmarks[0];
+          if (!points || points.length < 21) {
+            scannerRef.current.lastCenter = null;
+            scannerRef.current.stableFrames = 0;
+            setScanProgress(0);
+            setScanStatus("Show your full open palm to the camera");
+            return;
+          }
+          const xs = points.map((point: any) => point.x);
+          const ys = points.map((point: any) => point.y);
+          const minX = Math.min(...xs), maxX = Math.max(...xs);
+          const minY = Math.min(...ys), maxY = Math.max(...ys);
+          const width = maxX - minX, height = maxY - minY;
+          const center = { x: (minX + maxX) / 2, y: (minY + maxY) / 2 };
+          const inside = minX > 0.06 && maxX < 0.94 && minY > 0.04 && maxY < 0.96;
+          const goodSize = width >= 0.2 && height >= 0.28 && width <= 0.82 && height <= 0.94;
+
+          let brightness = 0, contrast = 0;
+          const video = videoRef.current;
+          if (video && video.readyState >= 2) {
+            const sample = document.createElement("canvas");
+            sample.width = 32; sample.height = 32;
+            const ctx = sample.getContext("2d", { willReadFrequently: true });
+            if (ctx) {
+              ctx.drawImage(video, 0, 0, 32, 32);
+              const pixels = ctx.getImageData(0, 0, 32, 32).data;
+              let sum = 0, sumSq = 0, count = 0;
+              for (let i = 0; i < pixels.length; i += 16) {
+                const gray = pixels[i] * 0.299 + pixels[i + 1] * 0.587 + pixels[i + 2] * 0.114;
+                sum += gray; sumSq += gray * gray; count++;
+              }
+              brightness = sum / Math.max(1, count);
+              contrast = Math.sqrt(Math.max(0, sumSq / Math.max(1, count) - brightness * brightness));
+            }
+          }
+          const goodLight = brightness >= 38 && brightness <= 225 && contrast >= 18;
+          const movement = scannerRef.current.lastCenter
+            ? Math.hypot(center.x - scannerRef.current.lastCenter.x, center.y - scannerRef.current.lastCenter.y)
+            : 1;
+          scannerRef.current.stableFrames = movement < 0.018 ? scannerRef.current.stableFrames + 1 : 0;
+          scannerRef.current.lastCenter = center;
+          const stability = Math.min(1, scannerRef.current.stableFrames / 18);
+          const score = Math.round((inside ? 35 : 0) + (goodSize ? 20 : Math.max(0, Math.min(20, width * height * 35))) + (goodLight ? 15 : 0) + stability * 30);
+          setScanProgress(score);
+
+          if (!inside) setScanStatus("Move your entire palm inside the guide");
+          else if (!goodSize) setScanStatus("Move your palm a little closer or farther away");
+          else if (!goodLight) setScanStatus("Improve lighting and avoid strong shadows");
+          else if (stability < 1) setScanStatus("Hold your hand steady — scanning palm");
+          else {
+            setScanStatus("Palm locked — capturing your photo");
+            scannerRef.current.capturing = true;
+            setAutoCapturing(true);
+            setScanProgress(100);
+            window.setTimeout(() => { if (!cancelled) capturePhotoFromStream(); }, 450);
+          }
+        });
+
+        const processFrame = async (timestamp: number) => {
+          if (cancelled) return;
+          if (timestamp - lastProcessAt > 90 && videoRef.current && videoRef.current.readyState >= 2) {
+            lastProcessAt = timestamp;
+            try { await hands.send({ image: videoRef.current }); }
+            catch (error) { console.warn("[palm-scanner] frame processing failed:", error); }
+          }
+          if (!cancelled) animationFrame = window.requestAnimationFrame(processFrame);
+        };
+        animationFrame = window.requestAnimationFrame(processFrame);
+      } catch (error) {
+        console.warn("[palm-scanner] automatic detection unavailable:", error);
+        if (!cancelled) setScanStatus("Auto-scan unavailable — use the capture button");
+      }
+    };
+    void start();
+    return () => {
+      cancelled = true;
+      window.cancelAnimationFrame(animationFrame);
+      try { void hands?.close?.(); } catch {}
+    };
+  }, [isCameraActive, cameraLoading, cameraError]);
 
   // Start live getUserMedia camera
   async function startLiveCamera(facing: "environment" | "user" = cameraFacing) {
@@ -728,10 +852,19 @@ These are traditional symbolic interpretations, not scientifically validated per
 
             <div className="palm-camera-viewfinder">
               <video ref={videoRef} autoPlay playsInline muted className="palm-camera-video" />
-              {/* Palm alignment silhouette guide */}
+              {/* Live palm alignment and scan feedback */}
               <div className="palm-camera-guide" aria-hidden="true">
-                <div className="palm-guide-outline" />
-                <span className="palm-guide-hint">Align your open palm inside the frame</span>
+                <div className={"palm-guide-outline " + (scanProgress >= 70 ? "is-scanning " : "") + (autoCapturing ? "is-locked" : "")} />
+                <div className="palm-scan-meter">
+                  <div className="palm-scan-ring" style={{ "--scan-progress": (scanProgress * 3.6) + "deg" } as React.CSSProperties}>
+                    <div className="palm-scan-ring-inner">
+                      <strong>{scanProgress}%</strong>
+                      <span>{autoCapturing ? "CAPTURING" : "SCAN"}</span>
+                    </div>
+                  </div>
+                  <span className="palm-scan-status">{scanStatus}</span>
+                </div>
+                <span className="palm-guide-hint">Keep your palm open, fully visible and steady</span>
               </div>
 
               {cameraLoading && (
@@ -774,8 +907,8 @@ These are traditional symbolic interpretations, not scientifically validated per
                 type="button"
                 className="palm-camera-shutter-btn"
                 onClick={capturePhotoFromStream}
-                disabled={cameraLoading || Boolean(cameraError)}
-                aria-label="Capture photo"
+                disabled={cameraLoading || Boolean(cameraError) || autoCapturing}
+                aria-label="Capture photo manually"
               >
                 <div className="palm-shutter-ring">
                   <div className="palm-shutter-dot" />
