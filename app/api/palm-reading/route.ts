@@ -49,13 +49,13 @@ Return ONLY a valid JSON object:
   "clear": true,
   "reading": "...",
   "detectedLines": {
-    "heartLine": { "visible": true, "clarity": "clear", "points": [{"x":120,"y":440},{"x":210,"y":430},{"x":310,"y":415},{"x":420,"y":405}] },
-    "headLine": { "visible": true, "clarity": "clear", "points": [{"x":150,"y":500},{"x":260,"y":520},{"x":370,"y":545},{"x":480,"y":560}] },
-    "lifeLine": { "visible": true, "clarity": "clear", "points": [{"x":200,"y":470},{"x":160,"y":560},{"x":170,"y":660},{"x":240,"y":760}] },
+    "heartLine": { "visible": false, "clarity": "not_detected", "points": [] },
+    "headLine": { "visible": false, "clarity": "not_detected", "points": [] },
+    "lifeLine": { "visible": false, "clarity": "not_detected", "points": [] },
     "fateLine": { "visible": false, "clarity": "not_detected", "points": [] }
   }
 }
-COORDINATE RULES: Return 4-20 ordered points for every visible line, traced on the actual crease in THIS photograph. Coordinates are normalized to the full original image (x: 0 left to 1000 right; y: 0 top to 1000 bottom). Follow each user's actual crease bends and endpoints; never use standard palm templates. Every point must lie on the visible crease pixels. If you cannot localize the path confidently, return visible=false and points=[]. Do not copy the illustrative coordinates above. A visible=true flag without at least four image-specific points is invalid. Never invent missing lines.
+COORDINATE RULES: For each line that can be visually traced with high confidence in THIS exact photograph, return visible=true and 6-24 ordered points along the actual crease pixels. Coordinates are normalized to the full original image: x=0 left, x=1000 right, y=0 top, y=1000 bottom. Trace the natural bends, endpoints, branches and interruptions; do not use palmistry textbook locations or expected line shapes. Do not infer a line merely because a line is traditionally expected. If a crease cannot be traced unambiguously, keep visible=false and points=[]. A visible=true line with fewer than 6 points is invalid. The example JSON above is intentionally all false; replace only when actual pixels support a trace.
 or if the image is NOT a clear palm:
 {"clear":false,"reason":"..."}
 Do not enclose the JSON in markdown code blocks or add text outside the JSON object.`;
