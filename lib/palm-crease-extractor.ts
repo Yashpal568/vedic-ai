@@ -1,3 +1,48 @@
+export type ExtractedPoint = { x: number; y: number };
+
+export type ExtractedLineResult = {
+  id: string;
+  name: string;
+  hindiName: string;
+  color: string;
+  glowColor: string;
+  visible: boolean;
+  clarity: "clear" | "faint" | "not_detected";
+  confidence: number;
+  points: ExtractedPoint[];
+  pathData: string;
+  labelPosition: ExtractedPoint;
+  meaning: string;
+};
+
+export type ExtractedMountResult = {
+  id: string;
+  name: string;
+  parvatName: string;
+  point: ExtractedPoint;
+  color: string;
+  detected: boolean;
+  significance: string;
+};
+
+export type GroundedPalmExtraction = {
+  hand: "left" | "right" | "unsure";
+  quality: "clear" | "acceptable" | "poor";
+  handDetected: boolean;
+  landmarksDetectedCount: number;
+  lines: ExtractedLineResult[];
+  mounts: ExtractedMountResult[];
+  overallConfidence: number;
+  summary: string;
+};
+
+export function pointsToSvgPath(points: ExtractedPoint[]): string {
+  if (points.length < 2) return "";
+  return points.map((point, index) =>
+    `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`
+  ).join(" ");
+}
+
 /**
  * Extracts real image-grounded palm features from pixel data or creates
  * anatomically grounded coordinates tailored to hand orientation.
