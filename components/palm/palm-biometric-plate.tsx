@@ -48,7 +48,7 @@ export default function PalmBiometricPlate({
       {/* Telemetry subtitle bar */}
       <div className="flex items-center justify-between text-[11px] text-[var(--muted)] px-2 mb-2">
         <span className="flex items-center gap-1.5">
-          <span className={`w-1.5 h-1.5 rounded-full ${activeFeatures.lines.filter((l) => l.visible).length >= 2 ? "bg-[var(--green)] animate-pulse" : "bg-[var(--gold)]"}`} />
+          <span className={`w-1.5 h-1.5 rounded-full ${activeFeatures.lines.filter((l: PalmAnalysisFeatures["lines"][number]) => l.visible).length >= 2 ? "bg-[var(--green)] animate-pulse" : "bg-[var(--gold)]"}`} />
           <span className="font-semibold text-[var(--text)]">
             {activeFeatures.lines.filter((l) => l.visible).length >= 2
               ? "Verified Hastarekha Scan"
