@@ -37,7 +37,7 @@ export function PalmCameraGuide({
 
   return (
     <div
-      className="palm-camera-guide-container palm-guide-outline"
+      className="palm-camera-guide-container"
       data-readiness-state={state}
       aria-hidden="true"
     >

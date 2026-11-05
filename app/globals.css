@@ -8562,12 +8562,10 @@ html {
   color: #8f8e82;
 }
 .palm-dropzone img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  max-width: 100%;
+  max-height: 280px;
   object-fit: contain;
-  background: #0a0b09;
+  background: transparent !important;
 }
 .palm-change {
   position: absolute;
@@ -17899,17 +17897,19 @@ html[data-theme="light"] .sidebar-bottom .sidebar-google-mark {
 .palm-camera-viewfinder {
   position: relative;
   width: 100%;
-  height: 360px;
+  height: min(72vh, 480px);
+  min-height: 360px;
   background: #090a0d;
   overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
 }
 .palm-camera-video {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 .palm-camera-guide {
   position: absolute;
@@ -17921,11 +17921,12 @@ html[data-theme="light"] .sidebar-bottom .sidebar-google-mark {
   justify-content: center;
 }
 .palm-guide-outline {
-  width: 200px;
-  height: 250px;
-  border: 2px dashed rgba(212, 183, 122, 0.75);
-  border-radius: 90px 90px 45px 45px;
-  box-shadow: 0 0 20px rgba(212, 183, 122, 0.2);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .palm-guide-hint {
   margin-top: 14px;
@@ -20619,4 +20620,14 @@ html[data-theme="light"] .sidebar-history-title {
 .palm-preview-confirm-btn:hover {
   opacity: 0.94;
   transform: translateY(-1px);
+}
+
+
+html[data-theme="light"] .palm-dropzone,
+html[data-theme="light"] .palm-dropzone.has-image {
+  background: rgba(212, 183, 122, 0.05) !important;
+}
+html[data-theme="light"] .palm-dropzone img,
+html[data-theme="light"] .palm-preview-img {
+  background: transparent !important;
 }

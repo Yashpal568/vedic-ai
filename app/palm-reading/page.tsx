@@ -20,10 +20,12 @@ import { derivePalmFeatures, type PalmAnalysisFeatures } from "@/lib/palm-featur
 import {
   evaluatePalmScannerFrame,
   type PalmReadinessState,
+  type Landmark21,
 } from "@/lib/palm-camera-scanner";
 import {
   getHandLandmarker,
   detectHandInVideo,
+  detectHandInImage,
   resetHandLandmarker,
   type HandDetectionOutput,
 } from "@/lib/mediapipe-hand-landmarker";
@@ -76,6 +78,7 @@ export default function PalmReadingPage() {
   const [detectionState, setDetectionState] = useState<PalmReadinessState>("NO_HAND");
   const [autoCapturing, setAutoCapturing] = useState(false);
   const scannerRef = useRef({ lastCenter: null as { x: number; y: number } | null, stableFrames: 0, capturing: false });
+  const lastDetectedLandmarksRef = useRef<Landmark21[] | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
@@ -137,12 +140,17 @@ export default function PalmReadingPage() {
         dataUrl = canvas.toDataURL("image/jpeg", qualityVal);
       }
 
-      // Derive genuine image-grounded features directly from frame pixels
-      const features = derivePalmFeatures(hand, undefined, {
-        data: imgData.data,
-        width,
-        height,
-      });
+      // Derive genuine image-grounded features directly from frame pixels and landmarks
+      const features = derivePalmFeatures(
+        hand,
+        undefined,
+        {
+          data: imgData.data,
+          width,
+          height,
+        },
+        lastDetectedLandmarksRef.current || undefined
+      );
 
       // Stop active video stream immediately
       stopCameraStream();
@@ -281,8 +289,12 @@ export default function PalmReadingPage() {
         let handDetection: HandDetectionOutput | null = null;
         if (landmarker) {
           handDetection = detectHandInVideo(landmarker, video, timestamp);
+          if (handDetection?.landmarks && handDetection.landmarks.length >= 21) {
+            lastDetectedLandmarksRef.current = handDetection.landmarks;
+          }
         }
 
+        const isModelLoading = landmarker === null && !landmarkerError;
         const { metrics, center, steadyCount } = evaluatePalmScannerFrame(
           video,
           offscreen,
@@ -290,7 +302,8 @@ export default function PalmReadingPage() {
           scannerRef.current.lastCenter,
           scannerRef.current.stableFrames,
           isMirrored,
-          hand
+          hand,
+          isModelLoading
         );
 
         scannerRef.current.lastCenter = center;
@@ -324,7 +337,7 @@ export default function PalmReadingPage() {
       cancelled = true;
       window.cancelAnimationFrame(animationFrame);
     };
-  }, [isCameraActive, cameraLoading, cameraError, cameraFacing, capturePhotoFromStream, hand]);
+  }, [isCameraActive, cameraLoading, cameraError, cameraFacing, capturePhotoFromStream, hand, landmarkerError]);
 
   // Switch between rear and front camera in modal
   function toggleCameraFacing() {
@@ -422,12 +435,25 @@ export default function PalmReadingPage() {
       setImage(prepared);
       setFileName(file.name || "palm-photo.jpg");
       setFileSizeStr(sizeKB > 1024 ? `${(sizeKB / 1024).toFixed(1)} MB` : `${sizeKB} KB`);
+
+      // Detect hand landmarks directly on the uploaded image
+      const detection = await detectHandInImage(canvas).catch(() => null);
+      const landmarks =
+        detection?.landmarks && detection.landmarks.length >= 21
+          ? detection.landmarks
+          : undefined;
+
       setPalmFeatures(
-        derivePalmFeatures(hand, undefined, {
-          data: imgData.data,
-          width: canvas.width,
-          height: canvas.height,
-        })
+        derivePalmFeatures(
+          hand,
+          undefined,
+          {
+            data: imgData.data,
+            width: canvas.width,
+            height: canvas.height,
+          },
+          landmarks
+        )
       );
     } catch (e) {
       console.error("[chooseImage error]", e);
@@ -897,7 +923,7 @@ These are traditional symbolic interpretations, not scientifically validated per
               <video ref={videoRef} autoPlay playsInline muted className="palm-camera-video" />
 
               {/* Strict palm CV anatomical alignment guide with dynamic status & live percentage */}
-              <div className="palm-guide-outline">
+              <div className="palm-guide-outline absolute inset-0 pointer-events-none">
                 <PalmCameraGuide
                   progress={scanProgress}
                   status={scanStatus}

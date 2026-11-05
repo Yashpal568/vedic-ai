@@ -540,12 +540,42 @@ export function evaluatePalmScannerFrame(
   lastCenter: { x: number; y: number } | null,
   consecutiveSteady: number,
   isMirrored = false,
-  userChosenHand?: "left" | "right" | "unsure"
+  userChosenHand?: "left" | "right" | "unsure",
+  isModelLoading = false
 ): {
   metrics: ScannerMetrics;
   center: { x: number; y: number } | null;
   steadyCount: number;
 } {
+  // Gate 0: Model is still initializing in the browser
+  if (isModelLoading) {
+    const state: PalmReadinessState = "MODEL_LOADING";
+    const statusMessage = PALM_STATE_MESSAGES[state];
+    return {
+      metrics: {
+        hasHand: false,
+        state,
+        readinessScore: 0,
+        statusMessage,
+        guideColor: "amber",
+        insideGuide: false,
+        optimalDistance: false,
+        goodLighting: true,
+        isSharp: true,
+        isSteady: false,
+        palmFacingCamera: false,
+        fingersVisible: false,
+        wristVisible: false,
+        sharpnessValue: 0,
+        brightnessValue: 0,
+        contrastValue: 0,
+        handedness: "Right",
+      },
+      center: null,
+      steadyCount: 0,
+    };
+  }
+
   // Gate 1: No hand detected (MediaPipe HandLandmarker detected 0 hands)
   if (
     !handDetection ||

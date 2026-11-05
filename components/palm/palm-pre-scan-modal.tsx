@@ -139,3 +139,4 @@ export function PalmPreScanModal({
     </div>
   );
 }
+

@@ -76,7 +76,7 @@ export default function PalmBiometricPlate({
 
       <div className="relative w-full rounded-2xl border border-[var(--gold)]/30 bg-[#FAF7F0] dark:bg-[#191B23] overflow-hidden shadow-xl p-2 sm:p-3 flex flex-col items-center justify-center transition-all">
         {/* Palm presentation container */}
-        <div className="relative w-full aspect-[4/3.8] max-h-[480px] rounded-xl overflow-hidden bg-[#FAF6EE] dark:bg-[#13151D] flex items-center justify-center border border-[var(--gold)]/20 shadow-inner">
+        <div className="relative w-full min-h-[340px] max-h-[500px] rounded-xl overflow-hidden bg-[#FAF6EE] dark:bg-[#13151D] flex items-center justify-center border border-[var(--gold)]/20 shadow-inner p-2">
           {/* Subtle studio backdrop lighting */}
           <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.45)_0%,rgba(240,233,219,0.75)_100%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(28,30,42,0.55)_0%,rgba(14,16,23,0.92)_100%)]" />
 
@@ -93,25 +93,27 @@ export default function PalmBiometricPlate({
             <line x1="500" y1="80" x2="500" y2="920" stroke="currentColor" strokeWidth="0.6" strokeDasharray="3 5" />
           </svg>
 
-          {/* User's Actual Palm Photograph */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={imageSrc || "/realistic-palm.jpg"}
-            alt="User's Analysed Palm Photo"
-            onError={(e) => {
-              e.currentTarget.onerror = null;
-              e.currentTarget.src = "/realistic-palm.jpg";
-            }}
-            className="w-full h-full object-contain object-center filter contrast-[1.04] brightness-[1.02] transition-all duration-300 relative z-0"
-          />
+          {/* Photo & Aligned Overlay Wrapper: Tight container hugging image bounds */}
+          <div className="relative inline-flex items-center justify-center max-w-full max-h-[460px] overflow-hidden rounded-lg z-10 shadow-sm">
+            {/* User's Actual Palm Photograph */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={imageSrc || "/realistic-palm.jpg"}
+              alt="User's Analysed Palm Photo"
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = "/realistic-palm.jpg";
+              }}
+              className="max-h-[460px] max-w-full w-auto h-auto object-contain block filter contrast-[1.04] brightness-[1.02] transition-all duration-300"
+            />
 
-          {/* Responsive SVG Overlay: Mapped Lines & Landmarks */}
-          {showOverlay && (
-            <svg
-              className="absolute inset-0 w-full h-full pointer-events-none z-10"
-              viewBox="0 0 1000 1000"
-              preserveAspectRatio="xMidYMid meet"
-            >
+            {/* Responsive SVG Overlay: Mapped Lines & Landmarks */}
+            {showOverlay && (
+              <svg
+                className="absolute inset-0 w-full h-full pointer-events-none z-10"
+                viewBox="0 0 1000 1000"
+                preserveAspectRatio="none"
+              >
               <defs>
                 <filter id="gold-glow" x="-20%" y="-20%" width="140%" height="140%">
                   <feGaussianBlur stdDeviation="4" result="blur" />
@@ -266,8 +268,9 @@ export default function PalmBiometricPlate({
               </div>
             </div>
           )}
+        </div>
 
-          {/* Top Right Retake Button */}
+        {/* Top Right Retake Button */}
           <div className="absolute top-3 right-3 flex items-center gap-2 z-30">
             <button
               type="button"

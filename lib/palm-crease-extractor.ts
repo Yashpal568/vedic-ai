@@ -218,6 +218,128 @@ function traceCreaseInCorridor(
  * Extracts real image-grounded palm features from pixel data or creates
  * anatomically grounded coordinates tailored to hand orientation.
  */
+export interface LandmarkPoint {
+  x: number;
+  y: number;
+  z?: number;
+}
+
+function computeLandmarkAnchoredCorridorsAndMounts(
+  landmarks: LandmarkPoint[],
+  _hand: "left" | "right" | "unsure"
+) {
+  const pts = landmarks.map((p) => ({
+    x: Math.max(0, Math.min(1000, Math.round(p.x * 1000))),
+    y: Math.max(0, Math.min(1000, Math.round(p.y * 1000))),
+  }));
+
+  const w0 = pts[0];   // Wrist
+  const t1 = pts[1];   // Thumb CMC
+  const t2 = pts[2];   // Thumb MCP
+  const i5 = pts[5];   // Index MCP
+  const m9 = pts[9];   // Middle MCP
+  const r13 = pts[13]; // Ring MCP
+  const p17 = pts[17]; // Pinky MCP
+
+  const lerp = (a: ExtractedPoint, b: ExtractedPoint, t: number): ExtractedPoint => ({
+    x: Math.round(a.x + (b.x - a.x) * t),
+    y: Math.round(a.y + (b.y - a.y) * t),
+  });
+
+  const heartCorridor: ExtractedPoint[] = [
+    lerp(p17, w0, 0.16),
+    lerp(r13, w0, 0.20),
+    lerp(m9, w0, 0.23),
+    lerp(lerp(m9, i5, 0.5), w0, 0.25),
+    lerp(i5, w0, 0.22),
+  ];
+
+  const headCorridor: ExtractedPoint[] = [
+    lerp(i5, t2, 0.40),
+    lerp(lerp(i5, t2, 0.40), lerp(p17, w0, 0.45), 0.33),
+    lerp(lerp(i5, t2, 0.40), lerp(p17, w0, 0.45), 0.66),
+    lerp(p17, w0, 0.45),
+  ];
+
+  const lifeCorridor: ExtractedPoint[] = [
+    lerp(i5, t2, 0.35),
+    lerp(t2, lerp(m9, w0, 0.35), 0.28),
+    lerp(t1, lerp(m9, w0, 0.55), 0.35),
+    lerp(t1, lerp(p17, w0, 0.70), 0.30),
+    lerp(w0, t1, 0.30),
+  ];
+
+  const fateCorridor: ExtractedPoint[] = [
+    lerp(w0, m9, 0.18),
+    lerp(w0, m9, 0.42),
+    lerp(w0, m9, 0.65),
+    lerp(w0, m9, 0.85),
+  ];
+
+  const mounts: ExtractedMountResult[] = [
+    {
+      id: "jupiter",
+      name: "Jupiter Mount",
+      parvatName: "Guru Parvat",
+      point: lerp(i5, w0, 0.12),
+      color: "#FFE192",
+      detected: true,
+      significance: "Anatomical region under index finger: Leadership, wisdom, and ethical strength",
+    },
+    {
+      id: "saturn",
+      name: "Saturn Mount",
+      parvatName: "Shani Parvat",
+      point: lerp(m9, w0, 0.12),
+      color: "#C4B5FD",
+      detected: true,
+      significance: "Anatomical region under middle finger: Discipline, perseverance, focus, and life karmas",
+    },
+    {
+      id: "sun",
+      name: "Sun Mount",
+      parvatName: "Surya Parvat",
+      point: lerp(r13, w0, 0.12),
+      color: "#FFE192",
+      detected: true,
+      significance: "Anatomical region under ring finger: Creativity, public honour, vitality, and brilliance",
+    },
+    {
+      id: "mercury",
+      name: "Mercury Mount",
+      parvatName: "Budha Parvat",
+      point: lerp(p17, w0, 0.12),
+      color: "#52FEB8",
+      detected: true,
+      significance: "Anatomical region under little finger: Commerce, sharp communication, quick wit, and discernment",
+    },
+    {
+      id: "venus",
+      name: "Venus Mount",
+      parvatName: "Shukra Parvat",
+      point: lerp(t1, lerp(i5, w0, 0.5), 0.35),
+      color: "#FBBF24",
+      detected: true,
+      significance: "Anatomical thenar eminence: Love, vitality, domestic warmth, and empathy",
+    },
+    {
+      id: "moon",
+      name: "Moon Mount",
+      parvatName: "Chandra Parvat",
+      point: lerp(lerp(p17, w0, 0.65), w0, 0.3),
+      color: "#93C5FD",
+      detected: true,
+      significance: "Anatomical hypothenar eminence: Intuition, emotional depth, subconscious imagination",
+    },
+  ];
+
+  return { heartCorridor, headCorridor, lifeCorridor, fateCorridor, mounts };
+}
+
+/**
+ * Extracts grounded palm features (Heart, Head, Life, Fate lines and Mounts)
+ * from image data and landmark coordinates.
+ */
 export function extractGroundedPalmFeatures(
   hand: "left" | "right" | "unsure" = "unsure",
   imageData?: {
@@ -230,123 +352,136 @@ export function extractGroundedPalmFeatures(
     headLine?: { visible?: boolean; clarity?: string };
     lifeLine?: { visible?: boolean; clarity?: string };
     fateLine?: { visible?: boolean; clarity?: string };
-  }
+  },
+  landmarks?: LandmarkPoint[]
 ): GroundedPalmExtraction {
   const isLeft = hand === "left" || hand === "unsure";
 
-  // Base anatomical corridor anchors in 0..1000 space
-  const heartCorridor: ExtractedPoint[] = isLeft
-    ? [
-        { x: 735, y: 440 },
-        { x: 635, y: 442 },
-        { x: 530, y: 420 },
-        { x: 440, y: 380 },
-        { x: 375, y: 330 },
-      ]
-    : [
-        { x: 265, y: 440 },
-        { x: 365, y: 442 },
-        { x: 470, y: 420 },
-        { x: 560, y: 380 },
-        { x: 625, y: 330 },
-      ];
+  let heartCorridor: ExtractedPoint[];
+  let headCorridor: ExtractedPoint[];
+  let lifeCorridor: ExtractedPoint[];
+  let fateCorridor: ExtractedPoint[];
+  let mounts: ExtractedMountResult[];
 
-  const headCorridor: ExtractedPoint[] = isLeft
-    ? [
-        { x: 335, y: 450 },
-        { x: 435, y: 475 },
-        { x: 540, y: 510 },
-        { x: 655, y: 565 },
-      ]
-    : [
-        { x: 665, y: 450 },
-        { x: 565, y: 475 },
-        { x: 460, y: 510 },
-        { x: 345, y: 565 },
-      ];
+  if (landmarks && landmarks.length >= 21) {
+    const anchored = computeLandmarkAnchoredCorridorsAndMounts(landmarks, hand);
+    heartCorridor = anchored.heartCorridor;
+    headCorridor = anchored.headCorridor;
+    lifeCorridor = anchored.lifeCorridor;
+    fateCorridor = anchored.fateCorridor;
+    mounts = anchored.mounts;
+  } else {
+    // Fallback tightened anatomical palm corridors within 0..1000 space (never extending to wrist/forearm)
+    heartCorridor = isLeft
+      ? [
+          { x: 720, y: 380 },
+          { x: 620, y: 382 },
+          { x: 520, y: 365 },
+          { x: 440, y: 340 },
+          { x: 380, y: 305 },
+        ]
+      : [
+          { x: 280, y: 380 },
+          { x: 380, y: 382 },
+          { x: 480, y: 365 },
+          { x: 560, y: 340 },
+          { x: 620, y: 305 },
+        ];
 
-  const lifeCorridor: ExtractedPoint[] = isLeft
-    ? [
-        { x: 340, y: 445 },
-        { x: 390, y: 505 },
-        { x: 415, y: 600 },
-        { x: 395, y: 710 },
-        { x: 350, y: 810 },
-        { x: 310, y: 865 },
-      ]
-    : [
-        { x: 660, y: 445 },
-        { x: 610, y: 505 },
-        { x: 585, y: 600 },
-        { x: 605, y: 710 },
-        { x: 650, y: 810 },
-        { x: 690, y: 865 },
-      ];
+    headCorridor = isLeft
+      ? [
+          { x: 340, y: 400 },
+          { x: 440, y: 420 },
+          { x: 540, y: 450 },
+          { x: 650, y: 490 },
+        ]
+      : [
+          { x: 660, y: 400 },
+          { x: 560, y: 420 },
+          { x: 460, y: 450 },
+          { x: 350, y: 490 },
+        ];
 
-  const fateCorridor: ExtractedPoint[] = [
-    { x: 505, y: 850 },
-    { x: 500, y: 700 },
-    { x: 495, y: 540 },
-    { x: 495, y: 390 },
-  ];
+    lifeCorridor = isLeft
+      ? [
+          { x: 340, y: 395 },
+          { x: 385, y: 440 },
+          { x: 405, y: 515 },
+          { x: 385, y: 595 },
+          { x: 345, y: 665 },
+        ]
+      : [
+          { x: 660, y: 395 },
+          { x: 615, y: 440 },
+          { x: 595, y: 515 },
+          { x: 615, y: 595 },
+          { x: 655, y: 665 },
+        ];
 
-  // Planetary mounts — labeled as estimated anatomical regions
-  const mounts: ExtractedMountResult[] = [
-    {
-      id: "jupiter",
-      name: "Jupiter Mount",
-      parvatName: "Guru Parvat",
-      point: isLeft ? { x: 380, y: 320 } : { x: 620, y: 320 },
-      color: "#FFE192",
-      detected: false,
-      significance: "Estimated anatomical region: Leadership, wisdom, and ethical strength",
-    },
-    {
-      id: "saturn",
-      name: "Saturn Mount",
-      parvatName: "Shani Parvat",
-      point: { x: 500, y: 295 },
-      color: "#C4B5FD",
-      detected: false,
-      significance: "Estimated anatomical region: Discipline, perseverance, focus, and life karmas",
-    },
-    {
-      id: "sun",
-      name: "Sun Mount",
-      parvatName: "Surya Parvat",
-      point: isLeft ? { x: 610, y: 315 } : { x: 390, y: 315 },
-      color: "#FFE192",
-      detected: false,
-      significance: "Estimated anatomical region: Creativity, public honour, vitality, and brilliance",
-    },
-    {
-      id: "mercury",
-      name: "Mercury Mount",
-      parvatName: "Budha Parvat",
-      point: isLeft ? { x: 710, y: 360 } : { x: 290, y: 360 },
-      color: "#52FEB8",
-      detected: false,
-      significance: "Estimated anatomical region: Commerce, sharp communication, quick wit, and discernment",
-    },
-    {
-      id: "venus",
-      name: "Venus Mount",
-      parvatName: "Shukra Parvat",
-      point: isLeft ? { x: 340, y: 640 } : { x: 660, y: 640 },
-      color: "#FBBF24",
-      detected: false,
-      significance: "Estimated anatomical region: Love, artistic appreciation, vitality, and empathy",
-    },
-    {
-      id: "moon",
-      name: "Moon Mount",
-      parvatName: "Chandra Parvat",
-      point: isLeft ? { x: 690, y: 730 } : { x: 310, y: 730 },
-      color: "#93C5FD",
-      detected: false,
-      significance: "Estimated anatomical region: Intuition, emotional depth, subconscious imagination",
-    },
-  ];
+    fateCorridor = [
+      { x: 500, y: 660 },
+      { x: 500, y: 550 },
+      { x: 498, y: 440 },
+      { x: 498, y: 340 },
+    ];
+
+    mounts = [
+      {
+        id: "jupiter",
+        name: "Jupiter Mount",
+        parvatName: "Guru Parvat",
+        point: isLeft ? { x: 380, y: 280 } : { x: 620, y: 280 },
+        color: "#FFE192",
+        detected: false,
+        significance: "Estimated anatomical region: Leadership, wisdom, and ethical strength",
+      },
+      {
+        id: "saturn",
+        name: "Saturn Mount",
+        parvatName: "Shani Parvat",
+        point: { x: 500, y: 260 },
+        color: "#C4B5FD",
+        detected: false,
+        significance: "Estimated anatomical region: Discipline, perseverance, focus, and life karmas",
+      },
+      {
+        id: "sun",
+        name: "Sun Mount",
+        parvatName: "Surya Parvat",
+        point: isLeft ? { x: 610, y: 275 } : { x: 390, y: 275 },
+        color: "#FFE192",
+        detected: false,
+        significance: "Estimated anatomical region: Creativity, public honour, vitality, and brilliance",
+      },
+      {
+        id: "mercury",
+        name: "Mercury Mount",
+        parvatName: "Budha Parvat",
+        point: isLeft ? { x: 710, y: 310 } : { x: 290, y: 310 },
+        color: "#52FEB8",
+        detected: false,
+        significance: "Estimated anatomical region: Commerce, sharp communication, quick wit, and discernment",
+      },
+      {
+        id: "venus",
+        name: "Venus Mount",
+        parvatName: "Shukra Parvat",
+        point: isLeft ? { x: 340, y: 540 } : { x: 660, y: 540 },
+        color: "#FBBF24",
+        detected: false,
+        significance: "Estimated anatomical region: Love, artistic appreciation, vitality, and empathy",
+      },
+      {
+        id: "moon",
+        name: "Moon Mount",
+        parvatName: "Chandra Parvat",
+        point: isLeft ? { x: 680, y: 600 } : { x: 320, y: 600 },
+        color: "#93C5FD",
+        detected: false,
+        significance: "Estimated anatomical region: Intuition, emotional depth, subconscious imagination",
+      },
+    ];
+  }
 
   type TraceResult = {
     detected: boolean;

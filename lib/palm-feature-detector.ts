@@ -40,7 +40,8 @@ export function derivePalmFeatures(
     data: Uint8ClampedArray | number[];
     width: number;
     height: number;
-  } | null
+  } | null,
+  landmarks?: { x: number; y: number; z?: number }[]
 ): PalmAnalysisFeatures {
-  return extractGroundedPalmFeatures(hand, imageData, apiDetections);
+  return extractGroundedPalmFeatures(hand, imageData, apiDetections, landmarks);
 }

@@ -74,9 +74,9 @@ export async function getHandLandmarker(): Promise<HandLandmarkerType | null> {
             },
             runningMode: "VIDEO",
             numHands: 2,
-            minHandDetectionConfidence: 0.62,
-            minHandPresenceConfidence: 0.62,
-            minTrackingConfidence: 0.6,
+            minHandDetectionConfidence: 0.45,
+            minHandPresenceConfidence: 0.45,
+            minTrackingConfidence: 0.45,
           }
         );
       } catch (localModelErr) {
@@ -94,9 +94,9 @@ export async function getHandLandmarker(): Promise<HandLandmarkerType | null> {
             },
             runningMode: "VIDEO",
             numHands: 2,
-            minHandDetectionConfidence: 0.6,
-            minHandPresenceConfidence: 0.6,
-            minTrackingConfidence: 0.55,
+            minHandDetectionConfidence: 0.45,
+            minHandPresenceConfidence: 0.45,
+            minTrackingConfidence: 0.45,
           }
         );
       }
@@ -172,7 +172,12 @@ export async function detectHandInImage(
   if (!landmarker) return null;
 
   try {
+    // Switch to IMAGE mode for static frame analysis
+    await landmarker.setOptions({ runningMode: "IMAGE" });
     const results: HandLandmarkerResult = landmarker.detect(image);
+    // Restore to VIDEO mode for continuous viewfinder detection
+    await landmarker.setOptions({ runningMode: "VIDEO" });
+
     const totalHands = results.landmarks?.length || 0;
     if (totalHands === 0 || !results.landmarks[0] || results.landmarks[0].length < 21) {
       return {
