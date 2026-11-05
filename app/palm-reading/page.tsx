@@ -284,7 +284,10 @@ export default function PalmReadingPage() {
         let handDetection: HandDetectionOutput | null = null;
         if (landmarker) {
           handDetection = detectHandInVideo(landmarker, video, timestamp);
-          if (handDetection && hand === "unsure" && handDetection.totalHandsDetected === 1) {
+          if (handDetection && handDetection.totalHandsDetected === 1) {
+            // Rear/environment and front camera video pixels are passed unmirrored to
+            // detectForVideo. Normalize MediaPipe's selfie-mirrored handedness convention
+            // for every selected-hand mode, not only when the user chooses "Not sure".
             handDetection = {
               ...handDetection,
               handedness: normalizeMediaPipeHandedness(handDetection.handedness, false),
