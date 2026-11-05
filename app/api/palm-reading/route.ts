@@ -49,13 +49,13 @@ Return ONLY a valid JSON object:
   "clear": true,
   "reading": "...",
   "detectedLines": {
-    "heartLine": { "visible": true, "clarity": "clear" },
-    "headLine": { "visible": true, "clarity": "clear" },
-    "lifeLine": { "visible": true, "clarity": "clear" },
-    "fateLine": { "visible": true, "clarity": "clear" }
+    "heartLine": { "visible": true, "clarity": "clear", "points": [{"x":120,"y":440},{"x":210,"y":430},{"x":310,"y":415},{"x":420,"y":405}] },
+    "headLine": { "visible": true, "clarity": "clear", "points": [{"x":150,"y":500},{"x":260,"y":520},{"x":370,"y":545},{"x":480,"y":560}] },
+    "lifeLine": { "visible": true, "clarity": "clear", "points": [{"x":200,"y":470},{"x":160,"y":560},{"x":170,"y":660},{"x":240,"y":760}] },
+    "fateLine": { "visible": false, "clarity": "not_detected", "points": [] }
   }
 }
-Note for detectedLines: If the Fate line or any line is faint, broken, or not clearly identifiable in this photo, set "visible": false and "clarity": "not_detected" honestly. Do NOT fabricate missing lines.
+COORDINATE RULES: Return 4-20 ordered points for every visible line, traced on the actual crease in THIS photograph. Coordinates are normalized to the full original image (x: 0 left to 1000 right; y: 0 top to 1000 bottom). Follow each user's actual crease bends and endpoints; never use standard palm templates. Every point must lie on the visible crease pixels. If you cannot localize the path confidently, return visible=false and points=[]. Do not copy the illustrative coordinates above. A visible=true flag without at least four image-specific points is invalid. Never invent missing lines.
 or if the image is NOT a clear palm:
 {"clear":false,"reason":"..."}
 Do not enclose the JSON in markdown code blocks or add text outside the JSON object.`;
@@ -256,10 +256,10 @@ export async function POST(request: Request) {
       reason?: string;
       reading?: string;
       detectedLines?: {
-        heartLine?: { visible?: boolean; clarity?: string };
-        headLine?: { visible?: boolean; clarity?: string };
-        lifeLine?: { visible?: boolean; clarity?: string };
-        fateLine?: { visible?: boolean; clarity?: string };
+        heartLine?: { visible?: boolean; clarity?: string; points?: { x: number; y: number }[] };
+        headLine?: { visible?: boolean; clarity?: string; points?: { x: number; y: number }[] };
+        lifeLine?: { visible?: boolean; clarity?: string; points?: { x: number; y: number }[] };
+        fateLine?: { visible?: boolean; clarity?: string; points?: { x: number; y: number }[] };
       };
       mounts?: Record<string, { x: number; y: number }>;
     }
