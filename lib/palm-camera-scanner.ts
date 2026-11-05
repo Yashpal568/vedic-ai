@@ -38,6 +38,19 @@ export interface Landmark21 {
 
 export type HandLandmarkPoint = Landmark21;
 
+/**
+ * MediaPipe Hands reports handedness assuming a mirrored selfie-camera image.
+ * The browser video element is passed to detectForVideo without pixel mirroring,
+ * so rear/unmirrored camera frames must invert the reported category.
+ */
+export function normalizeMediaPipeHandedness(
+  label: "Left" | "Right",
+  inputPixelsMirrored = false
+): "Left" | "Right" {
+  if (inputPixelsMirrored) return label;
+  return label === "Left" ? "Right" : "Left";
+}
+
 export interface ScannerMetrics {
   hasHand: boolean;
   state: PalmReadinessState;
