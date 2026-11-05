@@ -141,8 +141,11 @@ export async function POST(request: Request) {
       const key = process.env.GROQ_API_KEY;
       if (!key) return false;
       const configuredModel = process.env.PALM_GROQ_MODEL?.trim();
+      // Groq's current documented multimodal model for image input + JSON mode.
+      // Retired model IDs are ignored so a stale Vercel env value cannot break scans.
       const invalidOrRetiredModels = [
         "qwen/qwen3.6-27b",
+        "qwen/qwen3.6-27b-preview",
         "meta-llama/llama-4-scout-17b-16e-instruct",
         "meta-llama/llama-4-maverick-17b-128e-instruct",
         "llama-3.2-11b-vision-preview",
@@ -165,7 +168,9 @@ export async function POST(request: Request) {
                 { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}` } }
               ]
             }],
-            temperature: 0.2,
+            // Qwen 3.8 instruct mode is the low-latency setting for this image task.
+            temperature: 0.7,
+            reasoning_effort: "none",
             max_completion_tokens: 2200,
             response_format: { type: "json_object" }
           }),
@@ -178,6 +183,8 @@ export async function POST(request: Request) {
           return Boolean(raw?.trim());
         }
         lastStatus = res.status;
+        const providerBody = await res.text().catch(() => "");
+        console.error("[palm-reading] Groq vision provider status:", res.status, "model:", model, "body:", providerBody.slice(0, 1200));
         lastError = errorMessage(res.status, "Groq");
       } catch (e) {
         console.warn("[palm-reading] Groq attempt failed:", e);
