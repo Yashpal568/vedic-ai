@@ -226,10 +226,10 @@ export function extractGroundedPalmFeatures(
     height: number;
   } | null,
   apiDetections?: {
-    heartLine?: { visible?: boolean; clarity?: string };
-    headLine?: { visible?: boolean; clarity?: string };
-    lifeLine?: { visible?: boolean; clarity?: string };
-    fateLine?: { visible?: boolean; clarity?: string };
+    heartLine?: { visible?: boolean; clarity?: string; points?: ExtractedPoint[] };
+    headLine?: { visible?: boolean; clarity?: string; points?: ExtractedPoint[] };
+    lifeLine?: { visible?: boolean; clarity?: string; points?: ExtractedPoint[] };
+    fateLine?: { visible?: boolean; clarity?: string; points?: ExtractedPoint[] };
   }
 ): GroundedPalmExtraction {
   const isLeft = hand === "left" || hand === "unsure";
@@ -379,39 +379,27 @@ export function extractGroundedPalmFeatures(
     // Fate line has stricter detection threshold — if faint/absent, marked not detected
     fateTrace = traceCreaseInCorridor(gray, imageData.width, imageData.height, fateCorridor, radius, 0.45);
   } else if (apiDetections) {
-    // Ground in API vision detection model results
-    if (apiDetections.heartLine?.visible) {
-      heartTrace = {
+    // Render only per-image coordinates returned by visual analysis. A boolean
+    // detection is never allowed to fall back to a generic anatomical template.
+    const fromImage = (line?: { visible?: boolean; clarity?: string; points?: ExtractedPoint[] }): TraceResult => {
+      const points = (line?.points || []).filter((point) =>
+        Number.isFinite(point.x) && Number.isFinite(point.y) &&
+        point.x >= 0 && point.x <= 1000 && point.y >= 0 && point.y <= 1000
+      );
+      if (!line?.visible || points.length < 4) {
+        return { detected: false, clarity: "not_detected", confidence: 0, points: [] };
+      }
+      return {
         detected: true,
-        clarity: (apiDetections.heartLine.clarity as "clear" | "faint") || "faint",
-        confidence: 0.76,
-        points: heartCorridor,
+        clarity: line.clarity === "clear" ? "clear" : "faint",
+        confidence: 0,
+        points,
       };
-    }
-    if (apiDetections.headLine?.visible) {
-      headTrace = {
-        detected: true,
-        clarity: (apiDetections.headLine.clarity as "clear" | "faint") || "faint",
-        confidence: 0.74,
-        points: headCorridor,
-      };
-    }
-    if (apiDetections.lifeLine?.visible) {
-      lifeTrace = {
-        detected: true,
-        clarity: (apiDetections.lifeLine.clarity as "clear" | "faint") || "faint",
-        confidence: 0.78,
-        points: lifeCorridor,
-      };
-    }
-    if (apiDetections.fateLine?.visible) {
-      fateTrace = {
-        detected: true,
-        clarity: (apiDetections.fateLine.clarity as "clear" | "faint") || "faint",
-        confidence: 0.65,
-        points: fateCorridor,
-      };
-    }
+    };
+    heartTrace = fromImage(apiDetections.heartLine);
+    headTrace = fromImage(apiDetections.headLine);
+    lifeTrace = fromImage(apiDetections.lifeLine);
+    fateTrace = fromImage(apiDetections.fateLine);
   }
 
   const lines: ExtractedLineResult[] = [
@@ -426,7 +414,7 @@ export function extractGroundedPalmFeatures(
       confidence: heartTrace.confidence,
       points: heartTrace.points,
       pathData: pointsToSvgPath(heartTrace.points),
-      labelPosition: heartTrace.points[Math.floor(heartTrace.points.length / 2)] || { x: 500, y: 420 },
+      labelPosition: heartTrace.points[Math.floor(heartTrace.points.length / 2)] || { x: 0, y: 0 },
       meaning: "Emotional resonance, empathy, intimacy, and relational boundaries",
     },
     {
@@ -440,7 +428,7 @@ export function extractGroundedPalmFeatures(
       confidence: headTrace.confidence,
       points: headTrace.points,
       pathData: pointsToSvgPath(headTrace.points),
-      labelPosition: headTrace.points[Math.floor(headTrace.points.length / 2)] || { x: 500, y: 500 },
+      labelPosition: headTrace.points[Math.floor(headTrace.points.length / 2)] || { x: 0, y: 0 },
       meaning: "Intellectual style, focus, mental clarity, and problem solving",
     },
     {
@@ -454,7 +442,7 @@ export function extractGroundedPalmFeatures(
       confidence: lifeTrace.confidence,
       points: lifeTrace.points,
       pathData: pointsToSvgPath(lifeTrace.points),
-      labelPosition: lifeTrace.points[Math.floor(lifeTrace.points.length / 2)] || { x: 400, y: 650 },
+      labelPosition: lifeTrace.points[Math.floor(lifeTrace.points.length / 2)] || { x: 0, y: 0 },
       meaning: "Vitality, daily endurance, physical constitution, and lifestyle rhythm",
     },
     {
@@ -468,7 +456,7 @@ export function extractGroundedPalmFeatures(
       confidence: fateTrace.confidence,
       points: fateTrace.points,
       pathData: pointsToSvgPath(fateTrace.points),
-      labelPosition: fateTrace.points[Math.floor(fateTrace.points.length / 2)] || { x: 500, y: 600 },
+      labelPosition: fateTrace.points[Math.floor(fateTrace.points.length / 2)] || { x: 0, y: 0 },
       meaning: "Self-directed career drive, karmic vocation, and milestone clarity",
     },
   ];
