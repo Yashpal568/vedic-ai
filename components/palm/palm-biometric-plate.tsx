@@ -84,7 +84,7 @@ export default function PalmBiometricPlate({
           <svg
             className="absolute inset-0 w-full h-full pointer-events-none text-[var(--gold)]/20 dark:text-[var(--gold)]/15 z-0"
             viewBox="0 0 1000 1000"
-            preserveAspectRatio="xMidYMid meet"
+            preserveAspectRatio="none"
           >
             <circle cx="500" cy="500" r="420" fill="none" stroke="currentColor" strokeWidth="1" strokeDasharray="5 6" />
             <circle cx="500" cy="500" r="320" fill="none" stroke="currentColor" strokeWidth="0.8" />
