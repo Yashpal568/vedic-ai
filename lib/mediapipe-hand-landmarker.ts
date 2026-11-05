@@ -44,65 +44,75 @@ export async function getHandLandmarker(): Promise<HandLandmarkerType | null> {
 
   initializationError = null;
   initPromise = (async () => {
+    const candidates = [
+      {
+        name: "local assets",
+        wasm: "/mediapipe/wasm",
+        model: "/mediapipe/hand_landmarker.task",
+      },
+      {
+        name: "version-matched CDN assets",
+        wasm: "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.2.2/wasm",
+        model:
+          "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+      },
+    ];
+    const failures: string[] = [];
+
     try {
       const { FilesetResolver, HandLandmarker } = await import(
         "@mediapipe/tasks-vision"
       );
 
-      // Attempt 1: Local wasm path, Attempt 2: Version-pinned CDN wasm path
-      let visionFileset;
-      try {
-        visionFileset = await FilesetResolver.forVisionTasks("/mediapipe/wasm");
-      } catch (localWasmErr) {
-        console.warn(
-          "[mediapipe] Local wasm failed, falling back to version-pinned CDN:",
-          localWasmErr
-        );
-        visionFileset = await FilesetResolver.forVisionTasks(
-          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
-        );
+      for (const candidate of candidates) {
+        let visionFileset;
+        try {
+          visionFileset = await FilesetResolver.forVisionTasks(candidate.wasm);
+        } catch (error) {
+          failures.push(
+            candidate.name + " WASM: " +
+              (error instanceof Error ? error.message : String(error))
+          );
+          continue;
+        }
+
+        for (const delegate of ["GPU", "CPU"] as const) {
+          try {
+            landmarkerInstance = await HandLandmarker.createFromOptions(
+              visionFileset,
+              {
+                baseOptions: {
+                  modelAssetPath: candidate.model,
+                  delegate,
+                },
+                runningMode: "VIDEO",
+                numHands: 1,
+                minHandDetectionConfidence: 0.5,
+                minHandPresenceConfidence: 0.5,
+                minTrackingConfidence: 0.5,
+              }
+            );
+            console.info(
+              "[mediapipe] Hand Landmarker ready using " +
+                candidate.name +
+                " (" +
+                delegate +
+                ")"
+            );
+            return landmarkerInstance;
+          } catch (error) {
+            failures.push(
+              candidate.name + " " + delegate + ": " +
+                (error instanceof Error ? error.message : String(error))
+            );
+          }
+        }
       }
 
-      // Attempt 1: Local model asset, Attempt 2: Google storage CDN asset
-      try {
-        landmarkerInstance = await HandLandmarker.createFromOptions(
-          visionFileset,
-          {
-            baseOptions: {
-              modelAssetPath: "/mediapipe/hand_landmarker.task",
-              delegate: "GPU",
-            },
-            runningMode: "VIDEO",
-            numHands: 2,
-            minHandDetectionConfidence: 0.62,
-            minHandPresenceConfidence: 0.62,
-            minTrackingConfidence: 0.6,
-          }
-        );
-      } catch (localModelErr) {
-        console.warn(
-          "[mediapipe] GPU/local model failed, trying CPU and fallback URL:",
-          localModelErr
-        );
-        landmarkerInstance = await HandLandmarker.createFromOptions(
-          visionFileset,
-          {
-            baseOptions: {
-              modelAssetPath:
-                "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
-              delegate: "CPU",
-            },
-            runningMode: "VIDEO",
-            numHands: 2,
-            minHandDetectionConfidence: 0.6,
-            minHandPresenceConfidence: 0.6,
-            minTrackingConfidence: 0.55,
-          }
-        );
-      }
-
-      console.log("[mediapipe] Hand Landmarker initialized successfully");
-      return landmarkerInstance;
+      throw new Error(
+        "All MediaPipe initialization strategies failed. " +
+          failures.join(" | ")
+      );
     } catch (err) {
       initializationError =
         err instanceof Error ? err.message : "MediaPipe initialization failed";
