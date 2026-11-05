@@ -18,61 +18,8 @@ export function extractGroundedPalmFeatures(
 ): GroundedPalmExtraction {
   const isLeft = hand === "left" || hand === "unsure";
 
-  // Base anatomical corridor anchors in 0..1000 space
-  const heartCorridor: ExtractedPoint[] = isLeft
-    ? [
-        { x: 735, y: 440 },
-        { x: 635, y: 442 },
-        { x: 530, y: 420 },
-        { x: 440, y: 380 },
-        { x: 375, y: 330 },
-      ]
-    : [
-        { x: 265, y: 440 },
-        { x: 365, y: 442 },
-        { x: 470, y: 420 },
-        { x: 560, y: 380 },
-        { x: 625, y: 330 },
-      ];
-
-  const headCorridor: ExtractedPoint[] = isLeft
-    ? [
-        { x: 335, y: 450 },
-        { x: 435, y: 475 },
-        { x: 540, y: 510 },
-        { x: 655, y: 565 },
-      ]
-    : [
-        { x: 665, y: 450 },
-        { x: 565, y: 475 },
-        { x: 460, y: 510 },
-        { x: 345, y: 565 },
-      ];
-
-  const lifeCorridor: ExtractedPoint[] = isLeft
-    ? [
-        { x: 340, y: 445 },
-        { x: 390, y: 505 },
-        { x: 415, y: 600 },
-        { x: 395, y: 710 },
-        { x: 350, y: 810 },
-        { x: 310, y: 865 },
-      ]
-    : [
-        { x: 660, y: 445 },
-        { x: 610, y: 505 },
-        { x: 585, y: 600 },
-        { x: 605, y: 710 },
-        { x: 650, y: 810 },
-        { x: 690, y: 865 },
-      ];
-
-  const fateCorridor: ExtractedPoint[] = [
-    { x: 505, y: 850 },
-    { x: 500, y: 700 },
-    { x: 495, y: 540 },
-    { x: 495, y: 390 },
-  ];
+  // imageData is intentionally not used as a generic corridor detector.
+  void imageData;
 
   // Planetary mounts — labeled as estimated anatomical regions
   const mounts: ExtractedMountResult[] = [
