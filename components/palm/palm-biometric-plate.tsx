@@ -118,7 +118,7 @@ export default function PalmBiometricPlate({
             <svg
               className="absolute inset-0 w-full h-full pointer-events-none z-10"
               viewBox="0 0 1000 1000"
-              preserveAspectRatio="xMidYMid meet"
+              preserveAspectRatio="none"
             >
               <defs>
                 <filter id="gold-glow" x="-20%" y="-20%" width="140%" height="140%">
