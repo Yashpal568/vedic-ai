@@ -183,15 +183,16 @@ export function analyzePalmOrientation(
   // Lateral relationship: thumb vs pinky
   const thumbDx = thumbTip.x - pinkyTip.x;
 
-  // Determine effective handedness:
-  // Account for camera mirroring (front selfie camera vs rear environment camera).
-  // When isMirrored is false (standard coordinate space), effective handedness equals the physical hand.
-  // When isMirrored is true (selfie mode with horizontal flip), x coordinates are inverted,
-  // which flips lateral relations (thumb <-> pinky).
-  const baseHand = userChosenHand === "left" ? "Left" : userChosenHand === "right" ? "Right" : rawHandedness;
+  // Orientation must be derived from the hand actually seen by MediaPipe.
+  // The form's Left/Right selection is report metadata, not reliable camera geometry:
+  // users can select the wrong side or change cameras after selecting it. Using that
+  // selection as the orientation authority caused genuine palms to be rejected as dorsal.
+  // MediaPipe handedness is normalized by the caller for raw, unmirrored video pixels.
+  // Only account for an actual pixel mirror here.
+  void userChosenHand;
   const effectiveHandedness: "Left" | "Right" = isMirrored
-    ? (baseHand === "Right" ? "Left" : "Right")
-    : baseHand;
+    ? (rawHandedness === "Right" ? "Left" : "Right")
+    : rawHandedness;
 
   // Ambiguous geometry check: If cross-product is virtually zero or knuckles are collapsed
   if (Math.abs(cp2d) < 0.006 || Math.abs(thumbDx) < 0.015) {
