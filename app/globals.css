@@ -20620,3 +20620,175 @@ html[data-theme="light"] .sidebar-history-title {
   opacity: 0.94;
   transform: translateY(-1px);
 }
+
+
+/* Palm Reading responsive and camera alignment corrections */
+.palm-reading-page,
+.palm-reading-page main,
+.palm-grid,
+.palm-upload-card,
+.palm-grid > *,
+.palm-preview-container {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.palm-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr);
+}
+.palm-preview-container,
+.palm-dropzone.has-image {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+.palm-preview-img,
+.palm-dropzone img {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  max-height: min(48vh, 420px);
+  object-fit: contain;
+  object-position: center;
+}
+.palm-preview-meta {
+  width: min(100%, 100%);
+  min-width: 0;
+  flex-wrap: wrap;
+  justify-content: center;
+  overflow-wrap: anywhere;
+}
+.palm-filename {
+  min-width: 0;
+  max-width: min(65vw, 240px);
+}
+.palm-preview-actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: 100%;
+  min-width: 0;
+}
+.palm-preview-actions > *,
+.palm-camera-actions > *,
+.palm-capture-actions > * {
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+}
+.palm-camera-viewfinder {
+  position: relative;
+  width: 100%;
+  height: min(68svh, 720px);
+  min-height: 430px;
+  overflow: hidden;
+  isolation: isolate;
+}
+.palm-camera-video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+.palm-camera-viewfinder > .palm-guide-outline {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  pointer-events: none;
+}
+.palm-camera-guide-container {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: clamp(12px, 3vw, 22px);
+}
+.palm-camera-silhouette-svg {
+  width: min(92%, 430px);
+  height: min(92%, 590px);
+  max-width: none;
+  max-height: none;
+  top: 50%;
+  left: 50%;
+}
+.palm-guide-top-hud,
+.palm-dynamic-instruction-pill {
+  max-width: 100%;
+}
+.palm-dynamic-instruction-pill {
+  width: min(86%, 390px);
+}
+.palm-instruction-message {
+  overflow-wrap: anywhere;
+}
+.palm-preview-modal,
+.palm-camera-modal {
+  width: min(100%, 540px);
+  max-width: 100%;
+  min-width: 0;
+}
+.palm-preview-image-container {
+  width: 100%;
+  min-width: 0;
+  height: min(52svh, 480px);
+}
+.palm-preview-image {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+@media (max-width: 767px) {
+  .palm-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 14px;
+  }
+  .palm-upload-card,
+  .palm-guidance,
+  .palm-result {
+    width: 100%;
+    padding: clamp(14px, 4vw, 20px);
+  }
+  .palm-preview-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .palm-camera-overlay {
+    padding: 10px;
+    align-items: center;
+  }
+  .palm-camera-modal,
+  .palm-preview-modal {
+    width: 100%;
+    max-height: calc(100svh - 20px);
+    border-radius: 18px;
+  }
+  .palm-camera-viewfinder {
+    height: min(62svh, 620px);
+    min-height: 390px;
+  }
+  .palm-camera-silhouette-svg {
+    width: min(96%, 410px);
+    height: min(94%, 540px);
+  }
+  .palm-preview-image-container {
+    height: min(44svh, 380px);
+  }
+}
+@media (max-width: 380px) {
+  .palm-camera-viewfinder {
+    min-height: 360px;
+  }
+  .palm-scan-meter-card {
+    transform: scale(.88);
+    transform-origin: top left;
+  }
+  .palm-guide-help-pill {
+    font-size: 12px;
+    padding: 7px 10px;
+  }
+}
