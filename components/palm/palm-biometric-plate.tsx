@@ -22,6 +22,7 @@ export default function PalmBiometricPlate({
   // Enabled by default so the user immediately sees their palm lines and highlighted points
   const [showOverlay, setShowOverlay] = useState(true);
   const [selectedFeature, setSelectedFeature] = useState<string | null>(null);
+  const [imageAspectRatio, setImageAspectRatio] = useState(0.75);
 
   const activeFeatures = features || derivePalmFeatures(hand);
 
@@ -76,7 +77,8 @@ export default function PalmBiometricPlate({
 
       <div className="relative w-full rounded-2xl border border-[var(--gold)]/30 bg-[#FAF7F0] dark:bg-[#191B23] overflow-hidden shadow-xl p-2 sm:p-3 flex flex-col items-center justify-center transition-all">
         {/* Palm presentation container */}
-        <div className="relative w-full aspect-[4/3.8] max-h-[480px] rounded-xl overflow-hidden bg-[#FAF6EE] dark:bg-[#13151D] flex items-center justify-center border border-[var(--gold)]/20 shadow-inner">
+        <div className="relative w-full rounded-xl overflow-hidden bg-[#FAF6EE] dark:bg-[#13151D] flex items-center justify-center border border-[var(--gold)]/20 shadow-inner"
+          style={{ aspectRatio: imageAspectRatio }}>
           {/* Subtle studio backdrop lighting */}
           <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.45)_0%,rgba(240,233,219,0.75)_100%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(28,30,42,0.55)_0%,rgba(14,16,23,0.92)_100%)]" />
 
@@ -98,6 +100,12 @@ export default function PalmBiometricPlate({
           <img
             src={imageSrc || "/realistic-palm.jpg"}
             alt="User's Analysed Palm Photo"
+            onLoad={(event) => {
+              const { naturalWidth, naturalHeight } = event.currentTarget;
+              if (naturalWidth > 0 && naturalHeight > 0) {
+                setImageAspectRatio(naturalWidth / naturalHeight);
+              }
+            }}
             onError={(e) => {
               e.currentTarget.onerror = null;
               e.currentTarget.src = "/realistic-palm.jpg";
@@ -189,7 +197,7 @@ export default function PalmBiometricPlate({
                 })}
 
               {/* Render Planetary Mount Nodes */}
-              {activeFeatures.mounts.map((mount) => {
+              {activeFeatures.mounts.filter((mount) => mount.detected).map((mount) => {
                 const isSelected = selectedFeature === mount.id;
                 return (
                   <g key={mount.id} className="transition-all duration-200">
