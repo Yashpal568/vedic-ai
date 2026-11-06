@@ -19,6 +19,7 @@ import { parsePalmReading, type ParsedPalmReport } from "@/lib/palm-parser";
 import { derivePalmFeatures, type PalmAnalysisFeatures } from "@/lib/palm-feature-detector";
 import {
   evaluatePalmScannerFrame,
+  normalizeMediaPipeHandedness,
   type PalmReadinessState,
   type Landmark21,
 } from "@/lib/palm-camera-scanner";
@@ -278,7 +279,9 @@ export default function PalmReadingPage() {
       }
     })();
 
-    const isMirrored = cameraFacing === "user";
+    // detectForVideo receives the raw, unmirrored video pixels on both cameras.
+    // Normalize MediaPipe handedness separately below; CSS mirroring is presentation-only.
+    const isMirrored = false;
 
     const processFrame = (timestamp: number) => {
       if (cancelled) return;
@@ -289,6 +292,15 @@ export default function PalmReadingPage() {
         let handDetection: HandDetectionOutput | null = null;
         if (landmarker) {
           handDetection = detectHandInVideo(landmarker, video, timestamp);
+          if (handDetection && handDetection.totalHandsDetected === 1) {
+            // Rear/environment and front camera video pixels are passed unmirrored to
+            // detectForVideo. Normalize MediaPipe's selfie-mirrored handedness convention
+            // for every selected-hand mode, not only when the user chooses "Not sure".
+            handDetection = {
+              ...handDetection,
+              handedness: normalizeMediaPipeHandedness(handDetection.handedness, false),
+            };
+          }
           if (handDetection?.landmarks && handDetection.landmarks.length >= 21) {
             lastDetectedLandmarksRef.current = handDetection.landmarks;
           }

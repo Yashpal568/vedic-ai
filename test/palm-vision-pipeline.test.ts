@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   evaluatePalmScannerFrame,
+  normalizeMediaPipeHandedness,
   verifyPalmOrientation,
   verifyFingersExtended,
   verifyWristVisible,
@@ -122,6 +123,13 @@ function createMockVisionFrame(width = 640, height = 480, roiBrightness = 120, i
 }
 
 describe("Vedic-AI Mandatory Palm CV Recognition & Quality Test Suite (Requirements A-G)", () => {
+  it("normalizes MediaPipe handedness for unmirrored camera frames", () => {
+    expect(normalizeMediaPipeHandedness("Left", false)).toBe("Right");
+    expect(normalizeMediaPipeHandedness("Right", false)).toBe("Left");
+    expect(normalizeMediaPipeHandedness("Left", true)).toBe("Left");
+    expect(normalizeMediaPipeHandedness("Right", true)).toBe("Right");
+  });
+
   // 1. Human face in front of camera
   it("Test 1: Human face in front of camera — rejected with 0% progress and NO_HAND state", () => {
     const { video, canvas } = createMockVisionFrame();

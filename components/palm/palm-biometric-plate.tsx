@@ -22,6 +22,7 @@ export default function PalmBiometricPlate({
   // Enabled by default so the user immediately sees their palm lines and highlighted points
   const [showOverlay, setShowOverlay] = useState(true);
   const [selectedFeature, setSelectedFeature] = useState<string | null>(null);
+  const [imageAspectRatio, setImageAspectRatio] = useState(0.75);
 
   const activeFeatures = features || derivePalmFeatures(hand);
 
@@ -47,7 +48,7 @@ export default function PalmBiometricPlate({
       {/* Telemetry subtitle bar */}
       <div className="flex items-center justify-between text-[11px] text-[var(--muted)] px-2 mb-2">
         <span className="flex items-center gap-1.5">
-          <span className={`w-1.5 h-1.5 rounded-full ${activeFeatures.lines.filter((l) => l.visible).length >= 2 ? "bg-[var(--green)] animate-pulse" : "bg-[var(--gold)]"}`} />
+          <span className={`w-1.5 h-1.5 rounded-full ${activeFeatures.lines.filter((l: PalmAnalysisFeatures["lines"][number]) => l.visible).length >= 2 ? "bg-[var(--green)] animate-pulse" : "bg-[var(--gold)]"}`} />
           <span className="font-semibold text-[var(--text)]">
             {activeFeatures.lines.filter((l) => l.visible).length >= 2
               ? "Verified Hastarekha Scan"
@@ -76,7 +77,8 @@ export default function PalmBiometricPlate({
 
       <div className="relative w-full rounded-2xl border border-[var(--gold)]/30 bg-[#FAF7F0] dark:bg-[#191B23] overflow-hidden shadow-xl p-2 sm:p-3 flex flex-col items-center justify-center transition-all">
         {/* Palm presentation container */}
-        <div className="relative w-full min-h-[340px] max-h-[500px] rounded-xl overflow-hidden bg-[#FAF6EE] dark:bg-[#13151D] flex items-center justify-center border border-[var(--gold)]/20 shadow-inner p-2">
+        <div className="relative w-full rounded-xl overflow-hidden bg-[#FAF6EE] dark:bg-[#13151D] flex items-center justify-center border border-[var(--gold)]/20 shadow-inner"
+          style={{ aspectRatio: imageAspectRatio }}>
           {/* Subtle studio backdrop lighting */}
           <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.45)_0%,rgba(240,233,219,0.75)_100%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(28,30,42,0.55)_0%,rgba(14,16,23,0.92)_100%)]" />
 
@@ -84,7 +86,7 @@ export default function PalmBiometricPlate({
           <svg
             className="absolute inset-0 w-full h-full pointer-events-none text-[var(--gold)]/20 dark:text-[var(--gold)]/15 z-0"
             viewBox="0 0 1000 1000"
-            preserveAspectRatio="xMidYMid meet"
+            preserveAspectRatio="none"
           >
             <circle cx="500" cy="500" r="420" fill="none" stroke="currentColor" strokeWidth="1" strokeDasharray="5 6" />
             <circle cx="500" cy="500" r="320" fill="none" stroke="currentColor" strokeWidth="0.8" />
@@ -93,27 +95,31 @@ export default function PalmBiometricPlate({
             <line x1="500" y1="80" x2="500" y2="920" stroke="currentColor" strokeWidth="0.6" strokeDasharray="3 5" />
           </svg>
 
-          {/* Photo & Aligned Overlay Wrapper: Tight container hugging image bounds */}
-          <div className="relative inline-flex items-center justify-center max-w-full max-h-[460px] overflow-hidden rounded-lg z-10 shadow-sm">
-            {/* User's Actual Palm Photograph */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={imageSrc || "/realistic-palm.jpg"}
-              alt="User's Analysed Palm Photo"
-              onError={(e) => {
-                e.currentTarget.onerror = null;
-                e.currentTarget.src = "/realistic-palm.jpg";
-              }}
-              className="max-h-[460px] max-w-full w-auto h-auto object-contain block filter contrast-[1.04] brightness-[1.02] transition-all duration-300"
-            />
+          {/* User's Actual Palm Photograph */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={imageSrc || "/realistic-palm.jpg"}
+            alt="User's Analysed Palm Photo"
+            onLoad={(event) => {
+              const { naturalWidth, naturalHeight } = event.currentTarget;
+              if (naturalWidth > 0 && naturalHeight > 0) {
+                setImageAspectRatio(naturalWidth / naturalHeight);
+              }
+            }}
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = "/realistic-palm.jpg";
+            }}
+            className="w-full h-full object-contain object-center filter contrast-[1.04] brightness-[1.02] transition-all duration-300 relative z-0"
+          />
 
-            {/* Responsive SVG Overlay: Mapped Lines & Landmarks */}
-            {showOverlay && (
-              <svg
-                className="absolute inset-0 w-full h-full pointer-events-none z-10"
-                viewBox="0 0 1000 1000"
-                preserveAspectRatio="none"
-              >
+          {/* Responsive SVG Overlay: Mapped Lines & Landmarks */}
+          {showOverlay && (
+            <svg
+              className="absolute inset-0 w-full h-full pointer-events-none z-10"
+              viewBox="0 0 1000 1000"
+              preserveAspectRatio="none"
+            >
               <defs>
                 <filter id="gold-glow" x="-20%" y="-20%" width="140%" height="140%">
                   <feGaussianBlur stdDeviation="4" result="blur" />
@@ -191,7 +197,7 @@ export default function PalmBiometricPlate({
                 })}
 
               {/* Render Planetary Mount Nodes */}
-              {activeFeatures.mounts.map((mount) => {
+              {activeFeatures.mounts.filter((mount) => mount.detected).map((mount) => {
                 const isSelected = selectedFeature === mount.id;
                 return (
                   <g key={mount.id} className="transition-all duration-200">
@@ -268,9 +274,8 @@ export default function PalmBiometricPlate({
               </div>
             </div>
           )}
-        </div>
 
-        {/* Top Right Retake Button */}
+          {/* Top Right Retake Button */}
           <div className="absolute top-3 right-3 flex items-center gap-2 z-30">
             <button
               type="button"

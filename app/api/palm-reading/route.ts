@@ -64,13 +64,13 @@ Return ONLY a valid JSON object:
   "clear": true,
   "reading": "...",
   "detectedLines": {
-    "heartLine": { "visible": true, "clarity": "clear" },
-    "headLine": { "visible": true, "clarity": "clear" },
-    "lifeLine": { "visible": true, "clarity": "clear" },
-    "fateLine": { "visible": true, "clarity": "clear" }
+    "heartLine": { "visible": false, "clarity": "not_detected", "points": [] },
+    "headLine": { "visible": false, "clarity": "not_detected", "points": [] },
+    "lifeLine": { "visible": false, "clarity": "not_detected", "points": [] },
+    "fateLine": { "visible": false, "clarity": "not_detected", "points": [] }
   }
 }
-Note for detectedLines: If the Fate line or any line is faint, broken, or not clearly identifiable in this photo, set "visible": false and "clarity": "not_detected" honestly. Do NOT fabricate missing lines.
+COORDINATE RULES: For each line that can be visually traced with high confidence in THIS exact photograph, return visible=true and 6-24 ordered points along the actual crease pixels. Coordinates are normalized to the full original image: x=0 left, x=1000 right, y=0 top, y=1000 bottom. Trace the natural bends, endpoints, branches and interruptions; do not use palmistry textbook locations or expected line shapes. Do not infer a line merely because a line is traditionally expected. If a crease cannot be traced unambiguously, keep visible=false and points=[]. A visible=true line with fewer than 6 points is invalid. The example JSON above is intentionally all false; replace only when actual pixels support a trace.
 or if the image is NOT a clear palm:
 {"clear":false,"reason":"..."}
 Do not enclose the JSON in markdown code blocks or add text outside the JSON object.`;
@@ -156,8 +156,11 @@ export async function POST(request: Request) {
       const key = process.env.GROQ_API_KEY;
       if (!key) return false;
       const configuredModel = process.env.PALM_GROQ_MODEL?.trim();
+      // Groq's current documented multimodal model for image input + JSON mode.
+      // Retired model IDs are ignored so a stale Vercel env value cannot break scans.
       const invalidOrRetiredModels = [
         "qwen/qwen3.6-27b",
+        "qwen/qwen3.6-27b-preview",
         "meta-llama/llama-4-scout-17b-16e-instruct",
         "meta-llama/llama-4-maverick-17b-128e-instruct",
         "llama-3.2-11b-vision-preview",
@@ -180,7 +183,9 @@ export async function POST(request: Request) {
                 { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}` } }
               ]
             }],
-            temperature: 0.2,
+            // Qwen 3.8 instruct mode is the low-latency setting for this image task.
+            temperature: 0.7,
+            reasoning_effort: "none",
             max_completion_tokens: 2200,
             response_format: { type: "json_object" }
           }),
@@ -193,6 +198,8 @@ export async function POST(request: Request) {
           return Boolean(raw?.trim());
         }
         lastStatus = res.status;
+        const providerBody = await res.text().catch(() => "");
+        console.error("[palm-reading] Groq vision provider status:", res.status, "model:", model, "body:", providerBody.slice(0, 1200));
         lastError = errorMessage(res.status, "Groq");
       } catch (e) {
         console.warn("[palm-reading] Groq attempt failed:", e);
@@ -264,10 +271,10 @@ export async function POST(request: Request) {
       reason?: string;
       reading?: string;
       detectedLines?: {
-        heartLine?: { visible?: boolean; clarity?: string };
-        headLine?: { visible?: boolean; clarity?: string };
-        lifeLine?: { visible?: boolean; clarity?: string };
-        fateLine?: { visible?: boolean; clarity?: string };
+        heartLine?: { visible?: boolean; clarity?: string; points?: { x: number; y: number }[] };
+        headLine?: { visible?: boolean; clarity?: string; points?: { x: number; y: number }[] };
+        lifeLine?: { visible?: boolean; clarity?: string; points?: { x: number; y: number }[] };
+        fateLine?: { visible?: boolean; clarity?: string; points?: { x: number; y: number }[] };
       };
       mounts?: Record<string, { x: number; y: number }>;
     }
