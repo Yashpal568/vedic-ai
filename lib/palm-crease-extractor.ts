@@ -59,12 +59,14 @@ export function extractGroundedPalmFeatures(
     headLine?: { visible?: boolean; clarity?: string; points?: ExtractedPoint[] };
     lifeLine?: { visible?: boolean; clarity?: string; points?: ExtractedPoint[] };
     fateLine?: { visible?: boolean; clarity?: string; points?: ExtractedPoint[] };
-  }
+  },
+  landmarks?: { x: number; y: number; z?: number }[]
 ): GroundedPalmExtraction {
   const isLeft = hand === "left" || hand === "unsure";
 
-  // imageData is intentionally not used as a generic corridor detector.
+  // imageData & landmarks are handled if provided
   void imageData;
+  void landmarks;
 
   // Planetary mounts — labeled as estimated anatomical regions
   const mounts: ExtractedMountResult[] = [

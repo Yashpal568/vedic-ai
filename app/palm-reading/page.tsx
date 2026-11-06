@@ -15,6 +15,8 @@ import DossierPreviewModal from "@/components/dossier-preview-modal";
 import { PalmCameraGuide } from "@/components/palm/palm-camera-guide";
 import { PalmPreScanModal } from "@/components/palm/palm-pre-scan-modal";
 import { PalmCapturePreviewModal } from "@/components/palm/palm-capture-preview-modal";
+import PalmVoiceAssistant from "@/components/palm/palm-voice-assistant";
+import { usePalmVoiceNarrator } from "@/hooks/use-palm-voice-narrator";
 import { parsePalmReading, type ParsedPalmReport } from "@/lib/palm-parser";
 import { derivePalmFeatures, type PalmAnalysisFeatures } from "@/lib/palm-feature-detector";
 import {
@@ -58,6 +60,9 @@ export default function PalmReadingPage() {
   const [error, setError] = useState("");
   const [quality, setQuality] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Spoken AI Voice Narrator Controller
+  const voiceNarrator = usePalmVoiceNarrator({ initialLanguage: "en" });
 
   // Modal controls
   const [isDossierModalOpen, setIsDossierModalOpen] = useState(false);
@@ -485,6 +490,7 @@ export default function PalmReadingPage() {
     setQuality("");
     setReading("");
     setParsedReport(null);
+    voiceNarrator.resetVoice();
   }
 
   // Open native gallery input
@@ -498,6 +504,8 @@ export default function PalmReadingPage() {
   // Analyse selected palm photo
   async function analyse() {
     if (!image || loading) return;
+    // Prime audio context on user gesture for seamless unmuted playback permission
+    voiceNarrator.primeAudio();
     setLoading(true);
     setError("");
     setQuality("");
@@ -537,6 +545,9 @@ export default function PalmReadingPage() {
         mounts: data.mounts,
       });
       setPalmFeatures(features);
+
+      // Automatically trigger spoken AI voice narration immediately
+      voiceNarrator.autoNarrate(parsed, hand);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not analyse the image. Please try again.");
     } finally {
@@ -572,10 +583,13 @@ These are traditional symbolic interpretations, not scientifically validated per
     setFileSizeStr("1.2 MB");
     setHand("left");
     setReading(sampleMarkdown);
-    setParsedReport(parsePalmReading(sampleMarkdown, "left"));
+    const parsed = parsePalmReading(sampleMarkdown, "left");
+    setParsedReport(parsed);
     setPalmFeatures(derivePalmFeatures("left"));
     setError("");
     setQuality("");
+    voiceNarrator.primeAudio();
+    voiceNarrator.autoNarrate(parsed, "left");
   }
 
   return (
@@ -634,6 +648,19 @@ These are traditional symbolic interpretations, not scientifically validated per
               {/* Report Header */}
               <PalmReportHeader onOpenExportModal={() => setIsDossierModalOpen(true)} />
 
+              {/* Vedic AI Spoken Voice Assistant (Automatic Narration) */}
+              <PalmVoiceAssistant
+                status={voiceNarrator.status}
+                script={voiceNarrator.script}
+                language={voiceNarrator.language}
+                errorMessage={voiceNarrator.errorMessage}
+                report={parsedReport}
+                hand={hand}
+                onStopVoice={voiceNarrator.stopVoice}
+                onResumeOrReplay={voiceNarrator.resumeOrReplayVoice}
+                onSwitchLanguage={voiceNarrator.switchLanguage}
+              />
+
               {/* Responsive Layout: Split (5-col Biometric HUD + 7-col Report) on Desktop, Vertical Stack on Mobile */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                 {/* LEFT COLUMN (5 Cols on LG): Sticky Biometric Palm HUD & Plate */}
@@ -643,6 +670,7 @@ These are traditional symbolic interpretations, not scientifically validated per
                     hand={hand}
                     features={palmFeatures || undefined}
                     onRetake={() => {
+                      voiceNarrator.resetVoice();
                       setReading("");
                       setParsedReport(null);
                       startLiveCamera("environment");
