@@ -87,7 +87,9 @@ async function callGemini(
   }));
 
   const candidateModels = [
-    process.env.GEMINI_MODEL?.trim() || process.env.AI_MODEL?.trim() || "gemini-2.5-flash",
+    process.env.GEMINI_MODEL?.trim() || process.env.AI_MODEL?.trim() || "gemini-3.8-flash",
+    "gemini-3.8-flash",
+    "gemini-2.5-flash",
     "gemini-2.0-flash",
     "gemini-1.5-flash",
   ].filter(Boolean);

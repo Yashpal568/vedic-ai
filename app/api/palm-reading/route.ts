@@ -212,7 +212,9 @@ export async function POST(request: Request) {
       const key = process.env.GEMINI_API_KEY;
       if (!key) return false;
       const candidateModels = [
-        process.env.PALM_GEMINI_MODEL?.trim() || "gemini-2.5-flash",
+        process.env.PALM_GEMINI_MODEL?.trim() || "gemini-3.8-flash",
+        "gemini-3.8-flash",
+        "gemini-2.5-flash",
         "gemini-2.0-flash",
         "gemini-1.5-flash",
       ].filter(Boolean);
