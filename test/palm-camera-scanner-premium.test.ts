@@ -93,3 +93,4 @@ describe("Vedic-AI Palm Scanner Premium Redesign & Quality Upgrade Audit", () =>
     expect(guideCode).toContain("FINGERTIPS");
   });
 });
+

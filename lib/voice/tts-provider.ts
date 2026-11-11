@@ -12,9 +12,9 @@ export interface TTSVoice {
   id: string;
   name: string;
   language: string;
-  gender?: "male" | "female";
+  gender?: "male" | "female" | "neutral";
   description?: string;
-  provider: "elevenlabs" | "openai" | "browser";
+  provider: "gemini" | "elevenlabs" | "openai" | "browser";
 }
 
 export interface TTSGenerateOptions {
@@ -27,13 +27,13 @@ export interface TTSGenerateOptions {
 export interface TTSResult {
   audioBase64: string;
   contentType: string;
-  provider: "elevenlabs" | "openai" | "browser";
+  provider: "gemini" | "elevenlabs" | "openai" | "browser";
   voiceId: string;
   cached?: boolean;
 }
 
 export interface TTSProvider {
-  id: "elevenlabs" | "openai";
+  id: "gemini" | "elevenlabs" | "openai";
   name: string;
   generateSpeech(options: TTSGenerateOptions): Promise<TTSResult>;
   streamSpeech?(options: TTSGenerateOptions): Promise<ReadableStream<Uint8Array>>;
@@ -49,7 +49,7 @@ export interface TTSProvider {
 interface CacheEntry {
   audioBase64: string;
   contentType: string;
-  provider: "elevenlabs" | "openai" | "browser";
+  provider: "gemini" | "elevenlabs" | "openai" | "browser";
   voiceId: string;
   timestamp: number;
 }
@@ -288,10 +288,155 @@ export class OpenAITTSProvider implements TTSProvider {
 }
 
 /**
+ * Google Gemini Flash TTS Provider (Primary / Native)
+ * Synthesizes high-fidelity speech directly via Google Gemini Flash TTS API.
+ */
+export class GeminiTTSProvider implements TTSProvider {
+  id = "gemini" as const;
+  name = "Google Gemini TTS";
+
+  validateConfiguration() {
+    const key = process.env.GEMINI_API_KEY?.trim();
+    return {
+      configured: Boolean(key),
+      provider: "gemini",
+      missingKeys: key ? [] : ["GEMINI_API_KEY"],
+    };
+  }
+
+  async getAvailableVoices(language?: TTSLanguage): Promise<TTSVoice[]> {
+    return [
+      {
+        id: "gemini-3.8-flash-tts",
+        name: "Gemini Vedic Voice (Aoede)",
+        language: language || "en",
+        gender: "female",
+        description: "Natural, expressive conversational speech powered by Google Gemini Flash TTS",
+        provider: "gemini",
+      },
+      {
+        id: "gemini-3.8-flash-lite-tts",
+        name: "Gemini Lite Voice",
+        language: language || "en",
+        gender: "neutral",
+        description: "Fast speech synthesis powered by Google Gemini Flash Lite TTS",
+        provider: "gemini",
+      },
+    ];
+  }
+
+  async generateSpeech(options: TTSGenerateOptions): Promise<TTSResult> {
+    const key = process.env.GEMINI_API_KEY?.trim();
+    if (!key) {
+      throw new Error("GEMINI_NOT_CONFIGURED");
+    }
+
+    const modelName = options.voiceId?.trim() || process.env.GEMINI_TTS_MODEL?.trim() || "gemini-3.8-flash-tts";
+    const cacheKey = generateCacheKey(options.text, "gemini", modelName, options.speed);
+    const cached = getFromCache(cacheKey);
+    if (cached) {
+      return {
+        audioBase64: cached.audioBase64,
+        contentType: cached.contentType,
+        provider: "gemini",
+        voiceId: modelName,
+        cached: true,
+      };
+    }
+
+    // Candidate Gemini TTS models in preference order
+    const candidateModels = [
+      modelName,
+      "gemini-3.8-flash-tts",
+      "gemini-3.8-flash-lite-tts",
+    ].filter((m, i, arr) => arr.indexOf(m) === i);
+
+    let lastError: unknown = null;
+
+    for (const model of candidateModels) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`;
+        const response = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            contents: [
+              {
+                role: "user",
+                parts: [
+                  {
+                    text: options.text.slice(0, 4096),
+                  },
+                ],
+              },
+            ],
+            generationConfig: {
+              responseModalities: ["AUDIO"],
+            },
+          }),
+          signal: AbortSignal.timeout(20_000),
+        });
+
+        if (!response.ok) {
+          const errBody = await response.text().catch(() => "");
+          console.warn(`[tts-provider] Gemini TTS HTTP ${response.status} for ${model}:`, errBody);
+          if (response.status === 401 || response.status === 403) {
+            throw new Error("GEMINI_AUTH_FAILED");
+          }
+          if (response.status === 429) {
+            throw new Error("GEMINI_RATE_LIMITED");
+          }
+          continue;
+        }
+
+        const data = await response.json();
+        const part = data?.candidates?.[0]?.content?.parts?.[0];
+        const audioBase64 = part?.inlineData?.data;
+        const mimeType = part?.inlineData?.mimeType || "audio/wav";
+
+        if (audioBase64 && typeof audioBase64 === "string" && audioBase64.length > 0) {
+          const result: TTSResult = {
+            audioBase64,
+            contentType: mimeType,
+            provider: "gemini",
+            voiceId: model,
+          };
+
+          setToCache(cacheKey, {
+            audioBase64,
+            contentType: mimeType,
+            provider: "gemini",
+            voiceId: model,
+          });
+
+          return result;
+        }
+      } catch (err) {
+        lastError = err;
+        console.warn(`[tts-provider] Gemini TTS attempt failed for model ${model}:`, err);
+      }
+    }
+
+    throw lastError || new Error("GEMINI_TTS_FAILED");
+  }
+}
+
+/**
  * Unified Audio Synthesizer
- * Tries ElevenLabs first, then OpenAI TTS, then yields null to trigger client Web Speech.
+ * Tries Gemini TTS first if configured, then ElevenLabs, then OpenAI TTS, then yields null to trigger client Web Speech.
  */
 export async function synthesizeAudio(options: TTSGenerateOptions): Promise<TTSResult | null> {
+  const gemini = new GeminiTTSProvider();
+  if (gemini.validateConfiguration().configured) {
+    try {
+      return await gemini.generateSpeech(options);
+    } catch (err) {
+      console.warn("[tts-provider] Gemini synthesis failed, falling back:", err);
+    }
+  }
+
   const elevenLabs = new ElevenLabsTTSProvider();
   if (elevenLabs.validateConfiguration().configured) {
     try {
@@ -310,7 +455,7 @@ export async function synthesizeAudio(options: TTSGenerateOptions): Promise<TTSR
     }
   }
 
-  // Both server providers unconfigured or failed; returns null so client uses browser Web Speech API
+  // All server providers unconfigured or failed; returns null so client uses browser Web Speech API
   return null;
 }
 
@@ -318,15 +463,23 @@ export async function synthesizeAudio(options: TTSGenerateOptions): Promise<TTSR
  * Returns configuration state of available TTS providers for health checks and UI config
  */
 export function getTTSConfigurationStatus() {
+  const gemini = new GeminiTTSProvider().validateConfiguration();
   const elevenLabs = new ElevenLabsTTSProvider().validateConfiguration();
   const openAI = new OpenAITTSProvider().validateConfiguration();
 
+  const primaryProvider = gemini.configured
+    ? "gemini"
+    : elevenLabs.configured
+    ? "elevenlabs"
+    : "openai";
+
   return {
-    primaryProvider: "elevenlabs",
+    primaryProvider,
+    geminiConfigured: gemini.configured,
     elevenLabsConfigured: elevenLabs.configured,
     openAIConfigured: openAI.configured,
-    hasServerTTS: elevenLabs.configured || openAI.configured,
-    fallbackToBrowserSpeech: !elevenLabs.configured && !openAI.configured,
+    hasServerTTS: gemini.configured || elevenLabs.configured || openAI.configured,
+    fallbackToBrowserSpeech: !gemini.configured && !elevenLabs.configured && !openAI.configured,
     supportedLanguages: ["en", "hi", "hinglish"],
   };
 }

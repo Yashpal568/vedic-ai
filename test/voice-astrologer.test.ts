@@ -8,6 +8,7 @@ import {
   getRecommendedVoiceConfig,
 } from "@/lib/voice/language-service";
 import {
+  GeminiTTSProvider,
   ElevenLabsTTSProvider,
   OpenAITTSProvider,
   synthesizeAudio,
@@ -160,11 +161,22 @@ describe("Vedic-AI Voice Astrologer System (Complete Test Suite)", () => {
   describe("C. TTS Provider Abstraction & ElevenLabs Integration", () => {
     it("reports configuration status correctly without exposing secrets", () => {
       const status = getTTSConfigurationStatus();
-      expect(status.primaryProvider).toBe("elevenlabs");
+      expect(["gemini", "elevenlabs", "openai"]).toContain(status.primaryProvider);
       expect(Array.isArray(status.supportedLanguages)).toBe(true);
       expect(status.supportedLanguages).toContain("en");
       expect(status.supportedLanguages).toContain("hi");
       expect(status.supportedLanguages).toContain("hinglish");
+    });
+
+    it("Gemini provider validates configuration and lists available voices", async () => {
+      const provider = new GeminiTTSProvider();
+      const validation = provider.validateConfiguration();
+      expect(validation.provider).toBe("gemini");
+      expect(typeof validation.configured).toBe("boolean");
+      const voices = await provider.getAvailableVoices("en");
+      expect(voices.length).toBeGreaterThanOrEqual(1);
+      expect(voices[0].provider).toBe("gemini");
+      expect(voices[0].id).toBe("gemini-3.8-flash-tts");
     });
 
     it("ElevenLabs provider validates configuration and identifies missing keys when unset", () => {
@@ -187,8 +199,10 @@ describe("Vedic-AI Voice Astrologer System (Complete Test Suite)", () => {
     it("synthesizeAudio falls back gracefully to null when server keys are unconfigured", async () => {
       const originalEleven = process.env.ELEVENLABS_API_KEY;
       const originalOpenAI = process.env.OPENAI_API_KEY;
+      const originalGemini = process.env.GEMINI_API_KEY;
       delete process.env.ELEVENLABS_API_KEY;
       delete process.env.OPENAI_API_KEY;
+      delete process.env.GEMINI_API_KEY;
 
       const result = await synthesizeAudio({
         text: "Namaste and welcome to your palm reading.",
@@ -199,6 +213,7 @@ describe("Vedic-AI Voice Astrologer System (Complete Test Suite)", () => {
 
       if (originalEleven) process.env.ELEVENLABS_API_KEY = originalEleven;
       if (originalOpenAI) process.env.OPENAI_API_KEY = originalOpenAI;
+      if (originalGemini) process.env.GEMINI_API_KEY = originalGemini;
     });
   });
 
