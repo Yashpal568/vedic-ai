@@ -69,7 +69,7 @@ interface PalmVoiceAssistantProps {
 const QUICK_QUESTIONS = [
   "Explain my life line in simple language",
   "Meri heart line ka kya meaning hai?",
-  "Why was my fate line not clearly detected?",
+  "What does my fate line reveal about my career?",
   "What do my planetary mounts indicate?",
 ];
 

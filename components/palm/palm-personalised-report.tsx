@@ -37,6 +37,7 @@ export default function PalmPersonalisedReport({
           return (
             <li
               key={idx}
+              id={`palm-section-${item.id}`}
               className={`p-3.5 rounded-xl transition-all duration-300 shadow-sm ${
                 isHighlighted
                   ? "bg-[var(--wash)] border-2 border-[var(--gold)] ring-2 ring-[var(--gold)]/30 scale-[1.01]"
