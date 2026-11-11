@@ -19726,13 +19726,15 @@ html[data-theme="light"] .chat-footer {
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  padding: 9px 12px !important;
-  border-radius: 10px !important;
+  gap: 8px !important;
+  padding: 8px 10px !important;
+  border-radius: 9px !important;
   font-size: 13px !important;
   font-weight: 500 !important;
   color: var(--muted, #b3af9f) !important;
   text-decoration: none !important;
   border: 1px solid transparent !important;
+  white-space: nowrap !important;
   transition: all 0.15s ease !important;
 }
 
@@ -19752,8 +19754,27 @@ html[data-theme="light"] .chat-footer {
 .sidebar-nav-link-left {
   display: flex !important;
   align-items: center !important;
-  gap: 10px !important;
+  gap: 9px !important;
   min-width: 0 !important;
+  flex: 1 1 auto !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+}
+
+.sidebar-nav-title {
+  display: inline-flex !important;
+  align-items: baseline !important;
+  gap: 3px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.sidebar-nav-subtext {
+  font-size: 11px !important;
+  opacity: 0.65 !important;
+  font-weight: 400 !important;
+  white-space: nowrap !important;
 }
 
 .sidebar-nav-icon {
@@ -19766,10 +19787,16 @@ html[data-theme="light"] .chat-footer {
 }
 
 .sidebar-vision-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
   font-size: 9px !important;
   font-weight: 700 !important;
-  padding: 2px 7px !important;
-  border-radius: 999px !important;
+  line-height: 1 !important;
+  padding: 3px 6px !important;
+  border-radius: 9999px !important;
   background: rgba(82, 254, 184, 0.12) !important;
   color: #52feb8 !important;
   border: 1px solid rgba(82, 254, 184, 0.35) !important;

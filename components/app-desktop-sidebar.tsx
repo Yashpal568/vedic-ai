@@ -333,7 +333,11 @@ export default function AppDesktopSidebar({
                 >
                   <div className="sidebar-nav-link-left">
                     <Icon size={17} className="sidebar-nav-icon" />
-                    {!isCollapsed && <span>{item.label}</span>}
+                    {!isCollapsed && (
+                      <span className="sidebar-nav-title">
+                        {item.badge ? "Palm Reading" : item.label}
+                      </span>
+                    )}
                   </div>
                   {!isCollapsed && item.badge ? (
                     <span className="sidebar-vision-badge">{item.badge}</span>
