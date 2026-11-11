@@ -27,6 +27,7 @@ import type { VoiceStatus, PlaybackSpeed } from "@/hooks/use-palm-voice-narrator
 import type { VoiceLanguage } from "@/lib/voice/language-service";
 import type { ParsedPalmReport } from "@/lib/palm-parser";
 import type { NarrationSection } from "@/lib/voice/narration-generator";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface PalmVoiceAssistantProps {
   status: VoiceStatus;
@@ -104,6 +105,7 @@ export default function PalmVoiceAssistant({
   onResumeNarrationAfterQA,
   className = "",
 }: PalmVoiceAssistantProps) {
+  const { t } = useLanguage();
   const [showTranscript, setShowTranscript] = useState(false);
   const [showQAPanel, setShowQAPanel] = useState(false);
   const [textQuestion, setTextQuestion] = useState("");
@@ -373,7 +375,7 @@ export default function PalmVoiceAssistant({
                 title="Stop voice explanation immediately"
               >
                 <Square className="w-3 h-3 fill-current" />
-                <span>Stop Voice</span>
+                <span>{t("voice.stopVoice")}</span>
               </button>
             </div>
           </div>

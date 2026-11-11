@@ -17,6 +17,7 @@ import { PalmPreScanModal } from "@/components/palm/palm-pre-scan-modal";
 import { PalmCapturePreviewModal } from "@/components/palm/palm-capture-preview-modal";
 import PalmVoiceAssistant from "@/components/palm/palm-voice-assistant";
 import { usePalmVoiceNarrator } from "@/hooks/use-palm-voice-narrator";
+import { useLanguage } from "@/lib/i18n/language-context";
 import { parsePalmReading, type ParsedPalmReport } from "@/lib/palm-parser";
 import { derivePalmFeatures, type PalmAnalysisFeatures } from "@/lib/palm-feature-detector";
 import {
@@ -61,8 +62,15 @@ export default function PalmReadingPage() {
   const [quality, setQuality] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const { language } = useLanguage();
   // Spoken AI Voice Narrator Controller
-  const voiceNarrator = usePalmVoiceNarrator({ initialLanguage: "en" });
+  const voiceNarrator = usePalmVoiceNarrator({ initialLanguage: language });
+
+  useEffect(() => {
+    if (voiceNarrator.language !== language && parsedReport) {
+      voiceNarrator.switchLanguage(language, parsedReport, hand);
+    }
+  }, [language, parsedReport, hand, voiceNarrator]);
 
   // Modal controls
   const [isDossierModalOpen, setIsDossierModalOpen] = useState(false);
@@ -690,7 +698,7 @@ export default function PalmReadingPage() {
       const response = await fetch("/api/palm-reading", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image, hand, question }),
+        body: JSON.stringify({ image, hand, question, language }),
       });
 
       const data = await response.json().catch(() => ({}));
@@ -819,7 +827,7 @@ These are traditional symbolic interpretations, not scientifically validated per
       {/* Main Panel Offset for 280px Sidebar on Large Screens */}
       <div className="flex-1 flex flex-col app-sidebar-offset min-w-0">
         <SiteHeader
-          section="Traditional Palmistry"
+          section="header.traditionalPalmistry"
         />
 
         {/* WORKSPACE AREA */}

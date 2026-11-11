@@ -4,6 +4,7 @@ import "./light-mode-fix.css";
 import "./light-theme.css";
 import "./kundli-report.css";
 import ThemeSync from "@/components/theme-sync";
+import { LanguageProvider } from "@/lib/i18n/language-context";
 
 export const metadata: Metadata = {
   title: { default: "Vedic AI — Your Personal Vedic Astrology Companion", template: "%s | Vedic AI" },
@@ -27,7 +28,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en">
       <body>
         <ThemeSync />
-        {children}
+        <LanguageProvider>
+          {children}
+        </LanguageProvider>
       </body>
     </html>
   );

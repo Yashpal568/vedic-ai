@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import AppNavigationDrawer from "@/components/app-navigation-drawer";
+import { LanguageSelector } from "@/components/language-selector";
+import { useLanguage } from "@/lib/i18n/language-context";
 import {
   LogOut,
   Menu,
@@ -17,6 +19,7 @@ type Props = { section?: string; backHref?: string; backLabel?: string; onSignOu
 export default function SiteHeader({ section, onSignOut }: Props) {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const { t } = useLanguage();
 
   useEffect(() => {
     try {
@@ -77,9 +80,14 @@ export default function SiteHeader({ section, onSignOut }: Props) {
           </Link>
         </div>
 
-        {section && <span className="site-header-section">{section}</span>}
+        {section && (
+          <span className="site-header-section">
+            {section.startsWith("nav.") || section.startsWith("header.") ? t(section) : section}
+          </span>
+        )}
 
         <div className="site-header-actions">
+          <LanguageSelector variant="compact" />
           <button
             type="button"
             className="site-theme-toggle"
@@ -88,15 +96,15 @@ export default function SiteHeader({ section, onSignOut }: Props) {
             title={theme === "dark" ? "Light theme" : "Dark theme"}
           >
             {theme === "dark" ? <Sun size={17}/> : <MoonStar size={17}/>}
-            <span>{theme === "dark" ? "Light" : "Dark"}</span>
+            <span>{theme === "dark" ? t("nav.lightMode") : t("nav.darkMode")}</span>
           </button>
           {onSignOut ? (
             <button type="button" className="site-header-profile" onClick={onSignOut}>
-              <LogOut size={15}/><span>Sign out</span>
+              <LogOut size={15}/><span>{t("nav.signOut")}</span>
             </button>
           ) : (
             <Link href="/profile" className="site-header-profile">
-              <UserRound size={15}/><span>My profile</span>
+              <UserRound size={15}/><span>{t("nav.accountProfile")}</span>
             </Link>
           )}
         </div>

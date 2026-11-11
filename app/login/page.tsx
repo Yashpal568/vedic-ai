@@ -4,8 +4,11 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, CheckCircle2, Mail, MoonStar, ShieldCheck, Sparkles, Orbit } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { useLanguage } from "@/lib/i18n/language-context";
+import { LanguageSelector } from "@/components/language-selector";
 
 export default function LoginPage() {
+  const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
@@ -130,7 +133,10 @@ export default function LoginPage() {
 
   return (
     <main className="auth-shell auth-shell-premium">
-      <Link href="/" className="auth-back"><ArrowLeft size={15} /> <span>Back to Vedic AI</span></Link>
+      <div className="flex items-center justify-between w-full max-w-4xl mx-auto mb-3">
+        <Link href="/" className="auth-back"><ArrowLeft size={15} /> <span>{t("common.back")}</span></Link>
+        <LanguageSelector variant="compact" />
+      </div>
       <div className="auth-engine-status" aria-label="Vedic AI service status"><span /> COSMIC ENGINE V2.4</div>
       <div className="auth-layout">
         <section className="auth-story auth-story-visual" aria-label="About Vedic AI">

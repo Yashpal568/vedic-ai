@@ -20,8 +20,11 @@ import {
   Lock,
   ArrowRight,
   Orbit,
+  Globe,
 } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { useLanguage } from "@/lib/i18n/language-context";
+import { LanguageSelector } from "@/components/language-selector";
 
 interface PlaceOption {
   id: string;
@@ -41,6 +44,7 @@ export default function ProfilePage() {
   // Personal Information
   const [name, setName] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const { language, setLanguage, t } = useLanguage();
   const [bio, setBio] = useState("");
   const [avatar, setAvatar] = useState("");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -98,6 +102,9 @@ export default function ProfilePage() {
 
         // Authoritative Source: Read birth profile from authenticated user_metadata
         const meta = user.user_metadata || {};
+        if (meta.language === "en" || meta.language === "hi") {
+          setLanguage(meta.language);
+        }
         if (meta.birth_date || meta.birth_place) {
           if (meta.birth_date) setBirthDate(meta.birth_date);
           if (meta.birth_time) setBirthTime(meta.birth_time);
@@ -284,6 +291,7 @@ export default function ProfilePage() {
             nakshatra: calcNakshatra,
             pada: calcPada,
             dasha: calcDasha,
+            language,
           },
         });
         if (updateError) throw updateError;
@@ -341,7 +349,7 @@ export default function ProfilePage() {
 
       {/* Main Panel Offset for 280px Sidebar on Large Screens */}
       <div className="flex-1 flex flex-col app-sidebar-offset min-w-0">
-        <SiteHeader section="Account Profile" onSignOut={() => void signOut()} />
+        <SiteHeader section="header.profileSettings" onSignOut={() => void signOut()} />
 
         <main className="flex-1 w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10 py-8 pb-28">
           {/* Page Header */}
@@ -652,6 +660,18 @@ export default function ProfilePage() {
                   className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--raised)] border border-[var(--line)] text-xs text-[var(--text)] placeholder-[var(--quiet)] outline-none focus:border-[var(--gold)] transition-colors resize-none"
                 />
               </div>
+            </div>
+
+            {/* 3. Language & App Preferences */}
+            <div className="p-6 rounded-2xl bg-[var(--panel)] border border-[var(--line)] shadow-sm">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-[var(--gold)] mb-1 flex items-center gap-2">
+                <Globe size={16} />
+                <span>{t("profile.languagePreference")}</span>
+              </h3>
+              <p className="text-xs text-[var(--muted)] mb-4">
+                {t("profile.languageDescription")}
+              </p>
+              <LanguageSelector variant="full" />
             </div>
 
             {/* Error & Success Messages */}

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import AppDesktopSidebar from "@/components/app-desktop-sidebar";
 import SiteHeader from "@/components/site-header";
 import MobileBottomNav from "@/components/mobile-bottom-nav";
+import { useLanguage } from "@/lib/i18n/language-context";
 import {
   CalendarDays,
   Clock3,
@@ -71,6 +72,7 @@ function localDateString(offsetDays = 0) {
 }
 
 export default function PanchangPage() {
+  const { t } = useLanguage();
   const [date, setDate] = useState(() => localDateString(0));
   const [placeQuery, setPlaceQuery] = useState("New Delhi, India");
   const [place, setPlace] = useState<Place>({
@@ -176,7 +178,7 @@ export default function PanchangPage() {
 
       {/* Main Panel Offset for 280px Sidebar on Large Screens */}
       <div className="flex-1 flex flex-col app-sidebar-offset min-w-0">
-        <SiteHeader section="Panchang Almanac" />
+        <SiteHeader section={t("nav.panchangAlmanac")} />
 
         <main className="flex-1 w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10 py-8 pb-28">
           {/* Header & Kaala Engine Status */}

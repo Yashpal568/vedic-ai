@@ -8,12 +8,16 @@ const jsonSchema = z.object({
   image: z.string().min(1).max(10_000_000),
   hand: z.enum(["left", "right", "unsure"]).default("unsure"),
   question: z.string().max(800).optional(),
+  language: z.enum(["en", "hi"]).optional(),
 });
 
-function buildPalmPrompt(hand: "left" | "right" | "unsure", question?: string) {
+function buildPalmPrompt(hand: "left" | "right" | "unsure", question?: string, language: "en" | "hi" = "en") {
   const userFocus = question?.trim() ? `\nUser's specific inquiry: "${question.trim()}"\n` : "";
+  const langInstruction = language === "hi"
+    ? "\nLANGUAGE REQUIREMENT: Produce all observations, interpretations, descriptions, and remedies in natural, eloquent Hindi (हिन्दी) using Devanagari script, while keeping the section headers intact so the structured parser extracts them accurately.\n"
+    : "\nLANGUAGE REQUIREMENT: Produce all observations and explanations in clear, respectful, plain everyday English.\n";
   return `You are an expert Vedic Hastarekha and traditional palmistry visual analyst producing a detailed, genuinely personalized, structured report from the supplied palm photograph. Palmistry is an interpretive cultural discipline for self-reflection, not scientific certainty.
-${userFocus}
+${userFocus}${langInstruction}
 IMAGE QUALITY GATE:
 First, inspect the photo to verify that it clearly shows a human open palm with fingers and crease lines in sufficient lighting and focus.
 - If the image is NOT clearly an open palm, is severely blurry, too dark, or missing key line areas, return:
@@ -89,6 +93,7 @@ export async function POST(request: Request) {
     let mimeType = "image/jpeg";
     let hand: "left" | "right" | "unsure" = "unsure";
     let question = "";
+    let language: "en" | "hi" = "en";
 
     const contentType = request.headers.get("content-type") || "";
 
@@ -117,6 +122,10 @@ export async function POST(request: Request) {
       if (typeof rawQuestion === "string") {
         question = rawQuestion.slice(0, 800);
       }
+      const rawLanguage = formData.get("language");
+      if (rawLanguage === "hi" || rawLanguage === "en") {
+        language = rawLanguage;
+      }
     } else {
       const rawBody = await request.json().catch(() => null);
       if (!rawBody) {
@@ -125,6 +134,9 @@ export async function POST(request: Request) {
       const body = jsonSchema.parse(rawBody);
       hand = body.hand;
       question = body.question || "";
+      if (body.language === "hi" || body.language === "en") {
+        language = body.language;
+      }
 
       const match = body.image.match(/^data:(image\/(?:jpeg|png|webp|jpg));base64,([A-Za-z0-9+/=]+)$/i);
       if (!match) {
@@ -143,7 +155,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "The image data is invalid or exceeds 6 MB. Please choose a smaller photo." }, { status: 413 });
     }
 
-    const prompt = buildPalmPrompt(hand, question);
+    const prompt = buildPalmPrompt(hand, question, language);
     const provider = (process.env.AI_PROVIDER || "").toLowerCase();
     const useGroqVision = provider === "groq" || (!process.env.GEMINI_API_KEY && Boolean(process.env.GROQ_API_KEY));
 

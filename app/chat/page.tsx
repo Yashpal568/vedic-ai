@@ -9,6 +9,8 @@ import MobileBottomNav from "@/components/mobile-bottom-nav";
 import AppNavigationDrawer from "@/components/app-navigation-drawer";
 import AppDesktopSidebar from "@/components/app-desktop-sidebar";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { useLanguage } from "@/lib/i18n/language-context";
+import { LanguageSelector } from "@/components/language-selector";
 import type { KundliReport } from "@/lib/astrology";
 import { printKundliReport } from "@/lib/print-report";
 import { buildKundliHouseSummary, buildKundliPlanetSummary, buildKundliSimpleSummary } from "@/lib/kundli-summary";
@@ -348,6 +350,7 @@ export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const { language, t } = useLanguage();
   const [toast, setToast] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
@@ -650,7 +653,7 @@ export default function Home() {
         body: JSON.stringify({
           messages: nextMessages.slice(-30).map(({ role, content }) => ({ role, content })),
           birthProfile: savedBirth || undefined,
-          chartContext: chartReport || undefined,
+          chartContext: chartReport || undefined, language,
         }),
       });
       const data = await response.json();
@@ -707,7 +710,7 @@ export default function Home() {
         }
         const recognition = new Recognition();
         speechRecognitionRef.current = recognition;
-        recognition.lang = "hi-IN";
+        recognition.lang = language === "hi" ? "hi-IN" : "en-IN";
         recognition.continuous = true;
         recognition.interimResults = true;
         recognition.onresult = (event) => {
@@ -940,7 +943,7 @@ export default function Home() {
           body: JSON.stringify({
             messages: nextMessages.slice(-30).map(({ role, content }) => ({ role, content })),
             birthProfile: profile,
-            chartContext: report,
+            chartContext: report, language,
           }),
         });
         const aiData = await aiResponse.json();
@@ -1208,12 +1211,13 @@ export default function Home() {
             <div className="mode-pill" aria-label="Vedic AI preview status"><span className="status-dot" /> <span className="mode-pill-name">Vedic AI</span> <span className="mode-pill-preview" style={{ color: "var(--quiet)" }}>· Preview</span></div>
           </div>
           <div className="topbar-actions">
+            <LanguageSelector variant="compact" />
             <button className="topbar-theme-toggle" type="button" onClick={() => { const next = theme === "dark" ? "light" : "dark"; setTheme(next); document.documentElement.dataset.theme = next; try { window.localStorage.setItem("vedic-chat-theme", next); } catch {} }} aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} title={theme === "dark" ? "Light mode" : "Dark mode"}>
               {theme === "dark" ? <Sun size={17} /> : <MoonStar size={17} />}
-              <span>{theme === "dark" ? "Light" : "Dark"}</span>
+              <span>{theme === "dark" ? t("nav.lightMode") : t("nav.darkMode")}</span>
             </button>
-            {isSignedIn ? <button className="topbar-link topbar-signout-icon" onClick={signOut} title="Sign out" aria-label="Sign out"><LogOut size={17} /></button> : <Link href="/login" className="topbar-link" title="Sign in" aria-label="Sign in"><UserRound size={14}/> <span>Sign in</span></Link>}
-            <button className="topbar-link" title={savedBirth ? "Edit birth details" : "Add birth details"} aria-label={savedBirth ? "Edit birth details" : "Add birth details"} onClick={() => setIsBirthOpen(true)}><Orbit size={14} /><span>{savedBirth ? "Birth profile" : "Birth details"}</span></button>
+            {isSignedIn ? <button className="topbar-link topbar-signout-icon" onClick={signOut} title={t("nav.signOut")} aria-label={t("nav.signOut")}><LogOut size={17} /></button> : <Link href="/login" className="topbar-link" title={t("nav.signIn")} aria-label={t("nav.signIn")}><UserRound size={14}/> <span>{t("nav.signIn")}</span></Link>}
+            <button className="topbar-link" title={savedBirth ? t("header.editBirth") : t("header.addBirth")} aria-label={savedBirth ? t("header.editBirth") : t("header.addBirth")} onClick={() => setIsBirthOpen(true)}><Orbit size={14} /><span>{savedBirth ? t("header.birthProfile") : t("header.birthDetails")}</span></button>
             <button className="icon-button topbar-notifications" aria-label="Enable notifications" title="Notification settings" onClick={() => { void enableNotifications(); }}><Bell size={16}/></button>
             <button className="icon-button topbar-help" aria-label="Help and product status" title="Help & status" onClick={() => setToast("Vedic AI is an early preview. Astrology calculations need reference-chart validation; AI and saved history depend on configured services.")}><CircleHelp size={17} /></button>
           </div>
@@ -1402,7 +1406,7 @@ export default function Home() {
 
         <footer className="chat-footer"><div className="composer-wrap">
           <form className="composer" onSubmit={submitMessage}>
-            <textarea id="chat-input" ref={textareaRef} value={input} onChange={(event) => { setInput(event.target.value); event.target.style.height = "auto"; event.target.style.height = Math.min(event.target.scrollHeight, 150) + "px"; }} onKeyDown={onComposerKeyDown} placeholder="Ask about your kundli, planets, nakshatras, or Jyotish…" rows={1} aria-label="Message Vedic AI" />
+            <textarea id="chat-input" ref={textareaRef} value={input} onChange={(event) => { setInput(event.target.value); event.target.style.height = "auto"; event.target.style.height = Math.min(event.target.scrollHeight, 150) + "px"; }} onKeyDown={onComposerKeyDown} placeholder={t("chat.inputPlaceholder")} rows={1} aria-label="Message Vedic AI" />
             <div className="composer-bottom"><div className="composer-tools">
               <button type="button" className="tool-button" onClick={() => setIsBirthOpen(true)}><Plus size={15} /><span>{savedBirth ? "Birth profile added" : "Add birth details"}</span></button>
               <button type="button" className={"tool-button voice-input-button" + (voiceListening ? " is-listening" : "")} onClick={toggleVoiceInput} aria-label={voiceListening ? "Stop voice typing" : "Start voice typing"} title={voiceListening ? "Stop voice typing" : "Speak to type"}><span className="voice-input-icon">{voiceListening ? <MicOff size={16} /> : <Mic size={16} />}</span><span>{voiceListening ? "Listening…" : "Speak"}</span></button>

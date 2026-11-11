@@ -20,6 +20,7 @@ import {
 import type { KundliReport } from "@/lib/astrology";
 import { printKundliReport } from "@/lib/print-report";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 export interface SavedReportItem {
   id: string;
@@ -37,6 +38,7 @@ export default function ReportsLibraryClient({
   initialReports,
 }: ReportsLibraryClientProps) {
   const router = useRouter();
+  const { t } = useLanguage();
   const [reports, setReports] = useState<SavedReportItem[]>(initialReports);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<"all" | "kundli" | "palm" | "synastry">("all");
@@ -124,9 +126,9 @@ export default function ReportsLibraryClient({
         {/* Filter Pills */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
           {[
-            { id: "all", label: "All Records", icon: Filter },
-            { id: "kundli", label: "Birth Charts", icon: Compass },
-            { id: "palm", label: "Palm Dossiers", icon: Hand },
+            { id: "all", label: t("reports.allReports"), icon: Filter },
+            { id: "kundli", label: t("kundli.title"), icon: Compass },
+            { id: "palm", label: t("reports.palmReadings"), icon: Hand },
             { id: "synastry", label: "Synastry", icon: Heart },
           ].map((tab) => {
             const Icon = tab.icon;
@@ -240,7 +242,7 @@ export default function ReportsLibraryClient({
                       title="Export printable PDF report"
                     >
                       <Download size={13} />
-                      <span>Export PDF</span>
+                      <span>{t("reports.exportPdf")}</span>
                     </button>
                     <Link
                       href={`/chat?openBirth=1`}
@@ -301,7 +303,7 @@ export default function ReportsLibraryClient({
               className="px-5 py-2 rounded-xl bg-[var(--gold)] text-[#11131A] text-xs font-bold hover:bg-[var(--gold2)] transition-colors flex items-center gap-1.5"
             >
               <Plus size={14} />
-              <span>Calculate New Kundli</span>
+              <span>{t("kundli.calculateChart")}</span>
             </Link>
           </div>
         </div>
@@ -326,7 +328,7 @@ export default function ReportsLibraryClient({
           href="/chat?openBirth=1"
           className="px-5 py-2.5 rounded-xl bg-[var(--gold)] hover:bg-[var(--gold2)] text-[#11131A] text-xs font-bold transition-all shadow-md flex items-center gap-2 whitespace-nowrap shrink-0"
         >
-          <span>Calculate New Kundli</span>
+          <span>{t("kundli.calculateChart")}</span>
           <ArrowRight size={14} />
         </Link>
       </div>

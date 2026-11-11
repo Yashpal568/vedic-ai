@@ -59,7 +59,7 @@ export function generatePalmPrintHtml(report: ParsedPalmReport, options: PalmPri
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Vedic AI — Hastarekha Palmistry Archival Dossier (${escapeHtml(reportId)})</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Mukta:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap');
 
     *, *::before, *::after {
       box-sizing: border-box;
@@ -70,7 +70,7 @@ export function generatePalmPrintHtml(report: ParsedPalmReport, options: PalmPri
     body {
       background: #0f1118;
       color: ${text};
-      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: 'Plus Jakarta Sans', 'Noto Sans Devanagari', 'Mukta', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       font-size: 11px;
       line-height: 1.45;
       -webkit-font-smoothing: antialiased;

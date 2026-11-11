@@ -271,6 +271,7 @@ export function generateKundliPrintHtml(report: KundliReport, reportId?: string)
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Vedic AI · Janma Kundli Report · Two-Page A4</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Mukta:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap');
     :root {
       --navy: #0f172a;
       --navy-light: #1e293b;
@@ -292,7 +293,7 @@ export function generateKundliPrintHtml(report: KundliReport, reportId?: string)
     html, body {
       background: #eef2f6;
       color: var(--ink);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Devanagari", "Mukta", Helvetica, Arial, sans-serif;
       font-size: 8.5pt;
       line-height: 1.45;
       -webkit-print-color-adjust: exact;

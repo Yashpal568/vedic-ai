@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
+import { useLanguage } from "@/lib/i18n/language-context";
+import { LanguageSelector } from "@/components/language-selector";
 import {
   BookOpen,
   CalendarDays,
@@ -14,16 +16,6 @@ import {
   UserRound,
   X,
 } from "lucide-react";
-
-const links = [
-  { label: "Home", href: "/chat", Icon: House, key: "home", detail: "Your astrology workspace" },
-  { label: "Kundli", href: "/chat?openBirth=1", Icon: Orbit, key: "kundli", detail: "Birth chart and details" },
-  { label: "Astrology Chat", href: "/chat#chat-input", Icon: MessageCircle, key: "chat", detail: "Ask your Jyotish questions" },
-  { label: "Palmistry", href: "/palm-reading", Icon: Hand, key: "palm", detail: "Explore visible palm lines" },
-  { label: "Panchang", href: "/panchang", Icon: CalendarDays, key: "panchang", detail: "Daily almanac and timings" },
-  { label: "Saved Kundlis & reports", href: "/reports", Icon: BookOpen, key: "reports", detail: "Your saved birth charts" },
-  { label: "My profile", href: "/profile", Icon: UserRound, key: "profile", detail: "Your account settings" },
-];
 
 export default function AppNavigationDrawer({
   open,
@@ -43,6 +35,17 @@ export default function AppNavigationDrawer({
   onWorkspace?: () => void;
 }) {
   const pathname = usePathname();
+  const { t } = useLanguage();
+
+  const links = [
+    { label: t("nav.home"), href: "/chat", Icon: House, key: "home", detail: "Your astrology workspace" },
+    { label: t("nav.kundli"), href: "/chat?openBirth=1", Icon: Orbit, key: "kundli", detail: "Birth chart and details" },
+    { label: t("nav.astrologyChat"), href: "/chat#chat-input", Icon: MessageCircle, key: "chat", detail: "Ask your Jyotish questions" },
+    { label: t("nav.palmistry"), href: "/palm-reading", Icon: Hand, key: "palm", detail: "Explore visible palm lines" },
+    { label: t("nav.panchang"), href: "/panchang", Icon: CalendarDays, key: "panchang", detail: "Daily almanac and timings" },
+    { label: t("nav.savedReports"), href: "/reports", Icon: BookOpen, key: "reports", detail: "Your saved birth charts" },
+    { label: t("nav.accountProfile"), href: "/profile", Icon: UserRound, key: "profile", detail: "Your account settings" },
+  ];
 
   useEffect(() => {
     if (!open) return;
@@ -95,15 +98,18 @@ export default function AppNavigationDrawer({
               vedic<span style={{ color: "var(--gold)" }}>.</span>ai
             </span>
           </Link>
-          <button
-            type="button"
-            className="icon-button stitch-close-button"
-            onClick={onClose}
-            onTouchEnd={onClose}
-            aria-label="Close navigation"
-          >
-            <X size={20} />
-          </button>
+          <div className="flex items-center gap-2">
+            <LanguageSelector variant="compact" />
+            <button
+              type="button"
+              className="icon-button stitch-close-button"
+              onClick={onClose}
+              onTouchEnd={onClose}
+              aria-label="Close navigation"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </header>
 
         <div className="mobile-drawer-scroll stitch-drawer-scroll">
@@ -116,7 +122,7 @@ export default function AppNavigationDrawer({
             }}
           >
             <span className="stitch-consultation-plus">+</span>
-            <span>New consultation</span>
+            <span>{t("nav.newConsultation")}</span>
             <span className="stitch-consultation-spark">✧</span>
           </button>
 

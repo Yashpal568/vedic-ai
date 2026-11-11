@@ -22,6 +22,8 @@ import {
   PanelLeftOpen,
 } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { useLanguage } from "@/lib/i18n/language-context";
+import { LanguageSelector } from "@/components/language-selector";
 
 interface AppDesktopSidebarProps {
   onNewConsultation?: () => void;
@@ -51,6 +53,7 @@ export default function AppDesktopSidebar({
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const { t } = useLanguage();
 
   useEffect(() => {
     try {
@@ -197,44 +200,44 @@ export default function AppDesktopSidebar({
 
   const sacredWorkspaces = [
     {
-      label: "Astrology Chat",
+      label: t("nav.astrologyChat") || "Astrology Chat",
       href: "/chat",
       icon: MessageSquare,
       active: pathname === "/chat",
     },
     {
-      label: "Birth Chart (Kundli)",
+      label: t("nav.birthChart") || "Birth Chart (Kundli)",
       href: "/chat?openBirth=1",
       icon: Compass,
       active: false,
     },
     {
-      label: "Palm Reading (Hastarekha)",
+      label: t("nav.palmReading") || "Palm Reading (Hastarekha)",
       href: "/palm-reading",
       icon: Hand,
       active: pathname === "/palm-reading",
       badge: "Vision AI",
     },
     {
-      label: "Panchang Almanac",
+      label: t("nav.panchangAlmanac") || "Panchang Almanac",
       href: "/panchang",
       icon: Calendar,
       active: pathname === "/panchang",
     },
     {
-      label: "Saved Reports & Kundlis",
+      label: t("nav.savedReports") || "Saved Reports & Kundlis",
       href: "/reports",
       icon: BookOpen,
       active: pathname === "/reports",
     },
     {
-      label: "AI Memory",
+      label: t("nav.aiMemory"),
       href: "/chat?openMemory=1",
       icon: ShieldCheck,
       active: false,
     },
     {
-      label: "Account Profile",
+      label: t("nav.accountProfile"),
       href: "/profile",
       icon: User,
       active: pathname === "/profile",
@@ -306,11 +309,11 @@ export default function AppDesktopSidebar({
               })
             }
             className="new-consultation-btn"
-            title="New Consultation (⌘N)"
+            title={`${t("nav.newConsultation")} (⌘N)`}
           >
             <div className="new-consultation-left">
               <PlusCircle size={17} className="new-consultation-plus" />
-              {!isCollapsed && <span>New Consultation</span>}
+              {!isCollapsed && <span>{t("nav.newConsultation")}</span>}
             </div>
             {!isCollapsed && <span className="new-consultation-badge">⌘N</span>}
           </button>
@@ -319,7 +322,7 @@ export default function AppDesktopSidebar({
         {/* Sacred Workspaces Section */}
         <div className="sidebar-section">
           {!isCollapsed && (
-            <span className="sidebar-section-title">Sacred Workspaces</span>
+            <span className="sidebar-section-title">{t("nav.sacredWorkspaces")}</span>
           )}
           <nav className="sidebar-nav" aria-label="Sacred Workspaces">
             {sacredWorkspaces.map((item) => {
@@ -335,7 +338,7 @@ export default function AppDesktopSidebar({
                     <Icon size={17} className="sidebar-nav-icon" />
                     {!isCollapsed && (
                       <span className="sidebar-nav-title">
-                        {item.badge ? "Palm Reading" : item.label}
+                        {item.badge ? t("nav.palmReading") : item.label}
                       </span>
                     )}
                   </div>
@@ -354,7 +357,7 @@ export default function AppDesktopSidebar({
         {!isCollapsed && (
           <div className="sidebar-section sidebar-recent-section">
             <div className="sidebar-section-header">
-              <span className="sidebar-section-title">Recent Consultations</span>
+              <span className="sidebar-section-title">{t("nav.recentConsultations")}</span>
               <span className="sidebar-count-badge">{conversations.length}</span>
             </div>
 
@@ -364,11 +367,11 @@ export default function AppDesktopSidebar({
                 <Search size={13} className="sidebar-search-icon" />
                 <input
                   type="text"
-                  placeholder="Search consultations..."
+                  placeholder={t("nav.searchConsultations") || "Search consultations..."}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="sidebar-search-input"
-                  aria-label="Search consultations"
+                  aria-label={t("nav.searchConsultations")}
                 />
               </div>
             )}
@@ -402,7 +405,7 @@ export default function AppDesktopSidebar({
                       type="button"
                       onClick={(e) => handleDeleteConversation(e, item.id)}
                       className="sidebar-history-delete"
-                      title="Delete consultation"
+                      title={t("common.delete")}
                       aria-label={"Delete " + item.title}
                     >
                       <Trash2 size={13} />
@@ -411,7 +414,7 @@ export default function AppDesktopSidebar({
                 ))
               ) : (
                 <p className="sidebar-empty-state">
-                  {searchQuery ? "No matches" : "No saved consultations yet."}
+                  {searchQuery ? "No matches" : t("nav.noRecentConsultations")}
                 </p>
               )}
             </div>
@@ -422,9 +425,9 @@ export default function AppDesktopSidebar({
       {/* Permanently Fixed Footer: Account Profile (ChatGPT-style fixed at bottom) */}
       <div className="sidebar-fixed-footer sidebar-bottom pb-6">
         {!isCollapsed && (
-          <div className="sidebar-version-row flex items-center justify-between px-1 pb-1.5 text-[10px] text-[var(--quiet)] font-mono">
-            <span>Theme Toggle</span>
-            <span className="sidebar-version-pill">Vedic 4.0</span>
+          <div className="sidebar-version-row flex items-center justify-between px-1 pb-2">
+            <LanguageSelector variant="compact" showIcon={false} />
+            <span className="sidebar-version-pill text-[10px] text-[var(--quiet)] font-mono">Vedic 4.0</span>
           </div>
         )}
         {/* Account Row */}
@@ -462,8 +465,8 @@ export default function AppDesktopSidebar({
                 type="button"
                 onClick={handleSignOut}
                 className="sidebar-signout-btn"
-                title="Sign Out"
-                aria-label="Sign Out"
+                title={t("nav.signOut")}
+                aria-label={t("nav.signOut")}
               >
                 <LogOut size={15} />
               </button>
@@ -472,7 +475,7 @@ export default function AppDesktopSidebar({
                 href="/login"
                 className="sidebar-signin-badge"
               >
-                Sign In
+                {t("nav.signIn")}
               </Link>
             )
           )}
