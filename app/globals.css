@@ -17858,8 +17858,10 @@ html[data-theme="light"] .sidebar-bottom .sidebar-google-mark {
   padding: 16px;
 }
 .palm-camera-modal {
-  width: 100%;
-  max-width: 520px;
+  width: min(94vw, 1080px);
+  max-width: 1100px;
+  height: min(90vh, 880px);
+  max-height: 92vh;
   background: var(--panel);
   border: 1px solid var(--line2);
   border-radius: 20px;
@@ -17867,14 +17869,21 @@ html[data-theme="light"] .sidebar-bottom .sidebar-google-mark {
   display: flex;
   flex-direction: column;
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7);
+  transition: all 0.25s ease-out;
 }
 .palm-camera-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 18px;
+  padding: 12px 20px;
   border-bottom: 1px solid var(--line);
   background: rgba(212, 183, 122, 0.04);
+  flex-shrink: 0;
+}
+.palm-camera-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 .palm-camera-title {
   display: flex;
@@ -17883,6 +17892,32 @@ html[data-theme="light"] .sidebar-bottom .sidebar-google-mark {
   font-weight: 700;
   font-size: 14px;
   color: var(--gold);
+}
+.palm-camera-res-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  background: rgba(16, 21, 27, 0.9);
+  border: 1px solid rgba(212, 183, 122, 0.35);
+  color: #f6d89b;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+.palm-res-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #52feb8;
+  box-shadow: 0 0 6px rgba(82, 254, 184, 0.8);
+  animation: palm-dot-pulse 2s infinite;
+}
+@keyframes palm-dot-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.85); }
 }
 .palm-camera-close {
   display: grid;
@@ -17902,9 +17937,10 @@ html[data-theme="light"] .sidebar-bottom .sidebar-google-mark {
 }
 .palm-camera-viewfinder {
   position: relative;
+  flex: 1;
   width: 100%;
-  height: min(72vh, 480px);
-  min-height: 360px;
+  height: 100%;
+  min-height: 480px;
   background: #090a0d;
   overflow: hidden;
   display: block;
@@ -17958,6 +17994,84 @@ html[data-theme="light"] .sidebar-bottom .sidebar-google-mark {
   box-shadow:
     0 0 0 7px rgba(69, 224, 162, 0.16),
     0 0 34px rgba(69, 224, 162, 0.6);
+}
+
+/* Biometric Animated Laser Scanning Beam */
+.palm-scan-laser-line {
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  height: 2.5px;
+  pointer-events: none;
+  z-index: 5;
+  animation: palm-laser-sweep 2.8s ease-in-out infinite alternate;
+  will-change: top, opacity;
+}
+.palm-scan-laser-beam {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--laser-color, #f59e0b) 25%,
+    #ffffff 50%,
+    var(--laser-color, #f59e0b) 75%,
+    transparent 100%
+  );
+  box-shadow:
+    0 0 12px var(--laser-glow, rgba(245, 158, 11, 0.8)),
+    0 0 24px var(--laser-glow, rgba(245, 158, 11, 0.45));
+  border-radius: 9999px;
+}
+.palm-scan-laser-line.is-locked {
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  animation: palm-laser-lock 0.7s ease-in-out infinite alternate !important;
+}
+@keyframes palm-laser-sweep {
+  0% {
+    top: 14%;
+    opacity: 0.65;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    top: 86%;
+    opacity: 0.65;
+  }
+}
+@keyframes palm-laser-lock {
+  0% {
+    opacity: 0.85;
+    filter: drop-shadow(0 0 8px #52feb8);
+  }
+  100% {
+    opacity: 1;
+    filter: drop-shadow(0 0 20px #52feb8);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .palm-scan-laser-line {
+    animation: none !important;
+    top: 50% !important;
+    opacity: 0.75 !important;
+  }
+}
+.palm-hud-resolution-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  background: rgba(16, 21, 27, 0.88);
+  border: 1px solid rgba(212, 183, 122, 0.35);
+  color: #f6d89b;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
 }
 .palm-scan-meter {
   position: absolute;
@@ -20757,25 +20871,28 @@ html[data-theme="light"] .palm-preview-img {
   padding: clamp(12px, 3vw, 22px);
 }
 .palm-camera-silhouette-svg {
-  width: min(92%, 430px);
-  height: min(92%, 590px);
-  max-width: none;
-  max-height: none;
+  position: absolute;
   top: 50%;
   left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(84%, 520px);
+  height: min(84%, 660px);
+  max-width: none;
+  max-height: none;
+  pointer-events: none;
+  transition: all 0.25s ease-out;
 }
 .palm-guide-top-hud,
 .palm-dynamic-instruction-pill {
   max-width: 100%;
 }
 .palm-dynamic-instruction-pill {
-  width: min(86%, 390px);
+  width: min(86%, 420px);
 }
 .palm-instruction-message {
   overflow-wrap: anywhere;
 }
-.palm-preview-modal,
-.palm-camera-modal {
+.palm-preview-modal {
   width: min(100%, 540px);
   max-width: 100%;
   min-width: 0;
@@ -20790,6 +20907,18 @@ html[data-theme="light"] .palm-preview-img {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
+}
+@media (min-width: 768px) and (max-width: 1024px) {
+  .palm-camera-modal {
+    width: 92vw !important;
+    max-width: 92vw !important;
+    height: min(92vh, 840px) !important;
+    max-height: 92vh !important;
+  }
+  .palm-camera-silhouette-svg {
+    width: min(86%, 460px) !important;
+    height: min(84%, 580px) !important;
+  }
 }
 @media (max-width: 767px) {
   .palm-grid {
@@ -20806,22 +20935,33 @@ html[data-theme="light"] .palm-preview-img {
     grid-template-columns: minmax(0, 1fr);
   }
   .palm-camera-overlay {
-    padding: 10px;
-    align-items: center;
+    padding: 0 !important;
+    align-items: stretch !important;
   }
-  .palm-camera-modal,
+  .palm-camera-modal {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100svh !important;
+    max-height: 100svh !important;
+    border-radius: 0 !important;
+    border: none !important;
+  }
   .palm-preview-modal {
     width: 100%;
     max-height: calc(100svh - 20px);
     border-radius: 18px;
   }
   .palm-camera-viewfinder {
-    height: min(62svh, 620px);
-    min-height: 390px;
+    flex: 1;
+    height: auto !important;
+    min-height: 0 !important;
   }
   .palm-camera-silhouette-svg {
-    width: min(96%, 410px);
-    height: min(94%, 540px);
+    width: min(92%, 360px) !important;
+    height: min(78%, 500px) !important;
+  }
+  .palm-camera-controls {
+    padding: 12px 18px calc(env(safe-area-inset-bottom, 12px) + 6px) !important;
   }
   .palm-preview-image-container {
     height: min(44svh, 380px);

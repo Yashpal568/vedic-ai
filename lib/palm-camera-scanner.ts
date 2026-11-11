@@ -70,6 +70,7 @@ export interface ScannerMetrics {
   contrastValue: number;
   handedness: "Left" | "Right";
   landmarks?: Landmark21[];
+  resolutionLabel?: "4K" | "Full HD" | "HD" | "Standard";
 }
 
 /**
@@ -77,28 +78,28 @@ export interface ScannerMetrics {
  */
 export const PALM_STATE_MESSAGES: Record<PalmReadinessState, string> = {
   MODEL_LOADING: "Preparing palm scanner...",
-  NO_HAND: "Show your open hand to the camera",
+  NO_HAND: "Show your open palm to the camera",
   FACE_OR_NON_HAND: "Please show your palm, not your face",
   BACK_OF_HAND: "Turn your hand around — show your palm lines",
   PALM_NOT_FACING_CAMERA: "Turn your hand around — show your palm lines",
-  PALM_ROTATED: "Rotate your hand to face the camera",
-  PALM_TILTED: "Keep your palm straight and upright",
+  PALM_ROTATED: "Rotate your hand — keep palm straight",
+  PALM_TILTED: "Keep your palm straight",
   PALM_TOO_FAR: "Move your hand closer",
   PALM_TOO_CLOSE: "Move your hand slightly away",
-  HAND_OUTSIDE_GUIDE: "Place your entire palm inside the frame",
-  PALM_OUTSIDE_GUIDE: "Place your entire palm inside the frame",
-  FINGERS_CROPPED: "Keep all five fingertips visible",
+  HAND_OUTSIDE_GUIDE: "Center your palm inside the outline",
+  PALM_OUTSIDE_GUIDE: "Center your palm inside the outline",
+  FINGERS_CROPPED: "Keep all fingertips inside the guide",
   WRIST_CROPPED: "Move your hand slightly upward",
   WRIST_NOT_VISIBLE: "Move your hand slightly upward",
   FINGERS_CLOSED: "Spread your fingers naturally",
   FINGERS_NOT_VISIBLE: "Spread your fingers naturally",
-  IMAGE_BLURRY: "Hold still and allow the camera to focus",
-  POOR_LIGHTING: "Move to brighter, even lighting",
+  IMAGE_BLURRY: "Hold your hand steady — palm is blurry",
+  POOR_LIGHTING: "Move into brighter lighting",
   PALM_UNSTABLE: "Hold your hand steady",
-  PALM_STABILIZING: "Hold your hand steady",
-  READY_TO_CAPTURE: "Perfect! Hold still, capturing automatically...",
+  PALM_STABILIZING: "Hold still while we scan...",
+  READY_TO_CAPTURE: "Perfect! Hold still, capturing your photo automatically...",
   CAPTURED: "Palm photo captured successfully",
-  HAND_DETECTED: "Hold still while we verify your palm...",
+  HAND_DETECTED: "Hold still while we scan...",
 };
 
 export interface MediaPipeHandResults {
@@ -851,7 +852,7 @@ export function evaluatePalmScannerFrame(
   };
 
   // Gate 7: Distance / Scale verification
-  if (handHeight < 0.28 || handWidth < 0.20) {
+  if (handHeight < 0.22 || handWidth < 0.16) {
     return {
       metrics: {
         hasHand: true,
@@ -878,7 +879,7 @@ export function evaluatePalmScannerFrame(
     };
   }
 
-  if (handHeight > 0.94 || handWidth > 0.88) {
+  if (handHeight > 0.96 || handWidth > 0.92) {
     return {
       metrics: {
         hasHand: true,
@@ -906,12 +907,12 @@ export function evaluatePalmScannerFrame(
   }
 
   // Gate 8: Guide alignment
-  // Centered in frame: x in [0.20, 0.80], y in [0.16, 0.84]
+  // Centered in frame: x in [0.16, 0.84], y in [0.12, 0.88]
   const insideGuide =
-    palmCenter.x >= 0.20 &&
-    palmCenter.x <= 0.80 &&
-    palmCenter.y >= 0.16 &&
-    palmCenter.y <= 0.84;
+    palmCenter.x >= 0.16 &&
+    palmCenter.x <= 0.84 &&
+    palmCenter.y >= 0.12 &&
+    palmCenter.y <= 0.88;
 
   if (!insideGuide) {
     return {
@@ -978,8 +979,8 @@ export function evaluatePalmScannerFrame(
         state: "POOR_LIGHTING",
         readinessScore: 30,
         statusMessage: isDark
-          ? "Lighting is too dark — move to brighter light"
-          : "Palm is overexposed — avoid harsh glare",
+          ? "Move into brighter lighting — palm is too dark"
+          : "Move into even lighting — palm is overexposed",
         guideColor: "amber",
         insideGuide: true,
         optimalDistance: true,
@@ -1006,7 +1007,7 @@ export function evaluatePalmScannerFrame(
         hasHand: true,
         state: "IMAGE_BLURRY",
         readinessScore: 35,
-        statusMessage: "Hold still and allow the camera to focus — palm is blurry",
+        statusMessage: "Hold your hand steady — palm is blurry",
         guideColor: "amber",
         insideGuide: true,
         optimalDistance: true,
@@ -1085,7 +1086,7 @@ export function evaluatePalmScannerFrame(
       hasHand: true,
       state: "PALM_STABILIZING",
       readinessScore: progressPercent,
-      statusMessage: "Hold hand steady... " + progressPercent + "%",
+      statusMessage: "Hold still while we scan... " + progressPercent + "%",
       guideColor: "green",
       insideGuide: true,
       optimalDistance: true,

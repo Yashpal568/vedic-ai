@@ -10,6 +10,7 @@ interface PalmCameraGuideProps {
   guideColor: "red" | "amber" | "green";
   autoCapturing: boolean;
   onShowInstructions?: () => void;
+  resolutionBadge?: string;
 }
 
 export function PalmCameraGuide({
@@ -19,6 +20,7 @@ export function PalmCameraGuide({
   guideColor,
   autoCapturing,
   onShowInstructions,
+  resolutionBadge,
 }: PalmCameraGuideProps) {
   // Theme colors based on strict detection validation
   const strokeColor =
@@ -149,7 +151,28 @@ export function PalmCameraGuide({
         </text>
       </svg>
 
-      {/* Top Banner: Progress Meter and Active Instruction */}
+      {/* Biometric Animated Laser Scanning Beam */}
+      {state !== "NO_HAND" && state !== "FACE_OR_NON_HAND" && state !== "MODEL_LOADING" && (
+        <div
+          className={`palm-scan-laser-line ${autoCapturing || state === "READY_TO_CAPTURE" ? "is-locked" : ""}`}
+          style={
+            {
+              "--laser-color": strokeColor,
+              "--laser-glow":
+                guideColor === "green"
+                  ? "rgba(82, 254, 184, 0.85)"
+                  : guideColor === "amber"
+                  ? "rgba(245, 158, 11, 0.85)"
+                  : "rgba(239, 68, 68, 0.85)",
+            } as React.CSSProperties
+          }
+          aria-hidden="true"
+        >
+          <div className="palm-scan-laser-beam" />
+        </div>
+      )}
+
+      {/* Top Banner: Progress Meter, Resolution & Active Instruction */}
       <div className="palm-guide-top-hud">
         {/* Live Circular Percentage Meter */}
         <div className="palm-scan-meter-card">
@@ -180,6 +203,14 @@ export function PalmCameraGuide({
             </span>
           </div>
         </div>
+
+        {/* Live Video Stream Resolution Indicator Badge */}
+        {resolutionBadge && (
+          <div className="palm-hud-resolution-pill" title={`Live camera stream: ${resolutionBadge}`}>
+            <span className="palm-res-dot" />
+            <span>{resolutionBadge}</span>
+          </div>
+        )}
 
         {/* Help button to review instructions */}
         {onShowInstructions && (

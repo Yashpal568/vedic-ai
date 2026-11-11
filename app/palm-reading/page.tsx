@@ -75,6 +75,12 @@ export default function PalmReadingPage() {
   // Live camera modal states
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [cameraFacing, setCameraFacing] = useState<"environment" | "user">("environment");
+  const [cameraResolution, setCameraResolution] = useState<{
+    label: "4K" | "Full HD" | "HD" | "Standard";
+    width: number;
+    height: number;
+    fps?: number;
+  }>({ label: "Standard", width: 0, height: 0 });
   const [cameraError, setCameraError] = useState("");
   const [cameraLoading, setCameraLoading] = useState(false);
   const [landmarkerError, setLandmarkerError] = useState("");
@@ -121,44 +127,114 @@ export default function PalmReadingPage() {
     };
   }, []);
 
-  // Capture current video frame to preview state
-  const capturePhotoFromStream = useCallback((isAuto = false) => {
+  // Capture current video frame to preview state with high-resolution ImageCapture & canvas fallback
+  const capturePhotoFromStream = useCallback(async (isAuto = false) => {
     const video = videoRef.current;
     if (!video || video.readyState < 2) return;
 
     try {
-      const width = video.videoWidth || 1280;
-      const height = video.videoHeight || 720;
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) throw new Error("Could not capture frame");
+      let dataUrl = "";
+      let width = video.videoWidth || 1280;
+      let height = video.videoHeight || 720;
+      let rawPixelData: { data: Uint8ClampedArray; width: number; height: number } | undefined = undefined;
 
-      // Draw video frame onto canvas
-      ctx.drawImage(video, 0, 0, width, height);
-      const imgData = ctx.getImageData(0, 0, width, height);
+      // 1. Attempt native sensor full-resolution photo via ImageCapture API if supported
+      const videoTrack = mediaStreamRef.current?.getVideoTracks()[0];
+      let imageCaptureSuccess = false;
 
-      let qualityVal = 0.88;
-      let dataUrl = canvas.toDataURL("image/jpeg", qualityVal);
-      while (dataUrl.length > 5_000_000 && qualityVal > 0.5) {
-        qualityVal -= 0.08;
+      if (
+        videoTrack &&
+        typeof window !== "undefined" &&
+        "ImageCapture" in window
+      ) {
+        try {
+          const ImageCaptureCtor = (
+            window as unknown as {
+              ImageCapture?: new (track: MediaStreamTrack) => {
+                takePhoto: (options?: { fillLightMode?: string }) => Promise<Blob>;
+              };
+            }
+          ).ImageCapture;
+
+          if (ImageCaptureCtor) {
+            const imageCapture = new ImageCaptureCtor(videoTrack);
+            const blob: Blob = await imageCapture.takePhoto({ fillLightMode: "off" });
+            if (blob && blob.size > 0) {
+              dataUrl = await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result as string);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+              });
+
+              // Decode image to inspect dimensions & extract pixel data for crease extraction
+              const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+                const el = new Image();
+                el.onload = () => resolve(el);
+                el.onerror = reject;
+                el.src = dataUrl;
+              });
+
+              width = img.naturalWidth || width;
+              height = img.naturalHeight || height;
+
+              const canvas = document.createElement("canvas");
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext("2d");
+              if (ctx) {
+                ctx.drawImage(img, 0, 0, width, height);
+                const imgData = ctx.getImageData(0, 0, width, height);
+                rawPixelData = {
+                  data: imgData.data,
+                  width,
+                  height,
+                };
+                imageCaptureSuccess = true;
+              }
+            }
+          }
+        } catch {
+          imageCaptureSuccess = false;
+        }
+      }
+
+      // 2. Fallback to full-resolution video canvas at high JPEG quality (0.95)
+      if (!imageCaptureSuccess) {
+        width = video.videoWidth || 1280;
+        height = video.videoHeight || 720;
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) throw new Error("Could not capture frame");
+
+        ctx.drawImage(video, 0, 0, width, height);
+        const imgData = ctx.getImageData(0, 0, width, height);
+        rawPixelData = {
+          data: imgData.data,
+          width,
+          height,
+        };
+
+        // High JPEG quality 0.95
+        let qualityVal = 0.95;
         dataUrl = canvas.toDataURL("image/jpeg", qualityVal);
+        while (dataUrl.length > 5_000_000 && qualityVal > 0.55) {
+          qualityVal -= 0.08;
+          dataUrl = canvas.toDataURL("image/jpeg", qualityVal);
+        }
       }
 
       // Derive genuine image-grounded features directly from frame pixels and landmarks
       const features = derivePalmFeatures(
         hand,
         undefined,
-        {
-          data: imgData.data,
-          width,
-          height,
-        },
+        rawPixelData,
         lastDetectedLandmarksRef.current || undefined
       );
 
-      // Stop active video stream immediately
+      // Stop active video stream immediately to release camera hardware
       stopCameraStream();
       setIsCameraActive(false);
 
@@ -214,20 +290,108 @@ export default function PalmReadingPage() {
     }
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
+      const resolutionTiers: MediaTrackConstraints[] = [
+        // Tier 1: 4K UHD (3840x2160 @ 30fps)
+        {
+          facingMode: { ideal: facing },
+          width: { ideal: 3840 },
+          height: { ideal: 2160 },
+          frameRate: { ideal: 30 },
+        },
+        // Tier 2: Full HD (1920x1080 @ 30fps)
+        {
           facingMode: { ideal: facing },
           width: { ideal: 1920 },
           height: { ideal: 1080 },
+          frameRate: { ideal: 30 },
         },
-        audio: false,
-      });
+        // Tier 3: HD (1280x720 @ 30fps)
+        {
+          facingMode: { ideal: facing },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          frameRate: { ideal: 30 },
+        },
+        // Tier 4: Device default fallback
+        {
+          facingMode: { ideal: facing },
+        },
+      ];
+
+      let stream: MediaStream | null = null;
+      let lastErr: unknown = null;
+
+      for (const constraints of resolutionTiers) {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: constraints,
+            audio: false,
+          });
+          if (stream) break;
+        } catch (tierErr) {
+          lastErr = tierErr;
+        }
+      }
+
+      if (!stream) {
+        throw lastErr || new Error("Failed to initialize camera stream");
+      }
 
       mediaStreamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         await videoRef.current.play().catch(() => {});
       }
+
+      // Read actual hardware track settings & capabilities
+      const videoTrack = stream.getVideoTracks()[0];
+      let resLabel: "4K" | "Full HD" | "HD" | "Standard" = "Standard";
+      let actualW = 0;
+      let actualH = 0;
+      let actualFps: number | undefined = undefined;
+
+      if (videoTrack) {
+        const settings = typeof videoTrack.getSettings === "function" ? videoTrack.getSettings() : {};
+        actualW = settings.width || 0;
+        actualH = settings.height || 0;
+        actualFps = settings.frameRate ? Math.round(settings.frameRate) : undefined;
+
+        // Attempt continuous focus if camera sensor supports it
+        if (typeof videoTrack.getCapabilities === "function") {
+          try {
+            const caps = videoTrack.getCapabilities() as { focusMode?: string[] };
+            if (caps?.focusMode && caps.focusMode.includes("continuous")) {
+              await videoTrack.applyConstraints({
+                // @ts-expect-error advanced focusMode constraint
+                advanced: [{ focusMode: "continuous" }],
+              });
+            }
+          } catch {
+            // Focus constraint is optional; non-fatal
+          }
+        }
+      }
+
+      // Derive genuine resolution label (do not manufacture 4K unless actual dimensions confirm)
+      const maxDim = Math.max(actualW, actualH);
+      const minDim = Math.min(actualW, actualH);
+      if (maxDim >= 3840 || minDim >= 2160 || (actualW * actualH >= 3840 * 2000)) {
+        resLabel = "4K";
+      } else if (maxDim >= 1920 || minDim >= 1080 || (actualW * actualH >= 1920 * 1000)) {
+        resLabel = "Full HD";
+      } else if (maxDim >= 1280 || minDim >= 720) {
+        resLabel = "HD";
+      } else {
+        resLabel = "Standard";
+      }
+
+      setCameraResolution({
+        label: resLabel,
+        width: actualW,
+        height: actualH,
+        fps: actualFps,
+      });
+
       setCameraLoading(false);
     } catch (err: unknown) {
       console.warn("[palm-reading] getUserMedia error:", err);
@@ -977,9 +1141,20 @@ These are traditional symbolic interpretations, not scientifically validated per
         <div className="palm-camera-overlay" role="dialog" aria-modal="true" aria-label="Take palm photo">
           <div className="palm-camera-modal">
             <div className="palm-camera-header">
-              <span className="palm-camera-title">
-                <Camera size={16} /> Palm Camera Viewfinder
-              </span>
+              <div className="palm-camera-header-left">
+                <span className="palm-camera-title">
+                  <Camera size={16} /> Palm Camera Viewfinder
+                </span>
+                {cameraResolution.width > 0 && (
+                  <span
+                    className="palm-camera-res-badge"
+                    title={`Live Camera: ${cameraResolution.width}×${cameraResolution.height}${cameraResolution.fps ? ` @ ${cameraResolution.fps}fps` : ""}`}
+                  >
+                    <span className="palm-res-dot" />
+                    {cameraResolution.label}
+                  </span>
+                )}
+              </div>
               <button
                 type="button"
                 className="palm-camera-close"
@@ -1002,6 +1177,11 @@ These are traditional symbolic interpretations, not scientifically validated per
                   guideColor={guideColor}
                   autoCapturing={autoCapturing}
                   onShowInstructions={() => setIsPreScanModalOpen(true)}
+                  resolutionBadge={
+                    cameraResolution.width > 0
+                      ? `${cameraResolution.label}${cameraResolution.width ? ` ${cameraResolution.width}p` : ""}`
+                      : undefined
+                  }
                 />
               </div>
 
