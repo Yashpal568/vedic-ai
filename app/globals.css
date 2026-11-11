@@ -17360,7 +17360,7 @@ html[data-theme="light"] .sidebar-bottom .sidebar-google-mark {
   display: flex !important;
   flex-direction: column !important;
   gap: 8px !important;
-  padding: 10px 15px max(12px, env(safe-area-inset-bottom)) !important;
+  padding: 10px 15px max(24px, calc(16px + env(safe-area-inset-bottom))) !important;
   border-top: 1px solid rgba(255, 255, 255, 0.065) !important;
   background: linear-gradient(
     180deg,
@@ -19252,7 +19252,8 @@ html[data-theme="light"] .side-link.active {
 .sidebar-bottom {
   flex: 0 0 auto !important;
   margin-top: auto !important;
-  padding: 12px 14px !important;
+  padding: 12px 14px 24px !important;
+  padding-bottom: max(24px, calc(16px + env(safe-area-inset-bottom))) !important;
   border-top: 1px solid rgba(212, 183, 122, 0.14) !important;
   background: #0d0f14 !important;
   position: relative !important;
@@ -19263,6 +19264,8 @@ html[data-theme="light"] .side-link.active {
 html[data-theme="light"] .sidebar-bottom {
   background: #faf8f5 !important;
   border-top: 1px solid rgba(40, 30, 20, 0.09) !important;
+  padding: 12px 14px 24px !important;
+  padding-bottom: max(24px, calc(16px + env(safe-area-inset-bottom))) !important;
 }
 
 .sidebar-bottom .profile-row {
@@ -19270,6 +19273,7 @@ html[data-theme="light"] .sidebar-bottom {
   align-items: center !important;
   gap: 10px !important;
   padding: 8px 10px !important;
+  margin-bottom: 2px !important;
   border-radius: 12px !important;
   background: rgba(255, 255, 255, 0.035) !important;
   border: 1px solid rgba(212, 183, 122, 0.15) !important;
@@ -19535,8 +19539,10 @@ html[data-sidebar-collapsed="true"] .sidebar-workspace-items .side-link span:not
   display: none !important;
 }
 
-html[data-sidebar-collapsed="true"] .sidebar-bottom {
-  padding: 10px 8px !important;
+html[data-sidebar-collapsed="true"] .sidebar-bottom,
+html[data-sidebar-collapsed="true"] .sidebar-fixed-footer {
+  padding: 10px 8px 24px !important;
+  padding-bottom: max(24px, calc(16px + env(safe-area-inset-bottom))) !important;
 }
 
 html[data-sidebar-collapsed="true"] .sidebar-bottom .profile-row {
@@ -19918,6 +19924,31 @@ html[data-theme="light"] .chat-footer {
   letter-spacing: 0.5px !important;
 }
 
+/* Light Mode styling for Vision AI Badge: High contrast, deep Vedic emerald */
+html[data-theme="light"] .sidebar-vision-badge,
+[data-theme="light"] .sidebar-vision-badge,
+.light .sidebar-vision-badge {
+  background: rgba(16, 149, 97, 0.14) !important;
+  color: #065f46 !important;
+  border: 1px solid rgba(16, 149, 97, 0.38) !important;
+  font-weight: 750 !important;
+  box-shadow: 0 1px 2px rgba(16, 149, 97, 0.08) !important;
+}
+
+html[data-theme="light"] .sidebar-nav-link.active .sidebar-vision-badge,
+[data-theme="light"] .sidebar-nav-link.active .sidebar-vision-badge {
+  background: rgba(16, 149, 97, 0.22) !important;
+  color: #04543d !important;
+  border-color: rgba(16, 149, 97, 0.5) !important;
+}
+
+html[data-theme="light"] .sidebar-nav-link:hover .sidebar-vision-badge,
+[data-theme="light"] .sidebar-nav-link:hover .sidebar-vision-badge {
+  background: rgba(16, 149, 97, 0.25) !important;
+  color: #034532 !important;
+  border-color: rgba(16, 149, 97, 0.55) !important;
+}
+
 /* Recent Consultations */
 .sidebar-recent-section {
   margin-top: 10px !important;
@@ -20061,7 +20092,8 @@ html[data-theme="light"] .chat-footer {
 .sidebar-fixed-footer {
   margin-top: auto !important;
   flex-shrink: 0 !important;
-  padding: 12px 14px !important;
+  padding: 12px 14px 24px !important;
+  padding-bottom: max(24px, calc(16px + env(safe-area-inset-bottom))) !important;
   border-top: 1px solid var(--line, rgba(255, 255, 255, 0.08)) !important;
   background: rgba(14, 16, 23, 0.95) !important;
   display: flex !important;
@@ -20104,6 +20136,8 @@ html[data-theme="light"] .chat-footer {
   align-items: center !important;
   justify-content: space-between !important;
   padding-top: 8px !important;
+  padding-bottom: 4px !important;
+  margin-bottom: 2px !important;
   border-top: 1px solid var(--line, rgba(255, 255, 255, 0.08)) !important;
 }
 
@@ -20248,6 +20282,8 @@ html[data-theme="light"] .sidebar-search-input {
 html[data-theme="light"] .sidebar-fixed-footer {
   background: #f5f0e6 !important;
   border-top-color: #e5ded2 !important;
+  padding: 12px 14px 24px !important;
+  padding-bottom: max(24px, calc(16px + env(safe-area-inset-bottom))) !important;
 }
 
 html[data-theme="light"] .sidebar-account-name {

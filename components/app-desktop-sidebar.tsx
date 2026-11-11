@@ -420,7 +420,7 @@ export default function AppDesktopSidebar({
       </div>
 
       {/* Permanently Fixed Footer: Account Profile (ChatGPT-style fixed at bottom) */}
-      <div className="sidebar-fixed-footer sidebar-bottom">
+      <div className="sidebar-fixed-footer sidebar-bottom pb-6">
         {!isCollapsed && (
           <div className="sidebar-version-row flex items-center justify-between px-1 pb-1.5 text-[10px] text-[var(--quiet)] font-mono">
             <span>Theme Toggle</span>
@@ -428,7 +428,7 @@ export default function AppDesktopSidebar({
           </div>
         )}
         {/* Account Row */}
-        <div className="sidebar-account-row profile-row">
+        <div className="sidebar-account-row profile-row mb-1">
           <Link
             href="/profile"
             className="sidebar-account-link"
