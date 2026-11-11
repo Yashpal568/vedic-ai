@@ -39,53 +39,63 @@ export function parsePalmReading(markdown: string, hand: "left" | "right" | "uns
   }
 
   const pOverview = extractSection([
-    /##\s*1\.\s*(?:Palm Overview|Overview|Hand Structure|Photo Observations)[^\n]*\n([\s\S]*?)(?=\n##|\n---|$)/i,
+    /(?:#{1,4}|\*\*)\s*(?:1\.)?\s*(?:Palm Overview|Overview|Hand Structure|Photo Observations)[^\n]*\n([\s\S]*?)(?=\n(?:#{1,4}|\*\*|\d+\.)|\n---|$)/i,
     /##\s*Palm Overview[^\n]*\n([\s\S]*?)(?=\n##|\n---|$)/i,
+    /1\.\s*Palm Overview[^\n]*\n([\s\S]*?)(?=\n\d+\.|\n---|$)/i,
   ]);
 
   const pHeart = extractSection([
-    /##\s*2\.\s*(?:Heart Line|Heart)[^\n]*\n([\s\S]*?)(?=\n##|\n---|$)/i,
+    /(?:#{1,4}|\*\*)\s*(?:2\.)?\s*(?:Heart Line|Heart|Hrdaya)[^\n]*\n([\s\S]*?)(?=\n(?:#{1,4}|\*\*|\d+\.)|\n---|$)/i,
     /##\s*Heart Line[^\n]*\n([\s\S]*?)(?=\n##|\n---|$)/i,
+    /2\.\s*Heart Line[^\n]*\n([\s\S]*?)(?=\n\d+\.|\n---|$)/i,
   ]);
 
   const pHead = extractSection([
-    /##\s*3\.\s*(?:Head Line|Head)[^\n]*\n([\s\S]*?)(?=\n##|\n---|$)/i,
+    /(?:#{1,4}|\*\*)\s*(?:3\.)?\s*(?:Head Line|Head|Mastaka)[^\n]*\n([\s\S]*?)(?=\n(?:#{1,4}|\*\*|\d+\.)|\n---|$)/i,
     /##\s*Head Line[^\n]*\n([\s\S]*?)(?=\n##|\n---|$)/i,
+    /3\.\s*Head Line[^\n]*\n([\s\S]*?)(?=\n\d+\.|\n---|$)/i,
   ]);
 
   const pLife = extractSection([
-    /##\s*4\.\s*(?:Life Line|Life)[^\n]*\n([\s\S]*?)(?=\n##|\n---|$)/i,
+    /(?:#{1,4}|\*\*)\s*(?:4\.)?\s*(?:Life Line|Life|Jeeva)[^\n]*\n([\s\S]*?)(?=\n(?:#{1,4}|\*\*|\d+\.)|\n---|$)/i,
     /##\s*Life Line[^\n]*\n([\s\S]*?)(?=\n##|\n---|$)/i,
+    /4\.\s*Life Line[^\n]*\n([\s\S]*?)(?=\n\d+\.|\n---|$)/i,
   ]);
 
   const pThumbFingers = extractSection([
-    /##\s*5\.\s*(?:Thumb & Finger|Thumb|Finger Characteristics|Fingers)[^\n]*\n([\s\S]*?)(?=\n##|\n---|$)/i,
+    /(?:#{1,4}|\*\*)\s*(?:5\.)?\s*(?:Thumb & Finger|Thumb|Finger Characteristics|Fingers)[^\n]*\n([\s\S]*?)(?=\n(?:#{1,4}|\*\*|\d+\.)|\n---|$)/i,
     /##\s*Thumb[^\n]*\n([\s\S]*?)(?=\n##|\n---|$)/i,
+    /5\.\s*Thumb[^\n]*\n([\s\S]*?)(?=\n\d+\.|\n---|$)/i,
   ]);
 
   const pMounts = extractSection([
-    /##\s*6\.\s*(?:Planetary Mount|Mount Elevations|Mounts)[^\n]*\n([\s\S]*?)(?=\n##|\n---|$)/i,
+    /(?:#{1,4}|\*\*)\s*(?:6\.)?\s*(?:Planetary Mount|Mount Elevations|Mounts)[^\n]*\n([\s\S]*?)(?=\n(?:#{1,4}|\*\*|\d+\.)|\n---|$)/i,
     /##\s*Planetary Mounts[^\n]*\n([\s\S]*?)(?=\n##|\n---|$)/i,
+    /6\.\s*Planetary Mounts[^\n]*\n([\s\S]*?)(?=\n\d+\.|\n---|$)/i,
   ]);
 
   const pFate = extractSection([
-    /##\s*(?:7|5)\.\s*(?:Fate Line|Fate|Distinct Markings)[^\n]*\n([\s\S]*?)(?=\n##|\n---|$)/i,
+    /(?:#{1,4}|\*\*)\s*(?:7|5)\.?\s*(?:Fate Line|Fate|Bhagya|Distinct Markings)[^\n]*\n([\s\S]*?)(?=\n(?:#{1,4}|\*\*|\d+\.)|\n---|$)/i,
     /##\s*Fate Line[^\n]*\n([\s\S]*?)(?=\n##|\n---|$)/i,
+    /7\.\s*Fate Line[^\n]*\n([\s\S]*?)(?=\n\d+\.|\n---|$)/i,
   ]);
 
   const pSynthesis = extractSection([
-    /##\s*(?:8|6)\.\s*(?:Overall Traditional Reading|Traditional Reading|Synthesis)[^\n]*\n([\s\S]*?)(?=\n##|\n---|$)/i,
+    /(?:#{1,4}|\*\*)\s*(?:8|6)\.?\s*(?:Overall Traditional Reading|Traditional Reading|Synthesis)[^\n]*\n([\s\S]*?)(?=\n(?:#{1,4}|\*\*|\d+\.)|\n---|$)/i,
     /##\s*Overall Traditional Reading[^\n]*\n([\s\S]*?)(?=\n##|\n---|$)/i,
+    /8\.\s*Overall Traditional Reading[^\n]*\n([\s\S]*?)(?=\n\d+\.|\n---|$)/i,
   ]);
 
   const pRemedies = extractSection([
-    /##\s*(?:9|7)\.\s*(?:Karmic Harmonization|Upaya|Remedies|Prescribed)[^\n]*\n([\s\S]*?)(?=\n##|\n---|$)/i,
+    /(?:#{1,4}|\*\*)\s*(?:9|7)\.?\s*(?:Karmic Harmonization|Upaya|Remedies|Prescribed)[^\n]*\n([\s\S]*?)(?=\n(?:#{1,4}|\*\*|\d+\.)|\n---|$)/i,
     /##\s*Remedies[^\n]*\n([\s\S]*?)(?=\n##|\n---|$)/i,
+    /9\.\s*Remedies[^\n]*\n([\s\S]*?)(?=\n\d+\.|\n---|$)/i,
   ]);
 
   const pLimitations = extractSection([
-    /##\s*(?:10|8|7)\.\s*(?:Limitations|Guidance|Ethical)[^\n]*\n([\s\S]*?)(?=\n##|\n---|$)/i,
+    /(?:#{1,4}|\*\*)\s*(?:10|8|7)\.?\s*(?:Limitations|Guidance|Ethical)[^\n]*\n([\s\S]*?)(?=\n(?:#{1,4}|\*\*|\d+\.)|\n---|$)/i,
     /##\s*Limitations[^\n]*\n([\s\S]*?)(?=\n##|\n---|$)/i,
+    /10\.\s*Limitations[^\n]*\n([\s\S]*?)(?=\n\d+\.|\n---|$)/i,
   ]);
 
   // Extract or synthesize 10-point personalised items from available content

@@ -20,12 +20,13 @@ First, inspect the photo to verify that it clearly shows a human open palm with 
   {"clear":false,"reason":"..."}
 - Do NOT guess or fabricate lines from blur, shadows, jewellery, or digital artifacts.
 
-IF CLEAR, carefully examine THIS SPECIFIC HAND'S unique physical characteristics:
-1. Palm Element & Shape (Earth/square + short fingers, Air/square + long fingers, Fire/oblong + short fingers, Water/oblong + long fingers; palm breadth and skin firmness)
-2. Finger Proportions & Lengths (index/Jupiter vs ring/Apollo length, finger straightness, knuckle structure, spacing between fingers)
-3. Thumb Setting & Phalanges (setting angle, flexibility, first vs second phalange proportions)
-4. Planetary Mount Elevations (prominence of Mount of Jupiter, Saturn, Sun, Mercury, Venus, and Moon)
-5. Distinct Crease Paths (Heart, Head, Life, and Fate lines — their unique curvature, depth, origin, forks, branches, or breaks)
+CRITICAL REQUIREMENT — GENUINE HAND PERSONALIZATION:
+Every individual's hand is physically unique. NEVER output generic, canned, or repetitive template readings. You must explicitly evaluate and differentiate THIS specific hand's physical landmarks:
+1. Palm Element & Shape: Classify whether this hand is Earth (square palm + short fingers), Air (square palm + long fingers), Fire (oblong palm + short fingers), or Water (oblong palm + long fingers) by observing the palm-to-finger ratio and palm breadth.
+2. Finger Proportions & Lengths: Compare the index (Jupiter) finger vs ring (Apollo) finger length. Is Jupiter longer (leadership/ambition) or is Apollo longer (creativity/expression), and by what margin? Describe straightness and knuckle structure.
+3. Thumb Setting & Angle: Describe the thumb angle of opening (wide > 60° vs narrow), flexibility, and the balance between the first (willpower) and second (logic) phalanges.
+4. Planetary Mount Elevations: Examine the relative prominence of the Mount of Venus (thenar pad), Mount of Jupiter, Saturn, Sun, Mercury, and Mount of Moon (hypothenar pad). Which mounts are elevated, and which are flat?
+5. Distinct Crease Paths: Note the unique curvature, starting position, depth, branches, forks, or breaks of the Heart, Head, Life, and Fate lines on THIS palm. If the Fate line is faint or absent, state clearly that it is subtle or not distinctly formed.
 
 Generate a structured, unique, respectful report in plain, everyday English using these exact markdown sections:
 

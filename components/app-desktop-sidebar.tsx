@@ -252,7 +252,7 @@ export default function AppDesktopSidebar({
       } ${className}`}
       data-purpose="desktop-master-sidebar"
     >
-      {/* Brand Header with Squircle Mark and Toggle */}
+      {/* Brand Header with Squircle Mark and Aligned Actions */}
       <div className="sidebar-head">
         <Link
           href="/chat"
@@ -263,23 +263,32 @@ export default function AppDesktopSidebar({
             <MoonStar size={19} strokeWidth={1.6} />
           </span>
           {!isCollapsed && (
-            <span className="sidebar-brand-copy">
-              <span className="brand-name">
-                vedic<span style={{ color: "var(--gold)" }}>.</span>ai
-              </span>
-              <span className="brand-sub">Jyotish Intelligence</span>
+            <span className="brand-name">
+              vedic<span style={{ color: "var(--gold)" }}>.</span>ai
             </span>
           )}
         </Link>
         <div className="sidebar-head-actions">
+          {!isCollapsed && (
+            <button
+              type="button"
+              className="sidebar-head-btn sidebar-theme-toggle"
+              onClick={toggleTheme}
+              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              title="Theme Toggle"
+            >
+              {theme === "dark" ? <Sun size={15} /> : <MoonStar size={15} />}
+              <span className="sr-only">Theme Toggle</span>
+            </button>
+          )}
           <button
             type="button"
-            className="sidebar-collapse-toggle desktop-sidebar-toggle"
+            className="sidebar-head-btn sidebar-collapse-toggle desktop-sidebar-toggle"
             onClick={toggleSidebar}
             aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
-            {isCollapsed ? <PanelLeftOpen size={17} /> : <PanelLeftClose size={17} />}
+            {isCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
           </button>
         </div>
       </div>
@@ -406,25 +415,16 @@ export default function AppDesktopSidebar({
         )}
       </div>
 
-      {/* Permanently Fixed Footer: Theme Toggle & Account Profile */}
-      <div className="sidebar-fixed-footer">
-        {/* Theme Controls */}
-        <div className="sidebar-theme-row">
-          <button
-            type="button"
-            onClick={toggleTheme}
-            className="sidebar-theme-btn"
-            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-            title={theme === "dark" ? "Light mode" : "Dark mode"}
-          >
-            {theme === "dark" ? <Sun size={15} /> : <MoonStar size={15} />}
-            {!isCollapsed && <span>Theme Toggle</span>}
-          </button>
-          {!isCollapsed && <span className="sidebar-version-pill">Vedic 4.0</span>}
-        </div>
-
+      {/* Permanently Fixed Footer: Account Profile (ChatGPT-style fixed at bottom) */}
+      <div className="sidebar-fixed-footer sidebar-bottom">
+        {!isCollapsed && (
+          <div className="sidebar-version-row flex items-center justify-between px-1 pb-1.5 text-[10px] text-[var(--quiet)] font-mono">
+            <span>Theme Toggle</span>
+            <span className="sidebar-version-pill">Vedic 4.0</span>
+          </div>
+        )}
         {/* Account Row */}
-        <div className="sidebar-account-row">
+        <div className="sidebar-account-row profile-row">
           <Link
             href="/profile"
             className="sidebar-account-link"

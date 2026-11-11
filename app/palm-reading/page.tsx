@@ -459,6 +459,9 @@ export default function PalmReadingPage() {
         detection?.landmarks && detection.landmarks.length >= 21
           ? detection.landmarks
           : undefined;
+      if (landmarks) {
+        lastDetectedLandmarksRef.current = landmarks;
+      }
 
       setPalmFeatures(
         derivePalmFeatures(
@@ -537,13 +540,18 @@ export default function PalmReadingPage() {
       setReading(rawReading);
       const parsed = parsePalmReading(rawReading, hand);
       setParsedReport(parsed);
-      const features = derivePalmFeatures(hand, {
-        heartLine: data.detectedLines?.heartLine,
-        headLine: data.detectedLines?.headLine,
-        lifeLine: data.detectedLines?.lifeLine,
-        fateLine: data.detectedLines?.fateLine,
-        mounts: data.mounts,
-      });
+      const features = derivePalmFeatures(
+        hand,
+        {
+          heartLine: data.detectedLines?.heartLine,
+          headLine: data.detectedLines?.headLine,
+          lifeLine: data.detectedLines?.lifeLine,
+          fateLine: data.detectedLines?.fateLine,
+          mounts: data.mounts,
+        },
+        undefined,
+        lastDetectedLandmarksRef.current || undefined
+      );
       setPalmFeatures(features);
 
       // Automatically trigger spoken AI voice narration immediately
@@ -648,17 +656,36 @@ These are traditional symbolic interpretations, not scientifically validated per
               {/* Report Header */}
               <PalmReportHeader onOpenExportModal={() => setIsDossierModalOpen(true)} />
 
-              {/* Vedic AI Spoken Voice Assistant (Automatic Narration) */}
+              {/* Vedic AI Spoken Voice Assistant (Automatic Narration & Interactive Voice Q&A) */}
               <PalmVoiceAssistant
                 status={voiceNarrator.status}
                 script={voiceNarrator.script}
                 language={voiceNarrator.language}
+                sections={voiceNarrator.sections}
+                currentSectionIndex={voiceNarrator.currentSectionIndex}
+                currentSection={voiceNarrator.currentSection}
+                playbackSpeed={voiceNarrator.playbackSpeed}
                 errorMessage={voiceNarrator.errorMessage}
                 report={parsedReport}
                 hand={hand}
                 onStopVoice={voiceNarrator.stopVoice}
-                onResumeOrReplay={voiceNarrator.resumeOrReplayVoice}
+                onPauseVoice={voiceNarrator.pauseVoice}
+                onResumeVoice={voiceNarrator.resumeVoice}
+                onReplaySection={voiceNarrator.replaySection}
+                onNextSection={voiceNarrator.nextSection}
+                onPrevSection={voiceNarrator.prevSection}
+                onSetPlaybackSpeed={voiceNarrator.setPlaybackSpeed}
                 onSwitchLanguage={voiceNarrator.switchLanguage}
+                isRecordingQuestion={voiceNarrator.isRecordingQuestion}
+                isAnsweringQuestion={voiceNarrator.isAnsweringQuestion}
+                isAnsweringAudioPlaying={voiceNarrator.isAnsweringAudioPlaying}
+                lastQuestion={voiceNarrator.lastQuestion}
+                lastAnswer={voiceNarrator.lastAnswer}
+                hasInterruptedNarration={voiceNarrator.hasInterruptedNarration}
+                onStartRecordingQuestion={voiceNarrator.startRecordingQuestion}
+                onStopRecordingQuestion={voiceNarrator.stopRecordingAndAsk}
+                onAskTextQuestion={voiceNarrator.askTextQuestion}
+                onResumeNarrationAfterQA={voiceNarrator.resumeNarrationAfterQA}
               />
 
               {/* Responsive Layout: Split (5-col Biometric HUD + 7-col Report) on Desktop, Vertical Stack on Mobile */}
@@ -669,6 +696,7 @@ These are traditional symbolic interpretations, not scientifically validated per
                     imageSrc={image}
                     hand={hand}
                     features={palmFeatures || undefined}
+                    highlightedFeature={voiceNarrator.highlightedSection}
                     onRetake={() => {
                       voiceNarrator.resetVoice();
                       setReading("");
@@ -696,7 +724,10 @@ These are traditional symbolic interpretations, not scientifically validated per
                 {/* RIGHT COLUMN (7 Cols on LG): Structured Report Stream */}
                 <div className="lg:col-span-7 space-y-6">
                   {/* Section A: 10-Point Personalised Report */}
-                  <PalmPersonalisedReport report={parsedReport} />
+                  <PalmPersonalisedReport
+                    report={parsedReport}
+                    highlightedSection={voiceNarrator.highlightedSection}
+                  />
 
                   {/* Section B: Three-Layer Analytical Framework */}
                   <PalmThreeLayerAnalysis report={parsedReport} />

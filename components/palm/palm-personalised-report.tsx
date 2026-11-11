@@ -5,20 +5,24 @@ import type { ParsedPalmReport } from "@/lib/palm-parser";
 
 interface PalmPersonalisedReportProps {
   report: ParsedPalmReport;
+  highlightedSection?: string | null;
 }
 
-export default function PalmPersonalisedReport({ report }: PalmPersonalisedReportProps) {
+export default function PalmPersonalisedReport({
+  report,
+  highlightedSection = null,
+}: PalmPersonalisedReportProps) {
   const items = [
-    { title: "1. Overall palm structure", body: report.overallStructure },
-    { title: "2. Heart line interpretation", body: report.heartLine },
-    { title: "3. Head line interpretation", body: report.headLine },
-    { title: "4. Life line interpretation", body: report.lifeLine },
-    { title: "5. Fate line interpretation", body: report.fateLine },
-    { title: "6. Thumb characteristics", body: report.thumbCharacteristics },
-    { title: "7. Finger proportions", body: report.fingerProportions },
-    { title: "8. Mount of Venus", body: report.mountOfVenus },
-    { title: "9. Mount of Jupiter", body: report.mountOfJupiter },
-    { title: "10. Combined left and right palm interpretation", body: report.synthesis },
+    { id: "overallStructure", title: "1. Overall palm structure", body: report.overallStructure },
+    { id: "heartLine", title: "2. Heart line interpretation", body: report.heartLine },
+    { id: "headLine", title: "3. Head line interpretation", body: report.headLine },
+    { id: "lifeLine", title: "4. Life line interpretation", body: report.lifeLine },
+    { id: "fateLine", title: "5. Fate line interpretation", body: report.fateLine },
+    { id: "thumbCharacteristics", title: "6. Thumb characteristics", body: report.thumbCharacteristics },
+    { id: "fingerProportions", title: "7. Finger proportions", body: report.fingerProportions },
+    { id: "mountOfVenus", title: "8. Mount of Venus", body: report.mountOfVenus },
+    { id: "mountOfJupiter", title: "9. Mount of Jupiter", body: report.mountOfJupiter },
+    { id: "synthesis", title: "10. Combined left and right palm interpretation", body: report.synthesis },
   ];
 
   return (
@@ -28,21 +32,34 @@ export default function PalmPersonalisedReport({ report }: PalmPersonalisedRepor
       </h2>
 
       <ol className="space-y-3.5 text-[15px]">
-        {items.map((item, idx) => (
-          <li
-            key={idx}
-            className="p-3.5 rounded-xl bg-[var(--panel)] border border-[var(--line)] hover:border-[var(--gold)]/60 transition-colors shadow-sm"
-          >
-            <span className="font-bold text-[var(--text)] block text-[15px]">
-              {item.title}
-            </span>
-            <p className="text-sm text-[var(--muted)] mt-1.5 pl-2.5 leading-relaxed font-normal border-l-2 border-[var(--gold)]">
-              {item.body}
-            </p>
-          </li>
-        ))}
+        {items.map((item, idx) => {
+          const isHighlighted = highlightedSection === item.id;
+          return (
+            <li
+              key={idx}
+              className={`p-3.5 rounded-xl transition-all duration-300 shadow-sm ${
+                isHighlighted
+                  ? "bg-[var(--wash)] border-2 border-[var(--gold)] ring-2 ring-[var(--gold)]/30 scale-[1.01]"
+                  : "bg-[var(--panel)] border border-[var(--line)] hover:border-[var(--gold)]/60"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className={`font-bold block text-[15px] ${isHighlighted ? "text-[var(--gold)]" : "text-[var(--text)]"}`}>
+                  {item.title}
+                </span>
+                {isHighlighted && (
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--gold)] bg-[var(--gold)]/15 px-2 py-0.5 rounded-full animate-pulse">
+                    Spoken Now
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-[var(--muted)] mt-1.5 pl-2.5 leading-relaxed font-normal border-l-2 border-[var(--gold)]">
+                {item.body}
+              </p>
+            </li>
+          );
+        })}
       </ol>
     </section>
   );
 }
-

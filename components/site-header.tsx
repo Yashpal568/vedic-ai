@@ -73,7 +73,7 @@ export default function SiteHeader({ section, onSignOut }: Props) {
           {/* Mobile Brand: Only visible on mobile/tablet when sidebar is hidden — NEVER duplicate on PC */}
           <Link href="/chat" className="site-header-brand" aria-label="Vedic AI home">
             <span className="site-header-mark"><MoonStar size={19} strokeWidth={1.6}/></span>
-            <strong>vedic<span>.</span>ai</strong>
+            <span className="brand-name">vedic<span>.</span>ai</span>
           </Link>
         </div>
 

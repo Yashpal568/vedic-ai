@@ -9,6 +9,7 @@ interface PalmBiometricPlateProps {
   hand: "left" | "right" | "unsure";
   onRetake: () => void;
   features?: PalmAnalysisFeatures;
+  highlightedFeature?: string | null;
   className?: string;
 }
 
@@ -17,12 +18,18 @@ export default function PalmBiometricPlate({
   hand,
   onRetake,
   features,
+  highlightedFeature = null,
   className = "",
 }: PalmBiometricPlateProps) {
   // Enabled by default so the user immediately sees their palm lines and highlighted points
   const [showOverlay, setShowOverlay] = useState(true);
   const [selectedFeature, setSelectedFeature] = useState<string | null>(null);
   const [imageAspectRatio, setImageAspectRatio] = useState(0.75);
+
+  const normalizedHighlight = highlightedFeature
+    ? highlightedFeature.replace("Line", "").replace("mountOf", "").toLowerCase()
+    : null;
+  const effectiveSelectedFeature = normalizedHighlight || selectedFeature;
 
   const activeFeatures = features || derivePalmFeatures(hand);
 
@@ -148,7 +155,7 @@ export default function PalmBiometricPlate({
               {activeFeatures.lines
                 .filter((line) => line.visible && line.pathData)
                 .map((line) => {
-                  const isSelected = selectedFeature === line.id;
+                  const isSelected = effectiveSelectedFeature === line.id;
                   const filterUrl =
                     line.id === "head"
                       ? "url(#emerald-glow)"
@@ -198,7 +205,7 @@ export default function PalmBiometricPlate({
 
               {/* Render Planetary Mount Nodes */}
               {activeFeatures.mounts.filter((mount) => mount.detected).map((mount) => {
-                const isSelected = selectedFeature === mount.id;
+                const isSelected = effectiveSelectedFeature === mount.id;
                 return (
                   <g key={mount.id} className="transition-all duration-200">
                     {/* Pulsing beacon ring for mounts */}
@@ -230,7 +237,7 @@ export default function PalmBiometricPlate({
               {activeFeatures.lines
                 .filter((line) => line.visible)
                 .map((line) => {
-                  const isSelected = selectedFeature === line.id;
+                  const isSelected = effectiveSelectedFeature === line.id;
                   const leftPct = (line.labelPosition.x / 1000) * 100;
                   const topPct = (line.labelPosition.y / 1000) * 100;
 
@@ -301,7 +308,7 @@ export default function PalmBiometricPlate({
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {activeFeatures.lines.map((line) => {
-              const isSelected = selectedFeature === line.id;
+              const isSelected = effectiveSelectedFeature === line.id;
               return (
                 <button
                   key={`legend-${line.id}`}
@@ -343,7 +350,7 @@ export default function PalmBiometricPlate({
               Planetary Mounts:
             </span>
             {activeFeatures.mounts.map((mount) => {
-              const isSelected = selectedFeature === mount.id;
+              const isSelected = effectiveSelectedFeature === mount.id;
               return (
                 <button
                   key={`mount-pill-${mount.id}`}

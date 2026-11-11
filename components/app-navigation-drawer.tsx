@@ -72,12 +72,6 @@ export default function AppNavigationDrawer({
     <div
       className="mobile-nav-backdrop shared-navigation-backdrop"
       onClick={onClose}
-      onTouchEnd={(e) => {
-        if (e.target === e.currentTarget) {
-          e.preventDefault();
-          onClose();
-        }
-      }}
       role="dialog"
       aria-modal="true"
       aria-label="Navigation Menu"
@@ -86,12 +80,11 @@ export default function AppNavigationDrawer({
         className="mobile-nav-drawer shared-navigation-drawer stitch-mobile-drawer"
         aria-label="App navigation"
         onClick={(event) => event.stopPropagation()}
-        onTouchEnd={(event) => event.stopPropagation()}
       >
         <header className="mobile-nav-head shared-navigation-head stitch-drawer-head">
           <Link
             href="/chat"
-            className="brand sidebar-brand-premium"
+            className="brand sidebar-brand-clean"
             onClick={onClose}
             aria-label="Vedic AI home"
           >
@@ -105,15 +98,8 @@ export default function AppNavigationDrawer({
           <button
             type="button"
             className="icon-button stitch-close-button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onClose();
-            }}
-            onTouchEnd={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              onClose();
-            }}
+            onClick={onClose}
+            onTouchEnd={onClose}
             aria-label="Close navigation"
           >
             <X size={20} />

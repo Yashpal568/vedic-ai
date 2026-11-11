@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   generateNarrationScript,
   generateFallbackNarrationScript,
-  type NarrationRequest,
 } from "@/lib/palm-narration-service";
 import { synthesizeSpeech } from "@/lib/tts-service";
 import { POST } from "@/app/api/palm-reading/narrate/route";
