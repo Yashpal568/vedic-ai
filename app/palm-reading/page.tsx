@@ -178,18 +178,25 @@ export default function PalmReadingPage() {
               width = img.naturalWidth || width;
               height = img.naturalHeight || height;
 
+              const maxDim = 1600;
+              const scale = Math.min(1, maxDim / Math.max(width, height));
+              const targetWidth = Math.max(1, Math.round(width * scale));
+              const targetHeight = Math.max(1, Math.round(height * scale));
+
               const canvas = document.createElement("canvas");
-              canvas.width = width;
-              canvas.height = height;
+              canvas.width = targetWidth;
+              canvas.height = targetHeight;
               const ctx = canvas.getContext("2d");
               if (ctx) {
-                ctx.drawImage(img, 0, 0, width, height);
-                const imgData = ctx.getImageData(0, 0, width, height);
+                ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+                const imgData = ctx.getImageData(0, 0, targetWidth, targetHeight);
                 rawPixelData = {
                   data: imgData.data,
-                  width,
-                  height,
+                  width: targetWidth,
+                  height: targetHeight,
                 };
+                // Optimized JPEG quality for ultra-fast upload & crisp palm analysis
+                dataUrl = canvas.toDataURL("image/jpeg", 0.88);
                 imageCaptureSuccess = true;
               }
             }
@@ -199,31 +206,31 @@ export default function PalmReadingPage() {
         }
       }
 
-      // 2. Fallback to full-resolution video canvas at high JPEG quality (0.95)
+      // 2. Fallback to full-resolution video canvas at high JPEG quality (0.88)
       if (!imageCaptureSuccess) {
         width = video.videoWidth || 1280;
         height = video.videoHeight || 720;
+
+        const maxDim = 1600;
+        const scale = Math.min(1, maxDim / Math.max(width, height));
+        const targetWidth = Math.max(1, Math.round(width * scale));
+        const targetHeight = Math.max(1, Math.round(height * scale));
+
         const canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
         const ctx = canvas.getContext("2d");
         if (!ctx) throw new Error("Could not capture frame");
 
-        ctx.drawImage(video, 0, 0, width, height);
-        const imgData = ctx.getImageData(0, 0, width, height);
+        ctx.drawImage(video, 0, 0, targetWidth, targetHeight);
+        const imgData = ctx.getImageData(0, 0, targetWidth, targetHeight);
         rawPixelData = {
           data: imgData.data,
-          width,
-          height,
+          width: targetWidth,
+          height: targetHeight,
         };
 
-        // High JPEG quality 0.95
-        let qualityVal = 0.95;
-        dataUrl = canvas.toDataURL("image/jpeg", qualityVal);
-        while (dataUrl.length > 5_000_000 && qualityVal > 0.55) {
-          qualityVal -= 0.08;
-          dataUrl = canvas.toDataURL("image/jpeg", qualityVal);
-        }
+        dataUrl = canvas.toDataURL("image/jpeg", 0.88);
       }
 
       // Derive genuine image-grounded features directly from frame pixels and landmarks
@@ -688,6 +695,9 @@ export default function PalmReadingPage() {
 
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
+        if (response.status === 504) {
+          throw new Error("The analysis timed out on the server. Please try again with a clear photo.");
+        }
         throw new Error(typeof data.error === "string" ? data.error : "Could not analyse the image. Please try again.");
       }
 

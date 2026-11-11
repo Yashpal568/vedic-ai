@@ -63,16 +63,15 @@ Explain that palmistry is a reflective symbolic practice, not a fixed destiny. P
 Return ONLY a valid JSON object:
 {
   "clear": true,
-  "reading": "...",
+  "reading": "markdown string containing sections 1 to 10 with genuine physical observations of this specific hand",
   "detectedLines": {
-    "heartLine": { "visible": false, "clarity": "not_detected", "points": [] },
-    "headLine": { "visible": false, "clarity": "not_detected", "points": [] },
-    "lifeLine": { "visible": false, "clarity": "not_detected", "points": [] },
-    "fateLine": { "visible": false, "clarity": "not_detected", "points": [] }
+    "heartLine": { "visible": true, "clarity": "clear" },
+    "headLine": { "visible": true, "clarity": "clear" },
+    "lifeLine": { "visible": true, "clarity": "clear" },
+    "fateLine": { "visible": false, "clarity": "subtle" }
   }
 }
-COORDINATE RULES: For each line that can be visually traced with high confidence in THIS exact photograph, return visible=true and 6-24 ordered points along the actual crease pixels. Coordinates are normalized to the full original image: x=0 left, x=1000 right, y=0 top, y=1000 bottom. Trace the natural bends, endpoints, branches and interruptions; do not use palmistry textbook locations or expected line shapes. Do not infer a line merely because a line is traditionally expected. If a crease cannot be traced unambiguously, keep visible=false and points=[]. A visible=true line with fewer than 6 points is invalid. The example JSON above is intentionally all false; replace only when actual pixels support a trace.
-or if the image is NOT a clear palm:
+or if the image is NOT clearly an open human palm:
 {"clear":false,"reason":"..."}
 Do not enclose the JSON in markdown code blocks or add text outside the JSON object.`;
 }
@@ -187,10 +186,10 @@ export async function POST(request: Request) {
             // Qwen 3.8 instruct mode is the low-latency setting for this image task.
             temperature: 0.7,
             reasoning_effort: "none",
-            max_completion_tokens: 2200,
+            max_completion_tokens: 1800,
             response_format: { type: "json_object" }
           }),
-          signal: AbortSignal.timeout(40_000),
+          signal: AbortSignal.timeout(8_000),
         });
         if (res.ok) {
           const data = await res.json();
@@ -209,32 +208,49 @@ export async function POST(request: Request) {
     };
 
     const tryGemini = async (): Promise<boolean> => {
-      const key = process.env.GEMINI_API_KEY;
+      const key = process.env.GEMINI_API_KEY?.trim();
       if (!key) return false;
-      const candidateModels = [
-        process.env.PALM_GEMINI_MODEL?.trim() || "gemini-3.8-flash",
-        "gemini-3.8-flash",
+      const configuredModel = process.env.PALM_GEMINI_MODEL?.trim();
+      const retiredGemini = [
         "gemini-2.5-flash",
+        "gemini-2.5-flash-lite",
         "gemini-2.0-flash",
         "gemini-1.5-flash",
-      ].filter(Boolean);
+        "gemini-1.5-pro",
+      ];
+      const safeConfigured = configuredModel && !retiredGemini.includes(configuredModel) ? configuredModel : null;
+
+      // Prioritize ultra-low-latency Gemini vision models to guarantee completion within Vercel's execution window
+      const candidateModels = [
+        safeConfigured,
+        "gemini-flash-lite-latest",
+        "gemini-3-flash-preview",
+        "gemini-flash-latest",
+        "gemini-3.8-flash",
+      ].filter((m, i, arr): m is string => Boolean(m) && arr.indexOf(m) === i);
 
       for (const model of candidateModels) {
         try {
-          const geminiRes = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent", {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`;
+          const geminiRes = await fetch(url, {
             method: "POST",
-            headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+            headers: {
+              "Content-Type": "application/json",
+              "x-goog-api-key": key,
+            },
             body: JSON.stringify({
               contents: [{ role: "user", parts: [{ text: prompt }, { inline_data: { mime_type: mimeType, data: base64 } }] }],
-              generationConfig: { temperature: 0.2, responseMimeType: "application/json", maxOutputTokens: 2200 }
+              generationConfig: { temperature: 0.2, responseMimeType: "application/json", maxOutputTokens: 1800 }
             }),
-            signal: AbortSignal.timeout(35_000),
+            signal: AbortSignal.timeout(8_000),
           });
           if (geminiRes.ok) {
             const data = await geminiRes.json();
             raw = data?.candidates?.[0]?.content?.parts?.map((part: { text?: string }) => part.text || "").join("");
             selectedProvider = "Gemini";
-            return Boolean(raw?.trim());
+            if (raw?.trim()) {
+              return true;
+            }
           }
           lastStatus = geminiRes.status;
           lastError = errorMessage(geminiRes.status, "Gemini");
