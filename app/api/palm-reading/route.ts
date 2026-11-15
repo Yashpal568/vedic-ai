@@ -30,7 +30,9 @@ Every individual's hand is physically unique. NEVER output generic, canned, or r
 2. Finger Proportions & Lengths: Compare the index (Jupiter) finger vs ring (Apollo) finger length. Is Jupiter longer (leadership/ambition) or is Apollo longer (creativity/expression), and by what margin? Describe straightness and knuckle structure.
 3. Thumb Setting & Angle: Describe the thumb angle of opening (wide > 60° vs narrow), flexibility, and the balance between the first (willpower) and second (logic) phalanges.
 4. Planetary Mount Elevations: Examine the relative prominence of the Mount of Venus (thenar pad), Mount of Jupiter, Saturn, Sun, Mercury, and Mount of Moon (hypothenar pad). Which mounts are elevated, and which are flat?
-5. Distinct Crease Paths: Note the unique curvature, starting position, depth, branches, forks, or breaks of the Heart, Head, Life, and Fate lines on THIS palm. If the Fate line is faint or absent, state clearly that it is subtle or not distinctly formed.
+5. Distinct Crease Paths: Trace the actual visible crease pixels for the Heart, Head, Life, and Fate lines. For each line, record its start/end region, curvature (straight/gently curved/deeply curved), depth (deep/medium/faint), continuity (continuous/broken/branched/not visible), and confidence from 0 to 1. Never infer a line from where it is expected anatomically.
+6. Image-specific evidence: List at least 5 directly visible, image-specific observations (for example: a visible fork at a particular end, a line beginning separated from the life line, a crease that terminates before the palm edge, a clearly visible break, or a distinct curvature). Do not use personality adjectives as visual observations. If the uploaded photo does not support 5 reliable observations, return clear:false and ask for a better photo.
+7. This is a new analysis of the exact image attached in THIS request. Ignore any prior/sample palm readings or conversation context. Do not reuse previous report wording.
 
 Generate a structured, unique, respectful report using the language specified in LANGUAGE REQUIREMENT above. Do not switch languages. Use these exact markdown section headings and include concrete visual observations from this uploaded image in every section. If a feature cannot be seen, say it is not clearly visible instead of guessing:
 
@@ -67,12 +69,20 @@ Explain that palmistry is a reflective symbolic practice, not a fixed destiny. P
 Return ONLY a valid JSON object:
 {
   "clear": true,
-  "reading": "markdown string containing sections 1 to 10 with genuine physical observations of this specific hand",
+  "reading": "markdown string containing sections 1 to 10; every line description must match this image",
+  "observations": {
+    "handShape": "specific visible palm/finger proportions, or not assessable",
+    "heartLine": "specific visible path, start/end, curve, depth, continuity",
+    "headLine": "specific visible path, start/end, curve, depth, continuity",
+    "lifeLine": "specific visible path, start/end, curve, depth, continuity",
+    "fateLine": "specific visible path, start/end, curve, depth, continuity or not visible",
+    "distinctiveFeatures": ["at least five image-specific visible facts"]
+  },
   "detectedLines": {
-    "heartLine": { "visible": true, "clarity": "clear" },
-    "headLine": { "visible": true, "clarity": "clear" },
-    "lifeLine": { "visible": true, "clarity": "clear" },
-    "fateLine": { "visible": false, "clarity": "subtle" }
+    "heartLine": { "visible": true, "clarity": "clear", "points": [{"x": 120, "y": 410}, {"x": 250, "y": 395}, {"x": 390, "y": 380}, {"x": 520, "y": 390}] },
+    "headLine": { "visible": true, "clarity": "clear", "points": [{"x": 150, "y": 470}, {"x": 280, "y": 460}, {"x": 420, "y": 475}, {"x": 560, "y": 500}] },
+    "lifeLine": { "visible": true, "clarity": "clear", "points": [{"x": 350, "y": 420}, {"x": 300, "y": 520}, {"x": 330, "y": 650}, {"x": 420, "y": 760}] },
+    "fateLine": { "visible": false, "clarity": "not_detected", "points": [] }
   }
 }
 or if the image is NOT clearly an open human palm:
@@ -307,6 +317,14 @@ export async function POST(request: Request) {
         fateLine?: { visible?: boolean; clarity?: string; points?: { x: number; y: number }[] };
       };
       mounts?: Record<string, { x: number; y: number }>;
+      observations?: {
+        handShape?: string;
+        heartLine?: string;
+        headLine?: string;
+        lifeLine?: string;
+        fateLine?: string;
+        distinctiveFeatures?: string[];
+      };
     }
 
     let result: PalmModelResponse;
@@ -325,16 +343,31 @@ export async function POST(request: Request) {
       });
     }
 
-    if (typeof result.reading !== "string" || !result.reading.trim()) {
+    const observations = result.observations;
+    const distinctiveFeatures = Array.isArray(observations?.distinctiveFeatures)
+      ? observations.distinctiveFeatures.filter((item) => typeof item === "string" && item.trim().length >= 12)
+      : [];
+    const lineKeys = ["heartLine", "headLine", "lifeLine", "fateLine"] as const;
+    const hasTraceableLine = lineKeys.some((key) => {
+      const line = result.detectedLines?.[key];
+      return line?.visible === true && Array.isArray(line.points) && line.points.length >= 4;
+    });
+    if (
+      typeof result.reading !== "string" ||
+      !result.reading.trim() ||
+      distinctiveFeatures.length < 3 ||
+      !hasTraceableLine
+    ) {
       return NextResponse.json({
         clear: false,
-        reason: "The main palm lines are not clear enough to interpret. Please take a sharper photo in bright light."
-      });
+        reason: "The photo did not provide enough reliable, image-specific palm-line detail. Please retake it with the full palm flat, bright even lighting, and the camera directly above the hand."
+      }, { status: 422 });
     }
 
     return NextResponse.json({
       clear: true,
       reading: result.reading.trim(),
+      observations,
       detectedLines: result.detectedLines || null,
       mounts: result.mounts || null,
     }, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate", "Pragma": "no-cache", "Vary": "Content-Type" } });
