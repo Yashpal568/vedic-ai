@@ -390,65 +390,44 @@ describe("Vedic-AI Mandatory Palm CV Recognition & Quality Test Suite (Requireme
     }
   });
 
-  // 14. Two different palm images: coordinates are strictly image-dependent
-  it("Test 14: Two different palm images produce genuinely distinct image-dependent crease coordinates", () => {
-    const verifiedDetections = {
+  // 14. Vision detections without image-specific traces must never create template overlays
+  it("Test 14: Refuses to fabricate crease coordinates when a model omits image traces", () => {
+    const untracedDetections = {
       heartLine: { visible: true, clarity: "clear" },
       headLine: { visible: true, clarity: "clear" },
       lifeLine: { visible: true, clarity: "clear" },
       fateLine: { visible: true, clarity: "clear" },
     };
-
-    // Image A: Left hand with verified detections
-    const extractionA = extractGroundedPalmFeatures("left", null, verifiedDetections);
-    // Image B: Right hand with verified detections
-    const extractionB = extractGroundedPalmFeatures("right", null, verifiedDetections);
-
-    expect(extractionA.hand).toBe("left");
-    expect(extractionB.hand).toBe("right");
-
-    const heartA = extractionA.lines.find((l) => l.id === "heart")!;
-    const heartB = extractionB.lines.find((l) => l.id === "heart")!;
-
-    expect(heartA.visible).toBe(true);
-    expect(heartB.visible).toBe(true);
-    // In Left Hand, Heart line originates on right side (below pinky at x ~ 735)
-    // In Right Hand, Heart line originates on left side (below pinky at x ~ 265)
-    expect(heartA.points[0].x).not.toEqual(heartB.points[0].x);
-    expect(heartA.pathData).not.toEqual(heartB.pathData);
-
-    const lifeA = extractionA.lines.find((l) => l.id === "life")!;
-    const lifeB = extractionB.lines.find((l) => l.id === "life")!;
-    expect(lifeA.pathData).not.toEqual(lifeB.pathData);
+    const extraction = extractGroundedPalmFeatures("left", null, untracedDetections);
+    expect(extraction.lines.every((line) => !line.visible)).toBe(true);
+    expect(extraction.lines.every((line) => line.points.length === 0 && line.pathData === "")).toBe(true);
   });
 
-  // 15. Responsive coordinate scaling for mobile and desktop
-  it("Test 15: Normalizes coordinates to 0..1000 SVG viewBox preserving aspect ratio across screens", () => {
-    const verifiedDetections = {
-      heartLine: { visible: true },
-      headLine: { visible: true },
-      lifeLine: { visible: true },
-    };
-    const extraction = extractGroundedPalmFeatures("left", null, verifiedDetections);
+  // 15. Explicit model traces are preserved as supplied image-specific coordinates
+  it("Test 15: Preserves distinct, bounded crease traces returned for different palm photos", () => {
+    const traceA = [{ x: 120, y: 410 }, { x: 250, y: 395 }, { x: 390, y: 380 }, { x: 520, y: 390 }];
+    const traceB = [{ x: 180, y: 430 }, { x: 300, y: 450 }, { x: 450, y: 470 }, { x: 620, y: 510 }];
+    const extractionA = extractGroundedPalmFeatures("left", null, {
+      heartLine: { visible: true, clarity: "clear", points: traceA },
+    });
+    const extractionB = extractGroundedPalmFeatures("right", null, {
+      heartLine: { visible: true, clarity: "clear", points: traceB },
+    });
+    const heartA = extractionA.lines.find((line) => line.id === "heart")!;
+    const heartB = extractionB.lines.find((line) => line.id === "heart")!;
+    expect(heartA.visible).toBe(true);
+    expect(heartB.visible).toBe(true);
+    expect(heartA.points).toEqual(traceA);
+    expect(heartB.points).toEqual(traceB);
+    expect(heartA.pathData).not.toEqual(heartB.pathData);
 
-    for (const line of extraction.lines) {
-      if (line.visible) {
-        expect(line.points.length).toBeGreaterThanOrEqual(2);
-        for (const pt of line.points) {
-          expect(pt.x).toBeGreaterThanOrEqual(0);
-          expect(pt.x).toBeLessThanOrEqual(1000);
-          expect(pt.y).toBeGreaterThanOrEqual(0);
-          expect(pt.y).toBeLessThanOrEqual(1000);
-        }
-        expect(line.pathData).toMatch(/^M \d+ \d+/);
+    for (const line of extractionA.lines) {
+      for (const point of line.points) {
+        expect(point.x).toBeGreaterThanOrEqual(0);
+        expect(point.x).toBeLessThanOrEqual(1000);
+        expect(point.y).toBeGreaterThanOrEqual(0);
+        expect(point.y).toBeLessThanOrEqual(1000);
       }
-    }
-
-    for (const mount of extraction.mounts) {
-      expect(mount.point.x).toBeGreaterThanOrEqual(0);
-      expect(mount.point.x).toBeLessThanOrEqual(1000);
-      expect(mount.point.y).toBeGreaterThanOrEqual(0);
-      expect(mount.point.y).toBeLessThanOrEqual(1000);
     }
   });
 
