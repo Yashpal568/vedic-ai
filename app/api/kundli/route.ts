@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import tzlookup from "@photostructure/tz-lookup";
-import { calculateKundli } from "@/lib/astrology";
+import { calculateSwissKundli } from "@/lib/swiss-ephemeris-client";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   try {
     const body = schema.parse(await request.json());
     const timezone = tzlookup(body.latitude, body.longitude);
-    const report = calculateKundli({ ...body, timezone });
+    const report = await calculateSwissKundli({ ...body, timezone });
     return NextResponse.json({ report }, {
       headers: { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" },
     });
