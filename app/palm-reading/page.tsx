@@ -767,6 +767,28 @@ export default function PalmReadingPage() {
           );
           return;
         }
+        if (response.status === 502) {
+          const rawMsg =
+            typeof data.error === "string" && data.error.trim()
+              ? data.error
+              : typeof data.reason === "string" && data.reason.trim()
+                ? data.reason
+                : "";
+          const userGuidance = "Please retake the photo with bright lighting and the full open palm visible.";
+          let message = "";
+          if (!rawMsg) {
+            message = `The photo was unclear or taken in low light. ${userGuidance}`;
+          } else if (rawMsg.includes("bright lighting") && rawMsg.includes("full open palm")) {
+            message = rawMsg;
+          } else {
+            const cleaned = rawMsg.replace(/\s*Please try again[^.]*\.?/gi, "").trim();
+            message = cleaned
+              ? `${cleaned.replace(/[.]+$/, "")}. ${userGuidance}`
+              : `The photo needs another look. ${userGuidance}`;
+          }
+          setQuality(message);
+          return;
+        }
         throw new Error(
           typeof data.error === "string"
             ? data.error
