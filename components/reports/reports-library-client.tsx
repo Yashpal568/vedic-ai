@@ -80,7 +80,7 @@ export default function ReportsLibraryClient({
   });
 
   async function handleDelete(id: string) {
-    if (!window.confirm("Delete this saved kundli from your library?")) return;
+    if (!window.confirm(t("reports.confirmDelete") || "Delete this saved kundli from your library?")) return;
     setDeletingId(id);
     try {
       const res = await fetch(`/api/saved-kundli?id=${encodeURIComponent(id)}`, {
@@ -118,7 +118,7 @@ export default function ReportsLibraryClient({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by name, place, or ascendant..."
+            placeholder={t("reports.searchPlaceholder") || "Search by name, place, or ascendant..."}
             className="w-full pl-9 pr-4 py-2 rounded-xl bg-[var(--raised)] border border-[var(--line)] text-xs text-[var(--text)] placeholder-[var(--quiet)] outline-none focus:border-[var(--gold)] transition-colors"
           />
         </div>
@@ -129,7 +129,7 @@ export default function ReportsLibraryClient({
             { id: "all", label: t("reports.allReports"), icon: Filter },
             { id: "kundli", label: t("kundli.title"), icon: Compass },
             { id: "palm", label: t("reports.palmReadings"), icon: Hand },
-            { id: "synastry", label: "Synastry", icon: Heart },
+            { id: "synastry", label: t("reports.synastry") || "Synastry", icon: Heart },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeFilter === tab.id;
@@ -153,15 +153,15 @@ export default function ReportsLibraryClient({
 
         {/* Sort Dropdown */}
         <div className="flex items-center gap-2 shrink-0">
-          <span className="text-[11px] text-[var(--quiet)] hidden sm:inline">Sort:</span>
+          <span className="text-[11px] text-[var(--quiet)] hidden sm:inline">{t("reports.sort") || "Sort:"}</span>
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
             className="px-3 py-1.5 rounded-lg bg-[var(--raised)] border border-[var(--line)] text-xs text-[var(--text)] outline-none focus:border-[var(--gold)] cursor-pointer"
           >
-            <option value="recent">Most Recent</option>
-            <option value="oldest">Oldest First</option>
-            <option value="name">Alphabetical</option>
+            <option value="recent">{t("reports.mostRecent") || "Most Recent"}</option>
+            <option value="oldest">{t("reports.oldestFirst") || "Oldest First"}</option>
+            <option value="name">{t("reports.alphabetical") || "Alphabetical"}</option>
           </select>
         </div>
       </div>
@@ -206,27 +206,27 @@ export default function ReportsLibraryClient({
                     {nativeName}
                   </h3>
                   <p className="text-xs text-[var(--muted)] mt-0.5 truncate">
-                    {chart?.birth?.place || "Birthplace Recorded"}
+                    {chart?.birth?.place || t("reports.birthplaceRecorded") || "Birthplace Recorded"}
                   </p>
 
                   {/* Astrological Metrics Grid */}
                   <div className="grid grid-cols-2 gap-2 mt-4 p-3 rounded-xl bg-[var(--raised)] border border-[var(--line)] text-xs">
                     <div>
-                      <span className="text-[10px] text-[var(--quiet)] block">Lagna (Ascendant)</span>
+                      <span className="text-[10px] text-[var(--quiet)] block">{t("reports.lagnaAscendant") || "Lagna (Ascendant)"}</span>
                       <strong className="text-xs font-bold text-[var(--gold)]">
                         {lagna} · {lagnaDeg}°
                       </strong>
                     </div>
                     <div>
-                      <span className="text-[10px] text-[var(--quiet)] block">Moon Nakshatra</span>
+                      <span className="text-[10px] text-[var(--quiet)] block">{t("reports.moonNakshatra") || "Moon Nakshatra"}</span>
                       <strong className="text-xs font-bold text-[var(--text)]">
                         {moonNakshatra} (P{moonPada})
                       </strong>
                     </div>
                     <div className="col-span-2 pt-1.5 border-t border-[var(--line)] flex items-center justify-between">
-                      <span className="text-[10px] text-[var(--quiet)]">Current Dasha:</span>
+                      <span className="text-[10px] text-[var(--quiet)]">{t("reports.currentDasha") || "Current Dasha:"}</span>
                       <strong className="text-[11px] text-[#52FEB8] font-semibold">
-                        {dashaLord} Mahadasha
+                        {dashaLord} {t("reports.mahadasha") || "Mahadasha"}
                       </strong>
                     </div>
                   </div>
@@ -239,7 +239,7 @@ export default function ReportsLibraryClient({
                       type="button"
                       onClick={() => handlePrint(chart, item.id)}
                       className="px-3 py-1.5 rounded-lg bg-[var(--wash)] text-[var(--gold)] hover:bg-[var(--gold)] hover:text-[#11131A] text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
-                      title="Export printable PDF report"
+                      title={t("reports.exportPdf") || "Export printable PDF report"}
                     >
                       <Download size={13} />
                       <span>{t("reports.exportPdf")}</span>
@@ -247,10 +247,10 @@ export default function ReportsLibraryClient({
                     <Link
                       href={`/chat?openBirth=1`}
                       className="px-3 py-1.5 rounded-lg bg-[var(--raised)] text-[var(--muted)] hover:text-[var(--text)] text-xs font-semibold flex items-center gap-1.5 transition-colors"
-                      title="Inspect full birth chart"
+                      title={t("reports.inspectChart") || "Inspect full birth chart"}
                     >
                       <Eye size={13} />
-                      <span>View</span>
+                      <span>{t("common.view") || "View"}</span>
                     </Link>
                   </div>
 
@@ -276,13 +276,13 @@ export default function ReportsLibraryClient({
           </div>
           <h3 className="text-base font-bold text-[var(--text)] font-serif-luxury">
             {searchQuery || activeFilter !== "all"
-              ? "No matching records found"
-              : "Your celestial library is waiting"}
+              ? t("reports.noRecordsFound") || "No matching records found"
+              : t("reports.libraryWaiting") || "Your celestial library is waiting"}
           </h3>
           <p className="text-xs text-[var(--muted)] mt-1.5 max-w-xs mx-auto leading-relaxed">
             {searchQuery || activeFilter !== "all"
-              ? "Try clearing your search query or switching filters to view your saved charts."
-              : "Calculate a Janam Kundli or Palm Dossier, then select Save to archive it securely in your personal vault."}
+              ? t("reports.tryClearingFilters") || "Try clearing your search query or switching filters to view your saved charts."
+              : t("reports.archiveDescription") || "Calculate a Janam Kundli or Palm Dossier, then select Save to archive it securely in your personal vault."}
           </p>
 
           <div className="mt-5 flex items-center justify-center gap-3">
@@ -295,7 +295,7 @@ export default function ReportsLibraryClient({
                 }}
                 className="px-4 py-2 rounded-xl bg-[var(--raised)] text-xs font-semibold text-[var(--text)] border border-[var(--line)] hover:border-[var(--gold)] transition-colors cursor-pointer"
               >
-                Clear Filters
+                {t("reports.clearFilters") || "Clear Filters"}
               </button>
             )}
             <Link
@@ -317,10 +317,10 @@ export default function ReportsLibraryClient({
           </div>
           <div>
             <h3 className="text-base font-bold text-[var(--text)] font-serif-luxury">
-              Ready to generate a new astrological dossier?
+              {t("reports.readyNewDossier") || "Ready to generate a new astrological dossier?"}
             </h3>
             <p className="text-xs text-[var(--muted)] mt-0.5">
-              Enter birth coordinates to calculate natal lagna, planetary telemetry, and Parashara synthesis.
+              {t("reports.enterCoordsDescription") || "Enter birth coordinates to calculate natal lagna, planetary telemetry, and Parashara synthesis."}
             </p>
           </div>
         </div>

@@ -1328,11 +1328,11 @@ export default function Home() {
               <section className="kundli-simple-summary" aria-labelledby="kundli-simple-summary-title">
                 <div className="kundli-summary-heading"><div><div className="eyebrow"><span className="eyebrow-line" /> YOUR PERSONAL BIRTH CHART</div><h2 id="kundli-simple-summary-title">Your Kundli, in everyday language</h2><p>A friendly explanation of what your chart shows. You do not need prior astrology knowledge to read this.</p></div></div>
                 <div className="kundli-summary-subheading"><span>01</span><div><h3>The big picture</h3><p>Start here for the most important points in your chart.</p></div></div>
-                <div className="kundli-summary-points">{buildKundliSimpleSummary(chartReport).map((item, index) => <article className="kundli-summary-point" key={index}><span>{index + 1}</span><p>{item}</p></article>)}</div>
+                <div className="kundli-summary-points">{buildKundliSimpleSummary(chartReport, language).map((item, index) => <article className="kundli-summary-point" key={index}><span>{index + 1}</span><p>{item}</p></article>)}</div>
                 <div className="kundli-summary-subheading"><span>02</span><div><h3>Your planets, explained</h3><p>Each planet represents a different part of life. Its sign and house add context.</p></div></div>
-                <div className="kundli-planet-summary-grid">{buildKundliPlanetSummary(chartReport).map((planet) => <article className="kundli-planet-summary-card" key={planet.name}><div className="kundli-planet-summary-top"><strong>{planet.name}</strong><span>{planet.sign} · House {planet.house}</span></div><p>{planet.explanation}</p><small>Star group (Nakshatra): {planet.nakshatra || "Not available"}</small></article>)}</div>
+                <div className="kundli-planet-summary-grid">{buildKundliPlanetSummary(chartReport, language).map((planet) => <article className="kundli-planet-summary-card" key={planet.name}><div className="kundli-planet-summary-top"><strong>{planet.name}</strong><span>{planet.sign} · House {planet.house}</span></div><p>{planet.explanation}</p><small>Star group (Nakshatra): {planet.nakshatra || "Not available"}</small></article>)}</div>
                 <div className="kundli-summary-subheading"><span>03</span><div><h3>Your 12 life areas</h3><p>In astrology, each house represents one area of everyday life. Empty houses are normal.</p></div></div>
-                <div className="kundli-house-summary-grid">{buildKundliHouseSummary(chartReport).map((house) => <article className="kundli-house-summary-card" key={house.house}><div className="kundli-house-summary-top"><span>HOUSE {house.house}</span><strong>{house.sign}</strong></div><h4>{house.title}</h4><p>{house.explanation}</p><small>Planets here: {house.planets.length ? house.planets.join(", ") : "None listed"}</small></article>)}</div>
+                <div className="kundli-house-summary-grid">{buildKundliHouseSummary(chartReport, language).map((house) => <article className="kundli-house-summary-card" key={house.house}><div className="kundli-house-summary-top"><span>HOUSE {house.house}</span><strong>{house.sign}</strong></div><h4>{house.title}</h4><p>{house.explanation}</p><small>Planets here: {house.planets.length ? house.planets.join(", ") : "None listed"}</small></article>)}</div>
               
                 {/* Planetary Aspects (Parashari Drishti) */}
                 <div className="kundli-summary-subheading mt-8"><span>04</span><div><h3>Planetary Aspects (Parashari Drishti)</h3><p>Traditional drishtis cast by grahas across the 12 houses with special aspects for Mars, Jupiter, and Saturn.</p></div></div>
@@ -1348,7 +1348,7 @@ export default function Home() {
                       </tr>
                     </thead>
                     <tbody>
-                      {calculatePlanetaryAspects(chartReport).slice(0, 16).map((aspect, aspectIdx) => (
+                      {calculatePlanetaryAspects(chartReport, language).slice(0, 16).map((aspect, aspectIdx) => (
                         <tr key={aspectIdx}>
                           <td><strong>{aspect.planet}</strong></td>
                           <td>House {aspect.fromHouse}</td>
@@ -1364,7 +1364,7 @@ export default function Home() {
                 {/* Official 15-Point Indian Vedic Astrology Report */}
                 <div className="kundli-summary-subheading mt-8"><span>05</span><div><h3>The 15-Point Indian Vedic Astrology Report</h3><p>Comprehensive traditional analysis structured across the 15 approved core sections.</p></div></div>
                 <div className="space-y-3 mt-4">
-                  {build15PointVedicReport(chartReport).map((item) => (
+                  {build15PointVedicReport(chartReport, language).map((item) => (
                     <article key={item.number} className="p-4 rounded-xl bg-[var(--panel)] border border-[var(--line)] hover:border-[var(--gold)]/50 transition-colors shadow-sm">
                       <div className="flex items-center justify-between gap-2 mb-2">
                         <div className="flex items-center gap-2.5">

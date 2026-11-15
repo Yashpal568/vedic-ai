@@ -1,4 +1,6 @@
 import type { KundliReport } from "@/lib/astrology";
+import type { SupportedLanguage } from "@/lib/i18n/types";
+import { PLANET_NAMES_HI, SIGN_NAMES_HI } from "@/lib/kundli-summary";
 
 export interface Vedic15PointReportItem {
   number: number;
@@ -27,10 +29,14 @@ export interface PlanetaryAspect {
  * - Saturn aspects 3rd, 7th, 10th
  * - Rahu/Ketu aspect 5th, 7th, 9th
  */
-export function calculatePlanetaryAspects(report: KundliReport): PlanetaryAspect[] {
+export function calculatePlanetaryAspects(
+  report: KundliReport,
+  language: SupportedLanguage = "en"
+): PlanetaryAspect[] {
+  const isHi = language === "hi";
   const aspects: PlanetaryAspect[] = [];
   const houseOccupants: Record<number, string[]> = {};
-  
+
   for (let i = 1; i <= 12; i++) {
     houseOccupants[i] = [];
   }
@@ -60,15 +66,24 @@ export function calculatePlanetaryAspects(report: KundliReport): PlanetaryAspect
       targetHouses.push({ houseOffset: 9, special: true });
     }
 
+    const pDisplayName = isHi ? PLANET_NAMES_HI[planet.name] || planet.name : planet.name;
+
     for (const target of targetHouses) {
       const targetHouse = ((fromH + target.houseOffset - 2) % 12) + 1;
+      const rawImpacted = houseOccupants[targetHouse].filter((name) => name !== planet.name);
+      const impacted = isHi
+        ? rawImpacted.map((n) => PLANET_NAMES_HI[n] || n)
+        : rawImpacted;
+
       aspects.push({
-        planet: planet.name,
+        planet: pDisplayName,
         fromHouse: fromH,
         aspectsHouse: targetHouse,
-        aspectDegree: `${target.houseOffset * 30}° Drishti`,
+        aspectDegree: isHi
+          ? `${target.houseOffset * 30}° दृष्टि`
+          : `${target.houseOffset * 30}° Drishti`,
         specialDrishti: target.special,
-        impactedPlanets: houseOccupants[targetHouse].filter((name) => name !== planet.name),
+        impactedPlanets: impacted,
       });
     }
   }
@@ -95,7 +110,11 @@ export function calculatePlanetaryAspects(report: KundliReport): PlanetaryAspect
  * 14. Your current Mahadasha/Antardasha
  * 15. Important upcoming planetary themes
  */
-export function build15PointVedicReport(report: KundliReport): Vedic15PointReportItem[] {
+export function build15PointVedicReport(
+  report: KundliReport,
+  language: SupportedLanguage = "en"
+): Vedic15PointReportItem[] {
+  const isHi = language === "hi";
   const asc = report.ascendant;
   const moon = report.planets.find((p) => p.name === "Moon") || report.planets[1];
   const sun = report.planets.find((p) => p.name === "Sun") || report.planets[0];
@@ -105,9 +124,145 @@ export function build15PointVedicReport(report: KundliReport): Vedic15PointRepor
   const saturn = report.planets.find((p) => p.name === "Saturn") || report.planets[6];
 
   const currentDasha = report.vimshottari.currentMahadasha;
-  const dashaStart = new Date(currentDasha.start).toLocaleDateString("en-IN", { month: "short", year: "numeric" });
-  const dashaEnd = new Date(currentDasha.end).toLocaleDateString("en-IN", { month: "short", year: "numeric" });
+  const locale = isHi ? "hi-IN" : "en-IN";
+  const dashaStart = new Date(currentDasha.start).toLocaleDateString(locale, { month: "short", year: "numeric" });
+  const dashaEnd = new Date(currentDasha.end).toLocaleDateString(locale, { month: "short", year: "numeric" });
 
+  const ascSign = isHi ? SIGN_NAMES_HI[asc.sign] || asc.sign : asc.sign;
+  const moonSign = isHi ? SIGN_NAMES_HI[moon.sign] || moon.sign : moon.sign;
+  const sunSign = isHi ? SIGN_NAMES_HI[sun.sign] || sun.sign : sun.sign;
+  const mercurySign = isHi ? SIGN_NAMES_HI[mercury.sign] || mercury.sign : mercury.sign;
+  const jupiterSign = isHi ? SIGN_NAMES_HI[jupiter.sign] || jupiter.sign : jupiter.sign;
+  const venusSign = isHi ? SIGN_NAMES_HI[venus.sign] || venus.sign : venus.sign;
+  const saturnSign = isHi ? SIGN_NAMES_HI[saturn.sign] || saturn.sign : saturn.sign;
+  const dashaLord = isHi ? PLANET_NAMES_HI[currentDasha.lord] || currentDasha.lord : currentDasha.lord;
+
+  if (isHi) {
+    return [
+      {
+        number: 1,
+        section: "आपका लग्न एवं इसका महत्व",
+        title: `${ascSign} लग्न (${asc.degreeInSign.toFixed(2)}° पर)`,
+        summary: "आपका लग्न भाव आपकी शारीरिक ऊर्जा, मूल स्वभाव और जीवन के प्रति आपके दृष्टिकोण को स्वरूप देता है।",
+        details: `${ascSign} लग्न तथा ${asc.nakshatra} नक्षत्र (चरण ${asc.nakshatraPada}) के प्रभाव से आपका व्यक्तित्व स्वाभाविक रूप से संतुलित दृष्टिकोण, धैर्य और कर्तव्यनिष्ठा के साथ जीवन की दिशा तय करता है।`,
+        tag: "ऊर्जा एवं दृष्टिकोण",
+      },
+      {
+        number: 2,
+        section: "आपकी चंद्र राशि",
+        title: `${moonSign} राशि (चन्द्र लग्न)`,
+        summary: "चंद्रमा आपके मन (अवचेतन मन), भावनात्मक संतुलन और सहज प्रवृत्तियों का प्रतिनिधित्व करता है।",
+        details: `आपका मन ${moonSign} के सद्गुणों से मानसिक स्थिरता प्राप्त करता है। कुंडली के ${moon.house}वें भाव में स्थित चंद्रमा आपकी भावनात्मक सुरक्षा और आत्मीय शांति को रेखांकित करता है।`,
+        tag: "भावनात्मक केंद्र",
+      },
+      {
+        number: 3,
+        section: "आपका जन्म नक्षत्र",
+        title: `${moon.nakshatra} (चरण ${moon.nakshatraPada})`,
+        summary: "आपका जन्म नक्षत्र आपके गहरे मनोवैज्ञानिक स्वभाव और कार्मिक प्रवृत्तियों को दिशा देता है।",
+        details: `${moon.nakshatra} नक्षत्र में जन्म लेने से आपका स्वभाव रचनात्मक चिंतन, उद्देश्यपूर्ण निर्णय और विषम परिस्थितियों में भी शांत रहने की आंतरिक शक्ति से युक्त है।`,
+        tag: "कार्मिक स्वभाव",
+      },
+      {
+        number: 4,
+        section: "आपकी सूर्य राशि",
+        title: `${sunSign} (${sun.house}वें भाव में)`,
+        summary: "सूर्य आपके आत्म-तत्व (आत्माकारक ऊर्जा), गरिमा और जीवन के मुख्य उद्देश्य का कारक है।",
+        details: `सूर्य का ${sunSign} में ${sun.house}वें भाव में होना आपके जीवन-उद्देश्य को कर्तव्यनिष्ठा, स्वाभिमान और सत्यनिष्ठ कर्म के माध्यम से प्रकाशित करता है।`,
+        tag: "आत्म उद्देश्य",
+      },
+      {
+        number: 5,
+        section: "व्यक्तित्व का समग्र स्वरूप",
+        title: `त्रिविध पहचान समन्वय (${asc.sign} लग्न · ${moon.sign} चंद्र · ${sun.sign} सूर्य)`,
+        summary: "आपके कर्म, आपकी भावना और आपके आत्म-लक्ष्य का एकीकृत समन्वय।",
+        details: `आप ${ascSign} के बाह्य आचरण, ${moonSign} की आंतरिक संवेदनशीलता और ${sunSign} के आत्म-बल का सुंदर संतुलन बनाए रखते हैं।`,
+        tag: "मूल स्वरूप",
+      },
+      {
+        number: 6,
+        section: "आपकी भावनात्मक प्रवृत्तियां",
+        title: "भावनात्मक संतुलन एवं शांति",
+        summary: "तनाव, आत्मीयता और आत्म-पुनर्प्राप्ति के प्रति आपका दृष्टिकोण।",
+        details: `${moon.house}वें भाव में चंद्रमा और ${venusSign} में शुक्र का प्रभाव आपकी भावनाओं में निष्ठा और सादगी को प्राथमिकता देता है। तनाव के समय जल्दबाजी के स्थान पर शांत चिंतन आपको सही राह दिखाता है।`,
+        tag: "आंतरिक ताल",
+      },
+      {
+        number: 7,
+        section: "आपकी संवाद एवं संप्रेषण शैली",
+        title: `बुध ${mercurySign} में (${mercury.house}वें भाव में)`,
+        summary: "आपकी तार्किक संरचना, वाणी और विचार विमर्श का ढंग।",
+        details: `बुध की यह स्थिति ${mercury.retrograde ? "गहन आत्म-विश्लेषण और सोच-समझकर बोलने की विशेषता" : "स्पष्ट, तार्किक और व्यवस्थित संप्रेषण क्षमता"} प्रदान करती है।`,
+        tag: "बुद्धि एवं वाणी",
+      },
+      {
+        number: 8,
+        section: "आपकी बौद्धिक क्षमताएं",
+        title: "संज्ञानात्मक विवेक एवं रणनीतिक दृष्टि",
+        summary: "समस्या समाधान का तरीका, दूरदर्शिता और ज्ञान अर्जन की रुचि।",
+        details: `${jupiterSign} में तथा ${jupiter.house}वें भाव में गुरु (बृहस्पति) का प्रभाव आपको एकांगी तथ्यों के स्थान पर समग्र परिप्रेक्ष्य को समझने और दूरगामी मार्गदर्शन देने की बौद्धिक परिपक्वता देता है।`,
+        tag: "विवेक एवं रणनीति",
+      },
+      {
+        number: 9,
+        section: "आजीविका एवं कर्म क्षेत्र",
+        title: `दशम कर्म भाव एवं शनि ${saturnSign} में`,
+        summary: "व्यावसायिक रुझान, कर्मनिष्ठा और सामाजिक योगदान का मार्ग।",
+        details: `${saturn.house}वें भाव में शनि इंगित करता है कि व्यावसायिक प्रतिष्ठा सतत प्रयास, अनुशासन और नैतिक दृढ़ता से अर्जित होती है।`,
+        tag: "कर्म एवं कर्तव्य",
+      },
+      {
+        number: 10,
+        section: "संबंध एवं सामाजिक व्यवहार",
+        title: `सप्तम भाव साझेदारी एवं शुक्र ${venusSign} में`,
+        summary: "पारस्परिक साझेदारी, सम्मान और सामाजिक संतुलन।",
+        details: `शुक्र की स्थिति पारस्परिक आदर, स्पष्ट संवाद और परस्पर स्वावलंबन को संबंधों की स्थायी नींव मानती है।`,
+        tag: "साझेदारी एवं सौहार्द",
+      },
+      {
+        number: 11,
+        section: "वित्तीय प्रवृत्तियां एवं समृद्धि",
+        title: "द्वितीय (धन) एवं एकादश (लाभ) भाव प्रवाह",
+        summary: "संसाधन संचय, बचत की आदतें और आर्थिक संतुलन।",
+        details: `आपकी कुंडली सुनियोजित उद्यम, धैर्यपूर्ण निवेश और ज्ञान के सदुपयोग से आर्थिक स्थिरता का समर्थन करती है।`,
+        tag: "भौतिक समृद्धि",
+      },
+      {
+        number: 12,
+        section: "आपकी स्वाभाविक शक्तियां",
+        title: "जन्मजात सद्गुण एवं संरक्षी सामर्थ्य",
+        summary: "वे गुण जो कठिन समय में भी आपको संबल और दिशा प्रदान करते हैं।",
+        details: "जटिल परिस्थितियों में संयम, नीतिगत निर्णय और स्पष्टता स्थापित करने की सहज प्रवृत्ति आपकी प्रमुख ताकत है।",
+        tag: "स्वाभाविक प्रतिभा",
+      },
+      {
+        number: 13,
+        section: "व्यक्तिगत विकास के क्षेत्र",
+        title: "सजग आत्म-परिष्कार एवं संतुलन",
+        summary: "आदतन कमजोरियां, तनाव प्रतिक्रियाएं और उन्नयन के मार्ग।",
+        details: "अत्यधिक सोच-विचार के कारण निर्णय टालने से बचें। समय पर किया गया संतुलित प्रयास आपकी प्रगति को गति देता है।",
+        tag: "सजग विकास",
+      },
+      {
+        number: 14,
+        section: "वर्तमान महादशा एवं अंतर्दशा",
+        title: `${dashaLord} महादशा (${dashaStart} – ${dashaEnd})`,
+        summary: "वर्तमान समय में आपके जीवन अनुभवों को दिशा देने वाला मुख्य ग्रहीय अध्याय।",
+        details: `वर्तमान में आप ${dashaLord} के कालखंड में हैं। यह अवधि अनुशासन, ज्ञान अर्जन और दीर्घकालिक नींव को सुदृढ़ करने के अवसर प्रदान करती है।`,
+        tag: "सक्रिय कालखंड",
+      },
+      {
+        number: 15,
+        section: "आगामी महत्वपूर्ण ग्रहीय प्रवाह",
+        title: "गोचर (Transits) एवं आगामी परिवर्तन",
+        summary: "भविष्य के प्रमुख ज्योतिषीय प्रवाह और उनके साथ संतुलन के उपाय।",
+        details: "आगामी ग्रहीय गोचर में अपने दैनिक प्रयासों को अपने मूलभूत मूल्यों के अनुरूप रखें। अनुकूल समय में नए कदम उठाएं और संशय के समय धैर्य रखें।",
+        tag: "क्षितिज एवं समय-ताल",
+      },
+    ];
+  }
+
+  // Default English 15-Point Report
   return [
     {
       number: 1,

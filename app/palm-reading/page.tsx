@@ -18,6 +18,7 @@ import { PalmCapturePreviewModal } from "@/components/palm/palm-capture-preview-
 import PalmVoiceAssistant from "@/components/palm/palm-voice-assistant";
 import { usePalmVoiceNarrator } from "@/hooks/use-palm-voice-narrator";
 import { useLanguage } from "@/lib/i18n/language-context";
+import { translatePalmReport, isDevanagariText } from "@/lib/i18n/report-translator";
 import { parsePalmReading, type ParsedPalmReport } from "@/lib/palm-parser";
 import { derivePalmFeatures, type PalmAnalysisFeatures } from "@/lib/palm-feature-detector";
 import {
@@ -57,6 +58,8 @@ export default function PalmReadingPage() {
   const [question, setQuestion] = useState("");
   const [reading, setReading] = useState("");
   const [parsedReport, setParsedReport] = useState<ParsedPalmReport | null>(null);
+  const [originalReport, setOriginalReport] = useState<ParsedPalmReport | null>(null);
+  const [isTranslatingReport, setIsTranslatingReport] = useState(false);
   const [palmFeatures, setPalmFeatures] = useState<PalmAnalysisFeatures | null>(null);
   const [error, setError] = useState("");
   const [quality, setQuality] = useState("");
@@ -67,10 +70,40 @@ export default function PalmReadingPage() {
   const voiceNarrator = usePalmVoiceNarrator({ initialLanguage: language });
 
   useEffect(() => {
-    if (voiceNarrator.language !== language && parsedReport) {
-      voiceNarrator.switchLanguage(language, parsedReport, hand);
+    if (!originalReport) return;
+
+    let active = true;
+    const isOriginalDevanagari = isDevanagariText(originalReport.heartLine);
+    const originalLang = isOriginalDevanagari ? "hi" : "en";
+
+    if (language === originalLang) {
+      setParsedReport(originalReport);
+      if (voiceNarrator.language !== language) {
+        voiceNarrator.switchLanguage(language, originalReport, hand);
+      }
+      return;
     }
-  }, [language, parsedReport, hand, voiceNarrator]);
+
+    setIsTranslatingReport(true);
+    translatePalmReport(originalReport, language)
+      .then((translated) => {
+        if (!active) return;
+        setParsedReport(translated);
+        if (voiceNarrator.language !== language) {
+          voiceNarrator.switchLanguage(language, translated, hand);
+        }
+      })
+      .catch(() => {
+        // Fallback to original report on error
+      })
+      .finally(() => {
+        if (active) setIsTranslatingReport(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [language, originalReport, hand, voiceNarrator]);
 
   // Modal controls
   const [isDossierModalOpen, setIsDossierModalOpen] = useState(false);
@@ -274,6 +307,7 @@ export default function PalmReadingPage() {
     setQuality("");
     setReading("");
     setParsedReport(null);
+    setOriginalReport(null);
     if (capturedFeaturesTemp) {
       setPalmFeatures(capturedFeaturesTemp);
     }
@@ -554,6 +588,7 @@ export default function PalmReadingPage() {
     setQuality("");
     setReading("");
     setParsedReport(null);
+    setOriginalReport(null);
     setImage("");
     setFileName("");
     setFileSizeStr("");
@@ -672,6 +707,7 @@ export default function PalmReadingPage() {
     setQuality("");
     setReading("");
     setParsedReport(null);
+    setOriginalReport(null);
     voiceNarrator.resetVoice();
   }
 
@@ -693,6 +729,7 @@ export default function PalmReadingPage() {
     setQuality("");
     setReading("");
     setParsedReport(null);
+    setOriginalReport(null);
 
     try {
       const response = await fetch("/api/palm-reading", {
@@ -722,6 +759,7 @@ export default function PalmReadingPage() {
       setReading(rawReading);
       const parsed = parsePalmReading(rawReading, hand);
       setParsedReport(parsed);
+      setOriginalReport(parsed);
       const features = derivePalmFeatures(
         hand,
         {
@@ -775,6 +813,7 @@ These are traditional symbolic interpretations, not scientifically validated per
     setReading(sampleMarkdown);
     const parsed = parsePalmReading(sampleMarkdown, "left");
     setParsedReport(parsed);
+    setOriginalReport(parsed);
     setPalmFeatures(derivePalmFeatures("left"));
     setError("");
     setQuality("");
@@ -838,6 +877,17 @@ These are traditional symbolic interpretations, not scientifically validated per
               {/* Report Header */}
               <PalmReportHeader onOpenExportModal={() => setIsDossierModalOpen(true)} />
 
+              {isTranslatingReport && (
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-[var(--wash)] border border-[var(--gold)]/30 text-xs text-[var(--gold)] animate-pulse">
+                  <LoaderCircle size={14} className="animate-spin" />
+                  <span>
+                    {language === "hi"
+                      ? "रिपोर्ट का प्रामाणिक हिन्दी अनुवाद तैयार किया जा रहा है..."
+                      : "Preparing authentic English report translation..."}
+                  </span>
+                </div>
+              )}
+
               {/* Vedic AI Spoken Voice Assistant (Automatic Narration & Interactive Voice Q&A) */}
               <PalmVoiceAssistant
                 status={voiceNarrator.status}
@@ -883,6 +933,7 @@ These are traditional symbolic interpretations, not scientifically validated per
                       voiceNarrator.resetVoice();
                       setReading("");
                       setParsedReport(null);
+    setOriginalReport(null);
                       startLiveCamera("environment");
                     }}
                   />
