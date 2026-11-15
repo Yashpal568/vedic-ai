@@ -136,58 +136,6 @@ export function extractGroundedPalmFeatures(
   let lifeTrace: TraceResult = { detected: false, clarity: "not_detected", confidence: 0, points: [] };
   let fateTrace: TraceResult = { detected: false, clarity: "not_detected", confidence: 0, points: [] };
 
-  const defaultCorridors: Record<string, ExtractedPoint[]> = {
-    heart: isLeft
-      ? [
-          { x: 735, y: 380 },
-          { x: 620, y: 382 },
-          { x: 520, y: 365 },
-          { x: 440, y: 340 },
-          { x: 380, y: 305 },
-        ]
-      : [
-          { x: 265, y: 380 },
-          { x: 380, y: 382 },
-          { x: 480, y: 365 },
-          { x: 560, y: 340 },
-          { x: 620, y: 305 },
-        ],
-    head: isLeft
-      ? [
-          { x: 340, y: 400 },
-          { x: 440, y: 420 },
-          { x: 540, y: 450 },
-          { x: 650, y: 490 },
-        ]
-      : [
-          { x: 660, y: 400 },
-          { x: 560, y: 420 },
-          { x: 460, y: 450 },
-          { x: 350, y: 490 },
-        ],
-    life: isLeft
-      ? [
-          { x: 340, y: 395 },
-          { x: 385, y: 440 },
-          { x: 405, y: 515 },
-          { x: 385, y: 595 },
-          { x: 345, y: 665 },
-        ]
-      : [
-          { x: 660, y: 395 },
-          { x: 615, y: 440 },
-          { x: 595, y: 515 },
-          { x: 615, y: 595 },
-          { x: 655, y: 665 },
-        ],
-    fate: [
-      { x: 500, y: 660 },
-      { x: 500, y: 550 },
-      { x: 498, y: 440 },
-      { x: 498, y: 340 },
-    ],
-  };
-
   // If 21 MediaPipe hand landmarks are provided, derive genuine landmark-anchored crease corridors
   // placed strictly on the user's actual palm flesh, regardless of image aspect ratio, zoom, or forearm.
   let landmarkCorridors: Record<string, ExtractedPoint[]> | null = null;
@@ -279,11 +227,8 @@ export function extractGroundedPalmFeatures(
     mounts[5].detected = true;
   }
 
-  const activeCorridors = landmarkCorridors || defaultCorridors;
-
   if (apiDetections) {
     const fromImage = (
-      lineId: string,
       line?: { visible?: boolean; clarity?: string; points?: ExtractedPoint[] }
     ): TraceResult => {
       if (!line?.visible) {
@@ -310,10 +255,10 @@ export function extractGroundedPalmFeatures(
         points,
       };
     };
-    heartTrace = fromImage("heart", apiDetections.heartLine);
-    headTrace = fromImage("head", apiDetections.headLine);
-    lifeTrace = fromImage("life", apiDetections.lifeLine);
-    fateTrace = fromImage("fate", apiDetections.fateLine);
+    heartTrace = fromImage(apiDetections.heartLine);
+    headTrace = fromImage(apiDetections.headLine);
+    lifeTrace = fromImage(apiDetections.lifeLine);
+    fateTrace = fromImage(apiDetections.fateLine);
   } else if (landmarkCorridors) {
     // If no explicit apiDetections provided yet, derive lines directly from detected hand landmarks
     heartTrace = { detected: true, clarity: "clear", confidence: 0.95, points: landmarkCorridors.heart };
