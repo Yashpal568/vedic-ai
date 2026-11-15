@@ -289,10 +289,9 @@ export function extractGroundedPalmFeatures(
       if (!line?.visible) {
         return { detected: false, clarity: "not_detected", confidence: 0, points: [] };
       }
-      const rawPoints =
-        line.points && line.points.length >= 4
-          ? line.points
-          : activeCorridors[lineId] || [];
+      // A vision model must return an explicit crease trace from this photo.
+      // Never replace missing image evidence with anatomically plausible template paths.
+      const rawPoints = Array.isArray(line.points) ? line.points : [];
       const points = rawPoints.filter((point) =>
         Number.isFinite(point.x) &&
         Number.isFinite(point.y) &&
@@ -301,13 +300,13 @@ export function extractGroundedPalmFeatures(
         point.y >= 0 &&
         point.y <= 1000
       );
-      if (points.length < 2) {
+      if (points.length < 4) {
         return { detected: false, clarity: "not_detected", confidence: 0, points: [] };
       }
       return {
         detected: true,
         clarity: line.clarity === "clear" ? "clear" : "faint",
-        confidence: line.points && line.points.length >= 4 ? 0.9 : 0.8,
+        confidence: 0.75,
         points,
       };
     };
