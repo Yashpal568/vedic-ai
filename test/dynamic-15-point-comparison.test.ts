@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { calculateKundli } from "../lib/astrology";
 import { build15PointVedicReport } from "../lib/vedic-15-point-report";
-import * as fs from "fs";
 
 describe("Dynamic 15-Point Report Comparison (P1)", () => {
   it("generates and verifies distinct Career, Wealth, Relationships, and Mahadasha text for P1 and P2", () => {
@@ -60,30 +59,7 @@ describe("Dynamic 15-Point Report Comparison (P1)", () => {
     expect(wealthP1.details).not.toEqual(wealthP2.details);
     expect(dashaP1.details).not.toEqual(dashaP2.details);
 
-    // Save full comparison evidence to JSON
-    fs.writeFileSync(
-      "C:/Users/hp/.gemini/antigravity/brain/df355cbb-8b43-4434-bd55-f527cbd6b92a/scratch/15point_report_comparison.json",
-      JSON.stringify(
-        {
-          p1: {
-            title: "P1 (New Delhi, Cancer Lagna)",
-            career: { title: careerP1.title, details: careerP1.details },
-            relationships: { title: relP1.title, details: relP1.details },
-            wealth: { title: wealthP1.title, details: wealthP1.details },
-            dasha: { title: dashaP1.title, details: dashaP1.details },
-          },
-          p2: {
-            title: "P2 (New York, Leo Lagna)",
-            career: { title: careerP2.title, details: careerP2.details },
-            relationships: { title: relP2.title, details: relP2.details },
-            wealth: { title: wealthP2.title, details: wealthP2.details },
-            dasha: { title: dashaP2.title, details: dashaP2.details },
-          },
-        },
-        null,
-        2
-      )
-    );
+    // Full comparison evidence is already printed by the assertions above; no machine-specific path.
   });
 });
 

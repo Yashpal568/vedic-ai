@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest";
 import { calculateKundli } from "../lib/astrology";
-import * as fs from "fs";
 
 const profiles = [
   {
@@ -130,10 +129,7 @@ describe("Independent Astronomical Reference Verification (P1)", () => {
       });
     }
 
-    fs.writeFileSync(
-      "C:/Users/hp/.gemini/antigravity/brain/df355cbb-8b43-4434-bd55-f527cbd6b92a/scratch/ephemeris_comparison_results.json",
-      JSON.stringify(comparisonResults, null, 2)
-    );
+    console.log("Swiss Ephemeris comparison evidence:", JSON.stringify(comparisonResults, null, 2));
   }, 45000);
 });
 
