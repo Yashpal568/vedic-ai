@@ -99,14 +99,13 @@ export function parsePalmReading(markdown: string, hand: "left" | "right" | "uns
   ]);
 
   // Extract or synthesize 10-point personalised items from available content
-  const overallStructure = pOverview || (hand === "left"
-    ? "Left hand (passive Hastarekha): Observed palm structure reflecting innate physical constitution, constitutional stability, and natural temperament."
-    : "Right hand (active Hastarekha): Observed palm structure manifesting deliberate life habits, vocational direction, and conscious adaptation.");
+  const notVisible = "Not clearly distinguishable in this photo. The report will not infer this feature without a clear visual observation.";
+  const overallStructure = pOverview || notVisible;
 
-  const heartLine = pHeart || "Visible upper palm crease displaying smooth curvature towards the sub-digital mounts, reflecting natural emotional warmth and selective interpersonal trust.";
-  const headLine = pHead || "Well-defined transverse crease tracing across the central palm, indicating thoughtful analytical evaluation balanced with practical decision-making.";
-  const lifeLine = pLife || "Clear curved path enclosing the thenar eminence (Venus mount), symbolizing sustained physical stamina, daily rhythm, and recuperative vitality.";
-  const fateLine = pFate || "Central longitudinal crease moving toward the Saturn mount, symbolizing career initiative, focused vocation, and evolving self-reliance.";
+  const heartLine = pHeart || notVisible;
+  const headLine = pHead || notVisible;
+  const lifeLine = pLife || notVisible;
+  const fateLine = pFate || notVisible;
 
   // Separate thumb and finger descriptions dynamically
   let thumbCharacteristics = "";
@@ -119,10 +118,10 @@ export function parsePalmReading(markdown: string, hand: "left" | "right" | "uns
     fingerProportions = fingerLine || (thumbLine && lines.length > 1 ? lines.filter(l => l !== thumbLine).join(" ") : pThumbFingers);
   }
   if (!thumbCharacteristics) {
-    thumbCharacteristics = "Well-set thumb with stable phalange proportions, indicating balanced willpower, deliberate execution, and thoughtful tact.";
+    thumbCharacteristics = notVisible;
   }
   if (!fingerProportions) {
-    fingerProportions = "Proportionate finger lengths with straight alignment, reflecting balanced self-expression, mental agility, and cooperative leadership.";
+    fingerProportions = notVisible;
   }
 
   // Extract mount details dynamically
@@ -136,17 +135,13 @@ export function parsePalmReading(markdown: string, hand: "left" | "right" | "uns
     if (jupiterMatch) mountOfJupiter = jupiterMatch;
   }
   if (!mountOfVenus) {
-    mountOfVenus = "Moderately elevated thenar mount showing healthy vitality, aesthetic resonance, domestic devotion, and empathetic warmth.";
+    mountOfVenus = notVisible;
   }
   if (!mountOfJupiter) {
-    mountOfJupiter = "Clearly outlined region beneath the index finger, reflecting ethical integrity, personal self-respect, and guiding wisdom.";
+    mountOfJupiter = notVisible;
   }
 
-  const synthesis = pSynthesis || (hand === "left" 
-    ? "Left hand (passive hastarekha) indicates deep innate talents, emotional intuition, and inherited creative gifts."
-    : hand === "right"
-    ? "Right hand (active hastarekha) manifests conscious life efforts, vocational achievements, and active determination."
-    : "Balanced energy balance indicating harmonious alignment between intuitive traits and outward life choices.");
+  const synthesis = pSynthesis || "A personalised synthesis cannot be produced because the vision response did not include enough image-grounded observations. Please analyse the photo again.";
 
   // Parse remedies dynamically from AI response if available
   const parsedRemedies: string[] = [];
@@ -161,16 +156,8 @@ export function parsePalmReading(markdown: string, hand: "left" | "right" | "uns
 
   const isDevanagari = /[\u0900-\u097F]/.test(text);
   const defaultRemedies = isDevanagari
-    ? [
-        "सूर्य उपाय: प्रातःकाल सूर्य अर्घ्य दें और कुछ क्षण शांत ध्यान करें।",
-        "बृहस्पति उपाय: गुरुवार को स्वाध्याय अथवा गायत्री मंत्र का जप करें।",
-        "दैनिक संतुलन: शाम को 10 मिनट मौन व श्वास-प्रश्वास साधना करें।",
-      ]
-    : [
-        "Surya Upaya: Begin mornings with quiet outdoor light contemplation (Solar Arghya) to anchor clarity and vital energy.",
-        "Brihaspati Upaya: Dedicate time on Thursdays for reflective reading or reciting the Gayatri Mantra for discernment and ethical focus.",
-        "Mindful Cadence: Establish 10 minutes of evening sensory unwinding to balance the nervous system and assimilate daily experiences.",
-      ];
+    ? ["व्यक्तिगत उपाय नहीं दिए गए: फोटो से पर्याप्त विशिष्ट संकेत प्राप्त नहीं हुए।", "पहले स्पष्ट फोटो के साथ रेखाओं और पर्वतों का पुनः विश्लेषण करें।", "किसी भी उपाय को निश्चित परिणाम या वैज्ञानिक सलाह न मानें।"]
+    : ["No personalised remedy was generated because the image did not provide enough specific visual evidence.", "Retake the photo in even lighting and request a fresh analysis of the visible lines and mounts.", "Treat traditional practices as reflective guidance, not guaranteed outcomes or medical advice."];
 
   const remedies = parsedRemedies.length > 0 ? parsedRemedies : defaultRemedies;
 
