@@ -32,7 +32,7 @@ Every individual's hand is physically unique. NEVER output generic, canned, or r
 4. Planetary Mount Elevations: Examine the relative prominence of the Mount of Venus (thenar pad), Mount of Jupiter, Saturn, Sun, Mercury, and Mount of Moon (hypothenar pad). Which mounts are elevated, and which are flat?
 5. Distinct Crease Paths: Note the unique curvature, starting position, depth, branches, forks, or breaks of the Heart, Head, Life, and Fate lines on THIS palm. If the Fate line is faint or absent, state clearly that it is subtle or not distinctly formed.
 
-Generate a structured, unique, respectful report in plain, everyday English using these exact markdown sections:
+Generate a structured, unique, respectful report using the language specified in LANGUAGE REQUIREMENT above. Do not switch languages. Use these exact markdown section headings and include concrete visual observations from this uploaded image in every section. If a feature cannot be seen, say it is not clearly visible instead of guessing:
 
 ## 1. Palm Overview & Hand Structure
 Identify the hand (${hand !== "unsure" ? `${hand} hand` : "hand shown"}), the specific element classification (Earth, Air, Fire, or Water) based on palm-to-finger ratio, and skin/texture observations. Distinguish clearly what is visible from what cannot be assessed.
@@ -196,12 +196,12 @@ export async function POST(request: Request) {
               ]
             }],
             // Qwen 3.8 instruct mode is the low-latency setting for this image task.
-            temperature: 0.7,
+            temperature: 0.35,
             reasoning_effort: "none",
-            max_completion_tokens: 1800,
+            max_completion_tokens: 3200,
             response_format: { type: "json_object" }
           }),
-          signal: AbortSignal.timeout(8_000),
+          signal: AbortSignal.timeout(20_000),
         });
         if (res.ok) {
           const data = await res.json();
@@ -252,9 +252,9 @@ export async function POST(request: Request) {
             },
             body: JSON.stringify({
               contents: [{ role: "user", parts: [{ text: prompt }, { inline_data: { mime_type: mimeType, data: base64 } }] }],
-              generationConfig: { temperature: 0.2, responseMimeType: "application/json", maxOutputTokens: 1800 }
+              generationConfig: { temperature: 0.25, responseMimeType: "application/json", maxOutputTokens: 3200 }
             }),
-            signal: AbortSignal.timeout(8_000),
+            signal: AbortSignal.timeout(20_000),
           });
           if (geminiRes.ok) {
             const data = await geminiRes.json();
@@ -338,7 +338,7 @@ export async function POST(request: Request) {
       reading: result.reading.trim(),
       detectedLines: result.detectedLines || null,
       mounts: result.mounts || null,
-    });
+    }, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate", "Pragma": "no-cache", "Vary": "Content-Type" } });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: "Invalid request payload. Please upload a supported image under 6 MB." }, { status: 400 });
