@@ -79,11 +79,13 @@ Return ONLY a valid JSON object:
     "distinctiveFeatures": ["at least five image-specific visible facts"]
   },
   "detectedLines": {
-    "heartLine": { "visible": true, "clarity": "clear", "points": [{"x": 120, "y": 410}, {"x": 250, "y": 395}, {"x": 390, "y": 380}, {"x": 520, "y": 390}] },
-    "headLine": { "visible": true, "clarity": "clear", "points": [{"x": 150, "y": 470}, {"x": 280, "y": 460}, {"x": 420, "y": 475}, {"x": 560, "y": 500}] },
-    "lifeLine": { "visible": true, "clarity": "clear", "points": [{"x": 350, "y": 420}, {"x": 300, "y": 520}, {"x": 330, "y": 650}, {"x": 420, "y": 760}] },
+    "heartLine": { "visible": false, "clarity": "not_detected", "points": [] },
+    "headLine": { "visible": false, "clarity": "not_detected", "points": [] },
+    "lifeLine": { "visible": false, "clarity": "not_detected", "points": [] },
     "fateLine": { "visible": false, "clarity": "not_detected", "points": [] }
   }
+}
+IMPORTANT: The false/empty values above are schema placeholders, NOT findings. Replace them only with traces you can actually follow in this exact photo. Coordinates must be normalized from 0 to 1000 relative to the full image, not copied from this example. Never invent or reuse sample coordinates.
 }
 or if the image is NOT clearly an open human palm:
 {"clear":false,"reason":"..."}
