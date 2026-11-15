@@ -223,22 +223,21 @@ export async function POST(request: Request) {
       const key = process.env.GEMINI_API_KEY?.trim();
       if (!key) return false;
       const configuredModel = process.env.PALM_GEMINI_MODEL?.trim();
-      const retiredGemini = [
-        "gemini-2.5-flash",
-        "gemini-2.5-flash-lite",
-        "gemini-2.0-flash",
-        "gemini-1.5-flash",
-        "gemini-1.5-pro",
-      ];
-      const safeConfigured = configuredModel && !retiredGemini.includes(configuredModel) ? configuredModel : null;
+      const supportedVisionModels = new Set([
+        "gemini-3.8-flash",
+        "gemini-3.7-flash",
+        "gemini-3.6-flash",
+        "gemini-3.5-flash",
+        "gemini-3-flash-preview",
+      ]);
+      const safeConfigured = configuredModel && supportedVisionModels.has(configuredModel) ? configuredModel : null;
 
-      // Prioritize ultra-low-latency Gemini vision models to guarantee completion within Vercel's execution window
+      // Stable, documented multimodal Flash models. Avoid aliases and unverified model IDs.
       const candidateModels = [
         safeConfigured,
-        "gemini-flash-lite-latest",
-        "gemini-3-flash-preview",
-        "gemini-flash-latest",
         "gemini-3.8-flash",
+        "gemini-3.7-flash",
+        "gemini-3.5-flash",
       ].filter((m, i, arr): m is string => Boolean(m) && arr.indexOf(m) === i);
 
       for (const model of candidateModels) {
