@@ -437,16 +437,6 @@ export function build15PointVedicReport(
       title: `${currentDasha.lord} Mahadasha (${dashaStart} – ${dashaEnd})`,
       summary: `The primary planetary chapter currently governing your life experiences and focus.`,
       details: `You are in the ${currentDasha.lord} Mahadasha. Its natal placement is ${dashaPlacement}, and the calculated period runs from ${dashaStart} to ${dashaEnd}. The traditional interpretation should be based on this lord's house, sign, dignity, and planetary relationships—not a generic description.`, 
-        currentDasha.lord === "Jupiter" ? "wisdom expansion, educational opportunities, and ethical elevation"
-        : currentDasha.lord === "Saturn" ? "disciplined restructuring, vocational duty, and enduring milestones"
-        : currentDasha.lord === "Mercury" ? "commercial commerce, learning, communication, and intellectual networking"
-        : currentDasha.lord === "Venus" ? "relational harmony, artistic fulfillment, and domestic enrichment"
-        : currentDasha.lord === "Sun" ? "identity clarity, leadership responsibilities, and civic authority"
-        : currentDasha.lord === "Moon" ? "emotional deepening, domestic shifts, and intuitive exploration"
-        : currentDasha.lord === "Mars" ? "courageous initiative, physical drive, and decisive transitions"
-        : currentDasha.lord === "Rahu" ? "unconventional ambition, innovative breakthroughs, and worldly expansion"
-        : "spiritual introspection, shedding outworn habits, and intuitive awakening"
-      }.`,
       tag: "Active Time Chapter",
     },
     {
