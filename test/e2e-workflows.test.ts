@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { calculateKundli } from "../lib/astrology";
+import { build15PointVedicReport } from "../lib/vedic-15-point-report";
 import { generateKundliPrintHtml } from "../lib/print-report";
 import * as fs from "fs";
 import * as path from "path";
@@ -26,6 +27,31 @@ function findChromePath(): string | null {
 }
 
 describe("End-to-End Real User Workflows (Requirement 8)", () => {
+  it("builds different career, relationship, and wealth analysis for different natal charts", () => {
+    const chartA = calculateKundli({
+      date: "1995-10-24",
+      time: "06:30",
+      place: "New Delhi, India",
+      latitude: 28.6139,
+      longitude: 77.2090,
+      timezone: "Asia/Kolkata",
+    });
+    const chartB = calculateKundli({
+      date: "2001-04-07",
+      time: "21:45",
+      place: "Mumbai, India",
+      latitude: 19.0760,
+      longitude: 72.8777,
+      timezone: "Asia/Kolkata",
+    });
+    const readingA = build15PointVedicReport(chartA, "en");
+    const readingB = build15PointVedicReport(chartB, "en");
+    expect(readingA[8].details).not.toEqual(readingB[8].details);
+    expect(readingA[9].details).not.toEqual(readingB[9].details);
+    expect(readingA[10].details).not.toEqual(readingB[10].details);
+    expect(readingA[13].details).not.toEqual(readingB[13].details);
+  });
+
   const testBirth = {
     date: "1995-10-24",
     time: "06:30",
