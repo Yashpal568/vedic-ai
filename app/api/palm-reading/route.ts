@@ -86,7 +86,6 @@ Return ONLY a valid JSON object:
   }
 }
 IMPORTANT: The false/empty values above are schema placeholders, NOT findings. Replace them only with traces you can actually follow in this exact photo. Coordinates must be normalized from 0 to 1000 relative to the full image, not copied from this example. Never invent or reuse sample coordinates.
-}
 or if the image is NOT clearly an open human palm:
 {"clear":false,"reason":"..."}
 Do not enclose the JSON in markdown code blocks or add text outside the JSON object.`;
