@@ -99,6 +99,7 @@ function errorMessage(status: number, provider: "Groq" | "Gemini") {
 }
 
 export async function POST(request: Request) {
+  const requestStartTime = Date.now();
   try {
     let base64 = "";
     let mimeType = "image/jpeg";
@@ -212,7 +213,7 @@ export async function POST(request: Request) {
             max_completion_tokens: 3200,
             response_format: { type: "json_object" }
           }),
-          signal: AbortSignal.timeout(20_000),
+          signal: AbortSignal.timeout(Math.min(18_000, Math.max(5_000, 38_000 - (Date.now() - requestStartTime)))),
         });
         if (res.ok) {
           const data = await res.json();
@@ -226,6 +227,10 @@ export async function POST(request: Request) {
         lastError = errorMessage(res.status, "Groq");
       } catch (e) {
         console.warn("[palm-reading] Groq attempt failed:", e);
+        if (e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError")) {
+          lastStatus = 504;
+          lastError = "The palm vision model timed out. Please try again with a clear photo.";
+        }
       }
       return false;
     };
@@ -235,23 +240,36 @@ export async function POST(request: Request) {
       if (!key) return false;
       const configuredModel = process.env.PALM_GEMINI_MODEL?.trim();
       const supportedVisionModels = new Set([
+        "gemini-3.5-flash",
         "gemini-3.8-flash",
         "gemini-3.7-flash",
         "gemini-3.6-flash",
-        "gemini-3.5-flash",
         "gemini-3-flash-preview",
       ]);
       const safeConfigured = configuredModel && supportedVisionModels.has(configuredModel) ? configuredModel : null;
 
-      // Stable, documented multimodal Flash models. Avoid aliases and unverified model IDs.
+      // Prioritize gemini-3.5-flash which is verified fast, responsive, and robust for palm analysis.
+      // Retain safeConfigured and fallbacks, but bound sequential attempts to protect the Vercel execution window.
       const candidateModels = [
-        safeConfigured,
-        "gemini-3.8-flash",
-        "gemini-3.7-flash",
         "gemini-3.5-flash",
+        ...(safeConfigured && safeConfigured !== "gemini-3.5-flash" ? [safeConfigured] : []),
+        "gemini-3.8-flash",
       ].filter((m, i, arr): m is string => Boolean(m) && arr.indexOf(m) === i);
 
-      for (const model of candidateModels) {
+      const TOTAL_BUDGET_MS = 38_000;
+
+      for (let i = 0; i < candidateModels.length; i++) {
+        const model = candidateModels[i];
+        const elapsed = Date.now() - requestStartTime;
+        const remaining = TOTAL_BUDGET_MS - elapsed;
+        if (remaining < 8_000) {
+          console.warn("[palm-reading] Insufficient execution budget remaining for next Gemini attempt:", remaining, "ms");
+          break;
+        }
+
+        // Primary responsive model (gemini-3.5-flash) receives up to 25s; any subsequent fallback is capped at 12s.
+        const attemptTimeoutMs = i === 0 ? Math.min(25_000, remaining) : Math.min(12_000, remaining);
+
         try {
           const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`;
           const geminiRes = await fetch(url, {
@@ -264,7 +282,7 @@ export async function POST(request: Request) {
               contents: [{ role: "user", parts: [{ text: prompt }, { inline_data: { mime_type: mimeType, data: base64 } }] }],
               generationConfig: { temperature: 0.25, responseMimeType: "application/json", maxOutputTokens: 3200 }
             }),
-            signal: AbortSignal.timeout(20_000),
+            signal: AbortSignal.timeout(attemptTimeoutMs),
           });
           if (geminiRes.ok) {
             const data = await geminiRes.json();
@@ -278,6 +296,10 @@ export async function POST(request: Request) {
           lastError = errorMessage(geminiRes.status, "Gemini");
         } catch (e) {
           console.warn("[palm-reading] Gemini attempt failed for model:", model, e);
+          if (e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError")) {
+            lastStatus = 504;
+            lastError = "The palm vision model timed out. Please try again with a clear photo.";
+          }
         }
       }
       return false;
