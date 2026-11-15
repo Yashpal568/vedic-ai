@@ -6,7 +6,87 @@
 **Target Commit:** `e117c7c` (`Verify Vedic report content changes with individual birth charts`) on branch `main`  
 **Production URL:** [https://vedic-ai-psi.vercel.app](https://vedic-ai-psi.vercel.app)  
 **Vercel Deployment ID:** `bom1::cq7pd-1794744386516-39a2203dcd47`  
-**Final Release Verdict:** **PASS (Ready for Release)**
+**Final Release Verdict:** **NOT READY — critical live verification remains blocked**
+
+---
+
+> **Superseding live-verification update — 15 November 2026 (UTC)**  
+> The earlier blanket **PASS / Ready for Release** verdict and historical test matrix below are not a valid final release sign-off. The production checks recorded in this supplement supersede any earlier unverified PASS claims. Do not treat a successful HTTP status alone as proof of palm-analysis accuracy or cross-account isolation.
+
+## Supplemental Production Verification — 15 November 2026
+
+**Repository head:** `b940f1dd16f0b260b75865a14b188fa7862d64e0` on `main`  
+**Production deployment:** `dpl_2HiDnas217qspCRTL7UrsT7pWJGu`  
+**Deployment state:** READY  
+**Production alias:** [https://vedic-ai-psi.vercel.app](https://vedic-ai-psi.vercel.app)  
+**Deployment created:** 2026-11-15T13:37:01Z (Vercel deployment metadata)  
+**Verification window:** 2026-11-15T13:23:15Z–13:39:45Z
+
+### Corrected status matrix
+
+| Area | Status | Evidence |
+|---|---|---|
+| Palm photo A vs photo B meaningful comparison | **BLOCKED** | A returned HTTP 422; B returned one successful analysis. There are not two accepted readings to compare. |
+| Same exact photo repeat consistency | **BLOCKED** | First request succeeded; repeated exact same data URL returned HTTP 502 timeout. |
+| Blurry image rejection | **PASS** | 20px-blurred palm image returned HTTP 200, `clear:false`, with a specific blur diagnosis. |
+| Cropped image safe rejection | **BLOCKED** | Cropped palm request returned HTTP 502 timeout; safe rejection was not observed. |
+| Non-palm rejection | **PASS** | Forest image returned HTTP 200, `clear:false`, and was identified as a forest rather than a palm. |
+| Client-side invalid file rejection | **PASS** | A `.txt` file was rejected with “Please choose a valid photo (JPG, PNG, WebP, or HEIC).”; no API request was made. |
+| Palm timeout UI and retry | **PASS** | Live HTTP 502 timeout message displayed; analyse/retry button became enabled again. |
+| Palm HTTP 422 retake UI | **PASS — mocked integration** | On the deployed frontend, a controlled HTTP 422 `clear:false` response displayed the “Photo needs another look” card, detailed retake text, “Retake photo” and “Choose different photo” actions. A live 422 end-to-end UI response was not reproduced after the fix because the next live request timed out with HTTP 502. |
+| Returned report rendering | **BLOCKED** | One API response contained a structured reading and line coordinates, but the second request for the same image timed out; a stable live report-rendering pass is not established. |
+| Two-account cross-account isolation | **BLOCKED** | No two separately authenticated test sessions/accounts were available to this verification run. No claim of interactive isolation PASS is made. |
+| Production route smoke test | **PASS** | Nine routes returned HTTP 200. |
+| CI, lint, type-check, unit/integration suite, production build | **PASS** | GitHub Actions run [#43719928326](https://github.com/Yashpal568/vedic-ai/actions/runs/43719928326): all workflow steps succeeded; 21 test files and 141 tests passed; production build completed. |
+
+### Exact palm inputs and results
+
+All palm photos were public Wikimedia Commons images retrieved as browser-rendered JPEG data URLs at 640×1000 viewport dimensions. They are test fixtures, not user data.
+
+| Test ID | Input | Timestamp (UTC) | HTTP / request ID | Actual output | Status |
+|---|---|---|---|---|---|
+| PALM-LIVE-01 | `Right_Hand_Palm.png`, Eyefive45, CC BY-SA 4.0; exact data URL length 67,991 chars; `hand:right`, `language:en` | 2026-11-15T13:25:39.644Z | 422; `arn1::iad1::8k486-1794749139720-1cf47b1621d1` | `clear:false`; “The photo did not provide enough reliable, image-specific palm-line detail…”; no observations or detected lines | BLOCKED for distinct-photo comparison |
+| PALM-LIVE-02 | `Palm, fingers.jpg`, Genusfotografen / Wikimedia Sverige, CC BY-SA 4.0; exact data URL length 67,991 chars; `hand:left`, `language:en` | 2026-11-15T13:23:15.331Z | 200; `arn1::iad1::9mrxz-1794748995415-f8423392cd07` | `clear:true`; observations included Fire-hand shape, curved Heart Line, sloping Head Line joined to Life Line, wide Life Line arc, vertical Fate Line; returned 4-point Heart/Head/Life traces and a 3-point Fate trace | Single-request PASS only; not a repeatability or accuracy pass |
+| PALM-REPEAT-01 | Exact same `Palm, fingers.jpg` data URL as PALM-LIVE-02 | 2026-11-15T13:34:30.435Z | 200; `arn1::iad1::d7qrd-1794749670581-d47228f20e6a` | `clear:true`; same broad feature descriptions, but exact trace/observation payload comparison could not be completed because repeat failed | BLOCKED |
+| PALM-REPEAT-02 | Exact same data URL, submitted again after 1.5 seconds | 2026-11-15T13:34:37.139Z | 502; `arn1::iad1::sxmg7-1794749677273-ba6bd8cb07e0` | “The palm vision model timed out. Please try again with a clear photo.” | BLOCKED |
+| PALM-QUALITY-01 | PALM-LIVE-02 transformed with 20px blur | 2026-11-15T13:35:31.552Z | 200; `fra1::iad1::d6r2t-1794749731631-161ecbea65ed` | `clear:false`; model specifically reported severe blur and indistinguishable crease lines | PASS |
+| PALM-QUALITY-02 | Central crop of PALM-LIVE-02 (12% horizontal / 28% vertical inset; 76%×42% crop) | 2026-11-15T13:35:34.230Z | 502; `fra1::iad1::z5cf4-1794749734304-d8cf23be271d` | Vision-model timeout; no `clear:false` result | BLOCKED |
+| PALM-QUALITY-03 | Unsplash forest photograph, `gustav-gullstrand-d6kSvT2xZQo-unsplash-scaled-1.webp` | 2026-11-15T13:36:13.044Z | 200; `fra1::iad1::gtv5g-1794749773124-e4bd5ea1d0e1` | `clear:false`; explicitly identified forest scene, no hand/palm lines | PASS |
+
+**Important interpretation:** PALM-LIVE-02's response contains detailed descriptions, but one successful model response does not establish that every description or coordinate is accurately traced from the photograph. PALM-LIVE-01 was rejected, so this run does not prove that two different genuine palms yield meaningfully different accepted analyses. The exact-photo repeat timed out, so repeat consistency is unknown. These remain release blockers.
+
+### Frontend UI verification
+
+- Production frontend build under deployment `dpl_2HiDnas217qspCRTL7UrsT7pWJGu` displayed the “Assessing palm features…” loading label when analysis started.
+- A live HTTP 502 timeout at 2026-11-15T13:38:36.752Z (request `arn1::iad1::ppgtq-1794749916799-cc3cfea5fccb`) displayed the timeout message and restored the Analyse button to enabled state.
+- A controlled/mock HTTP 422 `clear:false` response at 2026-11-15T13:39:45.931Z displayed the detailed retake card with both retake and choose-different-photo actions; no generic error was shown.
+- A non-image `.txt` upload was rejected client-side with the valid-photo message and did not reach the API.
+- A live report with successful palm response has not yet been verified end-to-end on the current deployment.
+- These browser checks were performed at a 1440×1200 desktop viewport. Mobile/tablet visual checks are not included in this run.
+
+### Production smoke tests
+
+On the production alias, the following paths returned HTTP 200 on 2026-11-15:
+
+`/`, `/chat`, `/palm-reading`, `/panchang`, `/reports`, `/profile`, `/login`, `/privacy`, `/terms`.
+
+### CI and verified code change
+
+- Test-evidence portability fix: commit `5a1eb8b30a8d825be96f84d969be0e006fda28f6`; removed machine-specific Windows absolute-path writes from two test files.
+- Verified frontend fix: commit `b940f1dd16f0b260b75865a14b188fa7862d64e0`; HTTP 422 with `clear:false` now surfaces the retake guidance card instead of a generic error.
+- Latest CI run [#43719928326](https://github.com/Yashpal568/vedic-ai/actions/runs/43719928326): 21/21 test files passed, 141/141 tests passed, lint/type-check/production build passed.
+- Production deployment `dpl_2HiDnas217qspCRTL7UrsT7pWJGu` is READY and serves commit `b940f1d`.
+
+### Remaining blockers — do not mark as passed
+
+1. Obtain a second distinct genuine open-palm photo that the API accepts, then compare image-grounded feature observations and crease traces against PALM-LIVE-02.
+2. Repeat the exact same accepted image successfully multiple times; current repeat attempt ended in HTTP 502.
+3. Repeat cropped-photo test until a definitive safe rejection is observed; current attempt timed out.
+4. Verify a successful live Palm Reading report is rendered correctly in the deployed UI, including line overlays/feature labels.
+5. Complete interactive cross-account testing with two separately authenticated test accounts, including attempts to read each other's saved reports and conversations. This requires authorized test sessions; no credentials or private user data were used in this run.
+6. Complete mobile and tablet UI checks, plus live invalid-image/timeout integration checks.
+
+**Current verdict: NOT READY for final release sign-off.** Automated CI and basic route smoke tests are green, and blurry/non-palm rejection plus the UI retry/422 guidance states have been verified. However, image-to-image accuracy, repeat consistency, cropped-image fail-safe behavior, successful live report rendering, and cross-account privacy are still unverified or blocked.
 
 ---
 
