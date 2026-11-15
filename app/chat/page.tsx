@@ -371,30 +371,11 @@ export default function Home() {
     } catch {}
   }, []);
   useEffect(() => { try { window.localStorage.setItem("vedic-chat-theme", theme); } catch {} }, [theme]);
+  // Do not restore birth profiles, charts, or chat messages from a global browser key.
+  // That key was shared across accounts and could expose one user's chart to another.
   useEffect(() => {
-    try {
-      const cached = window.localStorage.getItem("vedic-active-chat-v2");
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed.messages) && parsed.messages.length > 0) {
-          setMessages(parsed.messages);
-        }
-        if (parsed.savedBirth) setSavedBirth(parsed.savedBirth);
-        if (parsed.chartReport) setChartReport(parsed.chartReport);
-      }
-    } catch {}
+    try { window.localStorage.removeItem("vedic-active-chat-v2"); } catch {}
   }, []);
-  useEffect(() => {
-    if (messages.length > 0 || chartReport) {
-      try {
-        window.localStorage.setItem("vedic-active-chat-v2", JSON.stringify({
-          messages,
-          savedBirth,
-          chartReport,
-        }));
-      } catch {}
-    }
-  }, [messages, savedBirth, chartReport]);
   useEffect(() => {
     try {
       setSidebarCollapsed(window.localStorage.getItem("vedic-sidebar-collapsed") === "1");
@@ -445,11 +426,13 @@ export default function Home() {
         accountUserIdRef.current = nextUserId;
         setHistoryItems([]);
         setMessages([]);
+        setSavedBirth(null);
         setActiveConversationId(null);
         setLoadingConversationId(null);
         setPendingDeleteConversation(null);
         setChartReport(null);
         setTransitReport(null);
+        try { window.localStorage.removeItem("vedic-active-chat-v2"); } catch {}
       }
       setIsSignedIn(signedInUser);
       setAuthReady(true);
