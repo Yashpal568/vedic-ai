@@ -289,13 +289,38 @@ export async function POST(request: Request) {
             raw = data?.candidates?.[0]?.content?.parts?.map((part: { text?: string }) => part.text || "").join("");
             selectedProvider = "Gemini";
             if (raw?.trim()) {
+              console.info("[palm-reading] Gemini attempt succeeded:", {
+                model,
+                elapsedMs: Date.now() - requestStartTime,
+                responseChars: raw.length,
+              });
               return true;
             }
+            console.warn("[palm-reading] Gemini returned an empty response:", {
+              model,
+              status: geminiRes.status,
+              elapsedMs: Date.now() - requestStartTime,
+              finishReason: data?.candidates?.[0]?.finishReason || "unknown",
+              promptFeedback: data?.promptFeedback?.blockReason || null,
+            });
+          } else {
+            const providerBody = await geminiRes.text().catch(() => "");
+            console.error("[palm-reading] Gemini provider rejected request:", {
+              model,
+              status: geminiRes.status,
+              elapsedMs: Date.now() - requestStartTime,
+              body: providerBody.slice(0, 1000),
+            });
           }
           lastStatus = geminiRes.status;
           lastError = errorMessage(geminiRes.status, "Gemini");
         } catch (e) {
-          console.warn("[palm-reading] Gemini attempt failed for model:", model, e);
+          console.warn("[palm-reading] Gemini attempt failed:", {
+            model,
+            elapsedMs: Date.now() - requestStartTime,
+            errorName: e instanceof Error ? e.name : "UnknownError",
+            errorMessage: e instanceof Error ? e.message.slice(0, 300) : "Unknown error",
+          });
           if (e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError")) {
             lastStatus = 504;
             lastError = "The palm vision model timed out. Please try again with a clear photo.";
