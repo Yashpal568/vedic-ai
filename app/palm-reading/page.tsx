@@ -64,6 +64,7 @@ export default function PalmReadingPage() {
   const [error, setError] = useState("");
   const [quality, setQuality] = useState("");
   const [loading, setLoading] = useState(false);
+  const imageRequestIdRef = useRef(0);
 
   const { language } = useLanguage();
   // Spoken AI Voice Narrator Controller
@@ -581,9 +582,11 @@ export default function PalmReadingPage() {
   // Handle file input selection from Gallery or Native Camera Fallback
   async function chooseImage(event: ChangeEvent<HTMLInputElement>) {
     const input = event.currentTarget;
+    imageRequestIdRef.current += 1;
     const file = input.files?.[0];
     if (!file) return;
 
+    const requestId = ++imageRequestIdRef.current;
     setError("");
     setQuality("");
     setReading("");
@@ -592,6 +595,8 @@ export default function PalmReadingPage() {
     setImage("");
     setFileName("");
     setFileSizeStr("");
+    setPalmFeatures(null);
+    lastDetectedLandmarksRef.current = null;
 
     // Maximum 20 MB size threshold
     if (file.size > 20 * 1024 * 1024) {
@@ -661,6 +666,7 @@ export default function PalmReadingPage() {
         throw new Error("This photo is still too large after compression. Please choose a smaller photo.");
       }
 
+      if (requestId !== imageRequestIdRef.current) return;
       const sizeKB = Math.round((prepared.length * 0.75) / 1024);
       const imgData = context.getImageData(0, 0, canvas.width, canvas.height);
       setImage(prepared);
@@ -669,6 +675,7 @@ export default function PalmReadingPage() {
 
       // Detect hand landmarks directly on the uploaded image
       const detection = await detectHandInImage(canvas).catch(() => null);
+      if (requestId !== imageRequestIdRef.current) return;
       const landmarks =
         detection?.landmarks && detection.landmarks.length >= 21
           ? detection.landmarks
@@ -690,8 +697,10 @@ export default function PalmReadingPage() {
         )
       );
     } catch (e) {
-      console.error("[chooseImage error]", e);
-      setError(e instanceof Error ? e.message : "Could not prepare this photo. Please try another image.");
+      if (requestId === imageRequestIdRef.current) {
+        console.error("[chooseImage error]", e);
+        setError(e instanceof Error ? e.message : "Could not prepare this photo. Please try another image.");
+      }
     } finally {
       try {
         if (input) input.value = "";
@@ -700,6 +709,7 @@ export default function PalmReadingPage() {
   }
 
   function removePhoto() {
+    imageRequestIdRef.current += 1;
     setImage("");
     setFileName("");
     setFileSizeStr("");
@@ -722,6 +732,8 @@ export default function PalmReadingPage() {
   // Analyse selected palm photo
   async function analyse() {
     if (!image || loading) return;
+    const requestId = ++imageRequestIdRef.current;
+    const imageBeingAnalysed = image;
     // Prime audio context on user gesture for seamless unmuted playback permission
     voiceNarrator.primeAudio();
     setLoading(true);
@@ -735,10 +747,11 @@ export default function PalmReadingPage() {
       const response = await fetch("/api/palm-reading", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image, hand, question, language }),
+        body: JSON.stringify({ image: imageBeingAnalysed, hand, question, language }),
       });
 
       const data = await response.json().catch(() => ({}));
+      if (requestId !== imageRequestIdRef.current) return;
       if (!response.ok) {
         if (response.status === 504) {
           throw new Error("The analysis timed out on the server. Please try again with a clear photo.");
@@ -777,9 +790,11 @@ export default function PalmReadingPage() {
       // Automatically trigger spoken AI voice narration immediately
       voiceNarrator.autoNarrate(parsed, hand);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not analyse the image. Please try again.");
+      if (requestId === imageRequestIdRef.current) {
+        setError(e instanceof Error ? e.message : "Could not analyse the image. Please try again.");
+      }
     } finally {
-      setLoading(false);
+      if (requestId === imageRequestIdRef.current) setLoading(false);
     }
   }
 
