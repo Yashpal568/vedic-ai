@@ -102,7 +102,7 @@ export async function calculateSwissKundli(input: KundliInput): Promise<KundliRe
       ayanamsha: "lahiri",
       house_system: "W",
       bodies: "default",
-      nodes: "true",
+      nodes: "mean",
     }),
     cache: "no-store",
     signal: AbortSignal.timeout(20_000),
