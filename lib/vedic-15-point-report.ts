@@ -136,6 +136,40 @@ export function build15PointVedicReport(
   const venusSign = isHi ? SIGN_NAMES_HI[venus.sign] || venus.sign : venus.sign;
   const saturnSign = isHi ? SIGN_NAMES_HI[saturn.sign] || saturn.sign : saturn.sign;
   const dashaLord = isHi ? PLANET_NAMES_HI[currentDasha.lord] || currentDasha.lord : currentDasha.lord;
+  const signOrder = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"];
+  const signRulers: Record<string, string> = {
+    Aries: "Mars", Taurus: "Venus", Gemini: "Mercury", Cancer: "Moon", Leo: "Sun", Virgo: "Mercury",
+    Libra: "Venus", Scorpio: "Mars", Sagittarius: "Jupiter", Capricorn: "Saturn", Aquarius: "Saturn", Pisces: "Jupiter",
+  };
+  const houseFacts = (house: number) => {
+    const sign = signOrder[(asc.signIndex + house - 1) % 12];
+    const ruler = signRulers[sign];
+    const lord = report.planets.find((planet) => planet.name === ruler);
+    const occupants = report.planets.filter((planet) => planet.house === house).map((planet) =>
+      isHi ? PLANET_NAMES_HI[planet.name] || planet.name : planet.name
+    );
+    const signLabel = isHi ? SIGN_NAMES_HI[sign] || sign : sign;
+    const rulerLabel = isHi ? PLANET_NAMES_HI[ruler] || ruler : ruler;
+    const lordPlacement = lord
+      ? (isHi
+          ? `${PLANET_NAMES_HI[lord.name] || lord.name} ${SIGN_NAMES_HI[lord.sign] || lord.sign} राशि के ${lord.house}वें भाव में स्थित है`
+          : `${lord.name} is in ${lord.sign}, House ${lord.house}`)
+      : (isHi ? "इस भाव के स्वामी की स्थिति उपलब्ध नहीं है" : "the house lord's placement is unavailable");
+    const occupantsLabel = occupants.length
+      ? occupants.join(isHi ? " और " : ", ")
+      : (isHi ? "इस भाव में कोई प्रमुख ग्रह स्थित नहीं है" : "no classical planet occupies this house");
+    return { sign, ruler, signLabel, rulerLabel, lordPlacement, occupantsLabel };
+  };
+  const careerHouse = houseFacts(10);
+  const relationshipHouse = houseFacts(7);
+  const wealthHouse = houseFacts(2);
+  const gainsHouse = houseFacts(11);
+  const dashaPlanet = report.planets.find((planet) => planet.name === currentDasha.lord);
+  const dashaPlacement = dashaPlanet
+    ? (isHi
+        ? `${PLANET_NAMES_HI[dashaPlanet.name] || dashaPlanet.name} ${SIGN_NAMES_HI[dashaPlanet.sign] || dashaPlanet.sign} राशि के ${dashaPlanet.house}वें भाव में स्थित है`
+        : `${dashaPlanet.name} is in ${dashaPlanet.sign}, House ${dashaPlanet.house}`)
+    : (isHi ? "महादशा स्वामी की जन्मकुंडली स्थिति उपलब्ध नहीं है" : "the Mahadasha lord's natal placement is unavailable");
 
   if (isHi) {
     return [
@@ -208,7 +242,7 @@ export function build15PointVedicReport(
         section: "आजीविका एवं कर्म क्षेत्र",
         title: `दशम कर्म भाव एवं शनि ${saturnSign} में`,
         summary: "व्यावसायिक रुझान, कर्मनिष्ठा और सामाजिक योगदान का मार्ग।",
-        details: `${saturn.house}वें भाव में शनि इंगित करता है कि व्यावसायिक प्रतिष्ठा सतत प्रयास, अनुशासन और नैतिक दृढ़ता से अर्जित होती है।`,
+        details: `दशम भाव ${careerHouse.signLabel} राशि का है और इसका स्वामी ${careerHouse.rulerLabel} है; ${careerHouse.lordPlacement}। इस भाव में ${careerHouse.occupantsLabel}। शनि ${saturnSign} राशि के ${saturn.house}वें भाव में है। पारंपरिक दृष्टि से करियर की व्याख्या इन वास्तविक स्थितियों को साथ देखकर करनी चाहिए; यह निश्चित पेशे या सफलता की गारंटी नहीं है।`,
         tag: "कर्म एवं कर्तव्य",
       },
       {
@@ -216,7 +250,7 @@ export function build15PointVedicReport(
         section: "संबंध एवं सामाजिक व्यवहार",
         title: `सप्तम भाव साझेदारी एवं शुक्र ${venusSign} में`,
         summary: "पारस्परिक साझेदारी, सम्मान और सामाजिक संतुलन।",
-        details: `शुक्र की स्थिति पारस्परिक आदर, स्पष्ट संवाद और परस्पर स्वावलंबन को संबंधों की स्थायी नींव मानती है।`,
+        details: `सप्तम भाव ${relationshipHouse.signLabel} राशि का है और इसका स्वामी ${relationshipHouse.rulerLabel} है; ${relationshipHouse.lordPlacement}। इस भाव में ${relationshipHouse.occupantsLabel}। शुक्र ${venusSign} राशि के ${venus.house}वें भाव में स्थित है। पारंपरिक संबंध-विचार में सप्तम भाव, उसके स्वामी और शुक्र—तीनों को साथ पढ़ा जाता है।`,
         tag: "साझेदारी एवं सौहार्द",
       },
       {
@@ -224,7 +258,7 @@ export function build15PointVedicReport(
         section: "वित्तीय प्रवृत्तियां एवं समृद्धि",
         title: "द्वितीय (धन) एवं एकादश (लाभ) भाव प्रवाह",
         summary: "संसाधन संचय, बचत की आदतें और आर्थिक संतुलन।",
-        details: `आपकी कुंडली सुनियोजित उद्यम, धैर्यपूर्ण निवेश और ज्ञान के सदुपयोग से आर्थिक स्थिरता का समर्थन करती है।`,
+        details: `द्वितीय धन भाव ${wealthHouse.signLabel} राशि में है; इसका स्वामी ${wealthHouse.rulerLabel} है (${wealthHouse.lordPlacement})। एकादश लाभ भाव ${gainsHouse.signLabel} राशि में है; इसका स्वामी ${gainsHouse.rulerLabel} है (${gainsHouse.lordPlacement})। इन दोनों भावों में स्थित ग्रह: धन भाव—${wealthHouse.occupantsLabel}; लाभ भाव—${gainsHouse.occupantsLabel}। यह पारंपरिक वित्तीय संकेतों का विवरण है, निवेश सलाह या धन की गारंटी नहीं।`,
         tag: "भौतिक समृद्धि",
       },
       {
@@ -248,7 +282,7 @@ export function build15PointVedicReport(
         section: "वर्तमान महादशा एवं अंतर्दशा",
         title: `${dashaLord} महादशा (${dashaStart} – ${dashaEnd})`,
         summary: "वर्तमान समय में आपके जीवन अनुभवों को दिशा देने वाला मुख्य ग्रहीय अध्याय।",
-        details: `वर्तमान में आप ${dashaLord} के कालखंड में हैं। यह अवधि अनुशासन, ज्ञान अर्जन और दीर्घकालिक नींव को सुदृढ़ करने के अवसर प्रदान करती है।`,
+        details: `वर्तमान महादशा ${dashaLord} की है और इसका जन्मकुंडली में स्थान: ${dashaPlacement}। अवधि ${dashaStart} से ${dashaEnd} तक है। व्याख्या महादशा स्वामी की वास्तविक राशि, भाव और अन्य ग्रहों से संबंध देखकर की जानी चाहिए।`,
         tag: "सक्रिय कालखंड",
       },
       {
@@ -256,7 +290,7 @@ export function build15PointVedicReport(
         section: "आगामी महत्वपूर्ण ग्रहीय प्रवाह",
         title: "गोचर (Transits) एवं आगामी परिवर्तन",
         summary: "भविष्य के प्रमुख ज्योतिषीय प्रवाह और उनके साथ संतुलन के उपाय।",
-        details: "आगामी ग्रहीय गोचर में अपने दैनिक प्रयासों को अपने मूलभूत मूल्यों के अनुरूप रखें। अनुकूल समय में नए कदम उठाएं और संशय के समय धैर्य रखें।",
+        details: "इस रिपोर्ट में वर्तमान गोचर की अलग गणना शामिल नहीं है। इसलिए किसी आगामी ग्रह-परिवर्तन या समय-सीमा का दावा नहीं किया जा रहा है; गोचर रिपोर्ट के लिए चुनी गई तारीख के वास्तविक ग्रह-स्थान अलग से गणना करने होंगे.",
         tag: "क्षितिज एवं समय-ताल",
       },
     ];
@@ -362,7 +396,7 @@ export function build15PointVedicReport(
       section: "Your career-related themes",
       title: `10th House Karma Bhava & Saturn in ${saturn.sign}`,
       summary: `Vocational inclinations, authority dynamics, and public impact trajectory.`,
-      details: `Saturn's placement in House ${saturn.house} indicates that professional recognition comes through consistency, structured competence, and ethical perseverance. Rather than overnight speculation, your career builds momentum cumulatively, peaking in mature adulthood.`,
+      details: `The 10th house (career) is ${careerHouse.sign}, ruled by ${careerHouse.ruler}; ${careerHouse.lordPlacement}. Occupants of the 10th house: ${careerHouse.occupantsLabel}. Saturn is in ${saturn.sign}, House ${saturn.house}. In traditional Jyotish, these placements are read together; they do not guarantee a specific profession or outcome.`, 
       tag: "Vocation & Duty",
     },
     {
@@ -370,7 +404,7 @@ export function build15PointVedicReport(
       section: "Your relationships and social nature",
       title: `7th House Dynamics & Venus in ${venus.sign}`,
       summary: `Partnership expectations, relational harmony, and cooperative boundaries.`,
-      details: `Venus in House ${venus.house} emphasizes fairness, mutual respect, and intellectual reciprocity in partnerships. You thrive with partners who respect your need for individual autonomy while offering steady, drama-free emotional support.`,
+      details: `The 7th house (partnerships) is ${relationshipHouse.sign}, ruled by ${relationshipHouse.ruler}; ${relationshipHouse.lordPlacement}. Occupants of the 7th house: ${relationshipHouse.occupantsLabel}. Venus is in ${venus.sign}, House ${venus.house}. Traditional relationship analysis considers the 7th house, its ruler, and Venus together rather than relying on Venus alone.`, 
       tag: "Union & Fellowship",
     },
     {
@@ -378,7 +412,7 @@ export function build15PointVedicReport(
       section: "Your financial tendencies",
       title: `2nd House (Dhana) & 11th House (Labha) Prosperity Flow`,
       summary: `Resource accumulation, saving habits, and material wealth management.`,
-      details: `Your chart supports sustained wealth through calculated enterprise and value-driven investment. Speculative risks are less favored than structured assets, specialized knowledge monetization, and long-term compound growth.`,
+      details: `The 2nd house (savings/resources) is ${wealthHouse.sign}, ruled by ${wealthHouse.ruler}; ${wealthHouse.lordPlacement}. The 11th house (gains) is ${gainsHouse.sign}, ruled by ${gainsHouse.ruler}; ${gainsHouse.lordPlacement}. Occupants: 2nd—${wealthHouse.occupantsLabel}; 11th—${gainsHouse.occupantsLabel}. These are traditional chart indicators, not a prediction of income or investment returns.`, 
       tag: "Material Prosperity",
     },
     {
@@ -402,7 +436,7 @@ export function build15PointVedicReport(
       section: "Your current Mahadasha/Antardasha",
       title: `${currentDasha.lord} Mahadasha (${dashaStart} – ${dashaEnd})`,
       summary: `The primary planetary chapter currently governing your life experiences and focus.`,
-      details: `You are navigating the ${currentDasha.lord} cycle. This period brings themes of ${
+      details: `You are in the ${currentDasha.lord} Mahadasha. Its natal placement is ${dashaPlacement}, and the calculated period runs from ${dashaStart} to ${dashaEnd}. The traditional interpretation should be based on this lord's house, sign, dignity, and planetary relationships—not a generic description.`, 
         currentDasha.lord === "Jupiter" ? "wisdom expansion, educational opportunities, and ethical elevation"
         : currentDasha.lord === "Saturn" ? "disciplined restructuring, vocational duty, and enduring milestones"
         : currentDasha.lord === "Mercury" ? "commercial commerce, learning, communication, and intellectual networking"
@@ -420,7 +454,7 @@ export function build15PointVedicReport(
       section: "Important upcoming planetary themes",
       title: `Transits (Gochara) & Next Major Transitions`,
       summary: `Key astrological currents on the horizon and how to harmonize with them.`,
-      details: `With upcoming transit shifts of ${saturn.name} and ${jupiter.name}, focus on aligning your daily efforts with long-term foundational goals. Practice deliberate timing: plant seeds during constructive dasha phases and consolidate gains during testing intervals.`,
+      details: `This birth-chart report does not calculate current or future transits. No upcoming planetary shift or event date is asserted here; a separate transit calculation for the requested date is required.`, 
       tag: "Horizon & Timing",
     },
   ];
