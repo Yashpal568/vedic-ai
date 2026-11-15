@@ -757,7 +757,23 @@ export default function PalmReadingPage() {
         if (response.status === 504) {
           throw new Error("The analysis timed out on the server. Please try again with a clear photo.");
         }
-        throw new Error(typeof data.error === "string" ? data.error : "Could not analyse the image. Please try again.");
+        if (response.status === 422 && data.clear === false) {
+          setQuality(
+            typeof data.error === "string"
+              ? data.error
+              : typeof data.reason === "string"
+                ? data.reason
+                : "The photo needs another look. Please retake it with the full palm clearly visible."
+          );
+          return;
+        }
+        throw new Error(
+          typeof data.error === "string"
+            ? data.error
+            : typeof data.reason === "string"
+              ? data.reason
+              : "Could not analyse the image. Please try again."
+        );
       }
 
       if (data.clear !== true) {
