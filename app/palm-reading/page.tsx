@@ -746,7 +746,8 @@ export default function PalmReadingPage() {
     try {
       const response = await fetch("/api/palm-reading", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        cache: "no-store",
+        headers: { "Content-Type": "application/json", "Cache-Control": "no-cache" },
         body: JSON.stringify({ image: imageBeingAnalysed, hand, question, language }),
       });
 
