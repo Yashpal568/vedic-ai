@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -11,6 +11,7 @@ import AppDesktopSidebar from "@/components/app-desktop-sidebar";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { useLanguage } from "@/lib/i18n/language-context";
 import { LanguageSelector } from "@/components/language-selector";
+import { translateAssistantChatMessage, isDevanagariText } from "@/lib/i18n/chat-translator";
 import type { KundliReport } from "@/lib/astrology";
 import { printKundliReport } from "@/lib/print-report";
 import { buildKundliHouseSummary, buildKundliPlanetSummary, buildKundliSimpleSummary } from "@/lib/kundli-summary";
@@ -28,56 +29,110 @@ type HistoryItem = { id: string; title: string; updated_at?: string };
 type VoiceRecognition = { lang: string; interimResults: boolean; continuous: boolean; onresult: ((event: { resultIndex: number; results: ArrayLike<{ isFinal: boolean; 0: { transcript: string } }> }) => void) | null; onerror: ((event: { error?: string }) => void) | null; onend: (() => void) | null; start: () => void; stop: () => void; abort?: () => void };
 type VoiceWindow = Window & { SpeechRecognition?: new () => VoiceRecognition; webkitSpeechRecognition?: new () => VoiceRecognition };
 
-const suggestions = [
-  {
-    title: "Career & Wealth",
-    description: "Analyze 10th house Karma Bhava, 2nd Dhana bhava, and financial growth prospects.",
-    prompt: "Analyze my 10th house and 2nd/11th houses for career trajectory, profession indications, and wealth potential based on my calculated chart.",
-    icon: BriefcaseBusiness,
-  },
-  {
-    title: "Love & Matchmaking",
-    description: "Explore 7th house dynamics, Venus placement, and marital compatibility factors.",
-    prompt: "Examine traditional relationship indicators from my chart including 7th house, Venus, and marital harmony themes.",
-    icon: Heart,
-  },
-  {
-    title: "Sade Sati & Dasha",
-    description: "Evaluate Saturn's 7.5-year cycle and your active Vimshottari Mahadasha timeline.",
-    prompt: "Explain my current Vimshottari Mahadasha and Antardasha periods and evaluate where I stand regarding Saturn's Sade Sati cycle.",
-    icon: Clock3,
-  },
-  {
-    title: "Vedic Remedies & Gems",
-    description: "Explore traditional Parashara Upayas, mantras, charity (daan), and gemstone guidance.",
-    prompt: "What traditional Vedic remedies (mantras, seva, gemstone precautions) are recommended for my planetary placements?",
-    icon: Gem,
-  },
-  {
-    title: "10th House Transit & Promotion",
-    description: "Assess current planetary transits over the 10th house and upcoming professional shifts.",
-    prompt: "Assess how current planetary transits affect my 10th house of career and professional opportunities.",
-    icon: Orbit,
-  },
-  {
-    title: "D9 Navamsha Destiny Chart",
-    description: "Inspect the divisional D9 chart for inner soul blueprint and planetary dignities.",
-    prompt: "Analyze my D9 Navamsha chart placements, Vargottama planets, and inner spiritual potential.",
-    icon: Compass,
-  },
-  {
-    title: "Saturn Sade Sati Analysis",
-    description: "Detailed breakdown of the rising, peak, and setting phases of Shani transit.",
-    prompt: "Provide an in-depth analysis of Saturn's transit relative to my natal Moon sign (Sade Sati status and practical guidance).",
-    icon: Sparkles,
-  },
-  {
-    title: "Kundli Milan & Ashtakoota",
-    description: "Traditional 36 Guna compatibility framework, Nadi, Bhakoot, and Ganadosha.",
-    prompt: "Explain how traditional Ashtakoota 36 Guna Milan works and what factors matter most for lifelong synastry.",
-    icon: Heart,
-  },
-];
+function getSuggestions(lang: "en" | "hi") {
+  if (lang === "hi") {
+    return [
+      {
+        title: "करियर एवं संपत्ति",
+        description: "दशम भाव (कर्म भाव), द्वितीय भाव (धन भाव) और वित्तीय समृद्धि की संभावनाओं का विश्लेषण।",
+        prompt: "मेरी गणना की गई कुंडली के आधार पर मेरे दशम भाव और द्वितीय/एकादश भाव का विश्लेषण कर करियर पथ और धन संभावनाओं को समझाएं।",
+        icon: BriefcaseBusiness,
+      },
+      {
+        title: "विवाह एवं संबंध",
+        description: "सप्तम भाव, शुक्र की स्थिति और वैवाहिक सामंजस्य संकेतकों का विश्लेषण।",
+        prompt: "मेरी जन्म कुंडली से पारंपरिक संबंध संकेतकों का परीक्षण करें, जिसमें सप्तम भाव, शुक्र और वैवाहिक सौहार्द शामिल हैं।",
+        icon: Heart,
+      },
+      {
+        title: "साढ़े साती एवं महादशा",
+        description: "शनि के 7.5 वर्षीय चक्र और आपकी सक्रिय विंशोत्तरी महादशा कालखंड का मूल्यांकन।",
+        prompt: "मेरी वर्तमान विंशोत्तरी महादशा और अंतर्दशा का विश्लेषण करें और बताएं कि मैं शनि की साढ़े साती के किस चरण में हूँ।",
+        icon: Clock3,
+      },
+      {
+        title: "वैदिक उपाय एवं रत्न",
+        description: "पारंपरिक पराशर उपाय, वैदिक मंत्र, दान और उपयुक्त रत्न मार्गदर्शन।",
+        prompt: "मेरी कुंडली के ग्रह योगों के अनुसार कौन से पारंपरिक वैदिक उपाय (मंत्र, सेवा, दान या रत्न सावधानियां) उपयुक्त हैं?",
+        icon: Gem,
+      },
+      {
+        title: "दशम भाव गोचर एवं पदोन्नति",
+        description: "दशम भाव पर वर्तमान ग्रहीय गोचर और व्यावसायिक अवसरों का आंकलन।",
+        prompt: "वर्तमान ग्रहीय गोचर मेरे करियर और आजीविका के दशम भाव को कैसे प्रभावित कर रहे हैं, इसका विश्लेषण करें।",
+        icon: Orbit,
+      },
+      {
+        title: "D9 नवांश भाग्य चक्र",
+        description: "आत्मिक क्षमता और ग्रहीय बल के लिए D9 नवांश वर्ग कुंडली का निरीक्षण।",
+        prompt: "मेरी D9 नवांश वर्ग कुंडली, वर्गोत्तम ग्रहों और आंतरिक आध्यात्मिक संभावनाओं का विश्लेषण करें।",
+        icon: Compass,
+      },
+      {
+        title: "शनि साढ़े साती विश्लेषण",
+        description: "जन्म चंद्र राशि के संदर्भ में शनि गोचर के उदय, शिखर और अस्त चरणों का विवरण।",
+        prompt: "मेरी जन्म चंद्र राशि के सापेक्ष शनि के गोचर (साढ़े साती की स्थिति और व्यावहारिक मार्गदर्शन) का गहन विश्लेषण प्रदान करें।",
+        icon: Sparkles,
+      },
+      {
+        title: "कुंडली मिलान एवं अष्टकूट",
+        description: "पारंपरिक 36 गुण मिलान, नाड़ी, भकूट और गण दोष का विश्लेषण।",
+        prompt: "पारंपरिक अष्टकूट 36 गुण मिलान कैसे काम करता है और दीर्घकालिक वैवाहिक सामंजस्य के लिए कौन से कारक सबसे महत्वपूर्ण हैं, समझाएं।",
+        icon: Heart,
+      },
+    ];
+  }
+  return [
+    {
+      title: "Career & Wealth",
+      description: "Analyze 10th house Karma Bhava, 2nd Dhana bhava, and financial growth prospects.",
+      prompt: "Analyze my 10th house and 2nd/11th houses for career trajectory, profession indications, and wealth potential based on my calculated chart.",
+      icon: BriefcaseBusiness,
+    },
+    {
+      title: "Love & Matchmaking",
+      description: "Explore 7th house dynamics, Venus placement, and marital compatibility factors.",
+      prompt: "Examine traditional relationship indicators from my chart including 7th house, Venus, and marital harmony themes.",
+      icon: Heart,
+    },
+    {
+      title: "Sade Sati & Dasha",
+      description: "Evaluate Saturn's 7.5-year cycle and your active Vimshottari Mahadasha timeline.",
+      prompt: "Explain my current Vimshottari Mahadasha and Antardasha periods and evaluate where I stand regarding Saturn's Sade Sati cycle.",
+      icon: Clock3,
+    },
+    {
+      title: "Vedic Remedies & Gems",
+      description: "Explore traditional Parashara Upayas, mantras, charity (daan), and gemstone guidance.",
+      prompt: "What traditional Vedic remedies (mantras, seva, gemstone precautions) are recommended for my planetary placements?",
+      icon: Gem,
+    },
+    {
+      title: "10th House Transit & Promotion",
+      description: "Assess current planetary transits over the 10th house and upcoming professional shifts.",
+      prompt: "Assess how current planetary transits affect my 10th house of career and professional opportunities.",
+      icon: Orbit,
+    },
+    {
+      title: "D9 Navamsha Destiny Chart",
+      description: "Inspect the divisional D9 chart for inner soul blueprint and planetary dignities.",
+      prompt: "Analyze my D9 Navamsha chart placements, Vargottama planets, and inner spiritual potential.",
+      icon: Compass,
+    },
+    {
+      title: "Saturn Sade Sati Analysis",
+      description: "Detailed breakdown of the rising, peak, and setting phases of Shani transit.",
+      prompt: "Provide an in-depth analysis of Saturn's transit relative to my natal Moon sign (Sade Sati status and practical guidance).",
+      icon: Sparkles,
+    },
+    {
+      title: "Kundli Milan & Ashtakoota",
+      description: "Traditional 36 Guna compatibility framework, Nadi, Bhakoot, and Ganadosha.",
+      prompt: "Explain how traditional Ashtakoota 36 Guna Milan works and what factors matter most for lifelong synastry.",
+      icon: Heart,
+    },
+  ];
+}
 const makeId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
 function formatConversationDate(value?: string) {
@@ -271,7 +326,7 @@ function normalizeAssistantMarkdown(raw: string) {
   return normalized.join("\\n").replace(/\\n{3,}/g, "\\n\\n");
 }
 
-function StructuredMessageView({ content }: { content: string }) {
+function StructuredMessageView({ content, language = "en" }: { content: string; language?: "en" | "hi" }) {
   const normalizedContent = normalizeAssistantMarkdown(content);
   return (
     <div className="message-text markdown-body ai-structured-body">
@@ -286,7 +341,9 @@ function StructuredMessageView({ content }: { content: string }) {
               const title = match[2];
               return (
                 <div className={`ai-structured-heading ai-section-${num}`}>
-                  <span className="ai-heading-pill">Section {num}</span>
+                  <span className="ai-heading-pill">
+                    {language === "hi" ? `खंड ${num}` : `Section ${num}`}
+                  </span>
                   <h3 className="ai-heading-text">{title}</h3>
                 </div>
               );
@@ -351,6 +408,51 @@ export default function Home() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const { language, t } = useLanguage();
+  const suggestions = useMemo(() => getSuggestions(language), [language]);
+  const [translatedMessages, setTranslatedMessages] = useState<Record<string, string>>({});
+  const [isTranslatingChat, setIsTranslatingChat] = useState(false);
+
+  useEffect(() => {
+    let isCurrent = true;
+    const assistantMsgs = messages.filter((m) => m.role === "assistant");
+    if (assistantMsgs.length === 0) return;
+
+    const msgsToTranslate = assistantMsgs.filter((m) => {
+      const isDev = isDevanagariText(m.content);
+      const isTargetDev = language === "hi";
+      const key = `${m.id}:${language}`;
+      return isDev !== isTargetDev && !translatedMessages[key];
+    });
+
+    if (msgsToTranslate.length === 0) return;
+
+    setIsTranslatingChat(true);
+    void Promise.all(
+      msgsToTranslate.map(async (m) => {
+        const translated = await translateAssistantChatMessage(m.content, language);
+        return { id: m.id, translated };
+      })
+    )
+      .then((results) => {
+        if (!isCurrent) return;
+        setTranslatedMessages((prev) => {
+          const next = { ...prev };
+          for (const res of results) {
+            next[`${res.id}:${language}`] = res.translated;
+          }
+          return next;
+        });
+      })
+      .catch((err) => console.warn("[vedic-ai] Chat translation error:", err))
+      .finally(() => {
+        if (isCurrent) setIsTranslatingChat(false);
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [language, messages, translatedMessages]);
+
   const [toast, setToast] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
@@ -904,16 +1006,22 @@ export default function Home() {
       setChartReport(report);
       setTransitReport(null);
       setIsBirthOpen(false);
-      const details = (profile.name.trim() ? "Name: " + profile.name.trim() + "\n" : "") +
-        "Date of birth: " + profile.date + "\nLocal birth time: " + profile.time +
-        "\nBirthplace: " + profile.place + "\nTimezone: " + report.birth.timezone;
+      const details = (profile.name.trim() ? (language === "hi" ? "नाम: " : "Name: ") + profile.name.trim() + "\n" : "") +
+        (language === "hi" ? "जन्म तिथि: " : "Date of birth: ") + profile.date +
+        (language === "hi" ? "\nस्थानीय जन्म समय: " : "\nLocal birth time: ") + profile.time +
+        (language === "hi" ? "\nजन्म स्थान: " : "\nBirthplace: ") + profile.place +
+        (language === "hi" ? "\nसमय क्षेत्र: " : "\nTimezone: ") + report.birth.timezone;
       const requestedFocus = pendingPrompt.trim();
       const userMessage: Message = {
         id: makeId(),
         role: "user",
         content: requestedFocus
-          ? "Use my newly calculated birth chart to answer this personal question: " + requestedFocus + "\n\nBirth details verified for this session:\n" + details + "\n\nFirst state the relevant calculated chart facts, then explain the traditional Jyotish interpretation. If the chart engine does not calculate a required factor reliably, disclose that limitation rather than guessing."
-          : "Please create and explain my Vedic kundli using these birth details:\n" + details,
+          ? (language === "hi"
+              ? "मेरे इस व्यक्तिगत प्रश्न का उत्तर देने के लिए मेरी नई गणना की गई जन्म कुंडली का उपयोग करें: " + requestedFocus + "\n\nइस सत्र के लिए सत्यापित जन्म विवरण:\n" + details + "\n\nपहले प्रासंगिक गणना किए गए चार्ट तथ्यों का उल्लेख करें, फिर पारंपरिक ज्योतिषीय व्याख्या समझाएं। यदि चार्ट इंजन किसी आवश्यक कारक की विश्वसनीय गणना नहीं करता है, तो अनुमान लगाने के बजाय उस सीमा को स्पष्ट करें।"
+              : "Use my newly calculated birth chart to answer this personal question: " + requestedFocus + "\n\nBirth details verified for this session:\n" + details + "\n\nFirst state the relevant calculated chart facts, then explain the traditional Jyotish interpretation. If the chart engine does not calculate a required factor reliably, disclose that limitation rather than guessing.")
+          : (language === "hi"
+              ? "कृपया इन जन्म विवरणों का उपयोग करके मेरी वैदिक कुंडली बनाएं और समझाएं:\n" + details
+              : "Please create and explain my Vedic kundli using these birth details:\n" + details),
       };
       const nextMessages = [...messages, userMessage];
       setMessages(nextMessages);
@@ -930,9 +1038,9 @@ export default function Home() {
           }),
         });
         const aiData = await aiResponse.json();
-        if (!aiResponse.ok) throw new Error(aiData.error || "The AI service could not generate your reading.");
+        if (!aiResponse.ok) throw new Error(aiData.error || (language === "hi" ? "एआई सेवा आपकी व्याख्या तैयार नहीं कर सकी।" : "The AI service could not generate your reading."));
         if (typeof aiData.reply !== "string" || !aiData.reply.trim()) {
-          throw new Error("The AI returned an empty reading. Please try again.");
+          throw new Error(language === "hi" ? "एआई ने खाली उत्तर दिया। कृपया पुनः प्रयास करें।" : "The AI returned an empty reading. Please try again.");
         }
         const assistantMessage: Message = { id: makeId(), role: "assistant", content: aiData.reply, animated: true };
         const completeMessages = [...nextMessages, assistantMessage];
@@ -942,10 +1050,12 @@ export default function Home() {
           persistConversation(completeMessages, [assistantMessage], conversationId)
         ).catch((saveError) => console.error("[vedic-ai] Could not persist completed birth-chat turn.", saveError));
       } catch (aiError) {
-        const reason = aiError instanceof Error ? aiError.message : "The AI service is temporarily unavailable.";
+        const reason = aiError instanceof Error ? aiError.message : (language === "hi" ? "एआई सेवा अस्थायी रूप से अनुपलब्ध है।" : "The AI service is temporarily unavailable.");
         const assistantMessage: Message = {
           id: makeId(), role: "assistant", animated: true,
-          content: "Your birth chart was calculated successfully, but I couldn't generate the interpretation this time. " + reason + " You can retry the question; your calculated chart remains available below.",
+          content: language === "hi"
+            ? "आपकी जन्म कुंडली की गणना सफलतापूर्वक हो गई, लेकिन इस बार मैं व्याख्या तैयार नहीं कर सका। " + reason + " आप प्रश्न पुनः पूछ सकते हैं; आपकी कुंडली नीचे उपलब्ध है।"
+            : "Your birth chart was calculated successfully, but I couldn't generate the interpretation this time. " + reason + " You can retry the question; your calculated chart remains available below.",
         };
         const failedMessages = [...nextMessages, assistantMessage];
         setMessages(failedMessages);
@@ -1211,18 +1321,18 @@ export default function Home() {
             <div className="home-engine-status">
               <span className="home-engine-mark"><MoonStar size={17}/></span>
               <div className="home-engine-copy">
-                <strong><i/> VEDIC CHART ENGINE · SIDEREAL CALCULATION</strong>
-                <span>{chartReport?.planets.find((planet) => planet.name === "Moon")?.nakshatra ? "Moon in " + chartReport.planets.find((planet) => planet.name === "Moon")?.nakshatra + " Nakshatra" : "Add birth details for your personal chart"}</span>
+                <strong><i/> {language === "hi" ? "वैदिक कुंडली इंजन · सायन/निरयण गणना" : "VEDIC CHART ENGINE · SIDEREAL CALCULATION"}</strong>
+                <span>{chartReport?.planets.find((planet) => planet.name === "Moon")?.nakshatra ? (language === "hi" ? "चंद्रमा " + chartReport.planets.find((planet) => planet.name === "Moon")?.nakshatra + " नक्षत्र में" : "Moon in " + chartReport.planets.find((planet) => planet.name === "Moon")?.nakshatra + " Nakshatra") : (language === "hi" ? "अपनी व्यक्तिगत कुंडली के लिए जन्म विवरण जोड़ें" : "Add birth details for your personal chart")}</span>
               </div>
-              <button type="button" className="home-sessions-button" onClick={() => setMobileMenuOpen(true)}><History size={14}/> Sessions</button>
+              <button type="button" className="home-sessions-button" onClick={() => setMobileMenuOpen(true)}><History size={14}/> {language === "hi" ? "सत्र" : "Sessions"}</button>
             </div>
             <div className="home-welcome-message">
-              <div className="home-welcome-brand"><span className="home-welcome-avatar"><MoonStar size={20}/><i/></span><div><strong>VEDIC.AI <span>·</span> ASTROLOGY COMPANION</strong><small><i/> Ready to explore</small></div></div>
-              <p>Namaste! 🙏 How can I assist you with your cosmic chart today? Explore the language of the planets, your questions, and traditional Jyotish concepts.</p>
+              <div className="home-welcome-brand"><span className="home-welcome-avatar"><MoonStar size={20}/><i/></span><div><strong>VEDIC.AI <span>·</span> {language === "hi" ? "ज्योतिष सहचर" : "ASTROLOGY COMPANION"}</strong><small><i/> {language === "hi" ? "तैयार" : "Ready to explore"}</small></div></div>
+              <p>{language === "hi" ? "नमस्ते! 🙏 आज मैं आपके जन्मांग और आकाशीय मानचित्र में क्या सहायता कर सकता हूँ? ग्रहों की भाषा, आपके प्रश्न और पारंपरिक ज्योतिष सिद्धांतों को समझें।" : "Namaste! 🙏 How can I assist you with your cosmic chart today? Explore the language of the planets, your questions, and traditional Jyotish concepts."}</p>
               <div className="home-birth-card">
-                <div className="home-birth-card-title"><CalendarDays size={17}/> {savedBirth && chartReport ? "Your birth chart is ready" : "Birth coordinates required"}</div>
-                <p>{savedBirth && chartReport ? "Your chart is calculated. Open your birth profile to review the details before exploring personal interpretations." : "To interpret your personal Janam Kundli, add your date of birth, exact local birth time, and birthplace."}</p>
-                <button type="button" onClick={() => setIsBirthOpen(true)}><CalendarDays size={16}/>{savedBirth && chartReport ? "Review birth details" : "Enter birth details"} <span>✦</span></button>
+                <div className="home-birth-card-title"><CalendarDays size={17}/> {savedBirth && chartReport ? (language === "hi" ? "आपकी जन्म कुंडली तैयार है" : "Your birth chart is ready") : (language === "hi" ? "जन्म निर्देशांक आवश्यक" : "Birth coordinates required")}</div>
+                <p>{savedBirth && chartReport ? (language === "hi" ? "आपकी कुंडली गणित हो चुकी है। व्यक्तिगत व्याख्याओं से पहले विवरण की समीक्षा के लिए अपना जन्म प्रोफ़ाइल खोलें।" : "Your chart is calculated. Open your birth profile to review the details before exploring personal interpretations.") : (language === "hi" ? "अपनी व्यक्तिगत जन्म कुंडली की व्याख्या के लिए, अपनी जन्म तिथि, सटीक स्थानीय जन्म समय और जन्म स्थान जोड़ें।" : "To interpret your personal Janam Kundli, add your date of birth, exact local birth time, and birthplace.")}</p>
+                <button type="button" onClick={() => setIsBirthOpen(true)}><CalendarDays size={16}/>{savedBirth && chartReport ? (language === "hi" ? "जन्म विवरण देखें" : "Review birth details") : (language === "hi" ? "जन्म विवरण दर्ज करें" : "Enter birth details")} <span>✦</span></button>
               </div>
             </div>
 
@@ -1235,7 +1345,7 @@ export default function Home() {
                   </div>
                   <div className="min-w-0">
                     <span className="text-[10px] uppercase font-bold text-[var(--gold)] tracking-wider block">
-                      Resume Previous Consultation
+                      {language === "hi" ? "पिछला परामर्श पुनः आरंभ करें" : "Resume Previous Consultation"}
                     </span>
                     <strong className="block text-xs text-[var(--text)] font-semibold mt-0.5 truncate max-w-[420px]">
                       {historyItems[0].title}
@@ -1250,21 +1360,21 @@ export default function Home() {
                   onClick={() => void loadConversation(historyItems[0].id)}
                   className="px-3 py-1.5 rounded-lg bg-[var(--gold)] text-[#11131A] text-xs font-bold hover:bg-[var(--gold2)] transition-colors cursor-pointer shrink-0"
                 >
-                  Resume Chat →
+                  {language === "hi" ? "संवाद जारी रखें →" : "Resume Chat →"}
                 </button>
               </div>
             )}
 
-            <div className="home-pathway-heading"><span><Sparkles size={14}/> CHOOSE A PATHWAY TO EXPLORE</span><small>8 Presets</small></div>
+            <div className="home-pathway-heading"><span><Sparkles size={14}/> {language === "hi" ? "एक विषय चुनें" : "CHOOSE A PATHWAY TO EXPLORE"}</span><small>{language === "hi" ? "8 विकल्प" : "8 Presets"}</small></div>
             <div className="prompt-grid">{suggestions.map((item) => {
               const Icon = item.icon;
               return <button className="prompt-card" key={item.title} onClick={() => {
-                 if (item.title.startsWith("Today's")) {
+                 if (item.title.startsWith("Today's") || item.title.startsWith("आज का")) {
                    window.location.href = "/panchang";
                  } else if (!savedBirth || !chartReport) {
                    setPendingPrompt(item.prompt);
                    setIsBirthOpen(true);
-                   setToast("For a personal reading, add your birth date, exact time, and birthplace first.");
+                   setToast(language === "hi" ? "व्यक्तिगत व्याख्या के लिए पहले अपनी जन्म तिथि, सटीक समय और स्थान जोड़ें।" : "For a personal reading, add your birth date, exact time, and birthplace first.");
                  } else {
                    void sendMessage(item.prompt);
                  }
@@ -1274,27 +1384,66 @@ export default function Home() {
                 <ChevronRight className="home-pathway-chevron" size={19}/>
               </button>;
             })}</div>
-            <div className="home-guidance-note"><Sparkles size={17}/><span>Traditional Jyotish interpretations are for reflection. Personal chart insights require precise birth details and calculated chart data.</span></div>
+            <div className="home-guidance-note"><Sparkles size={17}/><span>{language === "hi" ? "पारंपरिक ज्योतिषीय व्याख्याएं आत्म-चिंतन के लिए हैं। व्यक्तिगत चार्ट अंतर्दृष्टि के लिए सटीक जन्म विवरण और गणना किए गए चार्ट डेटा की आवश्यकता होती है।" : "Traditional Jyotish interpretations are for reflection. Personal chart insights require precise birth details and calculated chart data."}</span></div>
           </section> : <section className="chat-area" aria-live="polite">
             {messages.map((message, messageIndex) => <div className={"message-row " + message.role + (message.animated ? " is-new" : "")} key={message.id}>
               {message.role === "assistant" && <div className="message-avatar"><MoonStar size={16} /></div>}
               {message.role === "assistant" ? <div className="message-content">
-                <div className="message-meta">VEDIC AI <span style={{ color: "#5f6057", margin: "0 5px" }}>·</span> ASTROLOGY COMPANION</div>
+                <div className="message-meta">
+                  {language === "hi" ? "वैदिक एआई · ज्योतिष सहचर" : "VEDIC AI · ASTROLOGY COMPANION"}
+                  {isTranslatingChat && !translatedMessages[`${message.id}:${language}`] && (
+                    <span style={{ color: "var(--gold)", marginLeft: 6, fontSize: "11px" }}>
+                      · {language === "hi" ? "अनुवाद हो रहा है…" : "Translating…"}
+                    </span>
+                  )}
+                </div>
                 <div className="assistant-response-card">
-                  <StructuredMessageView content={message.content} />
+                  <StructuredMessageView
+                    content={translatedMessages[`${message.id}:${language}`] || message.content}
+                    language={language}
+                  />
                   <div className="assistant-footer-row">
-                    <div className="assistant-note"><Sparkles size={14} style={{ flexShrink: 0, color: "var(--gold)", marginTop: 2 }} /><span>Traditional Jyotish interpretations are for reflection, not certainty.</span></div>
+                    <div className="assistant-note">
+                      <Sparkles size={14} style={{ flexShrink: 0, color: "var(--gold)", marginTop: 2 }} />
+                      <span>
+                        {language === "hi"
+                          ? "पारंपरिक ज्योतिषीय व्याख्याएं आत्म-चिंतन के लिए हैं, निश्चितता के लिए नहीं।"
+                          : "Traditional Jyotish interpretations are for reflection, not certainty."}
+                      </span>
+                    </div>
                     {messageIndex === messages.length - 1 && !isLoading && (
-                      <button type="button" className="message-retry-btn" onClick={retryLastTurn} title="Retry last response">
+                      <button
+                        type="button"
+                        className="message-retry-btn"
+                        onClick={retryLastTurn}
+                        title={language === "hi" ? "अंतिम उत्तर पुनः प्राप्त करें" : "Retry last response"}
+                      >
                         <RefreshCw size={12} />
-                        <span>Retry</span>
+                        <span>{language === "hi" ? "पुनः प्रयास करें" : "Retry"}</span>
                       </button>
                     )}
                   </div>
                 </div>
               </div> : <div className="user-bubble">{message.content}</div>}
             </div>)}
-            {isLoading && <div className="message-row assistant"><div className="message-avatar"><MoonStar size={16} /></div><div className="message-content"><div className="message-meta">VEDIC AI · ANALYZING CHART</div><div className="assistant-response-card is-loading"><div className="ai-thinking-pulse"><div className="pulse-dot"/><div className="pulse-dot"/><div className="pulse-dot"/></div><p className="ai-thinking-text">Examining planetary placements, houses, and traditional Jyotish indicators…</p></div></div></div>}{chartReport && <details className="chart-panel-collapsible"><summary className="chart-panel-summary"><span><span className="chart-summary-kicker">YOUR VEDIC BIRTH CHART</span><strong>{chartReport.ascendant.sign} Ascendant · {chartReport.birth.place}</strong></span><span className="chart-summary-action">View calculated chart <ChevronRight size={15}/></span></summary><section className="chart-panel">
+            {isLoading && (
+              <div className="message-row assistant">
+                <div className="message-avatar"><MoonStar size={16} /></div>
+                <div className="message-content">
+                  <div className="message-meta">
+                    {language === "hi" ? "वैदिक एआई · कुंडली विश्लेषण जारी" : "VEDIC AI · ANALYZING CHART"}
+                  </div>
+                  <div className="assistant-response-card is-loading">
+                    <div className="ai-thinking-pulse"><div className="pulse-dot"/><div className="pulse-dot"/><div className="pulse-dot"/></div>
+                    <p className="ai-thinking-text">
+                      {language === "hi"
+                        ? "ग्रह स्थिति, भाव और पारंपरिक ज्योतिषीय संकेतकों का विश्लेषण किया जा रहा है…"
+                        : "Examining planetary placements, houses, and traditional Jyotish indicators…"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}{chartReport && <details className="chart-panel-collapsible"><summary className="chart-panel-summary"><span><span className="chart-summary-kicker">YOUR VEDIC BIRTH CHART</span><strong>{chartReport.ascendant.sign} Ascendant · {chartReport.birth.place}</strong></span><span className="chart-summary-action">View calculated chart <ChevronRight size={15}/></span></summary><section className="chart-panel">
               <div className="chart-panel-head"><div><div className="eyebrow"><span className="eyebrow-line" /> YOUR VEDIC BIRTH CHART</div><h2 className="chart-title">{chartReport.ascendant.sign} Ascendant <span>· {chartReport.birth.place.split(",").slice(0, 2).join(",")}</span></h2><p className="chart-subtitle">Lahiri sidereal · Whole-sign houses · {chartReport.birth.timezone}</p></div><button className="secondary-button chart-export" onClick={() => { const blob = new Blob([JSON.stringify(chartReport, null, 2)], { type: "application/json" }); const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.href = url; link.download = "vedic-ai-kundli.json"; link.click(); URL.revokeObjectURL(url); }}>Export chart <ArrowDown size={13}/></button><button className="secondary-button chart-export" onClick={() => { try { printKundliReport(chartReport); } catch (error) { setToast(error instanceof Error ? error.message : "Could not open PDF preview."); } }}>Print / Save PDF</button><button className="primary-button chart-save" onClick={saveChartReport}>Save kundli <Check size={13}/></button><button className="secondary-button chart-export" onClick={loadCurrentTransits} disabled={transitLoading}>{transitLoading ? <RefreshCw size={13} className="spin-icon"/> : <Orbit size={13}/>} {transitLoading ? "Calculating…" : "Current transits"}</button></div>
               <div className="chart-stats"><div className="chart-stat"><span>Ascendant / Lagna</span><strong>{chartReport.ascendant.sign}</strong><small>{chartReport.ascendant.degreeInSign.toFixed(2)}° · {chartReport.ascendant.nakshatra}</small></div><div className="chart-stat"><span>Moon Nakshatra</span><strong>{chartReport.planets.find((planet) => planet.name === "Moon")?.nakshatra || "—"}</strong><small>Pada {chartReport.planets.find((planet) => planet.name === "Moon")?.nakshatraPada || "—"}</small></div><div className="chart-stat"><span>Current Mahadasha</span><strong>{chartReport.vimshottari.currentMahadasha.lord}</strong><small>{new Date(chartReport.vimshottari.currentMahadasha.start).toLocaleDateString()} – {new Date(chartReport.vimshottari.currentMahadasha.end).toLocaleDateString()}</small></div></div>
               <div className="chart-secondary-grid">
@@ -1389,13 +1538,13 @@ export default function Home() {
 
         <footer className="chat-footer"><div className="composer-wrap">
           <form className="composer" onSubmit={submitMessage}>
-            <textarea id="chat-input" ref={textareaRef} value={input} onChange={(event) => { setInput(event.target.value); event.target.style.height = "auto"; event.target.style.height = Math.min(event.target.scrollHeight, 150) + "px"; }} onKeyDown={onComposerKeyDown} placeholder={t("chat.inputPlaceholder")} rows={1} aria-label="Message Vedic AI" />
+            <textarea id="chat-input" ref={textareaRef} value={input} onChange={(event) => { setInput(event.target.value); event.target.style.height = "auto"; event.target.style.height = Math.min(event.target.scrollHeight, 150) + "px"; }} onKeyDown={onComposerKeyDown} placeholder={language === "hi" ? "वैदिक एआई से अपनी कुंडली, महादशा, करियर या साधना के बारे में पूछें..." : t("chat.inputPlaceholder")} rows={1} aria-label={language === "hi" ? "वैदिक एआई को संदेश भेजें" : "Message Vedic AI"} />
             <div className="composer-bottom"><div className="composer-tools">
-              <button type="button" className="tool-button" onClick={() => setIsBirthOpen(true)}><Plus size={15} /><span>{savedBirth ? "Birth profile added" : "Add birth details"}</span></button>
-              <button type="button" className={"tool-button voice-input-button" + (voiceListening ? " is-listening" : "")} onClick={toggleVoiceInput} aria-label={voiceListening ? "Stop voice typing" : "Start voice typing"} title={voiceListening ? "Stop voice typing" : "Speak to type"}><span className="voice-input-icon">{voiceListening ? <MicOff size={16} /> : <Mic size={16} />}</span><span>{voiceListening ? "Listening…" : "Speak"}</span></button>
-            </div><button type="submit" className="send-button" aria-label="Send message" disabled={!input.trim() || isLoading || !authReady}><ArrowUp size={17} /></button></div>
+              <button type="button" className="tool-button" onClick={() => setIsBirthOpen(true)}><Plus size={15} /><span>{savedBirth ? (language === "hi" ? "जन्म विवरण जोड़ा गया" : "Birth profile added") : (language === "hi" ? "जन्म विवरण जोड़ें" : "Add birth details")}</span></button>
+              <button type="button" className={"tool-button voice-input-button" + (voiceListening ? " is-listening" : "")} onClick={toggleVoiceInput} aria-label={voiceListening ? (language === "hi" ? "ध्वनि इनपुट रोकें" : "Stop voice typing") : (language === "hi" ? "बोलकर लिखें" : "Start voice typing")} title={voiceListening ? (language === "hi" ? "ध्वनि इनपुट रोकें" : "Stop voice typing") : (language === "hi" ? "बोलकर लिखें" : "Speak to type")}><span className="voice-input-icon">{voiceListening ? <MicOff size={16} /> : <Mic size={16} />}</span><span>{voiceListening ? (language === "hi" ? "सुन रहे हैं…" : "Listening…") : (language === "hi" ? "बोलें" : "Speak")}</span></button>
+            </div><button type="submit" className="send-button" aria-label={language === "hi" ? "संदेश भेजें" : "Send message"} disabled={!input.trim() || isLoading || !authReady}><ArrowUp size={17} /></button></div>
           </form>
-          <p className="footer-note">Vedic AI can make mistakes. Astrological interpretations are traditional perspectives, not certainties. <span className="footer-separator">·</span> <Link href="/privacy">Privacy</Link> <span className="footer-separator">·</span> <Link href="/terms">Terms</Link></p>
+          <p className="footer-note">{language === "hi" ? "वैदिक एआई से त्रुटियां संभव हैं। ज्योतिषीय व्याख्याएं पारंपरिक दृष्टिकोण हैं, निश्चितताएं नहीं।" : "Vedic AI can make mistakes. Astrological interpretations are traditional perspectives, not certainties."} <span className="footer-separator">·</span> <Link href="/privacy">{language === "hi" ? "गोपनीयता" : "Privacy"}</Link> <span className="footer-separator">·</span> <Link href="/terms">{language === "hi" ? "नियम" : "Terms"}</Link></p>
         </div></footer>
 
         <MobileBottomNav />
@@ -1406,13 +1555,13 @@ export default function Home() {
       {pendingDeleteConversation && <div className="modal-backdrop conversation-delete-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !deletingConversationId) setPendingDeleteConversation(null); }}>
         <section className="modal conversation-delete-modal" role="alertdialog" aria-modal="true" aria-labelledby="delete-conversation-title" aria-describedby="delete-conversation-description">
           <div className="conversation-delete-icon"><Trash2 size={22}/></div>
-          <div className="conversation-delete-eyebrow">DELETE CONVERSATION</div>
-          <h2 className="modal-title" id="delete-conversation-title">Delete this chat?</h2>
-          <p className="modal-copy" id="delete-conversation-description">“{pendingDeleteConversation.title}” and all its saved messages will be permanently deleted. This action cannot be undone.</p>
+          <div className="conversation-delete-eyebrow">{language === "hi" ? "संवाद हटाएं" : "DELETE CONVERSATION"}</div>
+          <h2 className="modal-title" id="delete-conversation-title">{language === "hi" ? "क्या यह संवाद हटाना चाहते हैं?" : "Delete this chat?"}</h2>
+          <p className="modal-copy" id="delete-conversation-description">“{pendingDeleteConversation.title}” {language === "hi" ? "और इसके सभी सहेजे गए संदेश स्थायी रूप से हटा दिए जाएंगे।" : "and all its saved messages will be permanently deleted. This action cannot be undone."}</p>
           <div className="conversation-delete-actions">
-            <button type="button" className="secondary-button" onClick={() => setPendingDeleteConversation(null)} disabled={Boolean(deletingConversationId)}>Keep conversation</button>
+            <button type="button" className="secondary-button" onClick={() => setPendingDeleteConversation(null)} disabled={Boolean(deletingConversationId)}>{language === "hi" ? "संवाद रखें" : "Keep conversation"}</button>
             <button type="button" className="conversation-delete-confirm" onClick={() => void deleteConversation(pendingDeleteConversation.id)} disabled={Boolean(deletingConversationId)}>
-              {deletingConversationId === pendingDeleteConversation.id ? <><RefreshCw size={15} className="spin"/> Deleting…</> : <><Trash2 size={15}/> Delete chat</>}
+              {deletingConversationId === pendingDeleteConversation.id ? <><RefreshCw size={15} className="spin"/> {language === "hi" ? "हटाया जा रहा है…" : "Deleting…"}</> : <><Trash2 size={15}/> {language === "hi" ? "संवाद हटाएं" : "Delete chat"}</>}
             </button>
           </div>
         </section>
@@ -1421,20 +1570,20 @@ export default function Home() {
       {isBirthOpen && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setIsBirthOpen(false); }}>
         <section className="modal" role="dialog" aria-modal="true" aria-labelledby="birth-modal-title">
           <div className="modal-head"><div>
-            <div className="eyebrow"><span className="eyebrow-line" /> YOUR PERSONAL CHART</div>
-            <h2 className="modal-title" id="birth-modal-title" style={{ margin: "12px 0 0" }}>Begin with your birth details</h2>
-            <p className="modal-copy">Accurate time and place help determine the ascendant and planetary houses. You can review these details before chart calculation.</p>
-          </div><button className="icon-button" onClick={() => setIsBirthOpen(false)} aria-label="Close birth details"><X size={17} /></button></div>
+            <div className="eyebrow"><span className="eyebrow-line" /> {language === "hi" ? "आपकी व्यक्तिगत कुंडली" : "YOUR PERSONAL CHART"}</div>
+            <h2 className="modal-title" id="birth-modal-title" style={{ margin: "12px 0 0" }}>{language === "hi" ? "जन्म विवरण से आरंभ करें" : "Begin with your birth details"}</h2>
+            <p className="modal-copy">{language === "hi" ? "सटीक समय और स्थान लग्न और भावों के निर्धारण में सहायता करते हैं। आप गणना से पहले इनकी समीक्षा कर सकते हैं।" : "Accurate time and place help determine the ascendant and planetary houses. You can review these details before chart calculation."}</p>
+          </div><button className="icon-button" onClick={() => setIsBirthOpen(false)} aria-label={language === "hi" ? "जन्म विवरण बंद करें" : "Close birth details"}><X size={17} /></button></div>
           <form onSubmit={submitBirth}>
             <div className="form-grid">
-              <label className="form-field full"><span className="form-label">Name <span style={{ color: "var(--quiet)", fontWeight: 400 }}>(optional)</span></span><input className="form-input" autoComplete="name" value={birth.name} onChange={(event) => setBirth({ ...birth, name: event.target.value })} placeholder="What should we call you?" /></label>
-              <label className="form-field"><span className="form-label">Date of birth *</span><BirthDatePicker value={birth.date} onChange={(date) => setBirth((current) => ({ ...current, date }))} /></label>
-              <label className="form-field"><span className="form-label">Local birth time *</span><input className="form-input" type="time" required value={birth.time} onChange={(event) => setBirth({ ...birth, time: event.target.value })} /></label>
-              <label className="form-field full"><span className="form-label">Birthplace *</span><div className="place-search-row"><input className="form-input" required value={birth.place} onChange={(event) => { setBirth({ ...birth, place: event.target.value }); setSelectedPlace(null); setPlaceOptions([]); }} placeholder="City, region, country (e.g. Jaipur, India)" /><button type="button" className="secondary-button place-search-button" disabled={isGeocoding || birth.place.trim().length < 2} onClick={searchPlaces}>{isGeocoding ? "Searching…" : "Find place"}</button></div>{selectedPlace && <p className="place-selected"><Check size={12} /> Selected: {selectedPlace.label}</p>}{placeOptions.length > 1 && <div className="place-options">{placeOptions.map((option) => <button type="button" className={"place-option " + (selectedPlace?.id === option.id ? "chosen" : "")} key={option.id} onClick={() => { setSelectedPlace(option); setBirth({ ...birth, place: option.label }); setPlaceOptions([]); }}><Compass size={13}/><span>{option.label}</span>{selectedPlace?.id === option.id && <Check size={13}/>}</button>)}</div>}<span className="place-hint">Enter at least 2 characters, tap Find place, then select the matching city/area so timezone and coordinates resolve correctly.</span><span className="place-attribution">Location data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap contributors</a>.</span></label>
+              <label className="form-field full"><span className="form-label">{language === "hi" ? "नाम" : "Name"} <span style={{ color: "var(--quiet)", fontWeight: 400 }}>({language === "hi" ? "वैकल्पिक" : "optional"})</span></span><input className="form-input" autoComplete="name" value={birth.name} onChange={(event) => setBirth({ ...birth, name: event.target.value })} placeholder={language === "hi" ? "हम आपको किस नाम से संबोधित करें?" : "What should we call you?"} /></label>
+              <label className="form-field"><span className="form-label">{language === "hi" ? "जन्म तिथि *" : "Date of birth *"}</span><BirthDatePicker value={birth.date} onChange={(date) => setBirth((current) => ({ ...current, date }))} /></label>
+              <label className="form-field"><span className="form-label">{language === "hi" ? "स्थानीय जन्म समय *" : "Local birth time *"}</span><input className="form-input" type="time" required value={birth.time} onChange={(event) => setBirth({ ...birth, time: event.target.value })} /></label>
+              <label className="form-field full"><span className="form-label">{language === "hi" ? "जन्म स्थान *" : "Birthplace *"}</span><div className="place-search-row"><input className="form-input" required value={birth.place} onChange={(event) => { setBirth({ ...birth, place: event.target.value }); setSelectedPlace(null); setPlaceOptions([]); }} placeholder={language === "hi" ? "शहर, राज्य, देश (उदा. जयपुर, भारत)" : "City, region, country (e.g. Jaipur, India)"} /><button type="button" className="secondary-button place-search-button" disabled={isGeocoding || birth.place.trim().length < 2} onClick={searchPlaces}>{isGeocoding ? (language === "hi" ? "खोज रहे हैं…" : "Searching…") : (language === "hi" ? "स्थान खोजें" : "Find place")}</button></div>{selectedPlace && <p className="place-selected"><Check size={12} /> {language === "hi" ? "चयनित: " : "Selected: "}{selectedPlace.label}</p>}{placeOptions.length > 1 && <div className="place-options">{placeOptions.map((option) => <button type="button" className={"place-option " + (selectedPlace?.id === option.id ? "chosen" : "")} key={option.id} onClick={() => { setSelectedPlace(option); setBirth({ ...birth, place: option.label }); setPlaceOptions([]); }}><Compass size={13}/><span>{option.label}</span>{selectedPlace?.id === option.id && <Check size={13}/>}</button>)}</div>}<span className="place-hint">{language === "hi" ? "कम से कम 2 अक्षर दर्ज करें, स्थान खोजें दबाएं, फिर सही शहर/क्षेत्र का चयन करें ताकि समय क्षेत्र और निर्देशांक सटीक प्राप्त हों।" : "Enter at least 2 characters, tap Find place, then select the matching city/area so timezone and coordinates resolve correctly."}</span><span className="place-attribution">Location data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap contributors</a>.</span></label>
             </div>
-            <div className="assistant-note"><ShieldCheck size={14} style={{ flexShrink: 0, color: "var(--gold)", marginTop: 2 }} /><span>Your birth details are sent to Vedic AI&apos;s chart endpoint to calculate placements. To generate the automatic interpretation, your birth details and calculated chart are also sent to the AI provider configured by the site owner. Signed-in conversations may be saved to your account; use “Save kundli” only when you want to store a report. Guest conversations are not persisted.</span></div>
-            <label className="birth-consent"><input type="checkbox" checked={birthAiConsent} onChange={(event) => setBirthAiConsent(event.target.checked)} /><span>I agree to send these birth details and the calculated chart to the configured AI provider for personalized interpretation. I understand astrology is interpretive and the calculation engine is still being validated.</span></label>
-            <div className="modal-actions birth-modal-actions"><button type="submit" className="primary-button birth-calculate-button" disabled={!birthAiConsent || isLoading || isGeocoding}>{isLoading ? "Calculating your kundli…" : isGeocoding ? "Finding birthplace…" : "Calculate my kundli"} <ArrowUp size={16} /></button></div>
+            <div className="assistant-note"><ShieldCheck size={14} style={{ flexShrink: 0, color: "var(--gold)", marginTop: 2 }} /><span>{language === "hi" ? "आपके जन्म विवरण गणना के लिए वैदिक एआई के चार्ट एंडपॉइंट पर भेजे जाते हैं। व्यक्तिगत व्याख्या तैयार करने के लिए ये विवरण एआई प्रदाता को भेजे जाते हैं। अतिथि सत्र सहेजे नहीं जाते।" : "Your birth details are sent to Vedic AI's chart endpoint to calculate placements. To generate the automatic interpretation, your birth details and calculated chart are also sent to the AI provider configured by the site owner. Signed-in conversations may be saved to your account; use “Save kundli” only when you want to store a report. Guest conversations are not persisted."}</span></div>
+            <label className="birth-consent"><input type="checkbox" checked={birthAiConsent} onChange={(event) => setBirthAiConsent(event.target.checked)} /><span>{language === "hi" ? "मैं व्यक्तिगत व्याख्या के लिए इन जन्म विवरणों और गणना की गई कुंडली को एआई प्रदाता को भेजने के लिए सहमत हूँ।" : "I agree to send these birth details and the calculated chart to the configured AI provider for personalized interpretation. I understand astrology is interpretive and the calculation engine is still being validated."}</span></label>
+            <div className="modal-actions birth-modal-actions"><button type="submit" className="primary-button birth-calculate-button" disabled={!birthAiConsent || isLoading || isGeocoding}>{isLoading ? (language === "hi" ? "आपकी कुंडली की गणना की जा रही है…" : "Calculating your kundli…") : isGeocoding ? (language === "hi" ? "जन्म स्थान खोजा जा रहा है…" : "Finding birthplace…") : (language === "hi" ? "मेरी कुंडली की गणना करें" : "Calculate my kundli")} <ArrowUp size={16} /></button></div>
           </form>
         </section>
       </div>}

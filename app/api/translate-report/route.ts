@@ -119,38 +119,48 @@ ${JSON.stringify(sections, null, 2)}`;
 
     // 2. Try Gemini with JSON response schema
     if (geminiKey) {
-      const geminiModel = process.env.GEMINI_MODEL?.trim() || "gemini-2.5-flash";
-      try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiKey}`;
-        const response = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: {
-              responseMimeType: "application/json",
-              temperature: 0.1,
-            },
-          }),
-          signal: AbortSignal.timeout(14000),
-        });
+      const candidateModels = [
+        process.env.GEMINI_MODEL?.trim() || process.env.AI_MODEL?.trim() || "gemini-3.8-flash",
+        "gemini-3.8-flash",
+        "gemini-3.5-flash",
+        "gemini-2.0-flash",
+        "gemini-1.5-flash",
+      ].filter((m, i, arr): m is string => Boolean(m) && arr.indexOf(m) === i);
 
-        if (response.ok) {
-          const data = await response.json();
-          const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (raw) {
-            const parsedOutput = JSON.parse(raw);
-            if (Array.isArray(parsedOutput?.translations) && parsedOutput.translations.length > 0) {
-              return NextResponse.json({
-                ok: true,
-                provider: "gemini",
-                translations: parsedOutput.translations,
-              });
+      for (const geminiModel of candidateModels) {
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(geminiModel)}:generateContent?key=${encodeURIComponent(geminiKey)}`;
+          const response = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: {
+                responseMimeType: "application/json",
+                temperature: 0.1,
+              },
+            }),
+            signal: AbortSignal.timeout(12000),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (raw) {
+              const cleaned = raw.trim().replace(/^\s*```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "");
+              const parsedOutput = JSON.parse(cleaned);
+              if (Array.isArray(parsedOutput?.translations) && parsedOutput.translations.length > 0) {
+                return NextResponse.json({
+                  ok: true,
+                  provider: `gemini (${geminiModel})`,
+                  translations: parsedOutput.translations,
+                });
+              }
             }
           }
+        } catch {
+          // Try next model candidate
         }
-      } catch {
-        // Fall through to fallback
       }
     }
 

@@ -56,3 +56,4 @@ describe("Palm Reading HTTP 502 Provider Timeout and 422 Quality Handling", () =
     expect(msg4).toBe("Camera sensor returned noisy low-light frame. Please retake the photo with bright lighting and the full open palm visible.");
   });
 });
+

@@ -16361,7 +16361,21 @@ html[data-theme="light"] .birth-calendar-layer .birth-calendar-today {
 }
 @media (min-width: 681px) {
   .app-shell > .main-panel > .topbar {
-    display: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    min-height: 56px !important;
+    padding: 0 24px !important;
+    border-bottom: 1px solid rgba(212, 183, 122, 0.12) !important;
+    background: rgba(16, 17, 15, 0.8) !important;
+    backdrop-filter: blur(14px) !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 25 !important;
+  }
+  .app-shell[data-theme="light"] > .main-panel > .topbar {
+    background: rgba(255, 255, 255, 0.88) !important;
+    border-bottom-color: rgba(91, 79, 121, 0.12) !important;
   }
   .app-shell > .sidebar .sidebar-head-actions {
     display: flex;
