@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { GET } from "../app/api/health/route";
 
 const keys = ["VERCEL_ENV", "AI_PROVIDER", "GEMINI_API_KEY", "GROQ_API_KEY", "OPENAI_API_KEY", "SWISS_EPHEMERIS_API_URL"];
-const original = Object.fromEntries(keys.map((key) => [key, process.env[key])) as Record<string, string | undefined>;
+const original = Object.fromEntries(keys.map((key) => [key, process.env[key]])) as Record<string, string | undefined>;
 
 afterEach(() => {
   for (const key of keys) {

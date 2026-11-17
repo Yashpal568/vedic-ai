@@ -161,7 +161,7 @@ describe("Vedic-AI Voice Astrologer System (Complete Test Suite)", () => {
   describe("C. TTS Provider Abstraction & ElevenLabs Integration", () => {
     it("reports configuration status correctly without exposing secrets", () => {
       const status = getTTSConfigurationStatus();
-      expect(["gemini", "elevenlabs", "openai"]).toContain(status.primaryProvider);
+      expect(["gemini", "elevenlabs", "openai", "browser"]).toContain(status.primaryProvider);
       expect(Array.isArray(status.supportedLanguages)).toBe(true);
       expect(status.supportedLanguages).toContain("en");
       expect(status.supportedLanguages).toContain("hi");
@@ -335,25 +335,37 @@ describe("Vedic-AI Voice Astrologer System (Complete Test Suite)", () => {
       }
     });
 
-    it("POST /api/voice/conversation handles user query and returns grounded response", async () => {
-      const request = new Request("http://localhost:3000/api/voice/conversation", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          reportId: "test-qa-1",
-          report: sampleReport,
-          question: "What does my palm structure say about my endurance?",
-          hand: "left",
-          languagePreference: "en",
-        }),
-      });
+    it("POST /api/voice/conversation reports honestly when no AI provider is configured", async () => {
+      const providerKeys = ["GROQ_API_KEY", "GEMINI_API_KEY", "ELEVENLABS_API_KEY", "OPENAI_API_KEY"] as const;
+      const original = Object.fromEntries(providerKeys.map((key) => [key, process.env[key]])) as Record<string, string | undefined>;
+      providerKeys.forEach((key) => { delete process.env[key]; });
+      try {
+        const request = new Request("http://localhost:3000/api/voice/conversation", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            reportId: "test-qa-1",
+            report: sampleReport,
+            question: "What does my palm structure say about my endurance?",
+            hand: "left",
+            languagePreference: "en",
+          }),
+        });
 
-      const response = await conversationHandler(request);
-      expect(response.status).toBe(200);
-      const data = await response.json();
-      expect(data.success).toBe(true);
-      expect(data.answerText.length).toBeGreaterThan(15);
-      expect(data.canResumeNarration).toBe(true);
+        const response = await conversationHandler(request);
+        expect(response.status).toBe(200);
+        const data = await response.json();
+        expect(data.success).toBe(true);
+        expect(data.answerText).toContain("could not prepare an answer");
+        expect(data.groundedInReport).toBe(false);
+        expect(data.fallbackToBrowserSpeech).toBe(true);
+        expect(data.canResumeNarration).toBe(true);
+      } finally {
+        for (const key of providerKeys) {
+          if (original[key] === undefined) delete process.env[key];
+          else process.env[key] = original[key];
+        }
+      }
     });
   });
 });
