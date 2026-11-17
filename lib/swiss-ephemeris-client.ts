@@ -123,7 +123,7 @@ export async function calculateSwissKundli(input: KundliInput): Promise<KundliRe
   const ascSignIndex = Math.floor(ascNorm / 30);
   const ascLunar = lunarDetails(ascNorm);
   const findBody = (key: string) => chart.bodies!.find((body) => body.key === key && Number.isFinite(body.sidereal?.longitude));
-  const required = ["sun", "moon", "mars", "mercury", "jupiter", "venus", "saturn", "mean_node"];
+  const required = ["sun", "moon", "mars", "mercury", "jupiter", "venus", "saturn"];
   const missing = required.filter((key) => !findBody(key));
   if (missing.length) throw new Error("Swiss Ephemeris response is missing: " + missing.join(", "));
 

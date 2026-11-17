@@ -24,10 +24,19 @@ export function sanitizePalmVisionEvidence(
   const observationObject = observations && typeof observations === "object"
     ? observations as Record<string, unknown>
     : {};
+  const isImageSpecificObservation = (item: unknown): item is string => {
+    if (typeof item !== "string") return false;
+    const text = item.trim();
+    if (text.length < 24) return false;
+
+    // A feature must name a visible anatomical landmark and describe an observable
+    // shape, path, proportion, depth, junction, branch, or endpoint.
+    const namesLandmark = /\\b(?:palm|crease|line|thumb|finger|index|ring|mount|thenar|hypothenar|knuckle|wrist|fork|branch)\\b/i.test(text);
+    const describesAppearance = /\\b(?:curve|curved|arc|broad|narrow|diagonal|straight|sloping|deep|faint|visible|begins|starts|ends|stops|terminates|crosses|runs|extends|reaches|separated|joined|fork|branch|gap|longer|shorter|prominent|flat|raised)\\w*\\b/i.test(text);
+    return namesLandmark && describesAppearance;
+  };
   const distinctiveFeatures = Array.isArray(observationObject.distinctiveFeatures)
-    ? observationObject.distinctiveFeatures
-        .filter((item): item is string => typeof item === "string" && item.trim().length >= 12)
-        .map((item) => item.trim())
+    ? Array.from(new Set(observationObject.distinctiveFeatures.filter(isImageSpecificObservation).map((item) => item.trim())))
     : [];
   const source = detectedLines && typeof detectedLines === "object"
     ? detectedLines as Record<string, PalmLine>
