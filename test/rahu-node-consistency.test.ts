@@ -36,7 +36,7 @@ function makeChart(includeMeanNode = true) {
 }
 
 function mockChartResponse(chart: ReturnType<typeof makeChart>) {
-  const fetchMock = vi.fn(async () => new Response(JSON.stringify(chart), {
+  const fetchMock = vi.fn<typeof fetch>(async () => new Response(JSON.stringify(chart), {
     status: 200,
     headers: { "Content-Type": "application/json" },
   }));
