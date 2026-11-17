@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { sanitizePalmVisionEvidence } from "@/lib/palm-vision-validation";
 
 export const runtime = "nodejs";
 export const maxDuration = 45;
@@ -101,6 +103,14 @@ function errorMessage(status: number, provider: "Groq" | "Gemini") {
 export async function POST(request: Request) {
   const requestStartTime = Date.now();
   try {
+    const rate = await checkRateLimit(request, "palm-reading", 6, 60_000);
+    if (!rate.allowed) {
+      return NextResponse.json(
+        { error: "Too many palm analyses. Please wait a minute before uploading another photo." },
+        { status: 429, headers: { "Retry-After": String(rate.retryAfterSeconds) } }
+      );
+    }
+
     let base64 = "";
     let mimeType = "image/jpeg";
     let hand: "left" | "right" | "unsure" = "unsure";
@@ -391,20 +401,16 @@ export async function POST(request: Request) {
       });
     }
 
-    const observations = result.observations;
-    const distinctiveFeatures = Array.isArray(observations?.distinctiveFeatures)
-      ? observations.distinctiveFeatures.filter((item) => typeof item === "string" && item.trim().length >= 12)
-      : [];
-    const lineKeys = ["heartLine", "headLine", "lifeLine", "fateLine"] as const;
-    const hasTraceableLine = lineKeys.some((key) => {
-      const line = result.detectedLines?.[key];
-      return line?.visible === true && Array.isArray(line.points) && line.points.length >= 4;
-    });
+    const evidence = sanitizePalmVisionEvidence(result.observations, result.detectedLines);
+    const observations = {
+      ...(result.observations || {}),
+      distinctiveFeatures: evidence.distinctiveFeatures,
+    };
     if (
       typeof result.reading !== "string" ||
       !result.reading.trim() ||
-      distinctiveFeatures.length < 3 ||
-      !hasTraceableLine
+      evidence.distinctiveFeatures.length < 5 ||
+      !evidence.hasTraceableLine
     ) {
       return NextResponse.json({
         clear: false,
@@ -416,7 +422,7 @@ export async function POST(request: Request) {
       clear: true,
       reading: result.reading.trim(),
       observations,
-      detectedLines: result.detectedLines || null,
+      detectedLines: evidence.detectedLines,
       mounts: result.mounts || null,
     }, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate", "Pragma": "no-cache", "Vary": "Content-Type" } });
   } catch (error) {

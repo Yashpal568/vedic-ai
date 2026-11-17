@@ -17,7 +17,7 @@ export interface SpeechSynthesisOptions {
 export interface SpeechSynthesisResult {
   audioBase64: string;
   contentType: string;
-  provider: "openai" | "elevenlabs" | "google";
+  provider: "openai" | "elevenlabs" | "gemini";
 }
 
 /**
@@ -38,9 +38,11 @@ export async function synthesizeSpeech(
 
   if (!result) return null;
 
+  if (result.provider === "browser") return null;
+
   return {
     audioBase64: result.audioBase64,
     contentType: result.contentType,
-    provider: result.provider === "elevenlabs" ? "elevenlabs" : "openai",
+    provider: result.provider,
   };
 }

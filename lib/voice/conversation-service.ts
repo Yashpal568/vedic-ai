@@ -104,6 +104,7 @@ CRITICAL INTEGRITY INSTRUCTIONS:
 5. Maintain a serene, respectful, supportive Vedic tone.`;
 
   let answerText = "";
+  let generatedByAi = false;
 
   if (groqKey) {
     try {
@@ -137,20 +138,21 @@ CRITICAL INTEGRITY INSTRUCTIONS:
       if (response.ok) {
         const data = await response.json();
         answerText = data?.choices?.[0]?.message?.content?.trim() || "";
+        generatedByAi = Boolean(answerText);
       }
     } catch (err) {
       console.warn("[voice-qa] Groq answer generation error:", err);
     }
   }
 
-  // Fallback if AI call failed
+  // Never fabricate a report-specific answer during a provider outage.
   if (!answerText) {
     if (language === "hi") {
-      answerText = `आपकी रिपोर्ट के अनुसार, आपके हस्तरेखा में मुख्य रेखाएं आपकी जीवन-ऊर्जा और एकाग्रता को दर्शाती हैं। यदि आप किसी विशेष रेखा के बारे में पूछ रहे हैं, तो कृपया सुनिश्चित करें कि वह आपकी रिपोर्ट में स्पष्ट रूप से दर्ज हो।`;
+      answerText = "क्षमा करें, अभी एआई सेवा आपकी हथेली की रिपोर्ट के आधार पर उत्तर तैयार नहीं कर सकी। कृपया थोड़ी देर बाद फिर प्रयास करें।";
     } else if (language === "hinglish") {
-      answerText = `Aapki report ke mutabik, aapki palm lines aapki natural vitality aur mental focus ko reflect karti hain. Is report mein jo features clearly identify hue hain, hum unhi ke aadhar par traditional interpretation provide karte hain.`;
+      answerText = "Maaf kijiye, abhi AI service aapki palm report ke basis par jawab nahi bana paayi. Kripya thodi der baad dobara try karein.";
     } else {
-      answerText = `Based on your verified palm reading, your major lines reflect natural vitality and analytical focus. We strictly base all interpretations on features clearly identified in your photo.`;
+      answerText = "Sorry, the AI service could not prepare an answer from your palm report right now. Please try again shortly.";
     }
   }
 
@@ -170,7 +172,7 @@ CRITICAL INTEGRITY INSTRUCTIONS:
     answerText,
     language,
     audio,
-    groundedInReport: true,
+    groundedInReport: generatedByAi,
     canResumeNarration: true,
   };
 }

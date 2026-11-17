@@ -91,7 +91,7 @@ function buildVimshottari(moonLongitude: number, birthUtc: string): KundliReport
 export async function calculateSwissKundli(input: KundliInput): Promise<KundliReport> {
   // Reuse the existing strict local-time/DST validation before calling the ephemeris.
   const validated = calculateKundli(input);
-  const baseUrl = (process.env.SWISS_EPHEMERIS_API_URL || "https://swiss-ephemeris-api-2m5g.onrender.com").replace(/\/+$/, "");
+  const baseUrl = (process.env.SWISS_EPHEMERIS_API_URL || "https://vedic-ai-swiss-ephemeris-dvq8.onrender.com").replace(/\/+$/, "");
   const response = await fetch(baseUrl + "/v1/chart", {
     method: "POST",
     headers: { "Content-Type": "application/json", "Accept": "application/json" },

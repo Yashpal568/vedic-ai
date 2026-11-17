@@ -308,7 +308,7 @@ export class GeminiTTSProvider implements TTSProvider {
     return [
       {
         id: "gemini-3.8-flash-tts",
-        name: "Gemini Vedic Voice (Aoede)",
+        name: "Gemini Vedic Voice (Kore)",
         language: language || "en",
         gender: "female",
         description: "Natural, expressive conversational speech powered by Google Gemini Flash TTS",
@@ -331,8 +331,11 @@ export class GeminiTTSProvider implements TTSProvider {
       throw new Error("GEMINI_NOT_CONFIGURED");
     }
 
-    const modelName = options.voiceId?.trim() || process.env.GEMINI_TTS_MODEL?.trim() || "gemini-3.8-flash-tts";
-    const cacheKey = generateCacheKey(options.text, "gemini", modelName, options.speed);
+    const requestedModel = options.voiceId?.trim();
+    const modelName = (requestedModel?.startsWith("gemini-") ? requestedModel : process.env.GEMINI_TTS_MODEL?.trim()) || "gemini-3.8-flash-tts";
+    const voiceName = process.env.GEMINI_TTS_VOICE?.trim() || "Kore";
+    const languageCode = options.language === "hi" ? "hi-IN" : options.language === "en" ? "en-IN" : undefined;
+    const cacheKey = generateCacheKey(options.text, "gemini", `${modelName}:${voiceName}:${options.language}`, options.speed);
     const cached = getFromCache(cacheKey);
     if (cached) {
       return {
@@ -355,11 +358,12 @@ export class GeminiTTSProvider implements TTSProvider {
 
     for (const model of candidateModels) {
       try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
         const response = await fetch(url, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "x-goog-api-key": key,
           },
           body: JSON.stringify({
             contents: [
@@ -374,6 +378,12 @@ export class GeminiTTSProvider implements TTSProvider {
             ],
             generationConfig: {
               responseModalities: ["AUDIO"],
+              speechConfig: {
+                voiceConfig: {
+                  prebuiltVoiceConfig: { voiceName },
+                },
+                ...(languageCode ? { languageCode } : {}),
+              },
             },
           }),
           signal: AbortSignal.timeout(20_000),
@@ -392,7 +402,10 @@ export class GeminiTTSProvider implements TTSProvider {
         }
 
         const data = await response.json();
-        const part = data?.candidates?.[0]?.content?.parts?.[0];
+        const parts = data?.candidates?.[0]?.content?.parts;
+        const part = Array.isArray(parts)
+          ? parts.find((candidate: { inlineData?: { data?: string } }) => candidate?.inlineData?.data)
+          : undefined;
         const audioBase64 = part?.inlineData?.data;
         const mimeType = part?.inlineData?.mimeType || "audio/wav";
 
@@ -471,7 +484,9 @@ export function getTTSConfigurationStatus() {
     ? "gemini"
     : elevenLabs.configured
     ? "elevenlabs"
-    : "openai";
+    : openAI.configured
+    ? "openai"
+    : "browser";
 
   return {
     primaryProvider,

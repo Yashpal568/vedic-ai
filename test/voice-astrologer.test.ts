@@ -291,19 +291,48 @@ describe("Vedic-AI Voice Astrologer System (Complete Test Suite)", () => {
   });
 
   describe("E. Interactive Voice Q&A Engine", () => {
-    it("answers user question grounded strictly in their palm report", async () => {
-      const result = await answerReportQuestion({
-        reportId: "test-report-qa",
-        report: sampleReport,
-        question: "Explain my heart line in simple language.",
-        hand: "left",
-        languagePreference: "en",
-      });
+    it("does not claim report grounding when the AI provider is unavailable", async () => {
+      const originalGroqKey = process.env.GROQ_API_KEY;
+      delete process.env.GROQ_API_KEY;
+      try {
+        const result = await answerReportQuestion({
+          reportId: "test-report-qa-fallback",
+          report: sampleReport,
+          question: "Explain my heart line in simple language.",
+          hand: "left",
+          languagePreference: "en",
+        });
+        expect(result.answerText).toContain("could not prepare an answer");
+        expect(result.groundedInReport).toBe(false);
+        expect(result.canResumeNarration).toBe(true);
+      } finally {
+        if (originalGroqKey === undefined) delete process.env.GROQ_API_KEY;
+        else process.env.GROQ_API_KEY = originalGroqKey;
+      }
+    });
 
-      expect(result.answerText).toBeDefined();
-      expect(result.answerText.length).toBeGreaterThan(20);
-      expect(result.groundedInReport).toBe(true);
-      expect(result.canResumeNarration).toBe(true);
+    it("marks a generated answer grounded only when Groq returns report-specific content", async () => {
+      const originalGroqKey = process.env.GROQ_API_KEY;
+      const originalFetch = global.fetch;
+      process.env.GROQ_API_KEY = "unit-test-key";
+      global.fetch = vi.fn(async () => new Response(JSON.stringify({
+        choices: [{ message: { content: "Your report describes a gently curving Heart Line toward the Jupiter mount." } }],
+      }), { status: 200, headers: { "Content-Type": "application/json" } })) as unknown as typeof fetch;
+      try {
+        const result = await answerReportQuestion({
+          reportId: "test-report-qa-mock",
+          report: sampleReport,
+          question: "Explain my heart line in simple language.",
+          hand: "left",
+          languagePreference: "en",
+        });
+        expect(result.answerText).toContain("gently curving Heart Line");
+        expect(result.groundedInReport).toBe(true);
+      } finally {
+        global.fetch = originalFetch;
+        if (originalGroqKey === undefined) delete process.env.GROQ_API_KEY;
+        else process.env.GROQ_API_KEY = originalGroqKey;
+      }
     });
 
     it("POST /api/voice/conversation handles user query and returns grounded response", async () => {
