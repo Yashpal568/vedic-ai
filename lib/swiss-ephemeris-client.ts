@@ -123,7 +123,7 @@ export async function calculateSwissKundli(input: KundliInput): Promise<KundliRe
   const ascSignIndex = Math.floor(ascNorm / 30);
   const ascLunar = lunarDetails(ascNorm);
   const findBody = (key: string) => chart.bodies!.find((body) => body.key === key && Number.isFinite(body.sidereal?.longitude));
-  const required = ["sun", "moon", "mars", "mercury", "jupiter", "venus", "saturn"];
+  const required = ["sun", "moon", "mars", "mercury", "jupiter", "venus", "saturn", "mean_node"];
   const missing = required.filter((key) => !findBody(key));
   if (missing.length) throw new Error("Swiss Ephemeris response is missing: " + missing.join(", "));
 
@@ -136,7 +136,10 @@ export async function calculateSwissKundli(input: KundliInput): Promise<KundliRe
     return position(name, body.sidereal!.longitude!, ascSignIndex,
       body.sidereal!.retrograde ?? (body.sidereal!.longitude_speed ?? 0) < 0);
   });
-  const rahuBody = findBody("true_node") || findBody("mean_node");
+  const rahuBody = findBody("mean_node");
+  if (!rahuBody) {
+    throw new Error("Swiss Ephemeris response is missing required mean_node. True node fallback is disallowed.");
+  }
   if (rahuBody) {
     const rahu = position("Rahu", rahuBody.sidereal!.longitude!, ascSignIndex,
       rahuBody.sidereal!.retrograde ?? (rahuBody.sidereal!.longitude_speed ?? 0) < 0);
