@@ -31,8 +31,8 @@ export function sanitizePalmVisionEvidence(
 
     // A feature must name a visible anatomical landmark and describe an observable
     // shape, path, proportion, depth, junction, branch, or endpoint.
-    const namesLandmark = /\\b(?:palm|crease|line|thumb|finger|index|ring|mount|thenar|hypothenar|knuckle|wrist|fork|branch)\\b/i.test(text);
-    const describesAppearance = /\\b(?:curve|curved|arc|broad|narrow|diagonal|straight|sloping|deep|faint|visible|begins|starts|ends|stops|terminates|crosses|runs|extends|reaches|separated|joined|fork|branch|gap|longer|shorter|prominent|flat|raised)\\w*\\b/i.test(text);
+    const namesLandmark = /\b(?:palm|crease|line|thumb|finger|index|ring|mount|thenar|hypothenar|knuckle|wrist|fork|branch)\b/i.test(text);
+    const describesAppearance = /\b(?:curve|curved|arc|broad|narrow|diagonal|straight|sloping|deep|faint|visible|begins|starts|ends|stops|terminates|crosses|runs|extends|reaches|separated|joined|fork|branch|gap|longer|shorter|prominent|flat|raised)\w*\b/i.test(text);
     return namesLandmark && describesAppearance;
   };
   const distinctiveFeatures = Array.isArray(observationObject.distinctiveFeatures)
