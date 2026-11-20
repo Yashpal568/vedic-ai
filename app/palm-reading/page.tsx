@@ -12,29 +12,14 @@ import PalmRemediesUpaya from "@/components/palm/palm-remedies-upaya";
 import PalmDisclaimerMeta from "@/components/palm/palm-disclaimer-meta";
 import PalmChatDock from "@/components/palm/palm-chat-dock";
 import DossierPreviewModal from "@/components/dossier-preview-modal";
-import { PalmCameraGuide } from "@/components/palm/palm-camera-guide";
-import { PalmPreScanModal } from "@/components/palm/palm-pre-scan-modal";
-import { PalmCapturePreviewModal } from "@/components/palm/palm-capture-preview-modal";
 import PalmVoiceAssistant from "@/components/palm/palm-voice-assistant";
 import { usePalmVoiceNarrator } from "@/hooks/use-palm-voice-narrator";
 import { useLanguage } from "@/lib/i18n/language-context";
 import { translatePalmReport, isDevanagariText } from "@/lib/i18n/report-translator";
 import { parsePalmReading, type ParsedPalmReport } from "@/lib/palm-parser";
 import { derivePalmFeatures, type PalmAnalysisFeatures } from "@/lib/palm-feature-detector";
-import {
-  evaluatePalmScannerFrame,
-  normalizeMediaPipeHandedness,
-  type PalmReadinessState,
-  type Landmark21,
-} from "@/lib/palm-camera-scanner";
-import {
-  getHandLandmarker,
-  detectHandInVideo,
-  detectHandInImage,
-  resetHandLandmarker,
-  type HandDetectionOutput,
-} from "@/lib/mediapipe-hand-landmarker";
-import type { HandLandmarker as HandLandmarkerInstance } from "@mediapipe/tasks-vision";
+import { type Landmark21 } from "@/lib/palm-camera-scanner";
+import { detectHandInImage } from "@/lib/mediapipe-hand-landmarker";
 import {
   Camera,
   ImagePlus,
@@ -122,11 +107,6 @@ export default function PalmReadingPage() {
 
   // Modal controls
   const [isDossierModalOpen, setIsDossierModalOpen] = useState(false);
-  const [isPreScanModalOpen, setIsPreScanModalOpen] = useState(false);
-  const [isCapturePreviewOpen, setIsCapturePreviewOpen] = useState(false);
-  const [capturedImageTemp, setCapturedImageTemp] = useState<string>("");
-  const [capturedFeaturesTemp, setCapturedFeaturesTemp] = useState<PalmAnalysisFeatures | null>(null);
-  const [isAutoCaptured, setIsAutoCaptured] = useState(false);
 
   // Live camera modal states
   const [isCameraActive, setIsCameraActive] = useState(false);
@@ -139,13 +119,6 @@ export default function PalmReadingPage() {
   }>({ label: "Standard", width: 0, height: 0 });
   const [cameraError, setCameraError] = useState("");
   const [cameraLoading, setCameraLoading] = useState(false);
-  const [landmarkerError, setLandmarkerError] = useState("");
-  const [scanProgress, setScanProgress] = useState(0);
-  const [scanStatus, setScanStatus] = useState("Show your open hand to the camera");
-  const [guideColor, setGuideColor] = useState<"red" | "amber" | "green">("amber");
-  const [detectionState, setDetectionState] = useState<PalmReadinessState>("NO_HAND");
-  const [autoCapturing, setAutoCapturing] = useState(false);
-  const scannerRef = useRef({ lastCenter: null as { x: number; y: number } | null, stableFrames: 0, capturing: false });
   const lastDetectedLandmarksRef = useRef<Landmark21[] | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -184,7 +157,7 @@ export default function PalmReadingPage() {
   }, []);
 
   // Capture current video frame to preview state with high-resolution ImageCapture & canvas fallback
-  const capturePhotoFromStream = useCallback(async (isAuto = false) => {
+  const capturePhotoFromStream = useCallback(async () => {
     const video = videoRef.current;
     if (!video || video.readyState < 2) return;
 
@@ -301,33 +274,23 @@ export default function PalmReadingPage() {
       stopCameraStream();
       setIsCameraActive(false);
 
-      // Open captured image preview dialog with Retake / Continue options
-      setCapturedImageTemp(dataUrl);
-      setCapturedFeaturesTemp(features);
-      setIsAutoCaptured(isAuto);
-      setIsCapturePreviewOpen(true);
+      // Directly set the captured photo into the palm reading workspace
+      const sizeKB = Math.round((dataUrl.length * 0.75) / 1024);
+      setImage(dataUrl);
+      setFileName("palm-camera-capture.jpg");
+      setFileSizeStr(sizeKB > 1024 ? `${(sizeKB / 1024).toFixed(1)} MB` : `${sizeKB} KB`);
+      setError("");
+      setQuality("");
+      setReading("");
+      setParsedReport(null);
+      setOriginalReport(null);
+      if (features) {
+        setPalmFeatures(features);
+      }
     } catch (e) {
       setCameraError(e instanceof Error ? e.message : "Failed to capture photograph.");
     }
   }, [hand]);
-
-  // User confirms captured photo in preview modal
-  const confirmCapturedPhoto = useCallback(() => {
-    if (!capturedImageTemp) return;
-    const sizeKB = Math.round((capturedImageTemp.length * 0.75) / 1024);
-    setImage(capturedImageTemp);
-    setFileName("camera-capture.jpg");
-    setFileSizeStr(sizeKB > 1024 ? `${(sizeKB / 1024).toFixed(1)} MB` : `${sizeKB} KB`);
-    setError("");
-    setQuality("");
-    setReading("");
-    setParsedReport(null);
-    setOriginalReport(null);
-    if (capturedFeaturesTemp) {
-      setPalmFeatures(capturedFeaturesTemp);
-    }
-    setIsCapturePreviewOpen(false);
-  }, [capturedImageTemp, capturedFeaturesTemp]);
 
   // Start live getUserMedia camera
   const startLiveCamera = useCallback(async (facing: "environment" | "user" = cameraFacing) => {
@@ -478,111 +441,12 @@ export default function PalmReadingPage() {
     }
   }, [cameraFacing]);
 
-  // User retakes photo from preview modal
-  const retakeCapturedPhoto = useCallback(() => {
-    setIsCapturePreviewOpen(false);
+  // Open live in-app camera viewfinder (or fallback to device camera)
+  const openCamera = useCallback(() => {
+    setError("");
+    setQuality("");
     void startLiveCamera("environment");
   }, [startLiveCamera]);
-
-  // Live browser-side palm tracking powered by Google MediaPipe Tasks Vision
-  useEffect(() => {
-    if (!isCameraActive || cameraLoading || cameraError || !videoRef.current) return;
-    let cancelled = false;
-    let animationFrame = 0;
-    let lastProcessAt = 0;
-    const offscreen = document.createElement("canvas");
-    scannerRef.current = { lastCenter: null, stableFrames: 0, capturing: false };
-    setScanProgress(0);
-    setScanStatus("Show your open palm in front of the camera");
-    setAutoCapturing(false);
-    setLandmarkerError("");
-
-    let landmarker: HandLandmarkerInstance | null = null;
-    void (async () => {
-      try {
-        landmarker = await getHandLandmarker();
-        if (!landmarker && !cancelled) {
-          setLandmarkerError("Hand detection could not be initialized. You can retry or take a photo manually.");
-        }
-      } catch (err) {
-        console.warn("[palm-scanner] MediaPipe loader warning:", err);
-        if (!cancelled) {
-          setLandmarkerError("Hand detection could not be initialized. You can retry or take a photo manually.");
-        }
-      }
-    })();
-
-    // detectForVideo receives the raw, unmirrored video pixels on both cameras.
-    // Normalize MediaPipe handedness separately below; CSS mirroring is presentation-only.
-    const isMirrored = false;
-
-    const processFrame = (timestamp: number) => {
-      if (cancelled) return;
-      if (timestamp - lastProcessAt > 70 && videoRef.current && videoRef.current.readyState >= 2) {
-        lastProcessAt = timestamp;
-        const video = videoRef.current;
-
-        let handDetection: HandDetectionOutput | null = null;
-        if (landmarker) {
-          handDetection = detectHandInVideo(landmarker, video, timestamp);
-          if (handDetection && handDetection.totalHandsDetected === 1) {
-            // Rear/environment and front camera video pixels are passed unmirrored to
-            // detectForVideo. Normalize MediaPipe's selfie-mirrored handedness convention
-            // for every selected-hand mode, not only when the user chooses "Not sure".
-            handDetection = {
-              ...handDetection,
-              handedness: normalizeMediaPipeHandedness(handDetection.handedness, false),
-            };
-          }
-          if (handDetection?.landmarks && handDetection.landmarks.length >= 21) {
-            lastDetectedLandmarksRef.current = handDetection.landmarks;
-          }
-        }
-
-        const isModelLoading = landmarker === null && !landmarkerError;
-        const { metrics, center, steadyCount } = evaluatePalmScannerFrame(
-          video,
-          offscreen,
-          handDetection,
-          scannerRef.current.lastCenter,
-          scannerRef.current.stableFrames,
-          isMirrored,
-          hand,
-          isModelLoading
-        );
-
-        scannerRef.current.lastCenter = center;
-        scannerRef.current.stableFrames = steadyCount;
-        setScanProgress(metrics.readinessScore);
-        setScanStatus(metrics.statusMessage);
-        setGuideColor(metrics.guideColor);
-        setDetectionState(metrics.state);
-
-        if (metrics.state === "READY_TO_CAPTURE" && !scannerRef.current.capturing) {
-          scannerRef.current.capturing = true;
-          setAutoCapturing(true);
-          setScanProgress(100);
-          setScanStatus("Perfect! Hold still, capturing automatically...");
-          window.setTimeout(() => {
-            if (!cancelled) {
-              capturePhotoFromStream(true);
-            }
-          }, 350);
-          return;
-        }
-      }
-      if (!cancelled) {
-        animationFrame = window.requestAnimationFrame(processFrame);
-      }
-    };
-
-    animationFrame = window.requestAnimationFrame(processFrame);
-
-    return () => {
-      cancelled = true;
-      window.cancelAnimationFrame(animationFrame);
-    };
-  }, [isCameraActive, cameraLoading, cameraError, cameraFacing, capturePhotoFromStream, hand, landmarkerError]);
 
   // Switch between rear and front camera in modal
   function toggleCameraFacing() {
@@ -1002,7 +866,7 @@ These are traditional symbolic interpretations, not scientifically validated per
                       setReading("");
                       setParsedReport(null);
                       setOriginalReport(null);
-                      cameraInputRef.current?.click();
+                      openCamera();
                     }}
                   />
 
@@ -1117,19 +981,19 @@ These are traditional symbolic interpretations, not scientifically validated per
                       <button
                         type="button"
                         className="palm-picker-button palm-replace-button"
-                        onClick={() => cameraInputRef.current?.click()}
+                        onClick={openCamera}
                       >
                         <Camera size={16} />
                         <span>Retake with Camera</span>
                       </button>
-                      <label
-                        htmlFor="palm-gallery-input"
+                      <button
+                        type="button"
                         className="palm-picker-button palm-gallery-button cursor-pointer"
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={openGalleryPicker}
                       >
                         <RefreshCw size={16} />
                         <span>Replace from Gallery</span>
-                      </label>
+                      </button>
                       <button
                         type="button"
                         className="palm-remove-button"
@@ -1145,19 +1009,19 @@ These are traditional symbolic interpretations, not scientifically validated per
                       <button
                         type="button"
                         className="palm-picker-button palm-camera-button"
-                        onClick={() => cameraInputRef.current?.click()}
+                        onClick={openCamera}
                       >
                         <Camera size={17} />
                         <span>Take photo</span>
                       </button>
-                      <label
-                        htmlFor="palm-gallery-input"
+                      <button
+                        type="button"
                         className="palm-picker-button palm-gallery-button cursor-pointer"
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={openGalleryPicker}
                       >
                         <ImagePlus size={17} />
                         <span>Choose from gallery</span>
-                      </label>
+                      </button>
                     </div>
                   )}
 
@@ -1239,7 +1103,7 @@ These are traditional symbolic interpretations, not scientifically validated per
                       </div>
                       <p>{quality}</p>
                       <div className="palm-quality-actions">
-                        <button type="button" onClick={() => cameraInputRef.current?.click()}>
+                        <button type="button" onClick={openCamera}>
                           <Camera size={14} /> Retake photo
                         </button>
                         <button type="button" onClick={openGalleryPicker}>
@@ -1273,31 +1137,171 @@ These are traditional symbolic interpretations, not scientifically validated per
         </main>
       </div>
 
-      {/* Live Camera Scanner Disabled for Stability (Direct native photo capture used instead) */}
-      {false && (
-        <div className="palm-camera-overlay" role="dialog" aria-modal="true" aria-label="Take palm photo" data-specs={PALM_CAMERA_PROFILE_SPECS.tiers[0].label} data-res={cameraResolution.label}>
+      {/* Live In-App Camera Viewfinder */}
+      {isCameraActive && (
+        <div
+          className="palm-camera-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Take palm photo"
+          data-specs={PALM_CAMERA_PROFILE_SPECS.tiers[0].label}
+          data-res={cameraResolution.label}
+        >
           <div className="palm-camera-modal">
-            <div className="palm-camera-viewfinder">
-              <video className="palm-camera-video" />
-              <div className="palm-guide-outline">
-                <PalmCameraGuide
-                  progress={scanProgress}
-                  status={scanStatus}
-                  state={detectionState}
-                  guideColor={guideColor}
-                  autoCapturing={autoCapturing}
-                />
+            {/* Camera Header */}
+            <div className="palm-camera-header">
+              <div className="palm-camera-header-left">
+                <span className="palm-camera-title">
+                  <Camera size={18} />
+                  <span>Take Palm Photo</span>
+                </span>
+                {cameraResolution.width > 0 && (
+                  <span className="palm-camera-res-badge">
+                    <span className="palm-res-dot" />
+                    <span>{cameraResolution.label || "HD"}</span>
+                  </span>
+                )}
               </div>
+              <button
+                type="button"
+                className="palm-camera-close cursor-pointer"
+                onClick={closeCameraModal}
+                aria-label="Close camera"
+              >
+                <X size={18} />
+              </button>
             </div>
+
+            {/* Viewfinder Video */}
+            <div className="palm-camera-viewfinder relative">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="palm-camera-video"
+              />
+
+              {/* Hand Outline Guide */}
+              <div className="palm-guide-outline pointer-events-none">
+                <svg
+                  className="w-48 h-64 md:w-56 md:h-72 opacity-60"
+                  viewBox="0 0 400 520"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="
+                      M 140 500
+                      L 130 430
+                      C 125 390 100 370 70 330
+                      C 45 295 40 260 55 245
+                      C 70 230 95 245 115 275
+                      L 130 300
+                      C 130 250 128 170 135 120
+                      C 138 95 160 95 165 120
+                      L 172 230
+                      C 173 170 178 80 190 60
+                      C 195 45 215 45 220 60
+                      L 228 230
+                      C 230 180 235 110 248 95
+                      C 255 80 275 85 278 105
+                      L 282 250
+                      C 285 220 295 170 310 160
+                      C 320 150 335 160 335 180
+                      C 335 240 330 320 320 370
+                      C 310 420 280 470 265 500
+                      Z
+                    "
+                    stroke="#f0d99e"
+                    strokeWidth="2.5"
+                    strokeDasharray="6 4"
+                    fill="rgba(240, 217, 158, 0.05)"
+                  />
+                </svg>
+                <div className="palm-guide-hint">
+                  Hold open palm flat facing camera
+                </div>
+              </div>
+
+              {/* Loading State */}
+              {cameraLoading && (
+                <div className="palm-camera-loader">
+                  <LoaderCircle className="animate-spin" size={32} />
+                  <span>Connecting to camera…</span>
+                </div>
+              )}
+
+              {/* Error State with Action Fallbacks */}
+              {cameraError && (
+                <div className="palm-camera-error-banner">
+                  <AlertTriangle size={32} style={{ color: "#f59e0b" }} />
+                  <p>{cameraError}</p>
+                  <div className="flex flex-wrap gap-2 justify-center mt-2">
+                    <button
+                      type="button"
+                      className="palm-camera-fallback-btn cursor-pointer"
+                      onClick={() => {
+                        closeCameraModal();
+                        cameraInputRef.current?.click();
+                      }}
+                    >
+                      Use device camera app
+                    </button>
+                    <button
+                      type="button"
+                      className="palm-camera-fallback-btn cursor-pointer"
+                      style={{
+                        background: "rgba(255, 255, 255, 0.12)",
+                        color: "#fff",
+                        border: "1px solid rgba(255, 255, 255, 0.2)",
+                      }}
+                      onClick={() => {
+                        closeCameraModal();
+                        openGalleryPicker();
+                      }}
+                    >
+                      Choose from gallery
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Camera Controls */}
             <div className="palm-camera-controls">
-              <button type="button" className="palm-camera-shutter-btn" aria-label="Capture photo" onClick={() => capturePhotoFromStream(false)} />
-              <button type="button" onClick={toggleCameraFacing} aria-label="Switch camera"><SwitchCamera /></button>
-              <button type="button" onClick={closeCameraModal} aria-label="Close camera"><X /></button>
-              <button type="button" onClick={() => resetHandLandmarker()} aria-label="Reset landmarker" />
+              <button
+                type="button"
+                className="palm-camera-cancel-btn cursor-pointer"
+                onClick={closeCameraModal}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className="palm-camera-shutter-btn cursor-pointer"
+                aria-label="Capture photo"
+                onClick={() => capturePhotoFromStream()}
+                disabled={cameraLoading || Boolean(cameraError)}
+                title="Tap to snap photo"
+              >
+                <div className="palm-shutter-ring">
+                  <div className="palm-shutter-dot" />
+                </div>
+              </button>
+
+              <button
+                type="button"
+                className="palm-camera-flip-btn cursor-pointer"
+                onClick={toggleCameraFacing}
+                aria-label="Switch camera"
+                title="Switch between front and rear cameras"
+              >
+                <SwitchCamera size={20} />
+              </button>
             </div>
           </div>
-          <PalmPreScanModal isOpen={isPreScanModalOpen} onClose={() => setIsPreScanModalOpen(false)} onStartScan={() => {}} />
-          <PalmCapturePreviewModal isOpen={isCapturePreviewOpen} imageSrc="" isAutoCaptured={isAutoCaptured} onRetake={retakeCapturedPhoto} onConfirm={confirmCapturedPhoto} onClose={() => {}} />
         </div>
       )}
 
