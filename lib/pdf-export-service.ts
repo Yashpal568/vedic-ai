@@ -135,13 +135,34 @@ export async function downloadRealPdfFile(
 
   const { url } = await exportHtmlToPdfBlob(html, options);
 
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = cleanFilename;
-  a.style.display = "none";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 2000);
+  // Check if iOS Safari / iPadOS
+  const isIOS =
+    typeof navigator !== "undefined" &&
+    (/iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1));
+
+  if (isIOS) {
+    // iOS Safari does not support the download attribute on blob: URLs reliably.
+    // Opening the blob in a new tab allows iOS native PDF viewer to render it with Share -> Save to Files / Print options.
+    const newTab = window.open(url, "_blank");
+    if (!newTab) {
+      window.location.href = url;
+    }
+  } else {
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = cleanFilename;
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  // Keep blob URL alive for at least 60 seconds so downloads complete without premature eviction
+  setTimeout(() => {
+    try {
+      URL.revokeObjectURL(url);
+    } catch {}
+  }, 60000);
 }
 

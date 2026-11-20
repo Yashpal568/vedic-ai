@@ -13,13 +13,14 @@ import { useLanguage } from "@/lib/i18n/language-context";
 import { LanguageSelector } from "@/components/language-selector";
 import { translateAssistantChatMessage, isDevanagariText } from "@/lib/i18n/chat-translator";
 import type { KundliReport } from "@/lib/astrology";
-import { printKundliReport } from "@/lib/print-report";
+import { printKundliReport, downloadKundliPdfFile } from "@/lib/print-report";
 import { buildKundliHouseSummary, buildKundliPlanetSummary, buildKundliSimpleSummary } from "@/lib/kundli-summary";
 import { build15PointVedicReport, calculatePlanetaryAspects } from "@/lib/vedic-15-point-report";
 import {
   ArrowDown, ArrowUp, Mic, MicOff, CalendarDays, Check, ChevronLeft, ChevronRight,
   CircleHelp, Gem, History, LogOut, Menu, MoonStar, Orbit, Plus, Sun,
   ShieldCheck, Sparkles, UserRound, X, BriefcaseBusiness, Heart, Compass, Trash2, RefreshCw, Bell, Clock3,
+  Download, Printer, LoaderCircle,
 } from "lucide-react";
 
 type Message = { id: string; role: "user" | "assistant"; content: string; animated?: boolean };
@@ -394,6 +395,7 @@ export default function Home() {
   const [pendingPrompt, setPendingPrompt] = useState<string>("");
   const [transitReport, setTransitReport] = useState<KundliReport | null>(null);
   const [transitLoading, setTransitLoading] = useState(false);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [placeOptions, setPlaceOptions] = useState<PlaceOption[]>([]);
   const [selectedPlace, setSelectedPlace] = useState<PlaceOption | null>(null);
   const [isGeocoding, setIsGeocoding] = useState(false);
@@ -1444,7 +1446,7 @@ export default function Home() {
                 </div>
               </div>
             )}{chartReport && <details className="chart-panel-collapsible"><summary className="chart-panel-summary"><span><span className="chart-summary-kicker">YOUR VEDIC BIRTH CHART</span><strong>{chartReport.ascendant.sign} Ascendant · {chartReport.birth.place}</strong></span><span className="chart-summary-action">View calculated chart <ChevronRight size={15}/></span></summary><section className="chart-panel">
-              <div className="chart-panel-head"><div><div className="eyebrow"><span className="eyebrow-line" /> YOUR VEDIC BIRTH CHART</div><h2 className="chart-title">{chartReport.ascendant.sign} Ascendant <span>· {chartReport.birth.place.split(",").slice(0, 2).join(",")}</span></h2><p className="chart-subtitle">Lahiri sidereal · Whole-sign houses · {chartReport.birth.timezone}</p></div><button className="secondary-button chart-export" onClick={() => { const blob = new Blob([JSON.stringify(chartReport, null, 2)], { type: "application/json" }); const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.href = url; link.download = "vedic-ai-kundli.json"; link.click(); URL.revokeObjectURL(url); }}>Export chart <ArrowDown size={13}/></button><button className="secondary-button chart-export" onClick={() => { try { printKundliReport(chartReport); } catch (error) { setToast(error instanceof Error ? error.message : "Could not open PDF preview."); } }}>Print / Save PDF</button><button className="primary-button chart-save" onClick={saveChartReport}>Save kundli <Check size={13}/></button><button className="secondary-button chart-export" onClick={loadCurrentTransits} disabled={transitLoading}>{transitLoading ? <RefreshCw size={13} className="spin-icon"/> : <Orbit size={13}/>} {transitLoading ? "Calculating…" : "Current transits"}</button></div>
+              <div className="chart-panel-head"><div><div className="eyebrow"><span className="eyebrow-line" /> YOUR VEDIC BIRTH CHART</div><h2 className="chart-title">{chartReport.ascendant.sign} Ascendant <span>· {chartReport.birth.place.split(",").slice(0, 2).join(",")}</span></h2><p className="chart-subtitle">Lahiri sidereal · Whole-sign houses · {chartReport.birth.timezone}</p></div><button className="secondary-button chart-export" onClick={() => { const blob = new Blob([JSON.stringify(chartReport, null, 2)], { type: "application/json" }); const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.href = url; link.download = "vedic-ai-kundli.json"; link.click(); URL.revokeObjectURL(url); }}>Export chart <ArrowDown size={13}/></button><button className="secondary-button chart-export" disabled={isExportingPdf} onClick={async () => { setIsExportingPdf(true); try { await downloadKundliPdfFile(chartReport); setToast(language === "hi" ? "आपकी 2-पृष्ठीय कुंडली PDF तैयार हो गई है।" : "2-page Kundli PDF generated successfully."); } catch (error) { setToast(error instanceof Error ? error.message : "Could not generate PDF."); } finally { setIsExportingPdf(false); } }}>{isExportingPdf ? <LoaderCircle size={13} className="spin-icon" /> : <Download size={13} />} {isExportingPdf ? (language === "hi" ? "PDF बन रही है…" : "Generating PDF…") : (language === "hi" ? "कुंडली PDF" : "Download PDF")}</button><button className="secondary-button chart-export" onClick={() => { try { printKundliReport(chartReport); } catch (error) { setToast(error instanceof Error ? error.message : "Could not open PDF preview."); } }}><Printer size={13} /> {language === "hi" ? "प्रिंट / सेव" : "Print Sheet"}</button><button className="primary-button chart-save" onClick={saveChartReport}>Save kundli <Check size={13}/></button><button className="secondary-button chart-export" onClick={loadCurrentTransits} disabled={transitLoading}>{transitLoading ? <RefreshCw size={13} className="spin-icon"/> : <Orbit size={13}/>} {transitLoading ? "Calculating…" : "Current transits"}</button></div>
               <div className="chart-stats"><div className="chart-stat"><span>Ascendant / Lagna</span><strong>{chartReport.ascendant.sign}</strong><small>{chartReport.ascendant.degreeInSign.toFixed(2)}° · {chartReport.ascendant.nakshatra}</small></div><div className="chart-stat"><span>Moon Nakshatra</span><strong>{chartReport.planets.find((planet) => planet.name === "Moon")?.nakshatra || "—"}</strong><small>Pada {chartReport.planets.find((planet) => planet.name === "Moon")?.nakshatraPada || "—"}</small></div><div className="chart-stat"><span>Current Mahadasha</span><strong>{chartReport.vimshottari.currentMahadasha.lord}</strong><small>{new Date(chartReport.vimshottari.currentMahadasha.start).toLocaleDateString()} – {new Date(chartReport.vimshottari.currentMahadasha.end).toLocaleDateString()}</small></div></div>
               <div className="chart-secondary-grid">
                 <KundliDiagram report={chartReport} />

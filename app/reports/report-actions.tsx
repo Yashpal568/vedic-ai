@@ -2,14 +2,27 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Download, LoaderCircle, Trash2 } from "lucide-react";
+import { Download, LoaderCircle, Printer, Trash2 } from "lucide-react";
 import type { KundliReport } from "@/lib/astrology";
-import { printKundliReport } from "@/lib/print-report";
+import { printKundliReport, downloadKundliPdfFile } from "@/lib/print-report";
 
 export default function ReportActions({ id, report }: { id: string; report: KundliReport }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [error, setError] = useState("");
+
+  async function handleDownloadPdf() {
+    setIsExportingPdf(true);
+    setError("");
+    try {
+      await downloadKundliPdfFile(report, id);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Could not generate PDF report.");
+    } finally {
+      setIsExportingPdf(false);
+    }
+  }
 
   function printReport() {
     setError("");
@@ -44,7 +57,11 @@ export default function ReportActions({ id, report }: { id: string; report: Kund
   }
 
   return <div className="report-actions">
-    <button className="secondary-button" onClick={printReport}>Print / Save PDF</button>
+    <button className="primary-button" onClick={handleDownloadPdf} disabled={isExportingPdf || busy}>
+      {isExportingPdf ? <LoaderCircle size={13} className="spin-icon"/> : <Download size={13}/>}
+      {isExportingPdf ? "Generating PDF…" : "Download Kundli PDF"}
+    </button>
+    <button className="secondary-button" onClick={printReport} disabled={busy}><Printer size={13}/> Print Sheet</button>
     <button className="secondary-button" onClick={downloadReport}><Download size={13}/> Export JSON</button>
     <button className="secondary-button report-delete" onClick={deleteReport} disabled={busy}>{busy ? <LoaderCircle size={13}/> : <Trash2 size={13}/>} Delete</button>
     {error && <p role="alert" className="report-action-error">{error}</p>}

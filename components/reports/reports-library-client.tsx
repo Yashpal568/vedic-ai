@@ -16,9 +16,10 @@ import {
   Trash2,
   Sparkles,
   ArrowRight,
+  LoaderCircle,
 } from "lucide-react";
 import type { KundliReport } from "@/lib/astrology";
-import { printKundliReport } from "@/lib/print-report";
+import { printKundliReport, downloadKundliPdfFile } from "@/lib/print-report";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/lib/i18n/language-context";
 
@@ -44,6 +45,7 @@ export default function ReportsLibraryClient({
   const [activeFilter, setActiveFilter] = useState<"all" | "kundli" | "palm" | "synastry">("all");
   const [sortBy, setSortBy] = useState<"recent" | "oldest" | "name">("recent");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [exportingId, setExportingId] = useState<string | null>(null);
 
   // Filter logic
   let filtered = reports.filter((item) => {
@@ -96,11 +98,18 @@ export default function ReportsLibraryClient({
     }
   }
 
-  function handlePrint(report: KundliReport, id: string) {
+  async function handleExportPdf(report: KundliReport, id: string) {
+    setExportingId(id);
     try {
-      printKundliReport(report, id);
-    } catch (e) {
-      alert(e instanceof Error ? e.message : "Could not open printable PDF report.");
+      await downloadKundliPdfFile(report, id);
+    } catch {
+      try {
+        printKundliReport(report, id);
+      } catch (err) {
+        alert(err instanceof Error ? err.message : "Could not open printable PDF report.");
+      }
+    } finally {
+      setExportingId(null);
     }
   }
 
@@ -237,12 +246,13 @@ export default function ReportsLibraryClient({
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      onClick={() => handlePrint(chart, item.id)}
-                      className="px-3 py-1.5 rounded-lg bg-[var(--wash)] text-[var(--gold)] hover:bg-[var(--gold)] hover:text-[#11131A] text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                      disabled={exportingId === item.id}
+                      onClick={() => handleExportPdf(chart, item.id)}
+                      className="px-3 py-1.5 rounded-lg bg-[var(--wash)] text-[var(--gold)] hover:bg-[var(--gold)] hover:text-[#11131A] text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
                       title={t("reports.exportPdf") || "Export printable PDF report"}
                     >
-                      <Download size={13} />
-                      <span>{t("reports.exportPdf")}</span>
+                      {exportingId === item.id ? <LoaderCircle size={13} className="animate-spin" /> : <Download size={13} />}
+                      <span>{exportingId === item.id ? "Generating…" : t("reports.exportPdf")}</span>
                     </button>
                     <Link
                       href={`/chat?openBirth=1`}

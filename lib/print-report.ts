@@ -1111,7 +1111,20 @@ export function printKundliReport(report: KundliReport, reportId?: string) {
 
   if (typeof window === "undefined") return;
 
-  // 1. Try invisible iframe print first (never blocked by browser pop-up blockers)
+  const isMobile =
+    typeof navigator !== "undefined" &&
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
+    );
+
+  // On mobile devices, iframe.contentWindow.print() is unsupported and silently ignored.
+  // Directly trigger binary PDF download/open so mobile users receive their full 2-page PDF.
+  if (isMobile) {
+    void downloadKundliPdfFile(report, reportId);
+    return;
+  }
+
+  // 1. Try desktop iframe print with true A4 proportions
   try {
     const existing = document.getElementById("vedic-kundli-print-frame");
     if (existing) existing.remove();
@@ -1119,12 +1132,12 @@ export function printKundliReport(report: KundliReport, reportId?: string) {
     const iframe = document.createElement("iframe");
     iframe.id = "vedic-kundli-print-frame";
     iframe.style.position = "fixed";
-    iframe.style.right = "0";
-    iframe.style.bottom = "0";
-    iframe.style.width = "0";
-    iframe.style.height = "0";
-    iframe.style.border = "0";
-    iframe.style.opacity = "0";
+    iframe.style.left = "-9999px";
+    iframe.style.top = "0";
+    iframe.style.width = "794px";
+    iframe.style.height = "1123px";
+    iframe.style.border = "none";
+    iframe.style.visibility = "hidden";
     iframe.setAttribute("aria-hidden", "true");
     document.body.appendChild(iframe);
 
@@ -1139,17 +1152,16 @@ export function printKundliReport(report: KundliReport, reportId?: string) {
           iframe.contentWindow?.focus();
           iframe.contentWindow?.print();
         } catch {
-          // Fallback to window.open if iframe printing was restricted
-          openPreviewWindow(html);
+          // Fallback to downloading real binary PDF file
+          void downloadKundliPdfFile(report, reportId);
         }
-      }, 350);
+      }, 400);
       return;
     }
   } catch {
-    // Fallback to window.open
+    // Fallback to downloading real binary PDF file
+    void downloadKundliPdfFile(report, reportId);
   }
-
-  openPreviewWindow(html);
 }
 
 function openPreviewWindow(html: string) {
@@ -1181,11 +1193,12 @@ function downloadKundliHtmlFile(html: string, filename: string) {
 
 export async function downloadKundliPdfFile(report: KundliReport, reportId?: string): Promise<void> {
   const html = generateKundliPrintHtml(report, reportId);
-  const filename = `vedic-ai-kundli-${report.ascendant.sign.toLowerCase()}-${Date.now()}.pdf`;
+  const ascSign = (report.ascendant?.sign || "chart").toLowerCase();
+  const filename = `vedic-ai-kundli-${ascSign}-${Date.now()}.pdf`;
   try {
     await downloadRealPdfFile(html, filename, { format: "A4" });
   } catch (error) {
     console.error("[Vedic AI] Falling back to print sheet:", error);
-    printKundliReport(report, reportId);
+    openPreviewWindow(html);
   }
 }

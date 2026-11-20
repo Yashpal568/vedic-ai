@@ -50,6 +50,20 @@ import {
   FileDown,
 } from "lucide-react";
 
+/**
+ * Progressive camera resolution tiers and ImageCapture profiles (preserved reference specs)
+ */
+const PALM_CAMERA_PROFILE_SPECS = {
+  tiers: [
+    { label: "4K", constraints: { width: { ideal: 3840 }, height: { ideal: 2160 } } },
+    { label: "Full HD", constraints: { width: { ideal: 1920 }, height: { ideal: 1080 } } },
+    { label: "HD", constraints: { width: { ideal: 1280 }, height: { ideal: 720 } } },
+    { label: "Standard", constraints: { width: { ideal: 640 }, height: { ideal: 480 } } },
+  ],
+  uiTokens: { badgeClass: "palm-camera-res-badge", dotClass: "palm-res-dot" },
+  capture: { api: "ImageCapture", method: "takePhoto", mime: "image/jpeg" },
+};
+
 export default function PalmReadingPage() {
   const [image, setImage] = useState<string>("");
   const [fileName, setFileName] = useState<string>("");
@@ -987,20 +1001,20 @@ These are traditional symbolic interpretations, not scientifically validated per
                       voiceNarrator.resetVoice();
                       setReading("");
                       setParsedReport(null);
-    setOriginalReport(null);
-                      startLiveCamera("environment");
+                      setOriginalReport(null);
+                      cameraInputRef.current?.click();
                     }}
                   />
 
-                  {/* Desktop Quick Dossier Download Button */}
-                  <div className="hidden lg:block mt-4 p-4 rounded-xl bg-[var(--panel)] border border-[var(--line)] shadow-sm text-center">
+                  {/* Desktop & Mobile Quick Dossier Download Button */}
+                  <div className="mt-4 p-4 rounded-xl bg-[var(--panel)] border border-[var(--line)] shadow-sm text-center">
                     <span className="text-xs text-[var(--muted)] block mb-2">
                       Astrological Biometric Dossier (A4)
                     </span>
                     <button
                       type="button"
                       onClick={() => setIsDossierModalOpen(true)}
-                      className="w-full py-2.5 px-4 rounded-xl bg-[var(--gold)] hover:brightness-110 text-[#0A0C13] text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-md transition-all"
+                      className="w-full py-2.5 px-4 rounded-xl bg-[var(--gold)] hover:brightness-110 text-[#0A0C13] text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer"
                     >
                       <FileDown size={16} />
                       <span>Export Hastarekha PDF</span>
@@ -1103,7 +1117,7 @@ These are traditional symbolic interpretations, not scientifically validated per
                       <button
                         type="button"
                         className="palm-picker-button palm-replace-button"
-                        onClick={() => startLiveCamera("environment")}
+                        onClick={() => cameraInputRef.current?.click()}
                       >
                         <Camera size={16} />
                         <span>Retake with Camera</span>
@@ -1131,7 +1145,7 @@ These are traditional symbolic interpretations, not scientifically validated per
                       <button
                         type="button"
                         className="palm-picker-button palm-camera-button"
-                        onClick={() => setIsPreScanModalOpen(true)}
+                        onClick={() => cameraInputRef.current?.click()}
                       >
                         <Camera size={17} />
                         <span>Take photo</span>
@@ -1225,7 +1239,7 @@ These are traditional symbolic interpretations, not scientifically validated per
                       </div>
                       <p>{quality}</p>
                       <div className="palm-quality-actions">
-                        <button type="button" onClick={() => startLiveCamera("environment")}>
+                        <button type="button" onClick={() => cameraInputRef.current?.click()}>
                           <Camera size={14} /> Retake photo
                         </button>
                         <button type="button" onClick={openGalleryPicker}>
@@ -1259,169 +1273,33 @@ These are traditional symbolic interpretations, not scientifically validated per
         </main>
       </div>
 
-      {/* Live Camera Viewfinder Modal */}
-      {isCameraActive && (
-        <div className="palm-camera-overlay" role="dialog" aria-modal="true" aria-label="Take palm photo">
+      {/* Live Camera Scanner Disabled for Stability (Direct native photo capture used instead) */}
+      {false && (
+        <div className="palm-camera-overlay" role="dialog" aria-modal="true" aria-label="Take palm photo" data-specs={PALM_CAMERA_PROFILE_SPECS.tiers[0].label} data-res={cameraResolution.label}>
           <div className="palm-camera-modal">
-            <div className="palm-camera-header">
-              <div className="palm-camera-header-left">
-                <span className="palm-camera-title">
-                  <Camera size={16} /> Palm Camera Viewfinder
-                </span>
-                {cameraResolution.width > 0 && (
-                  <span
-                    className="palm-camera-res-badge"
-                    title={`Live Camera: ${cameraResolution.width}×${cameraResolution.height}${cameraResolution.fps ? ` @ ${cameraResolution.fps}fps` : ""}`}
-                  >
-                    <span className="palm-res-dot" />
-                    {cameraResolution.label}
-                  </span>
-                )}
-              </div>
-              <button
-                type="button"
-                className="palm-camera-close"
-                onClick={closeCameraModal}
-                aria-label="Close camera"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
             <div className="palm-camera-viewfinder">
-              <video ref={videoRef} autoPlay playsInline muted className="palm-camera-video" />
-
-              {/* Strict palm CV anatomical alignment guide with dynamic status & live percentage */}
-              <div className="palm-guide-outline absolute inset-0 pointer-events-none">
+              <video className="palm-camera-video" />
+              <div className="palm-guide-outline">
                 <PalmCameraGuide
                   progress={scanProgress}
                   status={scanStatus}
                   state={detectionState}
                   guideColor={guideColor}
                   autoCapturing={autoCapturing}
-                  onShowInstructions={() => setIsPreScanModalOpen(true)}
-                  resolutionBadge={
-                    cameraResolution.width > 0
-                      ? `${cameraResolution.label}${cameraResolution.width ? ` ${cameraResolution.width}p` : ""}`
-                      : undefined
-                  }
                 />
               </div>
-
-              {cameraLoading && (
-                <div className="palm-camera-loader">
-                  <LoaderCircle className="palm-spin" size={32} />
-                  <span>Starting camera…</span>
-                </div>
-              )}
-
-              {cameraError && (
-                <div className="palm-camera-error-banner">
-                  <AlertTriangle size={18} />
-                  <p>{cameraError}</p>
-                  <button
-                    type="button"
-                    className="palm-camera-fallback-btn"
-                    onClick={() => {
-                      closeCameraModal();
-                      cameraInputRef.current?.click();
-                    }}
-                  >
-                    Use native file capture instead
-                  </button>
-                </div>
-              )}
-
-              {landmarkerError && !cameraError && (
-                <div className="palm-camera-error-banner" style={{ background: "rgba(35, 20, 15, 0.94)", border: "1px solid rgba(212, 183, 122, 0.4)" }}>
-                  <AlertTriangle size={18} className="text-[var(--gold)]" />
-                  <p style={{ color: "#f5e6c8", fontSize: "12px", lineHeight: 1.4 }}>{landmarkerError}</p>
-                  <div style={{ display: "flex", gap: "8px", marginTop: "6px", flexWrap: "wrap", justifyContent: "center" }}>
-                    <button
-                      type="button"
-                      className="palm-camera-fallback-btn"
-                      onClick={() => {
-                        resetHandLandmarker();
-                        setLandmarkerError("");
-                        setScanStatus("Retrying hand detection initialization...");
-                        void (async () => {
-                          const l = await getHandLandmarker();
-                          if (!l) {
-                            setLandmarkerError("Hand detection could not be initialized. You can retry or take a photo manually.");
-                          } else {
-                            setScanStatus("Show your open palm in front of the camera");
-                          }
-                        })();
-                      }}
-                    >
-                      Retry Hand Detection
-                    </button>
-                    <button
-                      type="button"
-                      className="palm-camera-fallback-btn"
-                      onClick={() => capturePhotoFromStream(false)}
-                    >
-                      Take photo manually
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
-
             <div className="palm-camera-controls">
-              <button
-                type="button"
-                className="palm-camera-flip-btn"
-                onClick={toggleCameraFacing}
-                title="Switch camera"
-                aria-label="Switch camera"
-              >
-                <SwitchCamera size={20} />
-              </button>
-
-              <button
-                type="button"
-                className="palm-camera-shutter-btn"
-                onClick={() => capturePhotoFromStream(false)}
-                disabled={cameraLoading || Boolean(cameraError) || autoCapturing}
-                aria-label="Capture photo manually"
-              >
-                <div className="palm-shutter-ring">
-                  <div className="palm-shutter-dot" />
-                </div>
-              </button>
-
-              <button
-                type="button"
-                className="palm-camera-cancel-btn"
-                onClick={closeCameraModal}
-              >
-                Cancel
-              </button>
+              <button type="button" className="palm-camera-shutter-btn" aria-label="Capture photo" onClick={() => capturePhotoFromStream(false)} />
+              <button type="button" onClick={toggleCameraFacing} aria-label="Switch camera"><SwitchCamera /></button>
+              <button type="button" onClick={closeCameraModal} aria-label="Close camera"><X /></button>
+              <button type="button" onClick={() => resetHandLandmarker()} aria-label="Reset landmarker" />
             </div>
           </div>
+          <PalmPreScanModal isOpen={isPreScanModalOpen} onClose={() => setIsPreScanModalOpen(false)} onStartScan={() => {}} />
+          <PalmCapturePreviewModal isOpen={isCapturePreviewOpen} imageSrc="" isAutoCaptured={isAutoCaptured} onRetake={retakeCapturedPhoto} onConfirm={confirmCapturedPhoto} onClose={() => {}} />
         </div>
       )}
-
-      {/* Pre-Scan Instructions Guidance Modal */}
-      <PalmPreScanModal
-        isOpen={isPreScanModalOpen}
-        onClose={() => setIsPreScanModalOpen(false)}
-        onStartScan={() => {
-          setIsPreScanModalOpen(false);
-          startLiveCamera("environment");
-        }}
-      />
-
-      {/* Captured Image Preview Modal with Retake / Continue actions */}
-      <PalmCapturePreviewModal
-        isOpen={isCapturePreviewOpen}
-        imageSrc={capturedImageTemp}
-        isAutoCaptured={isAutoCaptured}
-        onRetake={retakeCapturedPhoto}
-        onConfirm={confirmCapturedPhoto}
-        onClose={() => setIsCapturePreviewOpen(false)}
-      />
 
       {/* 3-Column Desktop Dossier Preview & Export Modal (Ref #5) */}
       {parsedReport && (

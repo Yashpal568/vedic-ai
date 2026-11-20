@@ -108,6 +108,28 @@ export default function DossierPreviewModal({
           </button>
         </div>
 
+        {/* Mobile Quick Action Banner (Visible only on mobile screens < lg so users don't have to scroll past 2 pages) */}
+        <div className="lg:hidden px-4 py-2.5 bg-[var(--wash)] border-b border-[var(--line2)] flex items-center justify-between gap-2">
+          <button
+            type="button"
+            onClick={handleDownloadPdf}
+            disabled={isExporting}
+            className="flex-1 py-2 px-3 rounded-xl bg-[var(--gold)] text-[#0A0C13] text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md disabled:opacity-50 cursor-pointer"
+          >
+            {isExporting ? <LoaderCircle size={15} className="animate-spin" /> : <Download size={15} />}
+            <span>{isExporting ? "Generating PDF…" : "Download Archival PDF (A4)"}</span>
+          </button>
+          <button
+            type="button"
+            onClick={handlePrint}
+            disabled={isExporting}
+            className="p-2 rounded-xl bg-[var(--raised)] border border-[var(--line2)] text-[var(--text)] text-xs flex items-center justify-center cursor-pointer"
+            title="Print Dossier Directly"
+          >
+            <Printer size={15} />
+          </button>
+        </div>
+
         {/* Modal Body: 2-Column Split Composition (Matching Reference #5) */}
         <div className="flex-1 overflow-y-auto p-3 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
           {/* LEFT COLUMN: Realistic A4 Document Page Preview (7 Cols) */}

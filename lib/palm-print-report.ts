@@ -857,6 +857,17 @@ export function printHtmlViaIframe(html: string): Promise<boolean> {
       return;
     }
 
+    const isMobile =
+      typeof navigator !== "undefined" &&
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      );
+
+    if (isMobile) {
+      resolve(false);
+      return;
+    }
+
     try {
       const oldFrame = document.getElementById("vedic-print-iframe");
       if (oldFrame) oldFrame.remove();
@@ -864,12 +875,12 @@ export function printHtmlViaIframe(html: string): Promise<boolean> {
       const iframe = document.createElement("iframe");
       iframe.id = "vedic-print-iframe";
       iframe.style.position = "fixed";
-      iframe.style.right = "0";
-      iframe.style.bottom = "0";
-      iframe.style.width = "0";
-      iframe.style.height = "0";
-      iframe.style.border = "0";
-      iframe.style.opacity = "0";
+      iframe.style.left = "-9999px";
+      iframe.style.top = "0";
+      iframe.style.width = "794px";
+      iframe.style.height = "1123px";
+      iframe.style.border = "none";
+      iframe.style.visibility = "hidden";
       iframe.setAttribute("aria-hidden", "true");
 
       document.body.appendChild(iframe);
@@ -890,24 +901,9 @@ export function printHtmlViaIframe(html: string): Promise<boolean> {
           iframe.contentWindow?.print();
           resolve(true);
         } catch {
-          // Fallback to window.open if iframe printing was restricted
-          try {
-            const win = window.open("", "_blank");
-            if (win) {
-              win.document.open();
-              win.document.write(html);
-              win.document.close();
-              win.focus();
-              setTimeout(() => {
-                try { win.print(); } catch {}
-              }, 300);
-              resolve(true);
-              return;
-            }
-          } catch {}
           resolve(false);
         }
-      }, 350);
+      }, 400);
     } catch {
       resolve(false);
     }
