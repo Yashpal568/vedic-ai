@@ -1153,7 +1153,7 @@ These are traditional symbolic interpretations, not scientifically validated per
               <div className="palm-camera-header-left">
                 <span className="palm-camera-title">
                   <Camera size={18} />
-                  <span>Take Palm Photo</span>
+                  <span>Take Photo</span>
                 </span>
                 {cameraResolution.width > 0 && (
                   <span className="palm-camera-res-badge">
@@ -1172,7 +1172,7 @@ These are traditional symbolic interpretations, not scientifically validated per
               </button>
             </div>
 
-            {/* Viewfinder Video */}
+            {/* Viewfinder Video (Clean camera stream with no scanning overlay) */}
             <div className="palm-camera-viewfinder relative">
               <video
                 ref={videoRef}
@@ -1181,48 +1181,7 @@ These are traditional symbolic interpretations, not scientifically validated per
                 muted
                 className="palm-camera-video"
               />
-
-              {/* Hand Outline Guide */}
-              <div className="palm-guide-outline pointer-events-none">
-                <svg
-                  className="w-48 h-64 md:w-56 md:h-72 opacity-60"
-                  viewBox="0 0 400 520"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="
-                      M 140 500
-                      L 130 430
-                      C 125 390 100 370 70 330
-                      C 45 295 40 260 55 245
-                      C 70 230 95 245 115 275
-                      L 130 300
-                      C 130 250 128 170 135 120
-                      C 138 95 160 95 165 120
-                      L 172 230
-                      C 173 170 178 80 190 60
-                      C 195 45 215 45 220 60
-                      L 228 230
-                      C 230 180 235 110 248 95
-                      C 255 80 275 85 278 105
-                      L 282 250
-                      C 285 220 295 170 310 160
-                      C 320 150 335 160 335 180
-                      C 335 240 330 320 320 370
-                      C 310 420 280 470 265 500
-                      Z
-                    "
-                    stroke="#f0d99e"
-                    strokeWidth="2.5"
-                    strokeDasharray="6 4"
-                    fill="rgba(240, 217, 158, 0.05)"
-                  />
-                </svg>
-                <div className="palm-guide-hint">
-                  Hold open palm flat facing camera
-                </div>
-              </div>
+              <div className="palm-guide-outline hidden" aria-hidden="true" />
 
               {/* Loading State */}
               {cameraLoading && (
