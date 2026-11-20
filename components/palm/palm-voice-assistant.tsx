@@ -122,24 +122,26 @@ export default function PalmVoiceAssistant({
   const isCompleted = status === "completed";
   const isError = status === "error";
 
+  const isHi = language === "hi";
+
   const totalSections = sections.length || 1;
   const progressPercent = Math.min(100, Math.round(((currentSectionIndex + 1) / totalSections) * 100));
 
   const statusLabel = isPreparing
-    ? "Preparing voice explanation..."
+    ? isHi ? "स्वर व्याख्या तैयार हो रही है…" : "Preparing voice explanation..."
     : isSpeaking
-    ? "Voice Active"
+    ? isHi ? "स्वर सक्रिय" : "Voice Active"
     : isPaused
-    ? "Voice Paused"
+    ? isHi ? "स्वर विराम" : "Voice Paused"
     : isBlocked
-    ? "Autoplay Blocked by Browser"
+    ? isHi ? "सुनने के लिए टैप करें" : "Tap to listen"
     : isStopped
-    ? "Voice explanation stopped"
+    ? isHi ? "स्वर व्याख्या रोकी गई" : "Voice explanation stopped"
     : isCompleted
-    ? "Narration Complete"
+    ? isHi ? "व्याख्या पूर्ण" : "Narration Complete"
     : isError
-    ? "Voice Unavailable"
-    : "Ready";
+    ? isHi ? "स्वर अनुपलब्ध" : "Voice Unavailable"
+    : isHi ? "तैयार" : "Ready";
 
   const handleTextSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -216,7 +218,9 @@ export default function PalmVoiceAssistant({
               </span>
             </div>
             <p className="text-[11px] text-[var(--muted)] mt-0.5">
-              Natural conversational Jyotish audio explanation & interactive voice Q&A
+              {isHi
+                ? "प्राकृतिक ज्योतिषीय स्वर व्याख्या एवं संवाद"
+                : "Natural conversational Jyotish audio explanation & interactive voice Q&A"}
             </p>
           </div>
         </div>
@@ -270,8 +274,8 @@ export default function PalmVoiceAssistant({
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between text-[11px] text-[var(--muted)]">
               <span className="font-medium text-[var(--gold)]">
-                Section {currentSectionIndex + 1} of {totalSections}:{" "}
-                <strong className="text-[var(--text)]">{currentSection?.sectionTitle || "Overview"}</strong>
+                {isHi ? `अनुभाग ${currentSectionIndex + 1} / ${totalSections}: ` : `Section ${currentSectionIndex + 1} of ${totalSections}: `}
+                <strong className="text-[var(--text)]">{currentSection?.sectionTitle || (isHi ? "अवलोकन" : "Overview")}</strong>
               </span>
               <span className="text-[10px] text-[var(--quiet)]">{progressPercent}%</span>
             </div>
@@ -386,7 +390,11 @@ export default function PalmVoiceAssistant({
           <div className="flex items-center justify-between gap-3 p-3.5 rounded-xl bg-[var(--panel)]/70 border border-[var(--gold)]/20">
             <div className="flex items-center gap-2.5 text-xs text-[var(--muted)]">
               <Loader2 className="w-4 h-4 animate-spin text-[var(--gold)] shrink-0" />
-              <span>Composing structured spoken script and synthesizing voice with ElevenLabs...</span>
+              <span>
+                {isHi
+                  ? "स्वर व्याख्या तैयार की जा रही है…"
+                  : "Composing structured spoken script and preparing voice narration..."}
+              </span>
             </div>
             <button
               type="button"
@@ -394,7 +402,7 @@ export default function PalmVoiceAssistant({
               className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-[var(--muted)] hover:text-white border border-[var(--line)] hover:border-rose-500 hover:bg-rose-600/20 transition-all cursor-pointer"
             >
               <VolumeX className="w-3.5 h-3.5" />
-              <span>Cancel</span>
+              <span>{isHi ? "रद्द करें" : "Cancel"}</span>
             </button>
           </div>
         )}
@@ -405,18 +413,24 @@ export default function PalmVoiceAssistant({
             <div className="flex items-center gap-2.5 text-xs text-amber-200">
               <AlertCircle className="w-5 h-5 text-amber-400 shrink-0" />
               <div>
-                <strong className="block text-amber-300 font-semibold">Your report is ready!</strong>
-                <span>Browser autoplay policy paused audio. Tap below to begin the voice explanation with sound.</span>
+                <strong className="block text-amber-300 font-semibold">
+                  {isHi ? "आपकी रिपोर्ट तैयार है!" : "Your report is ready!"}
+                </strong>
+                <span>
+                  {isHi
+                    ? "ऑडियो सुनने के लिए नीचे दिए गए बटन पर टैप करें।"
+                    : "Browser autoplay policy paused audio. Tap below to begin the voice explanation with sound."}
+                </span>
               </div>
             </div>
             <button
               type="button"
               onClick={onResumeVoice}
               className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-xs font-bold tracking-wide text-[#11131A] bg-[var(--gold)] hover:bg-[#e6c469] active:scale-95 transition-all cursor-pointer shadow-lg border border-[var(--gold)] animate-pulse shrink-0"
-              aria-label="Tap to start voice explanation"
+              aria-label={isHi ? "आवाज़ में सुनने के लिए टैप करें" : "Tap to start voice explanation"}
             >
               <Volume2 className="w-4 h-4" />
-              <span>Tap to start voice explanation</span>
+              <span>{isHi ? "आवाज़ में सुनने के लिए टैप करें" : "Tap to start voice explanation"}</span>
             </button>
           </div>
         )}
@@ -425,7 +439,9 @@ export default function PalmVoiceAssistant({
         {(isStopped || isCompleted) && (
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 p-3.5 rounded-xl bg-[var(--panel)]/60 border border-[var(--line)]">
             <span className="text-xs text-[var(--muted)]">
-              {isCompleted ? "Voice explanation complete. You can replay anytime or ask questions." : "Voice explanation stopped. You can resume or replay anytime."}
+              {isCompleted
+                ? isHi ? "स्वर व्याख्या पूर्ण हुई। आप पुनः सुन सकते हैं।" : "Voice explanation complete. You can replay anytime or ask questions."
+                : isHi ? "स्वर व्याख्या रोकी गई। आप पुनः सुन सकते हैं।" : "Voice explanation stopped. You can resume or replay anytime."}
             </span>
             <button
               type="button"
@@ -433,7 +449,7 @@ export default function PalmVoiceAssistant({
               className="inline-flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold text-[var(--gold)] bg-[var(--panel)] hover:bg-[var(--gold)]/15 border border-[var(--gold)]/40 hover:border-[var(--gold)] active:scale-95 transition-all cursor-pointer shadow-xs self-start sm:self-auto"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              <span>Replay Explanation</span>
+              <span>{isHi ? "पुनः व्याख्या सुनें" : "Replay Explanation"}</span>
             </button>
           </div>
         )}
@@ -441,14 +457,14 @@ export default function PalmVoiceAssistant({
         {/* State E: Error Fallback */}
         {isError && (
           <div className="flex items-center justify-between gap-2.5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs text-rose-300">
-            <span className="truncate">{errorMessage || "Voice explanation could not be loaded."}</span>
+            <span className="truncate">{errorMessage || (isHi ? "स्वर व्याख्या लोड नहीं हो सकी।" : "Voice explanation could not be loaded.")}</span>
             <button
               type="button"
               onClick={onResumeVoice}
               className="inline-flex items-center gap-1 px-3 py-1 rounded text-[11px] font-semibold text-rose-200 border border-rose-400/40 hover:bg-rose-500/20 shrink-0 cursor-pointer"
             >
               <RotateCcw className="w-3 h-3" />
-              <span>Retry</span>
+              <span>{isHi ? "पुनः प्रयास करें" : "Retry"}</span>
             </button>
           </div>
         )}
@@ -462,7 +478,7 @@ export default function PalmVoiceAssistant({
               className="inline-flex items-center gap-2 text-xs font-bold text-[var(--gold)] hover:underline cursor-pointer"
             >
               <HelpCircle className="w-3.5 h-3.5" />
-              <span>Ask Astrologer a Question (Voice or Text)</span>
+              <span>{isHi ? "ज्योतिषी से प्रश्न पूछें (स्वर या लिखित)" : "Ask Astrologer a Question (Voice or Text)"}</span>
               {showQAPanel ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
             </button>
 
@@ -472,7 +488,7 @@ export default function PalmVoiceAssistant({
                 onClick={onResumeNarrationAfterQA}
                 className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#52FEB8] hover:underline cursor-pointer"
               >
-                <span>Resume Report Narration</span>
+                <span>{isHi ? "रिपोर्ट व्याख्या पुनः चालू करें" : "Resume Report Narration"}</span>
               </button>
             )}
           </div>
@@ -594,7 +610,11 @@ export default function PalmVoiceAssistant({
               aria-expanded={showTranscript}
             >
               <FileText className="w-3 h-3" />
-              <span>{showTranscript ? "Hide spoken script" : "View complete spoken script"}</span>
+              <span>
+                {showTranscript
+                  ? isHi ? "मौखिक आलेख छिपाएं" : "Hide spoken script"
+                  : isHi ? "पूर्ण मौखिक आलेख देखें" : "View complete spoken script"}
+              </span>
               {showTranscript ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
             </button>
 

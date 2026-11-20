@@ -24,6 +24,7 @@ interface DossierPreviewModalProps {
   report: ParsedPalmReport;
   imageSrc: string;
   hand: "left" | "right" | "unsure";
+  language?: "en" | "hi" | "hinglish";
 }
 
 export default function DossierPreviewModal({
@@ -32,6 +33,7 @@ export default function DossierPreviewModal({
   report,
   imageSrc,
   hand,
+  language = "en",
 }: DossierPreviewModalProps) {
   const [currentPage, setCurrentPage] = useState<1 | 2>(1);
   const [zoomLevel, setZoomLevel] = useState<number>(100);
@@ -53,6 +55,7 @@ export default function DossierPreviewModal({
         paperWeight,
         format: selectedFormat,
         watermark: hasWatermark,
+        language,
       });
     } catch (err) {
       console.error("Print error:", err);
@@ -71,6 +74,7 @@ export default function DossierPreviewModal({
         paperWeight,
         format: selectedFormat,
         watermark: hasWatermark,
+        language,
       });
     } catch (err) {
       console.error("Download PDF error:", err);

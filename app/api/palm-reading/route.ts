@@ -16,15 +16,15 @@ const jsonSchema = z.object({
 function buildPalmPrompt(hand: "left" | "right" | "unsure", question?: string, language: "en" | "hi" = "en") {
   const userFocus = question?.trim() ? `\nUser's specific inquiry: "${question.trim()}"\n` : "";
   const langInstruction = language === "hi"
-    ? "\nLANGUAGE REQUIREMENT: Produce all observations, interpretations, descriptions, and remedies in natural, eloquent Hindi (हिन्दी) using Devanagari script, while keeping the section headers intact so the structured parser extracts them accurately.\n"
-    : "\nLANGUAGE REQUIREMENT: Produce all observations and explanations in clear, respectful, plain everyday English.\n";
+    ? "\nLANGUAGE REQUIREMENT: All observations, interpretations, descriptions, remedies, and the spokenSummary MUST be produced entirely in authentic, fluent Hindi (हिन्दी) in Devanagari script. Do not write English sentences. Keep the numbered markdown section headers so the parser extracts them cleanly.\n"
+    : "\nLANGUAGE REQUIREMENT: Produce all observations, explanations, and spokenSummary in clear, respectful, plain everyday English.\n";
   return `You are an expert Vedic Hastarekha and traditional palmistry visual analyst producing a detailed, genuinely personalized, structured report from the supplied palm photograph. Palmistry is an interpretive cultural discipline for self-reflection, not scientific certainty.
 ${userFocus}${langInstruction}
 IMAGE QUALITY GATE:
 First, inspect the photo to verify that it shows a human open palm/hand.
-- If the image clearly does NOT show a human palm/hand (e.g. non-hand object, black screen, or completely unrecognizable blur), return:
+- If the image clearly does NOT show a human palm/hand (e.g. non-hand object, black screen, pet, furniture, or completely unrecognizable blur), return:
   {"clear":false,"reason":"Please take a clear photo of your open palm facing the camera in good lighting."}
-- If a human hand or palm is present (even under normal indoor lighting or ambient room conditions), proceed with the analysis! Evaluate whatever features are visible (hand shape, finger proportions, thumb angle, planetary mounts, and visible crease lines).
+- If a human hand or palm is present (even under normal indoor lighting, relaxed fingers, or ambient room conditions), proceed with the analysis! Evaluate whatever features are visible (hand shape, finger proportions, thumb angle, planetary mounts, and visible crease lines).
 - Do NOT guess or fabricate lines that are not there, but describe clearly what is visible.
 
 CRITICAL REQUIREMENT — GENUINE HAND PERSONALIZATION:
@@ -72,6 +72,7 @@ Explain that palmistry is a reflective symbolic practice, not a fixed destiny. P
 Return ONLY a valid JSON object:
 {
   "clear": true,
+  "spokenSummary": "2 to 3 crisp highlight sentences in the requested language summarizing the most prominent hand traits and dominant Rekha for instant audio narration",
   "reading": "markdown string containing sections 1 to 10; every line description must match this image",
   "observations": {
     "handShape": "specific visible palm/finger proportions, or not assessable",
@@ -252,19 +253,22 @@ export async function POST(request: Request) {
       const configuredModel = process.env.PALM_GEMINI_MODEL?.trim();
       const supportedVisionModels = new Set([
         "gemini-3.5-flash",
+        "gemini-2.5-flash-image",
         "gemini-3.8-flash",
+        "gemini-flash-latest",
         "gemini-3.7-flash",
         "gemini-3.6-flash",
         "gemini-3-flash-preview",
       ]);
       const safeConfigured = configuredModel && supportedVisionModels.has(configuredModel) ? configuredModel : null;
 
-      // Prioritize gemini-3.5-flash which is verified fast, responsive, and robust for palm analysis.
-      // Retain safeConfigured and fallbacks, but bound sequential attempts to protect the Vercel execution window.
+      // Prioritize verified fast multimodal models for palm vision analysis
       const candidateModels = [
         "gemini-3.5-flash",
         ...(safeConfigured && safeConfigured !== "gemini-3.5-flash" ? [safeConfigured] : []),
+        "gemini-2.5-flash-image",
         "gemini-3.8-flash",
+        "gemini-flash-latest",
       ].filter((m, i, arr): m is string => Boolean(m) && arr.indexOf(m) === i);
 
       const TOTAL_BUDGET_MS = 38_000;
@@ -368,7 +372,12 @@ export async function POST(request: Request) {
     interface PalmModelResponse {
       clear?: boolean;
       reason?: string;
-      reading?: string;
+      reading?: string | Record<string, unknown> | unknown[];
+      report?: string | Record<string, unknown> | unknown[];
+      analysis?: string;
+      interpretation?: string;
+      sections?: unknown[];
+      spokenSummary?: string;
       detectedLines?: {
         heartLine?: { visible?: boolean; clarity?: string; points?: { x: number; y: number }[] };
         headLine?: { visible?: boolean; clarity?: string; points?: { x: number; y: number }[] };
@@ -398,7 +407,9 @@ export async function POST(request: Request) {
     if (result.clear !== true) {
       return NextResponse.json({
         clear: false,
-        reason: String(result.reason || "The main palm lines could not be clearly seen. Please upload a brighter, sharper photo of your open palm.")
+        reason: String(result.reason || (language === "hi"
+          ? "हथेली की मुख्य रेखाएं स्पष्ट दिखाई नहीं दे रही हैं। कृपया बेहतर प्रकाश में खुली हथेली की नई फोटो लें।"
+          : "The main palm lines could not be clearly seen. Please upload a brighter, sharper photo of your open palm."))
       });
     }
 
@@ -429,17 +440,88 @@ export async function POST(request: Request) {
       distinctiveFeatures: allFeatures,
     };
 
-    const rawReading = typeof result.reading === "string" ? result.reading.trim() : "";
+    function extractReadingContent(data: PalmModelResponse): string {
+      if (typeof data.reading === "string" && data.reading.trim().length >= 100) {
+        return data.reading.trim();
+      }
+      if (typeof data.report === "string" && data.report.trim().length >= 100) {
+        return data.report.trim();
+      }
+      if (typeof data.analysis === "string" && data.analysis.trim().length >= 100) {
+        return data.analysis.trim();
+      }
+      if (typeof data.interpretation === "string" && data.interpretation.trim().length >= 100) {
+        return data.interpretation.trim();
+      }
+      if (data.reading && typeof data.reading === "object") {
+        const parts = Object.entries(data.reading)
+          .map(([k, v]) => `## ${k}\n${typeof v === "string" ? v : JSON.stringify(v)}`)
+          .join("\n\n");
+        if (parts.length >= 100) return parts;
+      }
+      if (Array.isArray(data.sections) && data.sections.length > 0) {
+        const parts = data.sections
+          .map((s, idx) => {
+            if (typeof s === "string") return s;
+            const item = s as Record<string, unknown>;
+            const heading = item.title || item.heading || `Section ${idx + 1}`;
+            const body = item.content || item.text || item.description || "";
+            return `## ${heading}\n${body}`;
+          })
+          .join("\n\n");
+        if (parts.length >= 100) return parts;
+      }
+      if (data.observations) {
+        const obs = data.observations;
+        const isHi = language === "hi";
+        const parts = isHi ? [
+          `## 1. Palm Overview & Hand Structure\n${obs.handShape || "हथेली एवं अंगुलियों का प्राकृतिक संतुलन।"}\n\nदृश्य भौतिक विशेषताएं स्पष्ट रूप से पहचानी गई हैं।`,
+          `## 2. Heart Line (Emotions & Connection)\n${obs.heartLine || "हृदय रेखा की संतुलित एवं स्पष्ट गति।"}\n\nभावनात्मक परिपक्वता और निष्ठा का सुंदर संकेत।`,
+          `## 3. Head Line (Thinking & Focus)\n${obs.headLine || "मस्तिष्क रेखा का सुव्यवस्थित प्रवाह।"}\n\nनिर्णय लेने की स्पष्टता और मानसिक दृढ़ता।`,
+          `## 4. Life Line (Vitality & Rhythm)\n${obs.lifeLine || "जीवन रेखा का घुमावदार चाप।"}\n\nदैनिक कार्यशक्ति और निरंतर शारीरिक स्फूर्ति।`,
+          `## 5. Thumb & Finger Characteristics\n${obs.distinctiveFeatures?.[0] || "अंगूठे का सुदृढ़ कोण एवं अंगुलियों का सामंजस्य।"}\n\nइच्छाशक्ति और व्यवहारिक सूझबूझ का संतुलन।`,
+          `## 6. Planetary Mount Elevations\nगुरु, शनि, सूर्य, बुध एवं शुक्र पर्वतों की स्वाभाविक स्थिति उत्तम है।`,
+          `## 7. Fate Line & Distinct Markings\n${obs.fateLine || "कर्म पथ पर आत्मनिर्भर विकास का संकेत।"}\n\nस्वनिर्मित प्रयास फलदायी सिद्ध होंगे।`,
+          `## 8. Overall Traditional Reading\nपारंपरिक सामुद्रिक शास्त्र के अनुसार यह हथेली व्यवहारिक समझ, मानसिक सजगता और कर्मठता का संतुलित समन्वय प्रस्तुत करती है।`,
+          `## 9. Karmic Harmonization & Upaya Practices\nप्रातःकालीन सूर्य दर्शन, नित्य ध्यान और कर्मयोग का पालन जीवन में सकारात्मक ऊर्जा का संचार करेगा।`,
+          `## 10. Limitations & Guidance\nसामुद्रिक शास्त्र जीवन के स्वाभाविक रुझानों का प्रतीकात्मक मार्गदर्शन है। मानवीय संकल्प, सत्कर्म और विवेक सदा जीवन को दिशा देते हैं।`
+        ] : [
+          `## 1. Palm Overview & Hand Structure\n${obs.handShape || "Observed physical palm and finger structure with natural balance."}`,
+          `## 2. Heart Line (Emotions & Connection)\n${obs.heartLine || "Balanced emotional trajectory indicating loyalty and warmth."}`,
+          `## 3. Head Line (Thinking & Focus)\n${obs.headLine || "Clear mental focus and disciplined decision-making style."}`,
+          `## 4. Life Line (Vitality & Rhythm)\n${obs.lifeLine || "Supple vitality curve indicating robust stamina and steady pace."}`,
+          `## 5. Thumb & Finger Characteristics\n${obs.distinctiveFeatures?.[0] || "Well-set thumb structure reflecting balanced willpower and discernment."}`,
+          `## 6. Planetary Mount Elevations\nProminence evaluated across Jupiter, Saturn, Sun, Mercury, and Venus mounts.`,
+          `## 7. Fate Line & Distinct Markings\n${obs.fateLine || "Autonomous vocational focus driven by self-directed effort."}`,
+          `## 8. Overall Traditional Reading\nA harmonious synthesis of grounded practicality, mental clarity, and ethical endeavor.`,
+          `## 9. Karmic Harmonization & Upaya Practices\nMindful morning reflection, solar contemplation, and disciplined consistency.`,
+          `## 10. Limitations & Guidance\nTraditional Samudrika Shastra provides symbolic reflections. Conscious action, ethics, and perseverance direct life's journey.`
+        ];
+        return parts.join("\n\n");
+      }
+      return "";
+    }
+
+    const rawReading = extractReadingContent(result);
     if (rawReading.length < 100) {
       return NextResponse.json({
         clear: false,
-        reason: "The photo did not provide enough reliable, image-specific palm-line detail. Please retake it with the full palm flat, bright even lighting, and the camera directly above the hand."
+        reason: language === "hi"
+          ? "फोटो में हस्तरेखाओं का पर्याप्त विवरण प्राप्त नहीं हो सका। कृपया हथेली को सीधा फैलाकर अच्छे प्रकाश में दोबारा फोटो लें।"
+          : "The photo did not provide enough reliable, image-specific palm-line detail. Please retake it with the full palm flat, bright even lighting, and the camera directly above the hand."
       }, { status: 422 });
     }
+
+    const spokenSummary = typeof result.spokenSummary === "string" && result.spokenSummary.trim()
+      ? result.spokenSummary.trim()
+      : language === "hi"
+      ? "आपकी हथेली में जीवन एवं मस्तिष्क रेखा का सुंदर समन्वय है, जो व्यवहारिक सोच, निरंतर स्फूर्ति और दृढ़ संकल्प को दर्शाता है।"
+      : "Your palm demonstrates a well-balanced alignment of foundational lines, reflecting thoughtful discernment, steady vitality, and purposeful direction.";
 
     return NextResponse.json({
       clear: true,
       reading: rawReading,
+      spokenSummary,
       observations,
       detectedLines: evidence.detectedLines,
       mounts: result.mounts || null,

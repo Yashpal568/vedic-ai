@@ -704,8 +704,8 @@ export default function PalmReadingPage() {
       );
       setPalmFeatures(features);
 
-      // Automatically trigger spoken AI voice narration immediately
-      voiceNarrator.autoNarrate(parsed, hand);
+      // Automatically trigger spoken AI voice narration immediately with fast summary parallelization
+      voiceNarrator.autoNarrate(parsed, hand, language, data.spokenSummary);
     } catch (e) {
       if (requestId === imageRequestIdRef.current) {
         setError(e instanceof Error ? e.message : "Could not analyse the image. Please try again.");
@@ -807,7 +807,10 @@ These are traditional symbolic interpretations, not scientifically validated per
           {reading && parsedReport ? (
             <div className="space-y-6">
               {/* Report Header */}
-              <PalmReportHeader onOpenExportModal={() => setIsDossierModalOpen(true)} />
+              <PalmReportHeader
+                language={language}
+                onOpenExportModal={() => setIsDossierModalOpen(true)}
+              />
 
               {isTranslatingReport && (
                 <div className="flex items-center gap-2 p-3 rounded-xl bg-[var(--wash)] border border-[var(--gold)]/30 text-xs text-[var(--gold)] animate-pulse">
@@ -853,10 +856,11 @@ These are traditional symbolic interpretations, not scientifically validated per
               />
 
               {/* Responsive Layout: Split (5-col Biometric HUD + 7-col Report) on Desktop, Vertical Stack on Mobile */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start pb-36 sm:pb-28">
                 {/* LEFT COLUMN (5 Cols on LG): Sticky Biometric Palm HUD & Plate */}
                 <div className="lg:col-span-5 lg:sticky lg:top-24">
                   <PalmBiometricPlate
+                    language={language}
                     imageSrc={image}
                     hand={hand}
                     features={palmFeatures || undefined}
@@ -892,21 +896,29 @@ These are traditional symbolic interpretations, not scientifically validated per
                   <PalmPersonalisedReport
                     report={parsedReport}
                     highlightedSection={voiceNarrator.highlightedSection}
+                    language={language}
                   />
 
                   {/* Section B: Three-Layer Analytical Framework */}
-                  <PalmThreeLayerAnalysis report={parsedReport} />
+                  <PalmThreeLayerAnalysis
+                    report={parsedReport}
+                    language={language}
+                  />
 
                   {/* Part C: Prescribed Karmic Harmonization & Upaya Remedies */}
-                  <PalmRemediesUpaya remedies={parsedReport.remedies} />
+                  <PalmRemediesUpaya
+                    remedies={parsedReport.remedies}
+                    language={language}
+                  />
 
                   {/* Metadata and Ethical Boundaries Disclaimer */}
-                  <PalmDisclaimerMeta />
+                  <PalmDisclaimerMeta language={language} />
                 </div>
               </div>
 
               {/* Floating Bottom Input Dock (Ref #2 & #3) */}
               <PalmChatDock
+                language={language}
                 onSendMessage={(msg) => {
                   setQuestion(msg);
                   analyse();
@@ -1272,6 +1284,7 @@ These are traditional symbolic interpretations, not scientifically validated per
           report={parsedReport}
           imageSrc={image}
           hand={hand}
+          language={language}
         />
       )}
 

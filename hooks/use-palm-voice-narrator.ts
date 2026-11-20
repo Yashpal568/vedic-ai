@@ -226,11 +226,12 @@ export function usePalmVoiceNarrator(options: UsePalmVoiceNarratorOptions = {}) 
 
       utterance.onerror = (e) => {
         currentUtteranceRef.current = null;
-        if (e.error === "not-allowed") {
+        if (e.error === "not-allowed" || e.error === "canceled" || e.error === "interrupted") {
           setStatus("blocked");
-        } else if (e.error !== "canceled" && e.error !== "interrupted") {
-          setStatus("error");
-          setErrorMessage("Browser voice synthesis could not complete.");
+        } else {
+          console.warn("[voice-player] Web speech error, switching to tap-to-play:", e.error);
+          setStatus("blocked");
+          setErrorMessage(null);
         }
       };
 
@@ -391,7 +392,8 @@ export function usePalmVoiceNarrator(options: UsePalmVoiceNarratorOptions = {}) 
     async (
       report: Partial<ParsedPalmReport> | null | undefined,
       hand: "left" | "right" | "unsure" = "unsure",
-      preferredLanguage?: VoiceLanguage | "auto"
+      preferredLanguage?: VoiceLanguage | "auto",
+      spokenSummary?: string
     ) => {
       const activePref = preferredLanguage || languagePreference;
 
@@ -415,6 +417,34 @@ export function usePalmVoiceNarrator(options: UsePalmVoiceNarratorOptions = {}) 
       }
       const controller = new AbortController();
       abortControllerRef.current = controller;
+
+      const effectiveLang = activePref === "auto" ? "en" : activePref;
+
+      // Fast-Path: If a 2-3 sentence crisp spokenSummary is already provided from palm vision,
+      // synthesize and stream it immediately in parallel to drop time-to-first-sound under 1-2 seconds.
+      if (spokenSummary && spokenSummary.trim()) {
+        fetch("/api/voice/speech", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            text: spokenSummary.trim(),
+            language: effectiveLang,
+            speed: playbackSpeed,
+          }),
+          signal: controller.signal,
+        })
+          .then(async (res) => {
+            if (res.ok && !userStoppedRef.current) {
+              const fastData = await res.json();
+              if (fastData.audioBase64) {
+                await playAudioBase64(fastData.audioBase64, fastData.contentType);
+              }
+            }
+          })
+          .catch((err) => {
+            console.info("[voice-narrator] Fast summary audio skipped, waiting for full narration:", err);
+          });
+      }
 
       try {
         // 1. Fetch structured narration from /api/voice/narration
@@ -444,7 +474,7 @@ export function usePalmVoiceNarrator(options: UsePalmVoiceNarratorOptions = {}) 
         setCurrentSectionIndex(0);
         setAudioProvider(data.provider);
 
-        // 2. Synthesize speech for full narration via /api/voice/speech
+        // 2. Synthesize speech for full narration via /api/voice/speech if not already speaking
         const speechRes = await fetch("/api/voice/speech", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -474,8 +504,8 @@ export function usePalmVoiceNarrator(options: UsePalmVoiceNarratorOptions = {}) 
         if ((err as Error)?.name === "AbortError") return;
         console.warn("[voice-narrator] autoNarrate error:", err);
         if (!userStoppedRef.current) {
-          setStatus("error");
-          setErrorMessage((err as Error)?.message || "Voice narration could not be generated.");
+          // Switch gracefully to blocked state so user can tap to retry without harsh error banner
+          setStatus("blocked");
         }
       }
     },

@@ -9,6 +9,7 @@ export interface PalmPrintOptions {
   format?: "A4" | "US_Letter";
   watermark?: boolean;
   reportId?: string;
+  language?: "en" | "hi" | "hinglish";
 }
 
 const htmlEntities: Record<string, string> = {
@@ -24,17 +25,23 @@ function escapeHtml(value: unknown): string {
 }
 
 export function generatePalmPrintHtml(report: ParsedPalmReport, options: PalmPrintOptions = {}): string {
+  const isHi = options.language === "hi";
   const hand = options.hand || "left";
   const texture = options.texture || "parchment";
   const reportId = options.reportId || `VD-PALM-2026-${Math.floor(1000 + Math.random() * 9000)}`;
-  const dateStr = new Date().toLocaleDateString("en-IN", {
+  const dateStr = new Date().toLocaleDateString(isHi ? "hi-IN" : "en-IN", {
     day: "2-digit",
     month: "short",
     year: "numeric",
   });
 
-  const handLabel =
-    hand === "left"
+  const handLabel = isHi
+    ? hand === "left"
+      ? "बायां हाथ (निष्क्रिय हस्तरेखा)"
+      : hand === "right"
+      ? "दायां हाथ (सक्रिय हस्तरेखा)"
+      : "खुली हथेली (हस्तरेखा)"
+    : hand === "left"
       ? "Left Hand (Passive Hastarekha)"
       : hand === "right"
       ? "Right Hand (Active Hastarekha)"
@@ -607,24 +614,31 @@ export function generatePalmPrintHtml(report: ParsedPalmReport, options: PalmPri
 
       <div>
         <header class="header-block">
-          <div class="header-top">
-            <div>
-              <span class="brand-eyebrow">VEDIC AI · SAMUDRIKA SHASTRA BIO-DOSSIER</span>
-              <h1 class="dossier-title">Hastarekha Biometric Blueprint</h1>
+          <div class="header-top" style="display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+            <div style="display: flex; align-items: center; gap: 14px;">
+              ${options.imageSrc ? `
+                <div class="palm-thumbnail-wrap" style="width: 72px; height: 92px; border-radius: 6px; overflow: hidden; border: 1.5px solid ${gold}; flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.35); background: #0C0E15;">
+                  <img src="${options.imageSrc}" alt="Target Palm Biometric" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
+                </div>
+              ` : ""}
+              <div>
+                <span class="brand-eyebrow">${isHi ? "वैदिक एआई · सामुद्रिक शास्त्र बायो-डॉसियर" : "VEDIC AI · SAMUDRIKA SHASTRA BIO-DOSSIER"}</span>
+                <h1 class="dossier-title">${isHi ? "हस्तरेखा बायोमेट्रिक ब्लूप्रिंट" : "Hastarekha Biometric Blueprint"}</h1>
+              </div>
             </div>
             <div class="meta-box">
-              <div><strong>SERIAL:</strong> ${escapeHtml(reportId)}</div>
-              <div><strong>DATE:</strong> ${escapeHtml(dateStr)}</div>
+              <div><strong>${isHi ? "क्रमांक:" : "SERIAL:"}</strong> ${escapeHtml(reportId)}</div>
+              <div><strong>${isHi ? "दिनांक:" : "DATE:"}</strong> ${escapeHtml(dateStr)}</div>
               <div><strong>AYANAMSHA:</strong> Lahiri 24°11'32"</div>
             </div>
           </div>
         </header>
 
         <div class="subject-ribbon">
-          <div><span>Target Palm</span><strong>${escapeHtml(handLabel)}</strong></div>
-          <div><span>Analytical Model</span><strong>Hastarekha Vision 2.0</strong></div>
-          <div><span>Biometric Status</span><strong>Verified Hastarekha Scan</strong></div>
-          <div><span>Archival Grade</span><strong>${options.format === "US_Letter" ? "US Letter" : "ISO 216 / A4"} · ${escapeHtml(options.paperWeight || "120gsm")}</strong></div>
+          <div><span>${isHi ? "लक्ष्य हथेली" : "Target Palm"}</span><strong>${escapeHtml(handLabel)}</strong></div>
+          <div><span>${isHi ? "विश्लेषण मॉडल" : "Analytical Model"}</span><strong>Hastarekha Vision 2.0</strong></div>
+          <div><span>${isHi ? "बायोमेट्रिक स्थिति" : "Biometric Status"}</span><strong>${isHi ? "सत्यापित हस्तरेखा स्कैन" : "Verified Hastarekha Scan"}</strong></div>
+          <div><span>${isHi ? "दस्तावेज़ ग्रेड" : "Archival Grade"}</span><strong>${options.format === "US_Letter" ? "US Letter" : "ISO 216 / A4"} · ${escapeHtml(options.paperWeight || "120gsm")}</strong></div>
         </div>
 
         <!-- Biometric Scan Plate + Mount Strengths -->

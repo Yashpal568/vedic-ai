@@ -24,8 +24,13 @@ export interface ParsedPalmReport {
   rawMarkdown: string;
 }
 
-export function parsePalmReading(markdown: string, hand: "left" | "right" | "unsure" = "unsure"): ParsedPalmReport {
+export function parsePalmReading(
+  markdown: string,
+  _hand: "left" | "right" | "unsure" = "unsure",
+  language: "en" | "hi" | "hinglish" = "en"
+): ParsedPalmReport {
   const text = markdown || "";
+  const isHi = language === "hi" || /[\u0900-\u097F]/.test(text);
   
   // Helper to extract text under a markdown heading
   function extractSection(patterns: RegExp[]): string {
@@ -99,7 +104,9 @@ export function parsePalmReading(markdown: string, hand: "left" | "right" | "uns
   ]);
 
   // Extract or synthesize 10-point personalised items from available content
-  const notVisible = "Not clearly distinguishable in this photo. The report will not infer this feature without a clear visual observation.";
+  const notVisible = isHi
+    ? "इस चित्र में यह रेखा या लक्षण स्पष्ट रूप से दृश्य नहीं है। बिना प्रत्यक्ष अवलोकन के इसका अनुमान नहीं लगाया जाएगा।"
+    : "Not clearly distinguishable in this photo. The report will not infer this feature without a clear visual observation.";
   const overallStructure = pOverview || notVisible;
 
   const heartLine = pHeart || notVisible;
@@ -141,7 +148,9 @@ export function parsePalmReading(markdown: string, hand: "left" | "right" | "uns
     mountOfJupiter = notVisible;
   }
 
-  const synthesis = pSynthesis || "A personalised synthesis cannot be produced because the vision response did not include enough image-grounded observations. Please analyse the photo again.";
+  const synthesis = pSynthesis || (isHi
+    ? "चित्र से पर्याप्त स्पष्ट अवलोकन प्राप्त न होने के कारण व्यक्तिगत निष्कर्ष तैयार नहीं किया जा सका। कृपया स्पष्ट फोटो के साथ पुनः प्रयास करें।"
+    : "A personalised synthesis cannot be produced because the vision response did not include enough image-grounded observations. Please analyse the photo again.");
 
   // Parse remedies dynamically from AI response if available
   const parsedRemedies: string[] = [];
@@ -154,38 +163,60 @@ export function parsePalmReading(markdown: string, hand: "left" | "right" | "uns
     }
   }
 
-  const isDevanagari = /[\u0900-\u097F]/.test(text);
-  const defaultRemedies = isDevanagari
+  const defaultRemedies = isHi
     ? ["व्यक्तिगत उपाय नहीं दिए गए: फोटो से पर्याप्त विशिष्ट संकेत प्राप्त नहीं हुए।", "पहले स्पष्ट फोटो के साथ रेखाओं और पर्वतों का पुनः विश्लेषण करें।", "किसी भी उपाय को निश्चित परिणाम या वैज्ञानिक सलाह न मानें।"]
     : ["No personalised remedy was generated because the image did not provide enough specific visual evidence.", "Retake the photo in even lighting and request a fresh analysis of the visible lines and mounts.", "Treat traditional practices as reflective guidance, not guaranteed outcomes or medical advice."];
 
   const remedies = parsedRemedies.length > 0 ? parsedRemedies : defaultRemedies;
 
   // Dynamically generate Layer 1 (Structural Hand Biometrics) from this specific person's hand data
-  const layer1Structure = [
-    `Hand architecture: ${overallStructure.slice(0, 115)}${overallStructure.length > 115 ? "..." : ""}`,
-    `Finger alignment: ${fingerProportions.slice(0, 115)}${fingerProportions.length > 115 ? "..." : ""}`,
-    `Thumb positioning: ${thumbCharacteristics.slice(0, 115)}${thumbCharacteristics.length > 115 ? "..." : ""}`,
-    `Mount of Jupiter (Guru): ${mountOfJupiter.slice(0, 110)}${mountOfJupiter.length > 110 ? "..." : ""}`,
-    `Mount of Venus (Shukra): ${mountOfVenus.slice(0, 110)}${mountOfVenus.length > 110 ? "..." : ""}`,
-  ];
+  const layer1Structure = isHi
+    ? [
+        `हथेली की संरचना: ${overallStructure.slice(0, 115)}${overallStructure.length > 115 ? "..." : ""}`,
+        `उंगलियों का अनुपात: ${fingerProportions.slice(0, 115)}${fingerProportions.length > 115 ? "..." : ""}`,
+        `अंगूठे की स्थिति: ${thumbCharacteristics.slice(0, 115)}${thumbCharacteristics.length > 115 ? "..." : ""}`,
+        `बृहस्पति पर्वत (गुरु): ${mountOfJupiter.slice(0, 110)}${mountOfJupiter.length > 110 ? "..." : ""}`,
+        `शुक्र पर्वत: ${mountOfVenus.slice(0, 110)}${mountOfVenus.length > 110 ? "..." : ""}`,
+      ]
+    : [
+        `Hand architecture: ${overallStructure.slice(0, 115)}${overallStructure.length > 115 ? "..." : ""}`,
+        `Finger alignment: ${fingerProportions.slice(0, 115)}${fingerProportions.length > 115 ? "..." : ""}`,
+        `Thumb positioning: ${thumbCharacteristics.slice(0, 115)}${thumbCharacteristics.length > 115 ? "..." : ""}`,
+        `Mount of Jupiter (Guru): ${mountOfJupiter.slice(0, 110)}${mountOfJupiter.length > 110 ? "..." : ""}`,
+        `Mount of Venus (Shukra): ${mountOfVenus.slice(0, 110)}${mountOfVenus.length > 110 ? "..." : ""}`,
+      ];
 
   // Dynamically generate Layer 2 (Primary Lines)
-  const layer2Lines = [
-    `Heart Line (Hridaya Rekha): ${heartLine.slice(0, 115)}${heartLine.length > 115 ? "..." : ""}`,
-    `Head Line (Mastaka Rekha): ${headLine.slice(0, 115)}${headLine.length > 115 ? "..." : ""}`,
-    `Life Line (Jeeva Rekha): ${lifeLine.slice(0, 115)}${lifeLine.length > 115 ? "..." : ""}`,
-    `Fate Line (Bhagya Rekha): ${fateLine.slice(0, 115)}${fateLine.length > 115 ? "..." : ""}`,
-  ];
+  const layer2Lines = isHi
+    ? [
+        `हृदय रेखा (Hridaya Rekha): ${heartLine.slice(0, 115)}${heartLine.length > 115 ? "..." : ""}`,
+        `मस्तिष्क रेखा (Mastaka Rekha): ${headLine.slice(0, 115)}${headLine.length > 115 ? "..." : ""}`,
+        `जीवन रेखा (Jeeva Rekha): ${lifeLine.slice(0, 115)}${lifeLine.length > 115 ? "..." : ""}`,
+        `भाग्य रेखा (Bhagya Rekha): ${fateLine.slice(0, 115)}${fateLine.length > 115 ? "..." : ""}`,
+      ]
+    : [
+        `Heart Line (Hridaya Rekha): ${heartLine.slice(0, 115)}${heartLine.length > 115 ? "..." : ""}`,
+        `Head Line (Mastaka Rekha): ${headLine.slice(0, 115)}${headLine.length > 115 ? "..." : ""}`,
+        `Life Line (Jeeva Rekha): ${lifeLine.slice(0, 115)}${lifeLine.length > 115 ? "..." : ""}`,
+        `Fate Line (Bhagya Rekha): ${fateLine.slice(0, 115)}${fateLine.length > 115 ? "..." : ""}`,
+      ];
 
   // Dynamically generate Layer 3 (Jyotish Interpretation)
-  const layer3Interpretation = [
-    `Emotional Expression: ${heartLine.slice(0, 120)}${heartLine.length > 120 ? "..." : ""}`,
-    `Intellectual Approach: ${headLine.slice(0, 120)}${headLine.length > 120 ? "..." : ""}`,
-    `Vital Energy & Routine: ${lifeLine.slice(0, 120)}${lifeLine.length > 120 ? "..." : ""}`,
-    `Vocational Trajectory: ${fateLine.slice(0, 120)}${fateLine.length > 120 ? "..." : ""}`,
-    `Integrative Synthesis: ${synthesis.slice(0, 125)}${synthesis.length > 125 ? "..." : ""}`,
-  ];
+  const layer3Interpretation = isHi
+    ? [
+        `भावनात्मक अभिव्यक्ति: ${heartLine.slice(0, 120)}${heartLine.length > 120 ? "..." : ""}`,
+        `बौद्धिक दृष्टिकोण: ${headLine.slice(0, 120)}${headLine.length > 120 ? "..." : ""}`,
+        `प्राणशक्ति व दिनचर्या: ${lifeLine.slice(0, 120)}${lifeLine.length > 120 ? "..." : ""}`,
+        `करियर व कर्म पथ: ${fateLine.slice(0, 120)}${fateLine.length > 120 ? "..." : ""}`,
+        `समग्र वैदिक निष्कर्ष: ${synthesis.slice(0, 125)}${synthesis.length > 125 ? "..." : ""}`,
+      ]
+    : [
+        `Emotional Expression: ${heartLine.slice(0, 120)}${heartLine.length > 120 ? "..." : ""}`,
+        `Intellectual Approach: ${headLine.slice(0, 120)}${headLine.length > 120 ? "..." : ""}`,
+        `Vital Energy & Routine: ${lifeLine.slice(0, 120)}${lifeLine.length > 120 ? "..." : ""}`,
+        `Vocational Trajectory: ${fateLine.slice(0, 120)}${fateLine.length > 120 ? "..." : ""}`,
+        `Integrative Synthesis: ${synthesis.slice(0, 125)}${synthesis.length > 125 ? "..." : ""}`,
+      ];
 
   return {
     overallStructure,
@@ -202,7 +233,9 @@ export function parsePalmReading(markdown: string, hand: "left" | "right" | "uns
     layer2Lines,
     layer3Interpretation,
     remedies,
-    disclaimer: pLimitations || "These traditional Hastarekha interpretations are designed for symbolic reflection, not scientific certainty. Conscious actions and deliberate choices always steer life.",
+    disclaimer: pLimitations || (isHi
+      ? "ये पारंपरिक हस्तरेखा व्याख्याएं आत्म-चिंतन के लिए हैं, निश्चित वैज्ञानिक भविष्यवाणी नहीं। आपके सजग विचार और सत्कर्म ही जीवन को दिशा देते हैं।"
+      : "These traditional Hastarekha interpretations are designed for symbolic reflection, not scientific certainty. Conscious actions and deliberate choices always steer life."),
     rawMarkdown: text,
   };
 }

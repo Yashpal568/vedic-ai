@@ -129,7 +129,7 @@ export class ElevenLabsTTSProvider implements TTSProvider {
     const voiceId =
       options.voiceId?.trim() ||
       process.env.ELEVENLABS_VOICE_ID?.trim() ||
-      "21m00Tcm4TlvDq8ikWAM"; // Default natural multilingual voice
+      "21m00Tcm4TlvDq8ikWAM"; // Default natural multilingual voice (Aditi / Rachel)
 
     const cacheKey = generateCacheKey(options.text, "elevenlabs", voiceId, options.speed);
     const cached = getFromCache(cacheKey);
@@ -143,10 +143,10 @@ export class ElevenLabsTTSProvider implements TTSProvider {
       };
     }
 
-    // eleven_multilingual_v2 handles Hindi, English, and Hinglish with high naturalness
-    const modelId = process.env.ELEVENLABS_MODEL_ID?.trim() || "eleven_multilingual_v2";
+    // eleven_flash_v2_5 delivers ultra-low latency (< 1s) with full Hindi and English support
+    const modelId = process.env.ELEVENLABS_MODEL_ID?.trim() || "eleven_flash_v2_5";
 
-    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?optimize_streaming_latency=3`, {
       method: "POST",
       headers: {
         "xi-api-key": key,
@@ -163,7 +163,7 @@ export class ElevenLabsTTSProvider implements TTSProvider {
           use_speaker_boost: true,
         },
       }),
-      signal: AbortSignal.timeout(22_000),
+      signal: AbortSignal.timeout(18_000),
     });
 
     if (!response.ok) {

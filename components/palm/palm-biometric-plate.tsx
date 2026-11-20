@@ -11,6 +11,7 @@ interface PalmBiometricPlateProps {
   features?: PalmAnalysisFeatures;
   highlightedFeature?: string | null;
   className?: string;
+  language?: "en" | "hi" | "hinglish";
 }
 
 export default function PalmBiometricPlate({
@@ -19,19 +20,26 @@ export default function PalmBiometricPlate({
   onRetake,
   highlightedFeature = null,
   className = "",
+  language = "en",
 }: PalmBiometricPlateProps) {
   const [imageAspectRatio, setImageAspectRatio] = useState(0.75);
+  const isHi = language === "hi";
 
   const normalizedHighlight = highlightedFeature
     ? highlightedFeature.replace("Line", "").replace("mountOf", "").toLowerCase()
     : null;
 
-  const handLabel =
-    hand === "left"
-      ? "Left Hand (Passive Hastarekha)"
+  const handLabel = isHi
+    ? hand === "left"
+      ? "बायां हाथ (अव्यक्त हस्तरेखा)"
       : hand === "right"
-      ? "Right Hand (Active Hastarekha)"
-      : "Open Palm (Hastarekha)";
+      ? "दायां हाथ (सक्रिय हस्तरेखा)"
+      : "हथेली (हस्तरेखा)"
+    : hand === "left"
+    ? "Left Hand (Passive Hastarekha)"
+    : hand === "right"
+    ? "Right Hand (Active Hastarekha)"
+    : "Open Palm (Hastarekha)";
 
   const scrollToExplanation = (sectionId?: string) => {
     if (sectionId) {
@@ -51,48 +59,48 @@ export default function PalmBiometricPlate({
     {
       id: "heart",
       sectionKey: "heartLine",
-      name: "Heart Line",
+      name: isHi ? "हृदय रेखा" : "Heart Line",
       sanskrit: "Hridaya Rekha",
-      focus: "Emotions, relationships, devotion & harmony",
+      focus: isHi ? "भावनाएं, संबंध, समर्पण व सौहार्द" : "Emotions, relationships, devotion & harmony",
       color: "#FBBF24",
       icon: Heart,
     },
     {
       id: "head",
       sectionKey: "headLine",
-      name: "Head Line",
+      name: isHi ? "मस्तिष्क रेखा" : "Head Line",
       sanskrit: "Mastaka Rekha",
-      focus: "Intellect, focus, wisdom & decisions",
+      focus: isHi ? "बुद्धि, एकाग्रता, विवेक व निर्णय-क्षमता" : "Intellect, focus, wisdom & decisions",
       color: "#34D399",
       icon: Brain,
     },
     {
       id: "life",
       sectionKey: "lifeLine",
-      name: "Life Line",
+      name: isHi ? "जीवन रेखा" : "Life Line",
       sanskrit: "Jeeva Rekha",
-      focus: "Vitality, stamina, physical resilience & energy",
+      focus: isHi ? "प्राणशक्ति, शारीरिक सहनशीलता व जीवन-ऊर्जा" : "Vitality, stamina, physical resilience & energy",
       color: "#F59E0B",
       icon: Flame,
     },
     {
       id: "fate",
       sectionKey: "fateLine",
-      name: "Fate Line",
+      name: isHi ? "भाग्य रेखा" : "Fate Line",
       sanskrit: "Bhagya Rekha",
-      focus: "Dharma, career milestones & opportunities",
+      focus: isHi ? "धर्म, करियर प्रगति व अवसर" : "Dharma, career milestones & opportunities",
       color: "#A78BFA",
       icon: Compass,
     },
   ];
 
   const planetaryMounts = [
-    { name: "Jupiter (Guru)", parvat: "Brihaspati", meaning: "Wisdom & leadership" },
-    { name: "Saturn (Shani)", parvat: "Shani", meaning: "Discipline & karma" },
-    { name: "Sun (Surya)", parvat: "Surya", meaning: "Creativity & honour" },
-    { name: "Mercury (Budha)", parvat: "Budha", meaning: "Communication & commerce" },
-    { name: "Venus (Shukra)", parvat: "Shukra", meaning: "Vitality & aesthetics" },
-    { name: "Moon (Chandra)", parvat: "Chandra", meaning: "Intuition & travel" },
+    { name: isHi ? "बृहस्पति (गुरु)" : "Jupiter (Guru)", parvat: "Brihaspati", meaning: isHi ? "ज्ञान व नेतृत्व" : "Wisdom & leadership" },
+    { name: isHi ? "शनि पर्वत" : "Saturn (Shani)", parvat: "Shani", meaning: isHi ? "अनुशासन व कर्म" : "Discipline & karma" },
+    { name: isHi ? "सूर्य पर्वत" : "Sun (Surya)", parvat: "Surya", meaning: isHi ? "रचनात्मकता व सम्मान" : "Creativity & honour" },
+    { name: isHi ? "बुध पर्वत" : "Mercury (Budha)", parvat: "Budha", meaning: isHi ? "संवाद व व्यापार" : "Communication & commerce" },
+    { name: isHi ? "शुक्र पर्वत" : "Venus (Shukra)", parvat: "Shukra", meaning: isHi ? "जीवन-ऊर्जा व सौंदर्य" : "Vitality & aesthetics" },
+    { name: isHi ? "चंद्र पर्वत" : "Moon (Chandra)", parvat: "Chandra", meaning: isHi ? "अंतर्ज्ञान व शांति" : "Intuition & travel" },
   ];
 
   return (
@@ -100,10 +108,10 @@ export default function PalmBiometricPlate({
       {/* Title */}
       <div className="text-center mb-3">
         <h2 className="text-[18px] sm:text-[20px] font-bold tracking-[0.18em] uppercase text-[var(--gold)] font-serif-luxury">
-          YOUR PALMISTRY PROFILE
+          {isHi ? "आपकी हस्तरेखा प्रोफ़ाइल" : "YOUR PALMISTRY PROFILE"}
         </h2>
         <p className="text-[13px] text-[var(--muted)] font-normal mt-0.5 tracking-wide">
-          Traditional Hastarekha Astrological Analysis
+          {isHi ? "पारंपरिक हस्तरेखा ज्योतिषीय विश्लेषण" : "Traditional Hastarekha Astrological Analysis"}
         </p>
       </div>
 
@@ -112,16 +120,16 @@ export default function PalmBiometricPlate({
         <span className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-[var(--green)] animate-pulse" />
           <span className="font-semibold text-[var(--text)]">
-            Verified Hastarekha Scan
+            {isHi ? "सत्यापित हस्तरेखा स्कैन" : "Verified Hastarekha Scan"}
           </span>
           <span className="text-[10px] text-[var(--quiet)] hidden sm:inline">
-            · Pure Photographic Biometrics
+            {isHi ? "· वास्तविक फोटोग्राफिक बायोमेट्रिक्स" : "· Pure Photographic Biometrics"}
           </span>
         </span>
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wider text-[var(--gold)] bg-[var(--panel)] border border-[var(--gold)]/30 uppercase">
             <Sparkles size={11} className="text-[var(--gold)]" />
-            AI Biometrics
+            {isHi ? "एआई बायोमेट्रिक्स" : "AI Biometrics"}
           </span>
         </div>
       </div>
@@ -129,44 +137,29 @@ export default function PalmBiometricPlate({
       <div className="relative w-full rounded-2xl border border-[var(--gold)]/30 bg-[#FAF7F0] dark:bg-[#191B23] overflow-hidden shadow-xl p-2 sm:p-3 flex flex-col items-center justify-center transition-all">
         {/* Palm presentation container: Clean photograph without visual line strokes or dots */}
         <div
-          className="relative w-full rounded-xl overflow-hidden bg-[#FAF6EE] dark:bg-[#13151D] flex items-center justify-center border border-[var(--gold)]/20 shadow-inner group"
+          className="relative w-full rounded-xl overflow-hidden bg-black/60 border border-[var(--line2)] shadow-inner flex items-center justify-center max-h-[480px]"
           style={{ aspectRatio: imageAspectRatio }}
         >
-          {/* Subtle studio backdrop lighting */}
-          <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.45)_0%,rgba(240,233,219,0.75)_100%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(28,30,42,0.55)_0%,rgba(14,16,23,0.92)_100%)]" />
+          {imageSrc ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              src={imageSrc}
+              alt={isHi ? "विश्लेषित हस्त चित्र" : "Analyzed palm photo"}
+              className="w-full h-full object-contain select-none"
+              onLoad={(e) => {
+                const img = e.currentTarget;
+                if (img.naturalWidth && img.naturalHeight) {
+                  setImageAspectRatio(img.naturalWidth / img.naturalHeight);
+                }
+              }}
+            />
+          ) : (
+            <div className="p-8 text-center text-xs text-[var(--muted)]">
+              {isHi ? "कोई हस्त चित्र लोड नहीं हुआ" : "No palm photo loaded"}
+            </div>
+          )}
 
-          {/* Celestial compass watermark rings behind palm */}
-          <svg
-            className="absolute inset-0 w-full h-full pointer-events-none text-[var(--gold)]/20 dark:text-[var(--gold)]/15 z-0"
-            viewBox="0 0 1000 1000"
-            preserveAspectRatio="none"
-          >
-            <circle cx="500" cy="500" r="420" fill="none" stroke="currentColor" strokeWidth="1" strokeDasharray="5 6" />
-            <circle cx="500" cy="500" r="320" fill="none" stroke="currentColor" strokeWidth="0.8" />
-            <circle cx="500" cy="500" r="220" fill="none" stroke="currentColor" strokeWidth="0.6" strokeDasharray="3 4" />
-            <line x1="80" y1="500" x2="920" y2="500" stroke="currentColor" strokeWidth="0.6" strokeDasharray="3 5" />
-            <line x1="500" y1="80" x2="500" y2="920" stroke="currentColor" strokeWidth="0.6" strokeDasharray="3 5" />
-          </svg>
-
-          {/* User's Actual Palm Photograph - Clean and pristine without artificial line overlays */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={imageSrc || "/realistic-palm.jpg"}
-            alt="User's Analysed Palm Photo"
-            onLoad={(event) => {
-              const { naturalWidth, naturalHeight } = event.currentTarget;
-              if (naturalWidth > 0 && naturalHeight > 0) {
-                setImageAspectRatio(naturalWidth / naturalHeight);
-              }
-            }}
-            onError={(e) => {
-              e.currentTarget.onerror = null;
-              e.currentTarget.src = "/realistic-palm.jpg";
-            }}
-            className="w-full h-full object-contain object-center filter contrast-[1.04] brightness-[1.02] transition-all duration-300 relative z-0"
-          />
-
-          {/* Hand label badge (Bottom Left) */}
+          {/* Bottom Left Hand Indicator Pill */}
           <div className="absolute left-3 bottom-3 z-20 pointer-events-none">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#11131A]/90 backdrop-blur-md text-[#FFE192] text-[10px] sm:text-[11px] font-medium rounded-full border border-[#E5C46B]/40 shadow-md">
               <span className="w-1.5 h-1.5 rounded-full bg-[#E5C46B]" />
@@ -180,11 +173,11 @@ export default function PalmBiometricPlate({
               type="button"
               onClick={onRetake}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--panel)]/90 backdrop-blur-md text-[var(--gold)] hover:text-white border border-[var(--gold)]/30 hover:border-[var(--gold)] text-xs font-semibold shadow-md transition-all active:scale-95 cursor-pointer"
-              aria-label="Upload or take another palm photo"
-              title="Upload or take another photo"
+              aria-label={isHi ? "पुनः हस्त चित्र लें" : "Upload or take another palm photo"}
+              title={isHi ? "पुनः हस्त चित्र लें" : "Upload or take another photo"}
             >
               <RefreshCw size={12} />
-              <span>Retake</span>
+              <span>{isHi ? "पुनः फोटो लें" : "Retake"}</span>
             </button>
           </div>
         </div>
@@ -194,18 +187,20 @@ export default function PalmBiometricPlate({
           <div className="flex items-center justify-between mb-2">
             <span className="text-[11px] uppercase font-bold tracking-wider text-[var(--gold)] flex items-center gap-1.5">
               <Sparkles size={13} className="text-[var(--gold)]" />
-              Hastarekha Analysis & Explanation
+              {isHi ? "हस्तरेखा विश्लेषण एवं व्याख्या" : "Hastarekha Analysis & Explanation"}
             </span>
             <span className="text-[10px] text-[var(--muted)]">
-              Click any section to read interpretation
+              {isHi ? "व्याख्या पढ़ने हेतु क्लिक करें" : "Click any section to read interpretation"}
             </span>
           </div>
 
           <p className="text-[12px] text-[var(--muted)] leading-relaxed mb-3">
-            In traditional Vedic Samudrika Shastra, your palm lines and mounts reveal personal karma, innate temperament, and vitality. Rather than drawing synthetic lines over your photo, Vedic AI provides an in-depth written and spoken astrological explanation below.
+            {isHi
+              ? "पारंपरिक वैदिक सामुद्रिक शास्त्र में आपकी हस्तरेखाएं और पर्वत व्यक्तिगत कर्म, स्वाभाविक स्वभाव और जीवन-ऊर्जा को प्रकट करते हैं। कृत्रिम रेखाएं खींचने के बजाय वैदिक एआई नीचे विस्तृत लिखित व मौखिक ज्योतिषीय व्याख्या प्रस्तुत करता है।"
+              : "In traditional Vedic Samudrika Shastra, your palm lines and mounts reveal personal karma, innate temperament, and vitality. Rather than drawing synthetic lines over your photo, Vedic AI provides an in-depth written and spoken astrological explanation below."}
           </p>
 
-          {/* Key Hastarekha Creases Overview Cards (Retains Heart Line, Head Line, Life Line tokens) */}
+          {/* Key Hastarekha Creases Overview Cards */}
           <div className="grid grid-cols-2 gap-2">
             {keyHastarekhaAreas.map((item) => {
               const isSpoken = normalizedHighlight === item.id;
@@ -219,7 +214,7 @@ export default function PalmBiometricPlate({
                       ? "bg-[var(--wash)] border-[var(--gold)] ring-1 ring-[var(--gold)]/40 shadow-xs scale-[1.01]"
                       : "bg-[var(--raised)] border-[var(--line)] hover:border-[var(--gold)]/60 hover:bg-[var(--wash)]/50"
                   }`}
-                  title={`Click to read complete ${item.name} analysis`}
+                  title={isHi ? `सम्पूर्ण ${item.name} विश्लेषण पढ़ें` : `Click to read complete ${item.name} analysis`}
                 >
                   <div className="flex items-center justify-between w-full mb-1">
                     <span className="flex items-center gap-1.5 text-xs font-semibold text-[var(--text)] group-hover/card:text-[var(--gold)] transition-colors">
@@ -230,7 +225,7 @@ export default function PalmBiometricPlate({
                       <span>{item.name}</span>
                     </span>
                     <span className="text-[9px] text-[var(--gold)] opacity-0 group-hover/card:opacity-100 transition-opacity">
-                      Read ↓
+                      {isHi ? "पढ़ें ↓" : "Read ↓"}
                     </span>
                   </div>
                   <span className="text-[10px] text-[var(--gold)] font-medium">
@@ -247,8 +242,10 @@ export default function PalmBiometricPlate({
           {/* Planetary Mounts Quick Guide */}
           <div className="mt-3 pt-2.5 border-t border-[var(--line)]/60">
             <div className="text-[10px] uppercase tracking-wider text-[var(--quiet)] font-semibold mb-1.5 flex items-center justify-between">
-              <span>Planetary Mounts Interpreted in Reading:</span>
-              <span className="text-[9px] text-[var(--gold)] lowercase">Brihaspati, Shani, Surya, Budha, Shukra, Chandra</span>
+              <span>{isHi ? "विश्लेषण में शामिल प्रमुख ग्रह पर्वत:" : "Planetary Mounts Interpreted in Reading:"}</span>
+              <span className="text-[9px] text-[var(--gold)] lowercase">
+                {isHi ? "बृहस्पति, शनि, सूर्य, बुध, शुक्र, चंद्र" : "Brihaspati, Shani, Surya, Budha, Shukra, Chandra"}
+              </span>
             </div>
             <div className="flex flex-wrap gap-1.5">
               {planetaryMounts.map((mount, idx) => (
@@ -272,7 +269,7 @@ export default function PalmBiometricPlate({
               className="w-full py-2 px-3 rounded-xl bg-[var(--gold)]/10 hover:bg-[var(--gold)]/20 border border-[var(--gold)]/40 hover:border-[var(--gold)] text-[var(--gold)] text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 shadow-xs"
             >
               <BookOpen size={13} />
-              <span>Read Complete 10-Point Astrological Explanation</span>
+              <span>{isHi ? "सम्पूर्ण 10-सूत्रीय हस्तरेखा विश्लेषण पढ़ें" : "Read Complete 10-Point Astrological Explanation"}</span>
               <ChevronDown size={14} className="animate-bounce" />
             </button>
           </div>
