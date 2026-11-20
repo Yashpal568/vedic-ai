@@ -39,63 +39,63 @@ export function parsePalmReading(markdown: string, hand: "left" | "right" | "uns
   }
 
   const pOverview = extractSection([
-    /(?:#{1,4}|\*\*)\s*(?:1\.)?\s*(?:हथेली|हाथ|Palm Overview|Overview|Hand Structure|Photo Observations)[^\n]*\n([\s\S]*?)(?=\n(?:#{1,4}|\*\*|\d+\.)|\n---|$)/i,
+    /(?:#{1,4}|\*\*)\s*(?:1\.)?\s*(?:हथेली|हाथ|Palm Overview|Overview|Hand Structure|Photo Observations)[^\n]*\n([\s\S]*?)(?=\n#{1,4}|\n\*\*\s*\d+\.|\n\d+\.\s+(?:[A-Z\u0900-\u097F][A-Za-z\u0900-\u097F\s]{2,}:|##)|\n---|$)/i,
     /##\s*(?:हथेली|Palm Overview)[^\n]*\n([\s\S]*?)(?=\n##|\n---|$)/i,
-    /1\.\s*(?:हथेली|Palm Overview)[^\n]*\n([\s\S]*?)(?=\n\d+\.|\n---|$)/i,
+    /1\.\s*(?:हथेली|Palm Overview)[^\n]*\n([\s\S]*?)(?=\n\d+\.\s+[A-Za-z\u0900-\u097F]|\n---|$)/i,
   ]);
 
   const pHeart = extractSection([
-    /(?:#{1,4}|\*\*)\s*(?:2\.)?\s*(?:हृदय रेखा|Heart Line|Heart|Hrdaya)[^\n]*\n([\s\S]*?)(?=\n(?:#{1,4}|\*\*|\d+\.)|\n---|$)/i,
+    /(?:#{1,4}|\*\*)\s*(?:2\.)?\s*(?:हृदय रेखा|Heart Line|Heart|Hrdaya)[^\n]*\n([\s\S]*?)(?=\n#{1,4}|\n\*\*\s*\d+\.|\n\d+\.\s+(?:[A-Z\u0900-\u097F][A-Za-z\u0900-\u097F\s]{2,}:|##)|\n---|$)/i,
     /##\s*(?:हृदय रेखा|Heart Line)[^\n]*\n([\s\S]*?)(?=\n##|\n---|$)/i,
-    /2\.\s*(?:हृदय रेखा|Heart Line)[^\n]*\n([\s\S]*?)(?=\n\d+\.|\n---|$)/i,
+    /2\.\s*(?:हृदय रेखा|Heart Line)[^\n]*\n([\s\S]*?)(?=\n\d+\.\s+[A-Za-z\u0900-\u097F]|\n---|$)/i,
   ]);
 
   const pHead = extractSection([
-    /(?:#{1,4}|\*\*)\s*(?:3\.)?\s*(?:मस्तिष्क रेखा|Head Line|Head|Mastaka)[^\n]*\n([\s\S]*?)(?=\n(?:#{1,4}|\*\*|\d+\.)|\n---|$)/i,
+    /(?:#{1,4}|\*\*)\s*(?:3\.)?\s*(?:मस्तिष्क रेखा|Head Line|Head|Mastaka)[^\n]*\n([\s\S]*?)(?=\n#{1,4}|\n\*\*\s*\d+\.|\n\d+\.\s+(?:[A-Z\u0900-\u097F][A-Za-z\u0900-\u097F\s]{2,}:|##)|\n---|$)/i,
     /##\s*(?:मस्तिष्क रेखा|Head Line)[^\n]*\n([\s\S]*?)(?=\n##|\n---|$)/i,
-    /3\.\s*(?:मस्तिष्क रेखा|Head Line)[^\n]*\n([\s\S]*?)(?=\n\d+\.|\n---|$)/i,
+    /3\.\s*(?:मस्तिष्क रेखा|Head Line)[^\n]*\n([\s\S]*?)(?=\n\d+\.\s+[A-Za-z\u0900-\u097F]|\n---|$)/i,
   ]);
 
   const pLife = extractSection([
-    /(?:#{1,4}|\*\*)\s*(?:4\.)?\s*(?:जीवन रेखा|Life Line|Life|Jeeva)[^\n]*\n([\s\S]*?)(?=\n(?:#{1,4}|\*\*|\d+\.)|\n---|$)/i,
+    /(?:#{1,4}|\*\*)\s*(?:4\.)?\s*(?:जीवन रेखा|Life Line|Life|Jeeva)[^\n]*\n([\s\S]*?)(?=\n#{1,4}|\n\*\*\s*\d+\.|\n\d+\.\s+(?:[A-Z\u0900-\u097F][A-Za-z\u0900-\u097F\s]{2,}:|##)|\n---|$)/i,
     /##\s*(?:जीवन रेखा|Life Line)[^\n]*\n([\s\S]*?)(?=\n##|\n---|$)/i,
-    /4\.\s*(?:जीवन रेखा|Life Line)[^\n]*\n([\s\S]*?)(?=\n\d+\.|\n---|$)/i,
+    /4\.\s*(?:जीवन रेखा|Life Line)[^\n]*\n([\s\S]*?)(?=\n\d+\.\s+[A-Za-z\u0900-\u097F]|\n---|$)/i,
   ]);
 
   const pThumbFingers = extractSection([
-    /(?:#{1,4}|\*\*)\s*(?:5\.)?\s*(?:अंगूठा|उंगलियां|Thumb & Finger|Thumb|Finger Characteristics|Fingers)[^\n]*\n([\s\S]*?)(?=\n(?:#{1,4}|\*\*|\d+\.)|\n---|$)/i,
+    /(?:#{1,4}|\*\*)\s*(?:5\.)?\s*(?:अंगूठा|उंगलियां|Thumb & Finger|Thumb|Finger Characteristics|Fingers)[^\n]*\n([\s\S]*?)(?=\n#{1,4}|\n\*\*\s*\d+\.|\n\d+\.\s+(?:[A-Z\u0900-\u097F][A-Za-z\u0900-\u097F\s]{2,}:|##)|\n---|$)/i,
     /##\s*(?:अंगूठा|Thumb)[^\n]*\n([\s\S]*?)(?=\n##|\n---|$)/i,
-    /5\.\s*(?:अंगूठा|Thumb)[^\n]*\n([\s\S]*?)(?=\n\d+\.|\n---|$)/i,
+    /5\.\s*(?:अंगूठा|Thumb)[^\n]*\n([\s\S]*?)(?=\n\d+\.\s+[A-Za-z\u0900-\u097F]|\n---|$)/i,
   ]);
 
   const pMounts = extractSection([
-    /(?:#{1,4}|\*\*)\s*(?:6\.)?\s*(?:ग्रह पर्वत|पर्वत|Planetary Mount|Mount Elevations|Mounts)[^\n]*\n([\s\S]*?)(?=\n(?:#{1,4}|\*\*|\d+\.)|\n---|$)/i,
+    /(?:#{1,4}|\*\*)\s*(?:6\.)?\s*(?:ग्रह पर्वत|पर्वत|Planetary Mount|Mount Elevations|Mounts)[^\n]*\n([\s\S]*?)(?=\n#{1,4}|\n\*\*\s*\d+\.|\n\d+\.\s+(?:[A-Z\u0900-\u097F][A-Za-z\u0900-\u097F\s]{2,}:|##)|\n---|$)/i,
     /##\s*(?:ग्रह पर्वत|Planetary Mounts)[^\n]*\n([\s\S]*?)(?=\n##|\n---|$)/i,
-    /6\.\s*(?:ग्रह पर्वत|Planetary Mounts)[^\n]*\n([\s\S]*?)(?=\n\d+\.|\n---|$)/i,
+    /6\.\s*(?:ग्रह पर्वत|Planetary Mounts)[^\n]*\n([\s\S]*?)(?=\n\d+\.\s+[A-Za-z\u0900-\u097F]|\n---|$)/i,
   ]);
 
   const pFate = extractSection([
-    /(?:#{1,4}|\*\*)\s*(?:7|5)\.?\s*(?:भाग्य रेखा|Fate Line|Fate|Bhagya|Distinct Markings)[^\n]*\n([\s\S]*?)(?=\n(?:#{1,4}|\*\*|\d+\.)|\n---|$)/i,
+    /(?:#{1,4}|\*\*)\s*(?:7|5)\.?\s*(?:भाग्य रेखा|Fate Line|Fate|Bhagya|Distinct Markings)[^\n]*\n([\s\S]*?)(?=\n#{1,4}|\n\*\*\s*\d+\.|\n\d+\.\s+(?:[A-Z\u0900-\u097F][A-Za-z\u0900-\u097F\s]{2,}:|##)|\n---|$)/i,
     /##\s*(?:भाग्य रेखा|Fate Line)[^\n]*\n([\s\S]*?)(?=\n##|\n---|$)/i,
-    /7\.\s*(?:भाग्य रेखा|Fate Line)[^\n]*\n([\s\S]*?)(?=\n\d+\.|\n---|$)/i,
+    /7\.\s*(?:भाग्य रेखा|Fate Line)[^\n]*\n([\s\S]*?)(?=\n\d+\.\s+[A-Za-z\u0900-\u097F]|\n---|$)/i,
   ]);
 
   const pSynthesis = extractSection([
-    /(?:#{1,4}|\*\*)\s*(?:8|6)\.?\s*(?:निष्कर्ष|Overall Traditional Reading|Traditional Reading|Synthesis)[^\n]*\n([\s\S]*?)(?=\n(?:#{1,4}|\*\*|\d+\.)|\n---|$)/i,
+    /(?:#{1,4}|\*\*)\s*(?:8|6)\.?\s*(?:निष्कर्ष|Overall Traditional Reading|Traditional Reading|Synthesis)[^\n]*\n([\s\S]*?)(?=\n#{1,4}|\n\*\*\s*\d+\.|\n\d+\.\s+(?:[A-Z\u0900-\u097F][A-Za-z\u0900-\u097F\s]{2,}:|##)|\n---|$)/i,
     /##\s*(?:निष्कर्ष|Overall Traditional Reading)[^\n]*\n([\s\S]*?)(?=\n##|\n---|$)/i,
-    /8\.\s*(?:निष्कर्ष|Overall Traditional Reading)[^\n]*\n([\s\S]*?)(?=\n\d+\.|\n---|$)/i,
+    /8\.\s*(?:निष्कर्ष|Overall Traditional Reading)[^\n]*\n([\s\S]*?)(?=\n\d+\.\s+[A-Za-z\u0900-\u097F]|\n---|$)/i,
   ]);
 
   const pRemedies = extractSection([
-    /(?:#{1,4}|\*\*)\s*(?:\d+\.)?\s*(?:वैदिक उपाय|उपाय|Karmic Harmonization|Upaya|Remedies|Prescribed)[^\n]*\n([\s\S]*?)(?=\n(?:#{1,4}|\*\*|\d+\.)|\n---|$)/i,
+    /(?:#{1,4}|\*\*)\s*(?:9\.)?\s*(?:वैदिक उपाय|उपाय|Karmic Harmonization|Upaya|Remedies|Prescribed)[^\n]*\n([\s\S]*?)(?=\n#{1,4}|\n---|$)/i,
     /##\s*(?:वैदिक उपाय|उपाय|Remedies)[^\n]*\n([\s\S]*?)(?=\n##|\n---|$)/i,
-    /(?:\d+\.)\s*(?:वैदिक उपाय|उपाय|Remedies)[^\n]*\n([\s\S]*?)(?=\n\d+\.|\n---|$)/i,
+    /(?:\d+\.)\s*(?:वैदिक उपाय|उपाय|Remedies)[^\n]*\n([\s\S]*?)(?=\n#{1,4}|\n---|$)/i,
   ]);
 
   const pLimitations = extractSection([
-    /(?:#{1,4}|\*\*)\s*(?:10|8|7)\.?\s*(?:मार्गदर्शन|Limitations|Guidance|Ethical)[^\n]*\n([\s\S]*?)(?=\n(?:#{1,4}|\*\*|\d+\.)|\n---|$)/i,
+    /(?:#{1,4}|\*\*)\s*(?:10|8|7)\.?\s*(?:मार्गदर्शन|Limitations|Guidance|Ethical)[^\n]*\n([\s\S]*?)(?=\n#{1,4}|\n---|$)/i,
     /##\s*(?:मार्गदर्शन|Limitations)[^\n]*\n([\s\S]*?)(?=\n##|\n---|$)/i,
-    /10\.\s*(?:मार्गदर्शन|Limitations)[^\n]*\n([\s\S]*?)(?=\n\d+\.|\n---|$)/i,
+    /10\.\s*(?:मार्गदर्शन|Limitations)[^\n]*\n([\s\S]*?)(?=\n---|$)/i,
   ]);
 
   // Extract or synthesize 10-point personalised items from available content
@@ -112,8 +112,8 @@ export function parsePalmReading(markdown: string, hand: "left" | "right" | "uns
   let fingerProportions = "";
   if (pThumbFingers) {
     const lines = pThumbFingers.split(/\n+/).map(l => l.trim()).filter(Boolean);
-    const thumbLine = lines.find(l => /thumb/i.test(l));
-    const fingerLine = lines.find(l => /finger|apollo|jupiter|phalange|knuckle/i.test(l));
+    const thumbLine = lines.find(l => /thumb|अंगूठा/i.test(l));
+    const fingerLine = lines.find(l => /finger|apollo|jupiter|phalange|knuckle|उंगली|उंगलियां|तर्जनी|अनामिका|मध्यमा/i.test(l));
     thumbCharacteristics = thumbLine || pThumbFingers;
     fingerProportions = fingerLine || (thumbLine && lines.length > 1 ? lines.filter(l => l !== thumbLine).join(" ") : pThumbFingers);
   }
@@ -129,8 +129,8 @@ export function parsePalmReading(markdown: string, hand: "left" | "right" | "uns
   let mountOfJupiter = "";
   if (pMounts) {
     const mountLines = pMounts.split(/\n+/).map(l => l.trim()).filter(Boolean);
-    const venusMatch = mountLines.find(l => /venus|shukra/i.test(l));
-    const jupiterMatch = mountLines.find(l => /jupiter|guru/i.test(l));
+    const venusMatch = mountLines.find(l => /venus|shukra|शुक्र/i.test(l));
+    const jupiterMatch = mountLines.find(l => /jupiter|guru|बृहस्पति|गुरू/i.test(l));
     if (venusMatch) mountOfVenus = venusMatch;
     if (jupiterMatch) mountOfJupiter = jupiterMatch;
   }

@@ -43,4 +43,32 @@ describe("Palm vision evidence validation", () => {
     expect(result.distinctiveFeatures).toHaveLength(0);
     expect(result.hasTraceableLine).toBe(false);
   });
+
+  it("validates realistic observations including thumb angles and Hindi language features", () => {
+    const mixedFeatures = [
+      "Thumb shows a well-balanced opening angle of approximately 55 degrees",
+      "हृदय रेखा गुरु पर्वत की ओर ऊपर की ओर मुड़ती है",
+      "Apollo (ring) finger is visibly longer than Jupiter (index) finger",
+      "Life line forms a wide, unbroken arc encompassing a broad Venus mount",
+      "Head line slopes smoothly downward toward the Mount of Moon",
+    ];
+    const result = sanitizePalmVisionEvidence({ distinctiveFeatures: mixedFeatures }, {});
+    expect(result.distinctiveFeatures).toHaveLength(5);
+  });
+
+  it("supplements distinctive features from grounded line and shape observations when list has fewer than 5 items", () => {
+    const sparseObservations = {
+      handShape: "Oblong palm with long slender fingers (Water element classification)",
+      heartLine: "Deep, smooth upward curve from outer edge toward Jupiter mount",
+      headLine: "Continuous line starting near thumb base and sloping downward toward the Moon mount",
+      lifeLine: "Broad, smooth arc sweeping around the Mount of Venus down to wrist",
+      distinctiveFeatures: [
+        "Apollo (ring) finger is visibly longer than Jupiter (index) finger",
+      ],
+    };
+    const result = sanitizePalmVisionEvidence(sparseObservations, {});
+    expect(result.distinctiveFeatures.length).toBeGreaterThanOrEqual(5);
+    expect(result.distinctiveFeatures).toContain("Apollo (ring) finger is visibly longer than Jupiter (index) finger");
+    expect(result.distinctiveFeatures).toContain(sparseObservations.handShape);
+  });
 });
