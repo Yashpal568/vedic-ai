@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import { useLanguage } from "@/lib/i18n/language-context";
 
 const STORAGE_KEY = "hasPlayedWelcomeGreeting";
@@ -12,12 +13,16 @@ export const GREETINGS = {
 };
 
 export default function WelcomeVoiceGreeting() {
+  const pathname = usePathname();
   const { language } = useLanguage();
   const hasPlayedRef = useRef(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Strictly restrict voice greeting to the Home page routes only
+  const isHomePage = pathname === "/" || pathname === "/chat";
+
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || !isHomePage) return;
 
     // Detect active language accurately (context first, fallback to localStorage/DOM)
     const storedLang = window.localStorage.getItem("vedic-language");
@@ -155,7 +160,7 @@ export default function WelcomeVoiceGreeting() {
       stopActivePlayback();
       audioRef.current = null;
     };
-  }, [language]);
+  }, [language, isHomePage]);
 
   return null;
 }

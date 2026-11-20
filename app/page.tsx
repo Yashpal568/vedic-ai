@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import AppNavigationDrawer from "@/components/app-navigation-drawer";
+import WelcomeVoiceGreeting from "@/components/voice/welcome-voice-greeting";
 import { useState } from "react";
 import {
   ArrowRight, ArrowUpRight, Check, ChevronDown, Compass, Heart, Menu, MoonStar,
@@ -25,6 +26,7 @@ export default function MarketingHome() {
   const [menuOpen, setMenuOpen] = useState(false);
   return (
     <main className="marketing-shell">
+      <WelcomeVoiceGreeting />
       <header className="marketing-nav">
         <Link href="/" className="marketing-brand" aria-label="Vedic AI home">
           <span className="marketing-brand-mark"><MoonStar size={21} strokeWidth={1.5} /></span>

@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 import type { KundliReport } from "@/lib/astrology";
+import WelcomeVoiceGreeting from "@/components/voice/welcome-voice-greeting";
 
 interface CelestialHomeViewProps {
   language: "en" | "hi";
@@ -172,6 +173,9 @@ export default function CelestialHomeView({
 
   return (
     <div className="w-full max-w-3xl mx-auto px-3.5 sm:px-6 pt-2 pb-10 flex flex-col gap-6 relative select-none">
+      {/* Language-aware Welcome Voice Greeting for Home Screen only */}
+      <WelcomeVoiceGreeting />
+
       {/* Background celestial ambient glow */}
       <div
         className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"

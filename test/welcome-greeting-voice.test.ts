@@ -68,4 +68,17 @@ describe("First-Time Welcome Voice Greeting & Voice Controls", () => {
     target.dispatchEvent(new CustomEvent("vedic-language-change", { detail: { language: "hi" } }));
     expect(languageChanged).toBe(true);
   });
+
+  it("strictly restricts greeting to the home page routes only (/ and /chat)", () => {
+    const isAllowedHomePage = (pathname: string) => pathname === "/" || pathname === "/chat";
+
+    expect(isAllowedHomePage("/")).toBe(true);
+    expect(isAllowedHomePage("/chat")).toBe(true);
+    expect(isAllowedHomePage("/palm-reading")).toBe(false);
+    expect(isAllowedHomePage("/panchang")).toBe(false);
+    expect(isAllowedHomePage("/profile")).toBe(false);
+    expect(isAllowedHomePage("/reports")).toBe(false);
+    expect(isAllowedHomePage("/login")).toBe(false);
+    expect(isAllowedHomePage("/terms")).toBe(false);
+  });
 });

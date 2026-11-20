@@ -5,7 +5,6 @@ import "./light-theme.css";
 import "./kundli-report.css";
 import ThemeSync from "@/components/theme-sync";
 import { LanguageProvider } from "@/lib/i18n/language-context";
-import WelcomeVoiceGreeting from "@/components/voice/welcome-voice-greeting";
 import CelestialCosmicBackground from "@/components/celestial-cosmic-background";
 
 export const metadata: Metadata = {
@@ -53,7 +52,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <ThemeSync />
         <LanguageProvider>
           <CelestialCosmicBackground />
-          <WelcomeVoiceGreeting />
           {children}
         </LanguageProvider>
       </body>
