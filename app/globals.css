@@ -14090,7 +14090,7 @@ body:has(.app-shell[data-theme="light"]) {
   min-height: 100dvh;
   padding-bottom: 100px;
   color: #ece7d8;
-  background: #050914;
+  background: transparent;
 }
 .panchang-header {
   position: sticky;
@@ -18657,35 +18657,68 @@ html[data-theme="light"] .sidebar-bottom .sidebar-google-mark {
    3. Unified Header Sidebar Toggle Controls
    ========================================================================= */
 
-/* 1. Restored Cosmic Galaxy Background in Dark Mode */
+/* 1. Universal Cosmic Celestial Background in Dark Mode (Unified across all pages: Chat, Palm, Panchang, Reports, Profile, Login) */
 html:not([data-theme="light"]) body,
 html[data-theme="dark"] body {
-  background-color: #060812 !important;
+  background-color: #050914 !important;
   background-image:
-    radial-gradient(
-      ellipse at 50% 0%,
-      rgba(229, 184, 75, 0.12) 0%,
-      transparent 65%
-    ),
-    radial-gradient(
-      ellipse at 85% 30%,
-      rgba(139, 92, 246, 0.08) 0%,
-      transparent 55%
+    linear-gradient(
+      90deg,
+      rgba(8, 10, 17, 0.9) 0%,
+      rgba(8, 10, 17, 0.76) 48%,
+      rgba(8, 10, 17, 0.62) 100%
     ),
     linear-gradient(
       180deg,
-      rgba(6, 8, 18, 0.78) 0%,
-      rgba(6, 8, 18, 0.92) 100%
+      rgba(8, 10, 17, 0.28) 0%,
+      rgba(8, 10, 17, 0.12) 38%,
+      rgba(8, 10, 17, 0.72) 100%
     ),
-    url("/cosmic-jyotish-desktop.svg") !important;
-  background-position: center top !important;
+    url("https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=2400&q=90") !important;
+  background-position: center 44% !important;
   background-size: cover !important;
-  background-attachment: fixed !important;
   background-repeat: no-repeat !important;
+  background-attachment: fixed !important;
+}
+
+@media (max-width: 1023px) {
+  html:not([data-theme="light"]) body,
+  html[data-theme="dark"] body {
+    background-color: #050914 !important;
+    background-image:
+      linear-gradient(
+        180deg,
+        rgba(7, 10, 19, 0.44) 0%,
+        rgba(7, 10, 19, 0.38) 35%,
+        rgba(7, 10, 19, 0.74) 100%
+      ),
+      url("https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=1400&q=88") !important;
+    background-position: center, 58% center !important;
+    background-size: cover, cover !important;
+    background-attachment: fixed !important;
+  }
 }
 
 html:not([data-theme="light"]) .min-h-screen,
-html:not([data-theme="light"]) .app-shell {
+html[data-theme="dark"] .min-h-screen,
+html:not([data-theme="light"]) .app-shell,
+html[data-theme="dark"] .app-shell,
+html:not([data-theme="light"]) .main-panel,
+html[data-theme="dark"] .main-panel,
+html:not([data-theme="light"]) .app-sidebar-offset,
+html[data-theme="dark"] .app-sidebar-offset,
+html:not([data-theme="light"]) .palm-shell,
+html[data-theme="dark"] .palm-shell,
+html:not([data-theme="light"]) .panchang-shell,
+html[data-theme="dark"] .panchang-shell,
+html:not([data-theme="light"]) .auth-shell,
+html[data-theme="dark"] .auth-shell,
+html:not([data-theme="light"]) .auth-shell-premium,
+html[data-theme="dark"] .auth-shell-premium,
+html:not([data-theme="light"]) .legal-shell,
+html[data-theme="dark"] .legal-shell,
+html:not([data-theme="light"]) .marketing-shell,
+html[data-theme="dark"] .marketing-shell {
   background-color: transparent !important;
 }
 
@@ -18758,28 +18791,14 @@ html[data-theme="light"] .desktop-sidebar-toggle:hover {
   color: #78591f;
 }
 
-/* Dark Mode: Restored Cosmic Galaxy Background across workspace panels */
+/* Dark Mode: Ensure workspace panels are transparent so the body cosmic background shines through seamlessly */
 html:not([data-theme="light"]) .main-panel,
 html:not([data-theme="light"]) .app-shell .main-panel,
 .app-shell:not([data-theme="light"]) .main-panel {
   position: relative;
   isolation: isolate;
-  background:
-    linear-gradient(
-      90deg,
-      rgba(8, 10, 17, 0.9) 0%,
-      rgba(8, 10, 17, 0.76) 48%,
-      rgba(8, 10, 17, 0.62) 100%
-    ),
-    linear-gradient(
-      180deg,
-      rgba(8, 10, 17, 0.28) 0%,
-      rgba(8, 10, 17, 0.12) 38%,
-      rgba(8, 10, 17, 0.72) 100%
-    ),
-    url("https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=2400&q=90")
-      center 44% / cover no-repeat !important;
-  background-attachment: scroll !important;
+  background-color: transparent !important;
+  background-image: none !important;
 }
 
 /* PC screens: Ensure no duplicate logo, no hamburger menu, and no "Back to chat" on desktop */
