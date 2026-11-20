@@ -10,7 +10,7 @@ import PalmPersonalisedReport from "@/components/palm/palm-personalised-report";
 import PalmThreeLayerAnalysis from "@/components/palm/palm-three-layer-analysis";
 import PalmRemediesUpaya from "@/components/palm/palm-remedies-upaya";
 import PalmDisclaimerMeta from "@/components/palm/palm-disclaimer-meta";
-import PalmChatDock from "@/components/palm/palm-chat-dock";
+import FloatingChatDock from "@/components/chat/floating-chat-dock";
 import DossierPreviewModal from "@/components/dossier-preview-modal";
 import PalmVoiceAssistant from "@/components/palm/palm-voice-assistant";
 import { usePalmVoiceNarrator } from "@/hooks/use-palm-voice-narrator";
@@ -802,7 +802,7 @@ These are traditional symbolic interpretations, not scientifically validated per
         />
 
         {/* WORKSPACE AREA */}
-        <main className="flex-1 w-full max-w-[1080px] mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-28">
+        <main className="flex-1 w-full max-w-[1080px] mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-44">
           {/* IF READING IS READY: Show Approved Vedic Cosmic Luxury Report Design (Ref #2, #3, #9) */}
           {reading && parsedReport ? (
             <div className="space-y-6">
@@ -915,16 +915,6 @@ These are traditional symbolic interpretations, not scientifically validated per
                   <PalmDisclaimerMeta language={language} />
                 </div>
               </div>
-
-              {/* Floating Bottom Input Dock (Ref #2 & #3) */}
-              <PalmChatDock
-                language={language}
-                onSendMessage={(msg) => {
-                  setQuestion(msg);
-                  analyse();
-                }}
-                onUploadClick={openGalleryPicker}
-              />
             </div>
           ) : (
             /* BEFORE READING: Photo Selection / Capture Viewport */
@@ -1287,6 +1277,26 @@ These are traditional symbolic interpretations, not scientifically validated per
           language={language}
         />
       )}
+
+      {/* Floating Bottom Input Dock */}
+      <FloatingChatDock
+        onSendMessage={
+          reading && parsedReport
+            ? (msg) => {
+                setQuestion(msg);
+                analyse();
+              }
+            : undefined
+        }
+        onPlusClick={openGalleryPicker}
+        placeholder={
+          reading && parsedReport
+            ? language === "hi"
+              ? "अपनी हस्तरेखा के बारे में प्रश्न पूछें…"
+              : "Ask Vedic AI about your palm..."
+            : undefined
+        }
+      />
 
       {/* Mobile Bottom Navigation Bar */}
       <MobileBottomNav />

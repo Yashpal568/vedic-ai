@@ -6,6 +6,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import AppDesktopSidebar from "@/components/app-desktop-sidebar";
 import SiteHeader from "@/components/site-header";
 import MobileBottomNav from "@/components/mobile-bottom-nav";
+import FloatingChatDock from "@/components/chat/floating-chat-dock";
 import ReportsLibraryClient, { type SavedReportItem } from "@/components/reports/reports-library-client";
 import enJson from "@/locales/en.json";
 import hiJson from "@/locales/hi.json";
@@ -41,7 +42,7 @@ export default async function ReportsPage() {
         <AppDesktopSidebar />
         <div className="flex-1 flex flex-col app-sidebar-offset min-w-0">
           <SiteHeader section="nav.savedReports" />
-          <main className="flex-1 w-full max-w-[1280px] mx-auto px-6 py-12 text-center">
+          <main className="flex-1 w-full max-w-[1280px] mx-auto px-6 py-12 pb-44 text-center">
             <div className="p-10 rounded-2xl bg-[var(--panel)] border border-[var(--line2)] max-w-md mx-auto">
               <BookOpen size={36} className="text-[var(--gold)] mx-auto mb-4" />
               <h1 className="text-xl font-bold font-serif-luxury text-[var(--text)]">
@@ -58,6 +59,9 @@ export default async function ReportsPage() {
               </Link>
             </div>
           </main>
+
+          <FloatingChatDock />
+          <MobileBottomNav />
         </div>
       </div>
     );
@@ -89,7 +93,7 @@ export default async function ReportsPage() {
       <div className="flex-1 flex flex-col app-sidebar-offset min-w-0">
         <SiteHeader section="nav.savedReports" />
 
-        <main className="flex-1 w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10 py-8 pb-28">
+        <main className="flex-1 w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10 py-8 pb-44">
           {/* Page Header */}
           <section className="mb-8">
             <div className="flex items-center justify-between">
@@ -121,6 +125,7 @@ export default async function ReportsPage() {
           <ReportsLibraryClient initialReports={reports} />
         </main>
 
+        <FloatingChatDock />
         <MobileBottomNav />
       </div>
     </div>

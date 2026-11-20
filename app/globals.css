@@ -1,10 +1,10 @@
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 :root {
-  --bg: #11131a;
-  --panel: #191b23;
-  --raised: #1d1f27;
-  --elevated: #282a31;
+  --bg: #060812;
+  --panel: #0e1122;
+  --raised: #14172a;
+  --elevated: #1a1e36;
   --line: rgba(255, 255, 255, 0.08);
   --line2: rgba(229, 196, 107, 0.25);
   --text: #e2e2ec;
@@ -15,7 +15,7 @@
   --wash: rgba(229, 196, 107, 0.1);
   --green: #56ffb9;
   --jade: #52feb8;
-  --font-playfair: "Playfair Display", Georgia, serif;
+  --font-playfair: "Playfair Display", "Cinzel", Georgia, serif;
   --font-jakarta:
     "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif;
 }
@@ -18698,22 +18698,22 @@ html[data-theme="light"] .sidebar-bottom .sidebar-google-mark {
 /* 1. Restored Cosmic Galaxy Background in Dark Mode */
 html:not([data-theme="light"]) body,
 html[data-theme="dark"] body {
-  background-color: #0b0f19 !important;
+  background-color: #060812 !important;
   background-image:
     radial-gradient(
       ellipse at 50% 0%,
-      rgba(229, 196, 107, 0.08) 0%,
-      transparent 60%
+      rgba(229, 184, 75, 0.12) 0%,
+      transparent 65%
     ),
     radial-gradient(
-      ellipse at 80% 50%,
-      rgba(86, 255, 185, 0.04) 0%,
-      transparent 50%
+      ellipse at 85% 30%,
+      rgba(139, 92, 246, 0.08) 0%,
+      transparent 55%
     ),
     linear-gradient(
       180deg,
-      rgba(11, 15, 25, 0.85) 0%,
-      rgba(11, 15, 25, 0.94) 100%
+      rgba(6, 8, 18, 0.78) 0%,
+      rgba(6, 8, 18, 0.92) 100%
     ),
     url("/cosmic-jyotish-desktop.svg") !important;
   background-position: center top !important;
@@ -18722,7 +18722,7 @@ html[data-theme="dark"] body {
   background-repeat: no-repeat !important;
 }
 
-html:not([data-theme="light"]) .min-h-screen.bg-\[var\(--bg\)\],
+html:not([data-theme="light"]) .min-h-screen,
 html:not([data-theme="light"]) .app-shell {
   background-color: transparent !important;
 }

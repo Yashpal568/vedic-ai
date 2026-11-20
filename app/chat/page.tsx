@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -8,9 +8,9 @@ import Link from "next/link";
 import MobileBottomNav from "@/components/mobile-bottom-nav";
 import AppNavigationDrawer from "@/components/app-navigation-drawer";
 import AppDesktopSidebar from "@/components/app-desktop-sidebar";
+import CelestialHomeView from "@/components/home/celestial-home-view";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { useLanguage } from "@/lib/i18n/language-context";
-import { LanguageSelector } from "@/components/language-selector";
 import { translateAssistantChatMessage, isDevanagariText } from "@/lib/i18n/chat-translator";
 import type { KundliReport } from "@/lib/astrology";
 import { printKundliReport, downloadKundliPdfFile } from "@/lib/print-report";
@@ -20,9 +20,9 @@ import KundliVoicePlayer from "@/components/voice/kundli-voice-player";
 import { stopAllSpeech } from "@/lib/voice/unified-tts-client";
 import {
   ArrowDown, ArrowUp, Mic, MicOff, CalendarDays, Check, ChevronLeft, ChevronRight,
-  CircleHelp, Gem, History, LogOut, Menu, MoonStar, Orbit, Plus, Sun,
-  ShieldCheck, Sparkles, UserRound, X, BriefcaseBusiness, Heart, Compass, Trash2, RefreshCw, Bell, Clock3,
-  Download, Printer, LoaderCircle,
+  History, LogOut, Menu, MoonStar, Orbit, Plus,
+  ShieldCheck, Sparkles, UserRound, X, Trash2, RefreshCw, Bell,
+  Download, Printer, LoaderCircle, Send, Compass,
 } from "lucide-react";
 
 type Message = { id: string; role: "user" | "assistant"; content: string; animated?: boolean };
@@ -32,110 +32,6 @@ type HistoryItem = { id: string; title: string; updated_at?: string };
 type VoiceRecognition = { lang: string; interimResults: boolean; continuous: boolean; onresult: ((event: { resultIndex: number; results: ArrayLike<{ isFinal: boolean; 0: { transcript: string } }> }) => void) | null; onerror: ((event: { error?: string }) => void) | null; onend: (() => void) | null; start: () => void; stop: () => void; abort?: () => void };
 type VoiceWindow = Window & { SpeechRecognition?: new () => VoiceRecognition; webkitSpeechRecognition?: new () => VoiceRecognition };
 
-function getSuggestions(lang: "en" | "hi") {
-  if (lang === "hi") {
-    return [
-      {
-        title: "करियर एवं संपत्ति",
-        description: "दशम भाव (कर्म भाव), द्वितीय भाव (धन भाव) और वित्तीय समृद्धि की संभावनाओं का विश्लेषण।",
-        prompt: "मेरी गणना की गई कुंडली के आधार पर मेरे दशम भाव और द्वितीय/एकादश भाव का विश्लेषण कर करियर पथ और धन संभावनाओं को समझाएं।",
-        icon: BriefcaseBusiness,
-      },
-      {
-        title: "विवाह एवं संबंध",
-        description: "सप्तम भाव, शुक्र की स्थिति और वैवाहिक सामंजस्य संकेतकों का विश्लेषण।",
-        prompt: "मेरी जन्म कुंडली से पारंपरिक संबंध संकेतकों का परीक्षण करें, जिसमें सप्तम भाव, शुक्र और वैवाहिक सौहार्द शामिल हैं।",
-        icon: Heart,
-      },
-      {
-        title: "साढ़े साती एवं महादशा",
-        description: "शनि के 7.5 वर्षीय चक्र और आपकी सक्रिय विंशोत्तरी महादशा कालखंड का मूल्यांकन।",
-        prompt: "मेरी वर्तमान विंशोत्तरी महादशा और अंतर्दशा का विश्लेषण करें और बताएं कि मैं शनि की साढ़े साती के किस चरण में हूँ।",
-        icon: Clock3,
-      },
-      {
-        title: "वैदिक उपाय एवं रत्न",
-        description: "पारंपरिक पराशर उपाय, वैदिक मंत्र, दान और उपयुक्त रत्न मार्गदर्शन।",
-        prompt: "मेरी कुंडली के ग्रह योगों के अनुसार कौन से पारंपरिक वैदिक उपाय (मंत्र, सेवा, दान या रत्न सावधानियां) उपयुक्त हैं?",
-        icon: Gem,
-      },
-      {
-        title: "दशम भाव गोचर एवं पदोन्नति",
-        description: "दशम भाव पर वर्तमान ग्रहीय गोचर और व्यावसायिक अवसरों का आंकलन।",
-        prompt: "वर्तमान ग्रहीय गोचर मेरे करियर और आजीविका के दशम भाव को कैसे प्रभावित कर रहे हैं, इसका विश्लेषण करें।",
-        icon: Orbit,
-      },
-      {
-        title: "D9 नवांश भाग्य चक्र",
-        description: "आत्मिक क्षमता और ग्रहीय बल के लिए D9 नवांश वर्ग कुंडली का निरीक्षण।",
-        prompt: "मेरी D9 नवांश वर्ग कुंडली, वर्गोत्तम ग्रहों और आंतरिक आध्यात्मिक संभावनाओं का विश्लेषण करें।",
-        icon: Compass,
-      },
-      {
-        title: "शनि साढ़े साती विश्लेषण",
-        description: "जन्म चंद्र राशि के संदर्भ में शनि गोचर के उदय, शिखर और अस्त चरणों का विवरण।",
-        prompt: "मेरी जन्म चंद्र राशि के सापेक्ष शनि के गोचर (साढ़े साती की स्थिति और व्यावहारिक मार्गदर्शन) का गहन विश्लेषण प्रदान करें।",
-        icon: Sparkles,
-      },
-      {
-        title: "कुंडली मिलान एवं अष्टकूट",
-        description: "पारंपरिक 36 गुण मिलान, नाड़ी, भकूट और गण दोष का विश्लेषण।",
-        prompt: "पारंपरिक अष्टकूट 36 गुण मिलान कैसे काम करता है और दीर्घकालिक वैवाहिक सामंजस्य के लिए कौन से कारक सबसे महत्वपूर्ण हैं, समझाएं।",
-        icon: Heart,
-      },
-    ];
-  }
-  return [
-    {
-      title: "Career & Wealth",
-      description: "Analyze 10th house Karma Bhava, 2nd Dhana bhava, and financial growth prospects.",
-      prompt: "Analyze my 10th house and 2nd/11th houses for career trajectory, profession indications, and wealth potential based on my calculated chart.",
-      icon: BriefcaseBusiness,
-    },
-    {
-      title: "Love & Matchmaking",
-      description: "Explore 7th house dynamics, Venus placement, and marital compatibility factors.",
-      prompt: "Examine traditional relationship indicators from my chart including 7th house, Venus, and marital harmony themes.",
-      icon: Heart,
-    },
-    {
-      title: "Sade Sati & Dasha",
-      description: "Evaluate Saturn's 7.5-year cycle and your active Vimshottari Mahadasha timeline.",
-      prompt: "Explain my current Vimshottari Mahadasha and Antardasha periods and evaluate where I stand regarding Saturn's Sade Sati cycle.",
-      icon: Clock3,
-    },
-    {
-      title: "Vedic Remedies & Gems",
-      description: "Explore traditional Parashara Upayas, mantras, charity (daan), and gemstone guidance.",
-      prompt: "What traditional Vedic remedies (mantras, seva, gemstone precautions) are recommended for my planetary placements?",
-      icon: Gem,
-    },
-    {
-      title: "10th House Transit & Promotion",
-      description: "Assess current planetary transits over the 10th house and upcoming professional shifts.",
-      prompt: "Assess how current planetary transits affect my 10th house of career and professional opportunities.",
-      icon: Orbit,
-    },
-    {
-      title: "D9 Navamsha Destiny Chart",
-      description: "Inspect the divisional D9 chart for inner soul blueprint and planetary dignities.",
-      prompt: "Analyze my D9 Navamsha chart placements, Vargottama planets, and inner spiritual potential.",
-      icon: Compass,
-    },
-    {
-      title: "Saturn Sade Sati Analysis",
-      description: "Detailed breakdown of the rising, peak, and setting phases of Shani transit.",
-      prompt: "Provide an in-depth analysis of Saturn's transit relative to my natal Moon sign (Sade Sati status and practical guidance).",
-      icon: Sparkles,
-    },
-    {
-      title: "Kundli Milan & Ashtakoota",
-      description: "Traditional 36 Guna compatibility framework, Nadi, Bhakoot, and Ganadosha.",
-      prompt: "Explain how traditional Ashtakoota 36 Guna Milan works and what factors matter most for lifelong synastry.",
-      icon: Heart,
-    },
-  ];
-}
 const makeId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
 function formatConversationDate(value?: string) {
@@ -369,6 +265,10 @@ export default function Home() {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       if (params.get("openBirth") === "1") setIsBirthOpen(true);
+      const query = params.get("q") || params.get("prompt") || window.sessionStorage?.getItem("vedic-pending-query");
+      if (query && query.trim()) {
+        setInput(query.trim());
+      }
       if (params.get("home") === "1") {
         startNewChat();
         window.history.replaceState(null, "", "/chat");
@@ -411,8 +311,7 @@ export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
-  const { language, t } = useLanguage();
-  const suggestions = useMemo(() => getSuggestions(language), [language]);
+  const { language, setLanguage } = useLanguage();
   const [translatedMessages, setTranslatedMessages] = useState<Record<string, string>>({});
   const [isTranslatingChat, setIsTranslatingChat] = useState(false);
 
@@ -785,6 +684,20 @@ export default function Home() {
   }
 
   function submitMessage(event: FormEvent<HTMLFormElement>) { event.preventDefault(); sendMessage(); }
+
+  // Handle incoming query from FloatingChatDock on other pages (?q=... or ?prompt=...)
+  useEffect(() => {
+    if (typeof window === "undefined" || !authReady) return;
+    const params = new URLSearchParams(window.location.search);
+    const query = params.get("q") || params.get("prompt") || window.sessionStorage?.getItem("vedic-pending-query");
+    if (query && query.trim()) {
+      try {
+        window.sessionStorage?.removeItem("vedic-pending-query");
+      } catch {}
+      window.history.replaceState(null, "", "/chat");
+      void sendMessage(query.trim());
+    }
+  }, [authReady]);
   async function toggleVoiceInput() {
     if (voiceListening) {
       try {
@@ -1311,102 +1224,110 @@ export default function Home() {
                 {accountAvatar ? <img className="profile-avatar" src={accountAvatar} alt="" /> : <span className="profile-avatar profile-avatar-fallback">{(accountName || savedBirth?.name || (isSignedIn ? accountEmail : "Guest explorer") || "G").trim().charAt(0).toUpperCase()}</span>}
                 <div style={{ minWidth: 0, flex: 1 }}><div className="profile-name">{isSignedIn ? (accountName || "My profile") : (savedBirth?.name || "Guest explorer")}</div><div className="profile-caption">{isSignedIn ? (accountEmail || "Signed in · private library") : "Guest session"}</div></div>
               </div>
+              <button className="mobile-signout-button" onClick={() => void enableNotifications()} title="Enable notifications" aria-label="Enable notifications"><Bell size={18}/></button>
               {isSignedIn ? <button className="mobile-signout-button" onClick={() => { setMobileMenuOpen(false); void signOut(); }} title="Sign out" aria-label="Sign out"><LogOut size={18}/></button> : <Link className="mobile-signout-button" href="/login" onClick={() => setMobileMenuOpen(false)} title="Sign in to sync history" aria-label="Sign in to sync history"><UserRound size={18}/></Link>}
             </div>
         }
       />
 
       <section className="main-panel app-sidebar-offset">
-        <header className="topbar">
-          <div className="topbar-left">
-            
-            <button className="icon-button mobile-menu xl:hidden" onClick={() => setMobileMenuOpen(true)} aria-label="Open menu"><Menu size={18} /></button>
-            <div className="chat-header-brand flex xl:hidden"><span className="brand-mark"><MoonStar size={19} strokeWidth={1.6} /></span><span className="brand-name">vedic<span style={{ color: "var(--gold)" }}>.</span>ai</span></div>
-            <div className="mode-pill" aria-label="Vedic AI preview status"><span className="status-dot" /> <span className="mode-pill-name">Vedic AI</span> <span className="mode-pill-preview" style={{ color: "var(--quiet)" }}>· Preview</span></div>
-          </div>
-          <div className="topbar-actions">
-            <LanguageSelector variant="compact" />
-            <button className="topbar-theme-toggle" type="button" onClick={() => { const next = theme === "dark" ? "light" : "dark"; setTheme(next); document.documentElement.dataset.theme = next; try { window.localStorage.setItem("vedic-chat-theme", next); } catch {} }} aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} title={theme === "dark" ? "Light mode" : "Dark mode"}>
-              {theme === "dark" ? <Sun size={17} /> : <MoonStar size={17} />}
-              <span>{theme === "dark" ? t("nav.lightMode") : t("nav.darkMode")}</span>
+        <header className="sticky top-0 z-30 flex items-center justify-between px-4 sm:px-6 h-16 backdrop-blur-md bg-[#070913]/75 border-b border-white/[0.06]">
+          {/* Left Zone: Hamburger + refined vedic.ai logo */}
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              className="w-9 h-9 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 flex items-center justify-center text-white/80 hover:text-white transition-colors cursor-pointer"
+              onClick={() => setMobileMenuOpen(true)}
+              aria-label="Open menu"
+            >
+              <Menu size={18} strokeWidth={2} />
             </button>
-            {isSignedIn ? <button className="topbar-link topbar-signout-icon" onClick={signOut} title={t("nav.signOut")} aria-label={t("nav.signOut")}><LogOut size={17} /></button> : <Link href="/login" className="topbar-link" title={t("nav.signIn")} aria-label={t("nav.signIn")}><UserRound size={14}/> <span>{t("nav.signIn")}</span></Link>}
-            <button className="topbar-link" title={savedBirth ? t("header.editBirth") : t("header.addBirth")} aria-label={savedBirth ? t("header.editBirth") : t("header.addBirth")} onClick={() => setIsBirthOpen(true)}><Orbit size={14} /><span>{savedBirth ? t("header.birthProfile") : t("header.birthDetails")}</span></button>
-            <button className="icon-button topbar-notifications" aria-label="Enable notifications" title="Notification settings" onClick={() => { void enableNotifications(); }}><Bell size={16}/></button>
-            <button className="icon-button topbar-help" aria-label="Help and product status" title="Help & status" onClick={() => setToast("Vedic AI is an early preview. Astrology calculations need reference-chart validation; AI and saved history depend on configured services.")}><CircleHelp size={17} /></button>
+            <div className="flex items-center gap-2">
+              <span className="w-8 h-8 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-center text-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.18)]">
+                <MoonStar size={16} strokeWidth={1.8} />
+              </span>
+              <span className="font-bold text-base tracking-tight text-white">
+                vedic<span className="text-amber-400">.</span>ai
+              </span>
+            </div>
+          </div>
+
+          {/* Right Zone: Compact EN / हिं segmented pill + sleek avatar */}
+          <div className="flex items-center gap-2.5">
+            <div className="inline-flex items-center rounded-full bg-white/[0.05] border border-white/10 p-0.5 text-xs font-semibold backdrop-blur-md">
+              <button
+                type="button"
+                onClick={() => setLanguage("en")}
+                className={`px-2.5 py-1 rounded-full transition-all text-xs cursor-pointer ${
+                  language === "en"
+                    ? "bg-amber-400/20 text-amber-300 font-bold shadow-[0_0_10px_rgba(251,191,36,0.2)]"
+                    : "text-white/60 hover:text-white"
+                }`}
+              >
+                EN
+              </button>
+              <span className="text-white/20 text-[10px] px-0.5 select-none">/</span>
+              <button
+                type="button"
+                onClick={() => setLanguage("hi")}
+                className={`px-2.5 py-1 rounded-full transition-all text-xs cursor-pointer ${
+                  language === "hi"
+                    ? "bg-amber-400/20 text-amber-300 font-bold shadow-[0_0_10px_rgba(251,191,36,0.2)]"
+                    : "text-white/60 hover:text-white"
+                }`}
+              >
+                हिं
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(true)}
+              className="relative w-9 h-9 rounded-full p-[1.5px] bg-gradient-to-tr from-amber-400 via-amber-200 to-amber-600 shadow-[0_0_12px_rgba(251,191,36,0.25)] hover:scale-105 active:scale-95 transition-transform cursor-pointer overflow-hidden flex items-center justify-center shrink-0"
+              title={isSignedIn ? (accountName || "My profile") : "Account / Menu"}
+              aria-label="Account menu"
+            >
+              {accountAvatar ? (
+                <img
+                  src={accountAvatar}
+                  alt="Profile"
+                  className="w-full h-full rounded-full object-cover"
+                />
+              ) : (
+                <span className="w-full h-full rounded-full bg-[#121524] flex items-center justify-center text-xs font-bold text-amber-200">
+                  {(accountName || savedBirth?.name || (isSignedIn ? accountEmail : "Guest") || "G").trim().charAt(0).toUpperCase()}
+                </span>
+              )}
+            </button>
           </div>
         </header>
 
-        <div className="content-scroll">
-          {!hasConversation ? <section className="welcome-wrap">
-            <div className="home-engine-status">
-              <span className="home-engine-mark"><MoonStar size={17}/></span>
-              <div className="home-engine-copy">
-                <strong><i/> {language === "hi" ? "वैदिक कुंडली इंजन · सायन/निरयण गणना" : "VEDIC CHART ENGINE · SIDEREAL CALCULATION"}</strong>
-                <span>{chartReport?.planets.find((planet) => planet.name === "Moon")?.nakshatra ? (language === "hi" ? "चंद्रमा " + chartReport.planets.find((planet) => planet.name === "Moon")?.nakshatra + " नक्षत्र में" : "Moon in " + chartReport.planets.find((planet) => planet.name === "Moon")?.nakshatra + " Nakshatra") : (language === "hi" ? "अपनी व्यक्तिगत कुंडली के लिए जन्म विवरण जोड़ें" : "Add birth details for your personal chart")}</span>
-              </div>
-              <button type="button" className="home-sessions-button" onClick={() => setMobileMenuOpen(true)}><History size={14}/> {language === "hi" ? "सत्र" : "Sessions"}</button>
-            </div>
-            <div className="home-welcome-message">
-              <div className="home-welcome-brand"><span className="home-welcome-avatar"><MoonStar size={20}/><i/></span><div><strong>VEDIC.AI <span>·</span> {language === "hi" ? "ज्योतिष सहचर" : "ASTROLOGY COMPANION"}</strong><small><i/> {language === "hi" ? "तैयार" : "Ready to explore"}</small></div></div>
-              <p>{language === "hi" ? "नमस्ते! 🙏 आज मैं आपके जन्मांग और आकाशीय मानचित्र में क्या सहायता कर सकता हूँ? ग्रहों की भाषा, आपके प्रश्न और पारंपरिक ज्योतिष सिद्धांतों को समझें।" : "Namaste! 🙏 How can I assist you with your cosmic chart today? Explore the language of the planets, your questions, and traditional Jyotish concepts."}</p>
-              <div className="home-birth-card">
-                <div className="home-birth-card-title"><CalendarDays size={17}/> {savedBirth && chartReport ? (language === "hi" ? "आपकी जन्म कुंडली तैयार है" : "Your birth chart is ready") : (language === "hi" ? "जन्म निर्देशांक आवश्यक" : "Birth coordinates required")}</div>
-                <p>{savedBirth && chartReport ? (language === "hi" ? "आपकी कुंडली गणित हो चुकी है। व्यक्तिगत व्याख्याओं से पहले विवरण की समीक्षा के लिए अपना जन्म प्रोफ़ाइल खोलें।" : "Your chart is calculated. Open your birth profile to review the details before exploring personal interpretations.") : (language === "hi" ? "अपनी व्यक्तिगत जन्म कुंडली की व्याख्या के लिए, अपनी जन्म तिथि, सटीक स्थानीय जन्म समय और जन्म स्थान जोड़ें।" : "To interpret your personal Janam Kundli, add your date of birth, exact local birth time, and birthplace.")}</p>
-                <button type="button" onClick={() => setIsBirthOpen(true)}><CalendarDays size={16}/>{savedBirth && chartReport ? (language === "hi" ? "जन्म विवरण देखें" : "Review birth details") : (language === "hi" ? "जन्म विवरण दर्ज करें" : "Enter birth details")} <span>✦</span></button>
-              </div>
-            </div>
-
-            {/* Last Consultation Card if history exists */}
-            {historyItems.length > 0 && (
-              <div className="p-4 rounded-xl bg-[var(--panel)] border border-[var(--line2)] mb-5 flex items-center justify-between gap-4 shadow-sm">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-lg bg-[var(--wash)] text-[var(--gold)] flex items-center justify-center shrink-0">
-                    <History size={18} />
-                  </div>
-                  <div className="min-w-0">
-                    <span className="text-[10px] uppercase font-bold text-[var(--gold)] tracking-wider block">
-                      {language === "hi" ? "पिछला परामर्श पुनः आरंभ करें" : "Resume Previous Consultation"}
-                    </span>
-                    <strong className="block text-xs text-[var(--text)] font-semibold mt-0.5 truncate max-w-[420px]">
-                      {historyItems[0].title}
-                    </strong>
-                    <span className="text-[10px] text-[var(--quiet)] block">
-                      {formatConversationDate(historyItems[0].updated_at)}
-                    </span>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => void loadConversation(historyItems[0].id)}
-                  className="px-3 py-1.5 rounded-lg bg-[var(--gold)] text-[#11131A] text-xs font-bold hover:bg-[var(--gold2)] transition-colors cursor-pointer shrink-0"
-                >
-                  {language === "hi" ? "संवाद जारी रखें →" : "Resume Chat →"}
-                </button>
-              </div>
-            )}
-
-            <div className="home-pathway-heading"><span><Sparkles size={14}/> {language === "hi" ? "एक विषय चुनें" : "CHOOSE A PATHWAY TO EXPLORE"}</span><small>{language === "hi" ? "8 विकल्प" : "8 Presets"}</small></div>
-            <div className="prompt-grid">{suggestions.map((item) => {
-              const Icon = item.icon;
-              return <button className="prompt-card" key={item.title} onClick={() => {
-                 if (item.title.startsWith("Today's") || item.title.startsWith("आज का")) {
-                   window.location.href = "/panchang";
-                 } else if (!savedBirth || !chartReport) {
-                   setPendingPrompt(item.prompt);
-                   setIsBirthOpen(true);
-                   setToast(language === "hi" ? "व्यक्तिगत व्याख्या के लिए पहले अपनी जन्म तिथि, सटीक समय और स्थान जोड़ें।" : "For a personal reading, add your birth date, exact time, and birthplace first.");
-                 } else {
-                   void sendMessage(item.prompt);
-                 }
-               }}>
-                <span className="prompt-icon"><Icon size={18} strokeWidth={1.7} /></span>
-                <span className="home-pathway-copy"><span className="prompt-title" style={{ display: "block" }}>{item.title}</span><span className="prompt-description" style={{ display: "block" }}>{item.description}</span></span>
-                <ChevronRight className="home-pathway-chevron" size={19}/>
-              </button>;
-            })}</div>
-            <div className="home-guidance-note"><Sparkles size={17}/><span>{language === "hi" ? "पारंपरिक ज्योतिषीय व्याख्याएं आत्म-चिंतन के लिए हैं। व्यक्तिगत चार्ट अंतर्दृष्टि के लिए सटीक जन्म विवरण और गणना किए गए चार्ट डेटा की आवश्यकता होती है।" : "Traditional Jyotish interpretations are for reflection. Personal chart insights require precise birth details and calculated chart data."}</span></div>
-          </section> : <section className="chat-area" aria-live="polite">
+        <div className="content-scroll pb-44 sm:pb-48">
+          {!hasConversation ? (
+            <CelestialHomeView
+              language={language}
+              savedBirth={savedBirth}
+              chartReport={chartReport}
+              historyItems={historyItems}
+              onOpenBirth={() => setIsBirthOpen(true)}
+              onSelectPrompt={(prompt, title) => {
+                if (title?.startsWith("Today's") || title?.startsWith("आज का")) {
+                  window.location.href = "/panchang";
+                } else if (!savedBirth || !chartReport) {
+                  setPendingPrompt(prompt);
+                  setIsBirthOpen(true);
+                  setToast(
+                    language === "hi"
+                      ? "व्यक्तिगत व्याख्या के लिए पहले अपनी जन्म तिथि, सटीक समय और स्थान जोड़ें।"
+                      : "For a personal reading, add your birth date, exact time, and birthplace first."
+                  );
+                } else {
+                  void sendMessage(prompt);
+                }
+              }}
+              onLoadConversation={(id) => void loadConversation(id)}
+            />
+          ) : <section className="chat-area" aria-live="polite">
             {messages.map((message, messageIndex) => <div className={"message-row " + message.role + (message.animated ? " is-new" : "")} key={message.id}>
               {message.role === "assistant" && <div className="message-avatar"><MoonStar size={16} /></div>}
               {message.role === "assistant" ? <div className="message-content">
@@ -1562,16 +1483,95 @@ export default function Home() {
           </section>}
         </div>
 
-        <footer className="chat-footer"><div className="composer-wrap">
-          <form className="composer" onSubmit={submitMessage}>
-            <textarea id="chat-input" ref={textareaRef} value={input} onChange={(event) => { setInput(event.target.value); event.target.style.height = "auto"; event.target.style.height = Math.min(event.target.scrollHeight, 150) + "px"; }} onKeyDown={onComposerKeyDown} placeholder={language === "hi" ? "कुंडली, महादशा या करियर के बारे में पूछें…" : t("chat.inputPlaceholder")} rows={1} aria-label={language === "hi" ? "वैदिक एआई को संदेश भेजें" : "Message Vedic AI"} />
-            <div className="composer-bottom"><div className="composer-tools">
-              <button type="button" className="tool-button" onClick={() => setIsBirthOpen(true)}><Plus size={15} /><span>{savedBirth ? (language === "hi" ? "जन्म विवरण जोड़ा गया" : "Birth profile added") : (language === "hi" ? "जन्म विवरण जोड़ें" : "Add birth details")}</span></button>
-              <button type="button" className={"tool-button voice-input-button" + (voiceListening ? " is-listening" : "")} onClick={toggleVoiceInput} aria-label={voiceListening ? (language === "hi" ? "ध्वनि इनपुट रोकें" : "Stop voice typing") : (language === "hi" ? "बोलकर लिखें" : "Start voice typing")} title={voiceListening ? (language === "hi" ? "ध्वनि इनपुट रोकें" : "Stop voice typing") : (language === "hi" ? "बोलकर लिखें" : "Speak to type")}><span className="voice-input-icon">{voiceListening ? <MicOff size={16} /> : <Mic size={16} />}</span><span>{voiceListening ? (language === "hi" ? "सुन रहे हैं…" : "Listening…") : (language === "hi" ? "बोलें" : "Speak")}</span></button>
-            </div><button type="submit" className="send-button" aria-label={language === "hi" ? "संदेश भेजें" : "Send message"} disabled={!input.trim() || isLoading || !authReady}><ArrowUp size={17} /></button></div>
-          </form>
-          <p className="footer-note">{language === "hi" ? "वैदिक एआई से त्रुटियां संभव हैं। ज्योतिषीय व्याख्याएं पारंपरिक दृष्टिकोण हैं, निश्चितताएं नहीं।" : "Vedic AI can make mistakes. Astrological interpretations are traditional perspectives, not certainties."} <span className="footer-separator">·</span> <Link href="/privacy">{language === "hi" ? "गोपनीयता" : "Privacy"}</Link> <span className="footer-separator">·</span> <Link href="/terms">{language === "hi" ? "नियम" : "Terms"}</Link></p>
-        </div></footer>
+        {/* Ambient Gradient Mask behind Floating Input Dock */}
+        <div
+          className="pointer-events-none fixed bottom-0 left-0 right-0 h-44 bg-gradient-to-t from-[#060812] via-[#060812]/80 to-transparent z-20"
+          aria-hidden="true"
+        />
+
+        {/* Floating Chat Dock */}
+        <footer
+          className={`fixed bottom-[68px] sm:bottom-[72px] lg:bottom-6 left-0 right-0 ${
+            sidebarCollapsed ? "lg:left-[72px]" : "lg:left-[280px]"
+          } z-25 px-3.5 sm:px-6 pointer-events-none flex justify-center transition-all duration-200`}
+        >
+          <div className="w-full max-w-xl pointer-events-auto">
+            <form
+              onSubmit={submitMessage}
+              className="group flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full bg-[#121624]/90 backdrop-blur-2xl border border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.65)] hover:border-white/20 focus-within:border-amber-400/50 focus-within:ring-2 focus-within:ring-amber-400/20 transition-all"
+            >
+              <textarea
+                id="chat-input"
+                ref={textareaRef}
+                value={input}
+                onChange={(event) => {
+                  setInput(event.target.value);
+                  event.target.style.height = "auto";
+                  event.target.style.height = Math.min(event.target.scrollHeight, 120) + "px";
+                }}
+                onKeyDown={onComposerKeyDown}
+                placeholder={
+                  language === "hi"
+                    ? "वैदिक एआई से पूछें…"
+                    : "Ask Vedic AI anything..."
+                }
+                rows={1}
+                aria-label={language === "hi" ? "वैदिक एआई को संदेश भेजें" : "Message Vedic AI"}
+                className="flex-1 bg-transparent border-0 outline-none text-white text-xs sm:text-[13.5px] placeholder:text-white/40 resize-none py-1.5 px-2 max-h-[120px] leading-relaxed"
+              />
+
+              <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setIsBirthOpen(true)}
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-white/60 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer"
+                  title={
+                    savedBirth
+                      ? (language === "hi" ? "जन्म विवरण देखें" : "View birth details")
+                      : (language === "hi" ? "जन्म विवरण जोड़ें" : "Add birth details")
+                  }
+                  aria-label="Birth details"
+                >
+                  <Plus size={18} strokeWidth={2} />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={toggleVoiceInput}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors cursor-pointer ${
+                    voiceListening
+                      ? "text-rose-400 bg-rose-500/20 animate-pulse"
+                      : "text-white/60 hover:text-white hover:bg-white/[0.08]"
+                  }`}
+                  aria-label={
+                    voiceListening
+                      ? (language === "hi" ? "ध्वनि इनपुट रोकें" : "Stop voice typing")
+                      : (language === "hi" ? "बोलकर लिखें" : "Start voice typing")
+                  }
+                  title={
+                    voiceListening
+                      ? (language === "hi" ? "ध्वनि इनपुट रोकें" : "Stop voice typing")
+                      : (language === "hi" ? "बोलकर लिखें" : "Speak to type")
+                  }
+                >
+                  {voiceListening ? <MicOff size={17} /> : <Mic size={17} />}
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={!input.trim() || isLoading || !authReady}
+                  className="w-9 h-9 rounded-full flex items-center justify-center text-[#11131a] shadow-[0_0_15px_rgba(229,184,75,0.35)] disabled:opacity-30 disabled:cursor-not-allowed hover:scale-105 active:scale-95 transition-transform cursor-pointer shrink-0"
+                  style={{
+                    background: "linear-gradient(90deg, #F6D365 0%, #E5B84B 50%, #C89B3C 100%)",
+                  }}
+                  aria-label={language === "hi" ? "संदेश भेजें" : "Send message"}
+                >
+                  <Send size={16} strokeWidth={2.2} className="-translate-x-0.5 translate-y-0.5" />
+                </button>
+              </div>
+            </form>
+          </div>
+        </footer>
 
         <MobileBottomNav />
       </section>

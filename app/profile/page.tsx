@@ -5,6 +5,7 @@ import Link from "next/link";
 import AppDesktopSidebar from "@/components/app-desktop-sidebar";
 import SiteHeader from "@/components/site-header";
 import MobileBottomNav from "@/components/mobile-bottom-nav";
+import FloatingChatDock from "@/components/chat/floating-chat-dock";
 import {
   Camera,
   Check,
@@ -351,7 +352,7 @@ export default function ProfilePage() {
       <div className="flex-1 flex flex-col app-sidebar-offset min-w-0">
         <SiteHeader section="header.profileSettings" onSignOut={() => void signOut()} />
 
-        <main className="flex-1 w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10 py-8 pb-28">
+        <main className="flex-1 w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10 py-8 pb-44">
           {/* Page Header */}
           <section className="mb-8">
             <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--gold)] flex items-center gap-1.5 mb-1.5">
@@ -721,6 +722,7 @@ export default function ProfilePage() {
           </div>
         </main>
 
+        <FloatingChatDock />
         <MobileBottomNav />
       </div>
     </div>

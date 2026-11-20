@@ -1,21 +1,23 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { stopAllSpeech } from "../lib/voice/unified-tts-client";
+import { GREETINGS } from "../components/voice/welcome-voice-greeting";
 
 describe("First-Time Welcome Voice Greeting & Voice Controls", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("defines the exact language scripts required by specification", () => {
-    const englishGreeting = "How can I assist you?";
-    const hindiGreeting = "नमस्ते, वैदिक एआई में आपका स्वागत है।";
+  it("defines the exact language scripts required by specification with Namaste", () => {
+    expect(GREETINGS.en.toLowerCase()).toContain("namaste");
+    expect(GREETINGS.en.toLowerCase()).toContain("how can i assist you");
+    expect(GREETINGS.hi).toContain("नमस्ते");
 
     const getGreetingScript = (lang: "en" | "hi") => {
-      return lang === "hi" ? hindiGreeting : englishGreeting;
+      return lang === "hi" ? GREETINGS.hi : GREETINGS.en;
     };
 
-    expect(getGreetingScript("en")).toBe("How can I assist you?");
-    expect(getGreetingScript("hi")).toBe("नमस्ते, वैदिक एआई में आपका स्वागत है।");
+    expect(getGreetingScript("en")).toBe("Namaste, how can I assist you?");
+    expect(getGreetingScript("hi")).toBe("नमस्ते, मैं आपकी क्या सहायता कर सकता हूँ?");
   });
 
   it("checks localStorage persistence flag so greeting is not repeated", () => {

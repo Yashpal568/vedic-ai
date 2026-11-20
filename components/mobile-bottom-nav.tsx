@@ -31,19 +31,27 @@ export default function MobileBottomNav() {
     : "home";
 
   return <nav className="mobile-bottom-nav" aria-label="Primary navigation">
-    {items.map(({ label, href, Icon, key }) => <Link
-      key={key}
-      href={href}
-      className={"mobile-bottom-nav-item" + (active === key ? " active" : "")}
-      aria-label={label}
-      aria-current={active === key ? "page" : undefined}
-      onClick={(event) => {
-        if (pathname === "/chat" && key === "kundli") { event.preventDefault(); window.location.href = "/chat?openBirth=1"; }
-        if (pathname === "/chat" && key === "home") { event.preventDefault(); window.location.href = "/chat?home=1"; }
-      }}
-    >
-      <Icon size={19} strokeWidth={1.8} />
-      <span>{label}</span>
-    </Link>)}
+    {items.map(({ label, href, Icon, key }) => {
+      const isActive = active === key;
+      return (
+        <Link
+          key={key}
+          href={href}
+          className={"mobile-bottom-nav-item relative transition-all duration-200" + (isActive ? " active" : "")}
+          aria-label={label}
+          aria-current={isActive ? "page" : undefined}
+          onClick={(event) => {
+            if (pathname === "/chat" && key === "kundli") { event.preventDefault(); window.location.href = "/chat?openBirth=1"; }
+            if (pathname === "/chat" && key === "home") { event.preventDefault(); window.location.href = "/chat?home=1"; }
+          }}
+        >
+          <Icon size={19} strokeWidth={isActive ? 2.2 : 1.7} />
+          <span>{label}</span>
+          {isActive && (
+            <span className="w-1 h-1 rounded-full bg-amber-400 shadow-[0_0_6px_#f59e0b] -mt-0.5" />
+          )}
+        </Link>
+      );
+    })}
   </nav>;
 }

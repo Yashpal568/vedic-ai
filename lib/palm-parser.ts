@@ -29,6 +29,7 @@ export function parsePalmReading(
   _hand: "left" | "right" | "unsure" = "unsure",
   language: "en" | "hi" | "hinglish" = "en"
 ): ParsedPalmReport {
+  void _hand;
   const text = markdown || "";
   const isHi = language === "hi" || /[\u0900-\u097F]/.test(text);
   
