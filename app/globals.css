@@ -1,5 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
+
+@custom-variant dark (&:where(html[data-theme="dark"] *, html.dark *));
 :root {
   --bg: #060812;
   --panel: #0e1122;
@@ -9166,18 +9168,18 @@ html {
 }
 /* Optional light appearance, persisted by the chat UI. */
 .app-shell[data-theme="light"] {
-  --bg: #f6f5f1;
-  --panel: #fff;
-  --raised: #eeede7;
-  --line: rgba(45, 42, 32, 0.09);
-  --line2: rgba(45, 42, 32, 0.16);
-  --text: #24251f;
-  --muted: #5e6058;
-  --quiet: #77796f;
-  --gold: #98742f;
-  --gold2: #78591f;
-  --wash: rgba(168, 132, 58, 0.1);
-  --green: #47794e;
+  --bg: #FAF8F4;
+  --panel: #ffffff;
+  --raised: #F7F5F0;
+  --line: rgba(24, 24, 27, 0.08);
+  --line2: rgba(181, 133, 37, 0.22);
+  --text: #18181B;
+  --muted: #52525B;
+  --quiet: #71717A;
+  --gold: #B58525;
+  --gold2: #98701F;
+  --wash: rgba(181, 133, 37, 0.08);
+  --green: #15803d;
   background: var(--bg);
   color: var(--text);
 }
@@ -9442,18 +9444,18 @@ html {
   border-color: var(--line2);
 }
 .app-shell[data-theme="light"] {
-  --bg: #f5f6f8;
+  --bg: #FAF8F4;
   --panel: #ffffff;
-  --raised: #eef0f4;
-  --line: rgba(35, 43, 57, 0.09);
-  --line2: rgba(35, 43, 57, 0.15);
-  --text: #202638;
-  --muted: #596174;
-  --quiet: #788094;
-  --gold: #9a7028;
-  --gold2: #80591a;
-  --wash: rgba(184, 139, 57, 0.1);
-  --green: #39784e;
+  --raised: #F7F5F0;
+  --line: rgba(24, 24, 27, 0.08);
+  --line2: rgba(181, 133, 37, 0.22);
+  --text: #18181B;
+  --muted: #52525B;
+  --quiet: #71717A;
+  --gold: #B58525;
+  --gold2: #98701F;
+  --wash: rgba(181, 133, 37, 0.08);
+  --green: #15803d;
   background: var(--bg);
   color: var(--text);
 }
@@ -13498,46 +13500,16 @@ body:has(.app-shell[data-theme="light"]) {
     left: 0;
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
-    min-height: 67px;
-    padding: 7px 7px max(7px, env(safe-area-inset-bottom, 0px));
-    border-top: 1px solid rgba(212, 183, 122, 0.16);
-    background: rgba(10, 12, 20, 0.94);
-    -webkit-backdrop-filter: blur(22px) saturate(135%);
-    backdrop-filter: blur(22px) saturate(135%);
-  }
-  .mobile-bottom-nav-item {
-    display: flex;
-    min-width: 0;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    gap: 4px;
-    padding: 4px 2px;
-    border: 0;
-    border-radius: 12px;
-    color: #a7a69f;
-    background: transparent;
-    font:
-      600 10px/1.2 Manrope,
-      ui-sans-serif,
-      system-ui,
-      sans-serif;
-    letter-spacing: 0.1px;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .mobile-bottom-nav-item svg {
-    flex: 0 0 auto;
-  }
-  .mobile-bottom-nav-item.active {
-    color: #f0cc68;
-  }
-  .mobile-bottom-nav-item.active svg {
-    filter: drop-shadow(0 0 7px rgba(240, 204, 104, 0.36));
+    min-height: 64px;
+    padding: 6px 6px max(6px, env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(11, 14, 23, 0.92);
+    -webkit-backdrop-filter: blur(24px) saturate(140%);
+    backdrop-filter: blur(24px) saturate(140%);
   }
   .app-shell[data-theme="light"] .mobile-bottom-nav {
-    border-top-color: rgba(122, 101, 66, 0.16);
-    background: rgba(255, 255, 255, 0.96);
+    border-top-color: rgba(0, 0, 0, 0.08);
+    background: rgba(255, 255, 255, 0.92);
   }
   .app-shell[data-theme="light"] .mobile-bottom-nav-item {
     color: #777b87;
@@ -15392,17 +15364,7 @@ html[data-theme="light"] .profile-signout {
   background: #fffefa !important;
   border-color: #e1ddd1 !important;
 }
-html[data-theme="light"] .mobile-bottom-nav {
-  color: #62666e !important;
-  background: rgba(255, 254, 250, 0.97) !important;
-  border-top-color: #e3dfd4 !important;
-}
-html[data-theme="light"] .mobile-bottom-nav-item {
-  color: #6d7280 !important;
-}
-html[data-theme="light"] .mobile-bottom-nav-item.active {
-  color: #876326 !important;
-}
+
 
 /* Birth-date picker: render as an opaque, viewport-level dialog so the modal fields
    never show through it or cover its controls on small screens. */

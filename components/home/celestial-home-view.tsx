@@ -58,7 +58,7 @@ export default function CelestialHomeView({
       accent: "gold",
       tint: "radial-gradient(ellipse at top left, rgba(245,158,11,0.18), transparent 72%)",
       borderGlow: "group-hover:border-amber-400/50",
-      iconWrap: "bg-amber-400/10 border-amber-400/25 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.18)]",
+      iconWrap: "bg-amber-500/10 border-amber-500/25 text-amber-700 dark:bg-amber-400/10 dark:border-amber-400/25 dark:text-amber-300 dark:shadow-[0_0_12px_rgba(245,158,11,0.18)]",
     },
     {
       id: "love",
@@ -73,7 +73,7 @@ export default function CelestialHomeView({
       accent: "rose",
       tint: "radial-gradient(ellipse at top left, rgba(244,63,94,0.18), transparent 72%)",
       borderGlow: "group-hover:border-rose-400/50",
-      iconWrap: "bg-rose-400/10 border-rose-400/25 text-rose-300 shadow-[0_0_12px_rgba(244,63,94,0.18)]",
+      iconWrap: "bg-rose-500/10 border-rose-500/25 text-rose-700 dark:bg-rose-400/10 dark:border-rose-400/25 dark:text-rose-300 dark:shadow-[0_0_12px_rgba(244,63,94,0.18)]",
     },
     {
       id: "sade-sati",
@@ -88,7 +88,7 @@ export default function CelestialHomeView({
       accent: "indigo",
       tint: "radial-gradient(ellipse at top left, rgba(129,140,248,0.18), transparent 72%)",
       borderGlow: "group-hover:border-indigo-400/50",
-      iconWrap: "bg-indigo-400/10 border-indigo-400/25 text-indigo-300 shadow-[0_0_12px_rgba(129,140,248,0.18)]",
+      iconWrap: "bg-indigo-500/10 border-indigo-500/25 text-indigo-700 dark:bg-indigo-400/10 dark:border-indigo-400/25 dark:text-indigo-300 dark:shadow-[0_0_12px_rgba(129,140,248,0.18)]",
     },
     {
       id: "remedies",
@@ -103,7 +103,7 @@ export default function CelestialHomeView({
       accent: "emerald",
       tint: "radial-gradient(ellipse at top left, rgba(16,185,129,0.18), transparent 72%)",
       borderGlow: "group-hover:border-emerald-400/50",
-      iconWrap: "bg-emerald-400/10 border-emerald-400/25 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.18)]",
+      iconWrap: "bg-emerald-500/10 border-emerald-500/25 text-emerald-700 dark:bg-emerald-400/10 dark:border-emerald-400/25 dark:text-emerald-300 dark:shadow-[0_0_12px_rgba(16,185,129,0.18)]",
     },
   ];
 
@@ -120,7 +120,7 @@ export default function CelestialHomeView({
       icon: Orbit,
       tint: "radial-gradient(ellipse at top left, rgba(234,179,8,0.18), transparent 72%)",
       borderGlow: "group-hover:border-yellow-400/50",
-      iconWrap: "bg-yellow-400/10 border-yellow-400/25 text-yellow-300 shadow-[0_0_12px_rgba(234,179,8,0.18)]",
+      iconWrap: "bg-amber-500/10 border-amber-500/25 text-amber-700 dark:bg-yellow-400/10 dark:border-yellow-400/25 dark:text-yellow-300",
     },
     {
       id: "navamsha",
@@ -134,7 +134,7 @@ export default function CelestialHomeView({
       icon: Compass,
       tint: "radial-gradient(ellipse at top left, rgba(168,85,247,0.18), transparent 72%)",
       borderGlow: "group-hover:border-purple-400/50",
-      iconWrap: "bg-purple-400/10 border-purple-400/25 text-purple-300 shadow-[0_0_12px_rgba(168,85,247,0.18)]",
+      iconWrap: "bg-purple-500/10 border-purple-500/25 text-purple-700 dark:bg-purple-400/10 dark:border-purple-400/25 dark:text-purple-300",
     },
     {
       id: "saturn-sade-sati",
@@ -148,7 +148,7 @@ export default function CelestialHomeView({
       icon: Sparkles,
       tint: "radial-gradient(ellipse at top left, rgba(59,130,246,0.18), transparent 72%)",
       borderGlow: "group-hover:border-blue-400/50",
-      iconWrap: "bg-blue-400/10 border-blue-400/25 text-blue-300 shadow-[0_0_12px_rgba(59,130,246,0.18)]",
+      iconWrap: "bg-blue-500/10 border-blue-500/25 text-blue-700 dark:bg-blue-400/10 dark:border-blue-400/25 dark:text-blue-300",
     },
     {
       id: "matchmaking",
@@ -162,7 +162,7 @@ export default function CelestialHomeView({
       icon: Heart,
       tint: "radial-gradient(ellipse at top left, rgba(236,72,153,0.18), transparent 72%)",
       borderGlow: "group-hover:border-pink-400/50",
-      iconWrap: "bg-pink-400/10 border-pink-400/25 text-pink-300 shadow-[0_0_12px_rgba(236,72,153,0.18)]",
+      iconWrap: "bg-pink-500/10 border-pink-500/25 text-pink-700 dark:bg-pink-400/10 dark:border-pink-400/25 dark:text-pink-300",
     },
   ];
 
@@ -185,15 +185,15 @@ export default function CelestialHomeView({
           1. ICONIC HERO CARD (Cosmic Glassmorphism + Luxury Gold CTA)
           ======================================================== */}
       <section
-        className="relative group rounded-[26px] p-[1px] bg-gradient-to-b from-amber-400/30 via-white/10 to-transparent shadow-[0_12px_40px_rgba(0,0,0,0.6)]"
+        className="relative group rounded-[26px] p-[1px] bg-gradient-to-b from-amber-500/20 via-black/[0.04] to-transparent dark:from-amber-400/30 dark:via-white/10 dark:to-transparent shadow-[0_12px_40px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.6)]"
       >
         {/* Animated aura behind card */}
-        <div className="absolute -inset-1 rounded-[28px] bg-gradient-to-r from-amber-500/15 via-violet-500/10 to-amber-500/10 blur-xl opacity-75 pointer-events-none -z-10 group-hover:opacity-100 transition-opacity duration-700" />
+        <div className="absolute -inset-1 rounded-[28px] bg-gradient-to-r from-amber-500/10 via-amber-200/20 to-amber-500/10 dark:from-amber-500/15 dark:via-violet-500/10 dark:to-amber-500/10 blur-xl opacity-75 pointer-events-none -z-10 group-hover:opacity-100 transition-opacity duration-700" />
 
-        <div className="relative rounded-[25px] bg-[#0c0e18]/85 backdrop-blur-2xl p-5 sm:p-7 overflow-hidden border border-white/[0.04]">
+        <div className="relative rounded-[25px] bg-white border border-amber-900/10 shadow-sm dark:bg-[#0c0e18]/85 dark:border-white/[0.04] backdrop-blur-2xl p-5 sm:p-7 overflow-hidden">
           {/* Faint slowly rotating sacred geometry / mandala watermark */}
           <div
-            className="absolute -right-20 -top-20 w-80 h-80 opacity-[0.06] pointer-events-none text-amber-300 animate-[spin_100s_linear_infinite]"
+            className="absolute -right-20 -top-20 w-80 h-80 opacity-[0.04] dark:opacity-[0.06] pointer-events-none text-amber-600 dark:text-amber-300 animate-[spin_100s_linear_infinite]"
             aria-hidden="true"
           >
             <svg viewBox="0 0 200 200" fill="none" stroke="currentColor" strokeWidth="0.75" className="w-full h-full">
@@ -211,23 +211,23 @@ export default function CelestialHomeView({
           {/* Top Metadata Strip */}
           <div className="flex items-center justify-between gap-3 relative z-10">
             <div className="inline-flex items-center gap-2.5">
-              <span className="w-7 h-7 rounded-lg bg-white/[0.04] border border-white/10 flex items-center justify-center text-amber-300/90 shadow-[0_0_10px_rgba(251,191,36,0.15)]">
+              <span className="w-7 h-7 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-700 shadow-[0_0_10px_rgba(217,119,6,0.12)] dark:bg-white/[0.04] dark:border-white/10 dark:text-amber-300/90 dark:shadow-[0_0_10px_rgba(251,191,36,0.15)] flex items-center justify-center">
                 <MoonStar size={14} strokeWidth={2} />
               </span>
-              <span className="text-[11px] font-bold tracking-wider uppercase text-amber-300/90">
-                VEDIC.AI <span className="text-white/30">·</span> {isHi ? "ज्योतिष सहचर" : "ASTROLOGY COMPANION"}
+              <span className="text-[11px] font-bold tracking-wider uppercase text-[#B58525] dark:text-amber-300/90">
+                VEDIC.AI <span className="text-black/25 dark:text-white/30">·</span> {isHi ? "ज्योतिष सहचर" : "ASTROLOGY COMPANION"}
               </span>
             </div>
 
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-semibold text-emerald-300 tracking-wide">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 tracking-wide">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
               <span>{isHi ? "तैयार" : "Ready to explore"}</span>
             </div>
           </div>
 
           {/* Warm Punchy Greeting in Luxury Display Serif */}
           <h2
-            className="relative z-10 text-xl sm:text-[23px] font-medium text-white tracking-tight leading-snug my-3.5 font-serif-luxury"
+            className="relative z-10 text-xl sm:text-[23px] font-medium text-[#18181B] dark:text-white tracking-tight leading-snug my-3.5 font-serif-luxury"
             style={{ fontFamily: "'Playfair Display', 'Cinzel', Georgia, serif" }}
           >
             {isHi
@@ -236,9 +236,9 @@ export default function CelestialHomeView({
           </h2>
 
           {/* Inner Birth Coordinates Card */}
-          <div className="relative z-10 rounded-2xl p-4 bg-white/[0.025] border border-white/[0.06] backdrop-blur-md flex flex-col gap-2.5">
-            <div className="flex items-center gap-2 text-xs font-semibold text-amber-300/95">
-              <CalendarDays size={15} className="text-amber-400 shrink-0" />
+          <div className="relative z-10 rounded-2xl p-4 bg-[#F7F5F0] border border-black/[0.05] dark:bg-white/[0.025] dark:border-white/[0.06] backdrop-blur-md flex flex-col gap-2.5">
+            <div className="flex items-center gap-2 text-xs font-semibold text-[#B58525] dark:text-amber-300/95">
+              <CalendarDays size={15} className="text-[#B58525] dark:text-amber-400 shrink-0" />
               <span>
                 {savedBirth && chartReport
                   ? isHi ? "आपकी जन्म कुंडली तैयार है" : "Your birth chart is ready"
@@ -246,7 +246,7 @@ export default function CelestialHomeView({
               </span>
             </div>
 
-            <p className="text-xs text-white/65 leading-relaxed m-0">
+            <p className="text-xs text-[#52525B] dark:text-white/65 leading-relaxed m-0">
               {savedBirth && chartReport
                 ? isHi
                   ? "आपकी कुंडली गणित हो चुकी है। व्यक्तिगत व्याख्याओं से पहले विवरण की समीक्षा के लिए अपना जन्म प्रोफ़ाइल खोलें।"
@@ -262,7 +262,7 @@ export default function CelestialHomeView({
               onClick={onOpenBirth}
               whileHover={{ scale: 1.015 }}
               whileTap={{ scale: 0.985 }}
-              className="mt-1 w-full py-3 px-4 rounded-xl font-bold text-xs sm:text-[13px] tracking-wide text-[#11131a] flex items-center justify-between shadow-[0_0_25px_rgba(229,184,75,0.32)] transition-all cursor-pointer relative overflow-hidden group/btn border-t border-white/40"
+              className="mt-1 w-full py-3 px-4 rounded-xl font-bold text-xs sm:text-[13px] tracking-wide text-[#18181B] flex items-center justify-between shadow-[0_0_25px_rgba(229,184,75,0.32)] transition-all cursor-pointer relative overflow-hidden group/btn border-t border-white/40"
               style={{
                 background: "linear-gradient(90deg, #F6D365 0%, #E5B84B 50%, #C89B3C 100%)",
               }}
@@ -275,7 +275,7 @@ export default function CelestialHomeView({
                     : isHi ? "जन्म विवरण दर्ज करें" : "Enter birth details"}
                 </span>
               </div>
-              <span className="text-base font-bold leading-none select-none text-[#11131a]/90 group-hover/btn:translate-x-0.5 transition-transform">
+              <span className="text-base font-bold leading-none select-none text-[#18181B]/90 group-hover/btn:translate-x-0.5 transition-transform">
                 ✦
               </span>
             </motion.button>
@@ -288,17 +288,17 @@ export default function CelestialHomeView({
           ======================================================== */}
       {historyItems.length > 0 && (
         <div
-          className="p-3.5 sm:p-4 rounded-2xl bg-white/[0.025] backdrop-blur-md border border-white/[0.07] flex items-center justify-between gap-3 shadow-lg"
+          className="p-3.5 sm:p-4 rounded-2xl bg-white border border-black/[0.06] shadow-sm dark:bg-white/[0.025] dark:border-white/[0.07] backdrop-blur-md flex items-center justify-between gap-3 dark:shadow-lg"
         >
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-8 h-8 rounded-xl bg-amber-400/10 border border-amber-400/25 text-amber-300 flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:bg-amber-400/10 dark:border-amber-400/25 dark:text-amber-300 flex items-center justify-center shrink-0">
               <History size={16} />
             </div>
             <div className="min-w-0">
-              <span className="text-[10px] uppercase font-bold text-amber-300/90 tracking-wider block">
+              <span className="text-[10px] uppercase font-bold text-[#B58525] dark:text-amber-300/90 tracking-wider block">
                 {isHi ? "पिछला परामर्श पुनः आरंभ करें" : "Resume Previous Consultation"}
               </span>
-              <strong className="block text-xs text-white font-medium truncate max-w-[280px] sm:max-w-md mt-0.5">
+              <strong className="block text-xs text-[#18181B] dark:text-white font-medium truncate max-w-[280px] sm:max-w-md mt-0.5">
                 {historyItems[0].title}
               </strong>
             </div>
@@ -306,7 +306,7 @@ export default function CelestialHomeView({
           <button
             type="button"
             onClick={() => onLoadConversation(historyItems[0].id)}
-            className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-amber-400/20 text-white text-xs font-semibold border border-white/10 hover:border-amber-400/30 transition-colors cursor-pointer shrink-0"
+            className="px-3 py-1.5 rounded-lg bg-black/[0.04] hover:bg-amber-500/15 text-[#18181B] border border-black/10 hover:border-amber-500/30 dark:bg-white/10 dark:hover:bg-amber-400/20 dark:text-white dark:border-white/10 dark:hover:border-amber-400/30 transition-colors text-xs font-semibold cursor-pointer shrink-0"
           >
             {isHi ? "जारी रखें →" : "Resume →"}
           </button>
@@ -318,15 +318,15 @@ export default function CelestialHomeView({
           ======================================================== */}
       <section className="flex flex-col gap-3.5">
         <div className="flex items-center justify-between px-1">
-          <div className="inline-flex items-center gap-2 text-xs font-bold tracking-wider uppercase text-amber-300/90">
-            <Sparkles size={14} className="text-amber-400" />
+          <div className="inline-flex items-center gap-2 text-xs font-bold tracking-wider uppercase text-[#B58525] dark:text-amber-300/90">
+            <Sparkles size={14} className="text-amber-600 dark:text-amber-400" />
             <span>{isHi ? "एक विषय चुनें" : "CHOOSE A PATHWAY TO EXPLORE"}</span>
           </div>
 
           <button
             type="button"
             onClick={() => setShowAllPresets(!showAllPresets)}
-            className="text-[11px] font-semibold text-white/50 hover:text-amber-300 transition-colors flex items-center gap-1 cursor-pointer py-1 px-2 rounded-lg hover:bg-white/[0.04]"
+            className="text-[11px] font-semibold text-[#71717A] hover:text-[#B58525] hover:bg-black/[0.04] dark:text-white/50 dark:hover:text-amber-300 dark:hover:bg-white/[0.04] transition-colors flex items-center gap-1 cursor-pointer py-1 px-2 rounded-lg"
           >
             <span>
               {showAllPresets
@@ -347,11 +347,11 @@ export default function CelestialHomeView({
                   whileHover={{ y: -3, scale: 1.01 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => onSelectPrompt(item.prompt, item.title)}
-                  className={`group relative text-left rounded-2xl p-4 sm:p-4.5 bg-white/[0.025] hover:bg-white/[0.045] backdrop-blur-xl border border-white/[0.07] ${item.borderGlow} transition-all duration-300 flex flex-col justify-between overflow-hidden shadow-lg cursor-pointer min-h-[148px] sm:min-h-[160px]`}
+                  className={`group relative text-left rounded-2xl p-4 sm:p-4.5 bg-white hover:bg-[#FAF8F4] border border-black/[0.06] shadow-sm hover:border-amber-500/40 dark:bg-white/[0.025] dark:hover:bg-white/[0.045] dark:border-white/[0.07] ${item.borderGlow} backdrop-blur-xl transition-all duration-300 flex flex-col justify-between overflow-hidden cursor-pointer min-h-[148px] sm:min-h-[160px]`}
                 >
                   {/* Category subtle top-left radial glow tint */}
                   <div
-                    className="absolute inset-0 pointer-events-none opacity-60 group-hover:opacity-100 transition-opacity duration-500"
+                    className="absolute inset-0 pointer-events-none opacity-30 group-hover:opacity-60 dark:opacity-60 dark:group-hover:opacity-100 transition-opacity duration-500"
                     style={{ background: item.tint }}
                   />
 
@@ -366,16 +366,16 @@ export default function CelestialHomeView({
 
                   {/* Bottom: Title & Subtitle with Chevron at bottom right */}
                   <div className="relative z-10 flex flex-col gap-1 w-full">
-                    <h3 className="font-semibold text-sm sm:text-[15px] text-white tracking-tight leading-snug group-hover:text-amber-200 transition-colors">
+                    <h3 className="font-semibold text-sm sm:text-[15px] text-[#18181B] group-hover:text-amber-700 dark:text-white dark:group-hover:text-amber-200 tracking-tight leading-snug transition-colors">
                       {item.title}
                     </h3>
                     <div className="flex items-end justify-between gap-1.5 w-full">
-                      <p className="text-[11px] sm:text-xs text-white/55 line-clamp-2 leading-relaxed m-0 flex-1">
+                      <p className="text-[11px] sm:text-xs text-[#52525B] dark:text-white/55 line-clamp-2 leading-relaxed m-0 flex-1">
                         {item.subtitle}
                       </p>
                       <ChevronRight
                         size={15}
-                        className="text-white/35 group-hover:text-amber-300 group-hover:translate-x-0.5 transition-all shrink-0 mb-0.5"
+                        className="text-[#71717A] group-hover:text-amber-600 group-hover:translate-x-0.5 dark:text-white/35 dark:group-hover:text-amber-300 transition-all shrink-0 mb-0.5"
                       />
                     </div>
                   </div>
@@ -386,8 +386,8 @@ export default function CelestialHomeView({
         </div>
 
         {/* Traditional Guidance Note */}
-        <div className="mt-2 py-3 px-4 rounded-xl bg-white/[0.015] border border-white/[0.05] flex items-center gap-2.5 text-[11px] text-white/50 leading-relaxed">
-          <Sparkles size={14} className="text-amber-400/80 shrink-0" />
+        <div className="mt-2 py-3 px-4 rounded-xl bg-black/[0.02] border border-black/[0.06] text-[#52525B] dark:bg-white/[0.015] dark:border-white/[0.05] dark:text-white/50 flex items-center gap-2.5 text-[11px] leading-relaxed">
+          <Sparkles size={14} className="text-amber-600/80 dark:text-amber-400/80 shrink-0" />
           <span>
             {isHi
               ? "पारंपरिक ज्योतिषीय व्याख्याएं आत्म-चिंतन के लिए हैं। व्यक्तिगत चार्ट अंतर्दृष्टि के लिए सटीक जन्म विवरण और गणना किए गए चार्ट डेटा की आवश्यकता होती है।"

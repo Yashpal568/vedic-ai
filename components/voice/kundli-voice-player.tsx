@@ -53,7 +53,7 @@ export default function KundliVoicePlayer({
     setPlayerState("loading");
 
     // Strictly sanitize ONLY Section 5 and Section 6 for audio synthesis
-    const textToSpeak = sanitizeTextForTTS(rawSections);
+    const textToSpeak = sanitizeTextForTTS(rawSections, language);
 
     try {
       const handle = await speakUnified({
@@ -183,7 +183,7 @@ export default function KundliVoicePlayer({
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
               <span className="text-xs font-bold uppercase tracking-wider text-[var(--gold)] font-sans">
-                {isHindi ? "ऑडियो वाचन · केवल खंड 5 और 6" : "VOICE NARRATION · SECTIONS 5 & 6"}
+                {isHindi ? "ऑडियो वाचन · महत्वपूर्ण बिंदु" : "VOICE NARRATION · IMPORTANT POINTS"}
               </span>
               {playerState === "playing" && (
                 <span className="inline-flex items-center px-1.5 py-0.2 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-400 animate-pulse">
@@ -198,8 +198,8 @@ export default function KundliVoicePlayer({
             </div>
             <p className="text-xs text-[var(--text)] font-medium truncate mt-0.5">
               {isHindi
-                ? "मुख्य बिंदु व व्यावहारिक मार्गदर्शन सुनें"
-                : "Listen to Key Highlights & Practical Guidance"}
+                ? "आपकी कुंडली के महत्वपूर्ण बिंदु व मार्गदर्शन सुनें"
+                : "Listen to Important Points About Your Kundli"}
             </p>
           </div>
         </div>

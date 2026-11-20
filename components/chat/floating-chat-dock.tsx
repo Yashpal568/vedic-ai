@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Mic, MicOff, Send } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/language-context";
@@ -135,7 +135,7 @@ export default function FloatingChatDock({
     <>
       {/* Ambient Gradient Mask behind Floating Input Dock */}
       <div
-        className="pointer-events-none fixed bottom-0 left-0 right-0 h-44 bg-gradient-to-t from-[#060812] via-[#060812]/80 to-transparent z-20"
+        className="pointer-events-none fixed bottom-0 left-0 right-0 h-44 bg-gradient-to-t from-[#FAF8F4] via-[#FAF8F4]/90 to-transparent dark:from-[#060812] dark:via-[#060812]/80 dark:to-transparent z-20"
         aria-hidden="true"
       />
 
@@ -143,10 +143,10 @@ export default function FloatingChatDock({
       <div
         className={`fixed bottom-[68px] sm:bottom-[72px] lg:bottom-6 left-0 right-0 lg:left-[280px] z-25 px-3.5 sm:px-6 pointer-events-none flex justify-center transition-all duration-200 ${className}`}
       >
-        <div className="w-full max-w-xl pointer-events-auto">
+        <div className="w-full max-w-3xl pointer-events-auto">
           <form
             onSubmit={handleSubmit}
-            className="group flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full bg-[#121624]/90 backdrop-blur-2xl border border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.65)] hover:border-white/20 focus-within:border-amber-400/50 focus-within:ring-2 focus-within:ring-amber-400/20 transition-all"
+            className="group flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full bg-white/95 border border-black/10 shadow-lg text-[#18181B] hover:border-black/20 focus-within:border-amber-500/50 focus-within:ring-2 focus-within:ring-amber-500/20 dark:bg-[#121624]/90 dark:border-white/10 dark:shadow-[0_12px_40px_rgba(0,0,0,0.65)] dark:hover:border-white/20 dark:focus-within:border-amber-400/50 dark:focus-within:ring-amber-400/20 backdrop-blur-2xl transition-all"
           >
             <textarea
               id="chat-input"
@@ -161,14 +161,14 @@ export default function FloatingChatDock({
               placeholder={resolvedPlaceholder}
               rows={1}
               aria-label={isHindi ? "वैदिक एआई को संदेश भेजें" : "Message Vedic AI"}
-              className="flex-1 bg-transparent border-0 outline-none text-white text-xs sm:text-[13.5px] placeholder:text-white/40 resize-none py-1.5 px-2 max-h-[120px] leading-relaxed"
+              className="flex-1 bg-transparent border-0 outline-none text-[#18181B] placeholder:text-[#71717A] dark:text-white dark:placeholder:text-white/40 text-xs sm:text-[13.5px] resize-none py-1.5 px-2 max-h-[120px] leading-relaxed"
             />
 
             <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
               <button
                 type="button"
                 onClick={handlePlus}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-white/60 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-full flex items-center justify-center text-zinc-600 hover:text-zinc-900 hover:bg-black/[0.05] dark:text-white/60 dark:hover:text-white dark:hover:bg-white/[0.08] transition-colors cursor-pointer"
                 title={isHindi ? "जन्म विवरण जोड़ें" : "Add birth details"}
                 aria-label="Birth details"
               >
@@ -180,8 +180,8 @@ export default function FloatingChatDock({
                 onClick={toggleVoiceInput}
                 className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors cursor-pointer ${
                   voiceListening
-                    ? "text-rose-400 bg-rose-500/20 animate-pulse"
-                    : "text-white/60 hover:text-white hover:bg-white/[0.08]"
+                    ? "text-rose-500 bg-rose-500/20 animate-pulse"
+                    : "text-zinc-600 hover:text-zinc-900 hover:bg-black/[0.05] dark:text-white/60 dark:hover:text-white dark:hover:bg-white/[0.08]"
                 }`}
                 aria-label={
                   voiceListening

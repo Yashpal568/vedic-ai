@@ -27,7 +27,28 @@ export const viewport: Viewport = { themeColor: "#11131a", colorScheme: "light d
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                var urlTheme = new URLSearchParams(window.location.search).get('theme');
+                var saved = window.localStorage.getItem('vedic-chat-theme');
+                var theme = urlTheme === 'light' || (urlTheme !== 'dark' && saved === 'light') ? 'light' : 'dark';
+                document.documentElement.dataset.theme = theme;
+                if (theme === 'dark') {
+                  document.documentElement.classList.add('dark');
+                  document.documentElement.classList.remove('light');
+                } else {
+                  document.documentElement.classList.add('light');
+                  document.documentElement.classList.remove('dark');
+                }
+              } catch (e) {}
+            `,
+          }}
+        />
+      </head>
       <body>
         <ThemeSync />
         <LanguageProvider>

@@ -110,35 +110,58 @@ World
     expect(extractKundliSections5And6(incomplete2)).toBeNull();
   });
 
-  it("sanitizes markdown symbols and bullet markers for fluent TTS playback", () => {
+  it("replaces Point 5 and Point 6 headers with natural Kundli phrasing in Hindi", () => {
     const extracted = extractKundliSections5And6(hindiReport)!;
-    const sanitized = sanitizeTextForTTS(extracted);
+    const sanitized = sanitizeTextForTTS(extracted, "hi");
 
-    // Markdown symbols stripped
-    expect(sanitized).not.toContain("###");
-    expect(sanitized).not.toContain("**");
-    expect(sanitized).not.toMatch(/^[\s*•\-+>]/m);
+    // Replaced with natural Hindi phrasing
+    expect(sanitized).toContain("आपकी कुंडली के महत्वपूर्ण बिंदु:");
+    expect(sanitized).toContain("व्यावहारिक मार्गदर्शन:");
+    expect(sanitized).not.toContain("5. मुख्य बिंदु");
+    expect(sanitized).not.toContain("6. व्यावहारिक मार्गदर्शन");
+    expect(sanitized).not.toContain("point 5");
+    expect(sanitized).not.toContain("point 6");
 
     // Content preserved
-    expect(sanitized).toContain("5. मुख्य बिंदु");
     expect(sanitized).toContain("शनि-महादशा");
-    expect(sanitized).toContain("6. व्यावहारिक मार्गदर्शन");
     expect(sanitized).toContain("अनुशासन बनाए रखें");
   });
 
-  it("sanitizes English report for fluent TTS playback", () => {
+  it("replaces Point 5 and Point 6 headers with 'Important points about your Kundli' in English", () => {
     const extracted = extractKundliSections5And6(englishReport)!;
-    const sanitized = sanitizeTextForTTS(extracted);
+    const sanitized = sanitizeTextForTTS(extracted, "en");
 
-    expect(sanitized).not.toContain("###");
-    expect(sanitized).not.toContain("**");
-    expect(sanitized).toContain("5. Important Points");
+    expect(sanitized).toContain("Important points about your Kundli:");
+    expect(sanitized).toContain("Practical guidance for your Kundli:");
+    expect(sanitized).not.toContain("5. Important Points");
+    expect(sanitized).not.toContain("6. Practical Guidance");
+    expect(sanitized).not.toContain("point 5");
+    expect(sanitized).not.toContain("point 6");
     expect(sanitized).toContain("Mars in 10th House: Extraordinary professional focus");
-    expect(sanitized).toContain("6. Practical Guidance");
     expect(sanitized).toContain("Establish Daily Routines");
   });
 
-  it("extracts exact user mobile screenshot Kundli text and sanitizes correctly", () => {
+  it("replaces literal 'point 5 explain' and 'point 6 explain' cleanly", () => {
+    const rawWithPointExplain = `
+Point 5 explain
+- Mars in 10th House: Career leadership.
+- Jupiter Aspect: Wisdom and ethics.
+
+Point 6 explain
+- Practice daily meditation and morning walks.
+`;
+    const extracted = extractKundliSections5And6(rawWithPointExplain);
+    expect(extracted).not.toBeNull();
+
+    const sanitized = sanitizeTextForTTS(extracted!, "en");
+    expect(sanitized).toContain("Important points about your Kundli:");
+    expect(sanitized).toContain("Practical guidance for your Kundli:");
+    expect(sanitized).not.toContain("point 5 explain");
+    expect(sanitized).not.toContain("point 6 explain");
+    expect(sanitized).toContain("Mars in 10th House: Career leadership");
+  });
+
+  it("extracts exact user mobile screenshot Kundli text and sanitizes correctly into natural Hindi", () => {
     const mobileReport = `
 4. आपके लिए इसका क्या अर्थ है
 मिश्रण को दर्शाता है, जिसमें घर-परिवार एवं सामाजिक प्रतिष्ठा दोनों ही महत्वपूर्ण भूमिका निभाते हैं।
@@ -161,8 +184,6 @@ World
 
     const extracted = extractKundliSections5And6(mobileReport);
     expect(extracted).not.toBeNull();
-    expect(extracted).toContain("5. मुख्य बिंदु");
-    expect(extracted).toContain("6. व्यावहारिक मार्गदर्शन");
     expect(extracted).toContain("शनि-महादशा");
     expect(extracted).toContain("आत्म-विकास");
 
@@ -170,9 +191,11 @@ World
     expect(extracted).not.toContain("4. आपके लिए इसका क्या अर्थ है");
     expect(extracted).not.toContain("मिश्रण को दर्शाता है");
 
-    const sanitized = sanitizeTextForTTS(extracted!);
-    expect(sanitized).toContain("5. मुख्य बिंदु");
-    expect(sanitized).toContain("6. व्यावहारिक मार्गदर्शन");
+    const sanitized = sanitizeTextForTTS(extracted!, "hi");
+    expect(sanitized).toContain("आपकी कुंडली के महत्वपूर्ण बिंदु:");
+    expect(sanitized).toContain("व्यावहारिक मार्गदर्शन:");
+    expect(sanitized).not.toContain("5. मुख्य बिंदु");
+    expect(sanitized).not.toContain("6. व्यावहारिक मार्गदर्शन");
     expect(sanitized).not.toContain("—"); // converted to comma pause
   });
 
@@ -192,15 +215,15 @@ Ancient texts remind us that free will guides destiny.
 
     const extracted = extractKundliSections5And6(boldNumberedReport);
     expect(extracted).not.toBeNull();
-    expect(extracted).toContain("5. Key Highlights");
     expect(extracted).toContain("Point Alpha");
-    expect(extracted).toContain("6. Actionable Advice");
     expect(extracted).not.toContain("7. Vedic Epilogue");
     expect(extracted).not.toContain("Ancient texts");
 
-    const sanitized = sanitizeTextForTTS(extracted!);
+    const sanitized = sanitizeTextForTTS(extracted!, "en");
     expect(sanitized).not.toContain("**");
     expect(sanitized).not.toContain("*");
+    expect(sanitized).toContain("Important points about your Kundli:");
+    expect(sanitized).toContain("Practical guidance for your Kundli:");
     expect(sanitized).toContain("Point Alpha: Leading strategic vision");
   });
 });

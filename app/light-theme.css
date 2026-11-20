@@ -1,22 +1,27 @@
 /* Vedic AI — shared light theme. Activated by html[data-theme="light"]. */
-html[data-theme="light"] {
+html[data-theme="light"],
+html.light {
   color-scheme: light;
-  --bg: #f7f5ef;
-  --panel: #fffefa;
-  --raised: #f0ede4;
-  --line: rgba(50, 45, 32, 0.1);
-  --line2: rgba(50, 45, 32, 0.16);
-  --text: #25271f;
-  --muted: #66685f;
-  --quiet: #77796f;
-  --gold: #9b7737;
-  --gold2: #b18a43;
-  --wash: rgba(177, 138, 67, 0.11);
-  --green: #477b55;
+  --bg: #FAF8F4;
+  --panel: #ffffff;
+  --raised: #F7F5F0;
+  --line: rgba(24, 24, 27, 0.08);
+  --line2: rgba(181, 133, 37, 0.22);
+  --text: #18181B;
+  --muted: #52525B;
+  --quiet: #71717A;
+  --gold: #B58525;
+  --gold2: #98701F;
+  --wash: rgba(181, 133, 37, 0.08);
+  --green: #15803d;
 }
-html[data-theme="light"] body {
-  background: #f7f5ef;
-  color: #25271f;
+html[data-theme="light"] body,
+html.light body {
+  background-color: #FAF8F4;
+  background-image:
+    radial-gradient(ellipse at 50% 0%, rgba(229, 184, 75, 0.08), transparent 70%),
+    radial-gradient(ellipse at 100% 30%, rgba(212, 163, 60, 0.05), transparent 60%);
+  color: #18181B;
 }
 html[data-theme="light"] ::selection {
   background: #ead8ad;

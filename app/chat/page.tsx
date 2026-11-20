@@ -16,7 +16,6 @@ import type { KundliReport } from "@/lib/astrology";
 import { printKundliReport, downloadKundliPdfFile } from "@/lib/print-report";
 import { buildKundliHouseSummary, buildKundliPlanetSummary, buildKundliSimpleSummary } from "@/lib/kundli-summary";
 import { build15PointVedicReport, calculatePlanetaryAspects } from "@/lib/vedic-15-point-report";
-import KundliVoicePlayer from "@/components/voice/kundli-voice-player";
 import { stopAllSpeech } from "@/lib/voice/unified-tts-client";
 import {
   ArrowDown, ArrowUp, Mic, MicOff, CalendarDays, Check, ChevronLeft, ChevronRight,
@@ -310,7 +309,17 @@ export default function Home() {
   const accountUserIdRef = useRef<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [theme, setTheme] = useState<"dark" | "light">(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const urlTheme = new URLSearchParams(window.location.search).get("theme");
+        if (urlTheme === "light" || urlTheme === "dark") return urlTheme;
+        const saved = window.localStorage.getItem("vedic-chat-theme");
+        if (saved === "light" || saved === "dark") return saved;
+      } catch {}
+    }
+    return "dark";
+  });
   const { language, setLanguage } = useLanguage();
   const [translatedMessages, setTranslatedMessages] = useState<Record<string, string>>({});
   const [isTranslatingChat, setIsTranslatingChat] = useState(false);
@@ -371,11 +380,27 @@ export default function Home() {
       const urlTheme = new URLSearchParams(window.location.search).get("theme");
       const saved = window.localStorage.getItem("vedic-chat-theme");
       const current = urlTheme === "light" || urlTheme === "dark" ? urlTheme : (saved === "light" ? "light" : "dark");
+      console.log("THEME_EFFECT: urlTheme=", urlTheme, "saved=", saved, "current=", current);
       setTheme(current);
       document.documentElement.dataset.theme = current;
+      document.documentElement.classList.toggle("dark", current === "dark");
+      document.documentElement.classList.toggle("light", current === "light");
     } catch {}
   }, []);
-  useEffect(() => { try { window.localStorage.setItem("vedic-chat-theme", theme); } catch {} }, [theme]);
+  useEffect(() => {
+    try {
+      window.localStorage.setItem("vedic-chat-theme", theme);
+      document.documentElement.dataset.theme = theme;
+      document.documentElement.classList.toggle("dark", theme === "dark");
+      document.documentElement.classList.toggle("light", theme === "light");
+      document.querySelectorAll('[data-theme="dark"]').forEach(el => {
+        console.log("FIND_DARK: [data-theme=dark] on", el.tagName, el.className.slice(0, 30));
+      });
+      document.querySelectorAll('.dark').forEach(el => {
+        console.log("FIND_DARK: .dark on", el.tagName, el.className.slice(0, 30));
+      });
+    } catch {}
+  }, [theme]);
   // Do not restore birth profiles, charts, or chat messages from a global browser key.
   // That key was shared across accounts and could expose one user's chart to another.
   useEffect(() => {
@@ -1231,49 +1256,49 @@ export default function Home() {
       />
 
       <section className="main-panel app-sidebar-offset">
-        <header className="sticky top-0 z-30 flex items-center justify-between px-4 sm:px-6 h-16 backdrop-blur-md bg-[#070913]/75 border-b border-white/[0.06]">
+        <header className="sticky top-0 z-30 flex items-center justify-between px-4 sm:px-6 h-16 backdrop-blur-md bg-[#FAF8F4]/85 border-b border-black/[0.06] text-[#18181B] dark:bg-[#070913]/75 dark:border-white/[0.06] dark:text-white transition-colors">
           {/* Left Zone: Hamburger + refined vedic.ai logo */}
           <div className="flex items-center gap-3">
             <button
               type="button"
-              className="w-9 h-9 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 flex items-center justify-center text-white/80 hover:text-white transition-colors cursor-pointer"
+              className="w-9 h-9 rounded-xl bg-black/[0.04] hover:bg-black/[0.08] border border-black/10 flex items-center justify-center text-zinc-700 hover:text-zinc-900 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] dark:border-white/10 dark:text-white/80 dark:hover:text-white transition-colors cursor-pointer"
               onClick={() => setMobileMenuOpen(true)}
               aria-label="Open menu"
             >
               <Menu size={18} strokeWidth={2} />
             </button>
             <div className="flex items-center gap-2">
-              <span className="w-8 h-8 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-center text-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.18)]">
+              <span className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 shadow-[0_0_12px_rgba(217,119,6,0.15)] dark:bg-white/[0.04] dark:border-white/10 dark:text-amber-300 dark:shadow-[0_0_12px_rgba(251,191,36,0.18)]">
                 <MoonStar size={16} strokeWidth={1.8} />
               </span>
-              <span className="font-bold text-base tracking-tight text-white">
-                vedic<span className="text-amber-400">.</span>ai
+              <span className="font-bold text-base tracking-tight text-[#18181B] dark:text-white">
+                vedic<span className="text-amber-500 dark:text-amber-400">.</span>ai
               </span>
             </div>
           </div>
 
           {/* Right Zone: Compact EN / हिं segmented pill + sleek avatar */}
           <div className="flex items-center gap-2.5">
-            <div className="inline-flex items-center rounded-full bg-white/[0.05] border border-white/10 p-0.5 text-xs font-semibold backdrop-blur-md">
+            <div className="inline-flex items-center rounded-full bg-black/[0.04] border border-black/10 dark:bg-white/[0.05] dark:border-white/10 p-0.5 text-xs font-semibold backdrop-blur-md">
               <button
                 type="button"
                 onClick={() => setLanguage("en")}
                 className={`px-2.5 py-1 rounded-full transition-all text-xs cursor-pointer ${
                   language === "en"
-                    ? "bg-amber-400/20 text-amber-300 font-bold shadow-[0_0_10px_rgba(251,191,36,0.2)]"
-                    : "text-white/60 hover:text-white"
+                    ? "bg-amber-500/20 text-amber-800 dark:bg-amber-400/20 dark:text-amber-300 font-bold shadow-[0_0_10px_rgba(251,191,36,0.2)]"
+                    : "text-zinc-600 hover:text-zinc-900 dark:text-white/60 dark:hover:text-white"
                 }`}
               >
                 EN
               </button>
-              <span className="text-white/20 text-[10px] px-0.5 select-none">/</span>
+              <span className="text-black/20 dark:text-white/20 text-[10px] px-0.5 select-none">/</span>
               <button
                 type="button"
                 onClick={() => setLanguage("hi")}
                 className={`px-2.5 py-1 rounded-full transition-all text-xs cursor-pointer ${
                   language === "hi"
-                    ? "bg-amber-400/20 text-amber-300 font-bold shadow-[0_0_10px_rgba(251,191,36,0.2)]"
-                    : "text-white/60 hover:text-white"
+                    ? "bg-amber-500/20 text-amber-800 dark:bg-amber-400/20 dark:text-amber-300 font-bold shadow-[0_0_10px_rgba(251,191,36,0.2)]"
+                    : "text-zinc-600 hover:text-zinc-900 dark:text-white/60 dark:hover:text-white"
                 }`}
               >
                 हिं
@@ -1283,7 +1308,7 @@ export default function Home() {
             <button
               type="button"
               onClick={() => setMobileMenuOpen(true)}
-              className="relative w-9 h-9 rounded-full p-[1.5px] bg-gradient-to-tr from-amber-400 via-amber-200 to-amber-600 shadow-[0_0_12px_rgba(251,191,36,0.25)] hover:scale-105 active:scale-95 transition-transform cursor-pointer overflow-hidden flex items-center justify-center shrink-0"
+              className="relative w-9 h-9 rounded-full p-[1.5px] bg-gradient-to-tr from-amber-500 via-amber-300 to-amber-600 shadow-[0_0_12px_rgba(251,191,36,0.25)] hover:scale-105 active:scale-95 transition-transform cursor-pointer overflow-hidden flex items-center justify-center shrink-0"
               title={isSignedIn ? (accountName || "My profile") : "Account / Menu"}
               aria-label="Account menu"
             >
@@ -1294,7 +1319,7 @@ export default function Home() {
                   className="w-full h-full rounded-full object-cover"
                 />
               ) : (
-                <span className="w-full h-full rounded-full bg-[#121524] flex items-center justify-center text-xs font-bold text-amber-200">
+                <span className="w-full h-full rounded-full bg-amber-50 text-amber-900 dark:bg-[#121524] dark:text-amber-200 flex items-center justify-center text-xs font-bold">
                   {(accountName || savedBirth?.name || (isSignedIn ? accountEmail : "Guest") || "G").trim().charAt(0).toUpperCase()}
                 </span>
               )}
@@ -1340,11 +1365,6 @@ export default function Home() {
                   )}
                 </div>
                 <div className="assistant-response-card">
-                  <KundliVoicePlayer
-                    content={translatedMessages[`${message.id}:${language}`] || message.content}
-                    language={language}
-                    messageId={message.id}
-                  />
                   <StructuredMessageView
                     content={translatedMessages[`${message.id}:${language}`] || message.content}
                     language={language}
@@ -1485,7 +1505,7 @@ export default function Home() {
 
         {/* Ambient Gradient Mask behind Floating Input Dock */}
         <div
-          className="pointer-events-none fixed bottom-0 left-0 right-0 h-44 bg-gradient-to-t from-[#060812] via-[#060812]/80 to-transparent z-20"
+          className="pointer-events-none fixed bottom-0 left-0 right-0 h-44 bg-gradient-to-t from-[#FAF8F4] via-[#FAF8F4]/90 to-transparent dark:from-[#060812] dark:via-[#060812]/80 dark:to-transparent z-20"
           aria-hidden="true"
         />
 
@@ -1495,10 +1515,10 @@ export default function Home() {
             sidebarCollapsed ? "lg:left-[72px]" : "lg:left-[280px]"
           } z-25 px-3.5 sm:px-6 pointer-events-none flex justify-center transition-all duration-200`}
         >
-          <div className="w-full max-w-xl pointer-events-auto">
+          <div className="w-full max-w-3xl pointer-events-auto">
             <form
               onSubmit={submitMessage}
-              className="group flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full bg-[#121624]/90 backdrop-blur-2xl border border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.65)] hover:border-white/20 focus-within:border-amber-400/50 focus-within:ring-2 focus-within:ring-amber-400/20 transition-all"
+              className="group flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full bg-white/95 border border-black/10 shadow-lg text-[#18181B] hover:border-black/20 focus-within:border-amber-500/50 focus-within:ring-2 focus-within:ring-amber-500/20 dark:bg-[#121624]/90 dark:border-white/10 dark:shadow-[0_12px_40px_rgba(0,0,0,0.65)] dark:hover:border-white/20 dark:focus-within:border-amber-400/50 dark:focus-within:ring-amber-400/20 backdrop-blur-2xl transition-all"
             >
               <textarea
                 id="chat-input"
@@ -1517,14 +1537,14 @@ export default function Home() {
                 }
                 rows={1}
                 aria-label={language === "hi" ? "वैदिक एआई को संदेश भेजें" : "Message Vedic AI"}
-                className="flex-1 bg-transparent border-0 outline-none text-white text-xs sm:text-[13.5px] placeholder:text-white/40 resize-none py-1.5 px-2 max-h-[120px] leading-relaxed"
+                className="flex-1 bg-transparent border-0 outline-none text-[#18181B] placeholder:text-[#71717A] dark:text-white dark:placeholder:text-white/40 text-xs sm:text-[13.5px] resize-none py-1.5 px-2 max-h-[120px] leading-relaxed"
               />
 
               <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
                 <button
                   type="button"
                   onClick={() => setIsBirthOpen(true)}
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-white/60 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer"
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-zinc-600 hover:text-zinc-900 hover:bg-black/[0.05] dark:text-white/60 dark:hover:text-white dark:hover:bg-white/[0.08] transition-colors cursor-pointer"
                   title={
                     savedBirth
                       ? (language === "hi" ? "जन्म विवरण देखें" : "View birth details")
@@ -1540,8 +1560,8 @@ export default function Home() {
                   onClick={toggleVoiceInput}
                   className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors cursor-pointer ${
                     voiceListening
-                      ? "text-rose-400 bg-rose-500/20 animate-pulse"
-                      : "text-white/60 hover:text-white hover:bg-white/[0.08]"
+                      ? "text-rose-500 bg-rose-500/20 animate-pulse"
+                      : "text-zinc-600 hover:text-zinc-900 hover:bg-black/[0.05] dark:text-white/60 dark:hover:text-white dark:hover:bg-white/[0.08]"
                   }`}
                   aria-label={
                     voiceListening

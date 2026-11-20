@@ -2,7 +2,10 @@
  * Vedic-AI Kundli Voice Extraction & Text Sanitization Utility
  * Extracts ONLY Section 5 and Section 6 from generated Kundli reports.
  * Strictly excludes Sections 1, 2, 3, 4, intro text, Section 7, and footers.
- * Strips markdown and special characters for natural, fluent voice synthesis.
+ * Replaces robotic "Point 5 explain" / "Point 6 explain" / "5." / "6." with natural,
+ * human introductory phrasing:
+ * - English: "Important points about your Kundli" & "Practical guidance for your Kundli"
+ * - Hindi: "आपकी कुंडली के महत्वपूर्ण बिंदु" & "आपकी कुंडली के लिए व्यावहारिक मार्गदर्शन"
  */
 
 /**
@@ -14,8 +17,8 @@ export function extractKundliSections5And6(content: string): string | null {
   if (!content || typeof content !== "string") return null;
 
   // Locate the start of Section 5:
-  // Matches "### 5.", "## 5.", "5.", or "**5." followed by section title
-  const startRegex = /(?:^|\n)(?:#{1,4}\s*|\*{1,2}\s*)?5\.\s*([^\n]+)/i;
+  // Matches "### 5.", "## 5.", "5.", "**5.", or "point 5" followed by section title
+  const startRegex = /(?:^|\n)(?:#{1,4}\s*|\*{1,2}\s*)?(?:5\.|point\s*5\b)\s*([^\n]+)/i;
   const startMatch = content.match(startRegex);
   if (!startMatch || startMatch.index === undefined) return null;
 
@@ -23,8 +26,8 @@ export function extractKundliSections5And6(content: string): string | null {
   const remaining = content.slice(startIndex);
 
   // Locate the start of Section 7 or footer/boundary:
-  // Matches "### 7.", "## 7.", "7.", or "**7." or "---" or "Vedic AI"
-  const endRegex = /(?:\n(?:#{1,4}\s*|\*{1,2}\s*)?7\.\s*[^\n]+|\n\s*---|(?:\n|^)\s*Vedic AI\b)/i;
+  // Matches "### 7.", "## 7.", "7.", "**7.", or "---" or "Vedic AI"
+  const endRegex = /(?:\n(?:#{1,4}\s*|\*{1,2}\s*)?(?:7\.|point\s*7\b)\s*[^\n]+|\n\s*---|(?:\n|^)\s*Vedic AI\b)/i;
   const endMatch = remaining.match(endRegex);
 
   const rawSection5And6 = endMatch && endMatch.index !== undefined
@@ -32,7 +35,7 @@ export function extractKundliSections5And6(content: string): string | null {
     : remaining.trim();
 
   // Verify that it contains Section 6 as well
-  if (!/(?:^|\n)(?:#{1,4}\s*|\*{1,2}\s*)?6\.\s*[^\n]+/i.test(rawSection5And6)) {
+  if (!/(?:^|\n)(?:#{1,4}\s*|\*{1,2}\s*)?(?:6\.|point\s*6\b)\s*[^\n]+/i.test(rawSection5And6)) {
     return null;
   }
 
@@ -43,10 +46,36 @@ export function extractKundliSections5And6(content: string): string | null {
  * Strips markdown syntax, bullets, special characters, and repeated punctuation
  * so the text is spoken fluently by Text-to-Speech (TTS) engines without
  * vocalizing punctuation marks or markdown artifacts.
+ *
+ * Replaces robotic "Point 5 explain" and "Point 6 explain" headings with warm,
+ * respectful phrasing:
+ * - English: "Important points about your Kundli:" & "Practical guidance for your Kundli:"
+ * - Hindi: "आपकी कुंडली के महत्वपूर्ण बिंदु:" & "आपकी कुंडली के लिए व्यावहारिक मार्गदर्शन:"
  */
-export function sanitizeTextForTTS(markdown: string): string {
+export function sanitizeTextForTTS(markdown: string, language?: "en" | "hi"): string {
   if (!markdown) return "";
+
+  // Auto-detect Hindi if explicit language is 'hi' or text contains Devanagari Unicode
+  const isHi = language === "hi" || /[\u0900-\u097F]/.test(markdown);
+
+  const s5Replacement = isHi
+    ? "आपकी कुंडली के महत्वपूर्ण बिंदु: "
+    : "Important points about your Kundli: ";
+
+  const s6Replacement = isHi
+    ? ". आपकी कुंडली के लिए व्यावहारिक मार्गदर्शन: "
+    : ". Practical guidance for your Kundli: ";
+
+  // Match line 5 header safely up to end-of-line
+  const s5Regex = /(?:^|\n)\s*(?:#{1,6}\s*|\*{1,2}\s*)?(?:point\s*5(?:\s*explain)?|5\.)(?:\s*explain)?(?:\s*(?:important\s*points(?:\s*about\s*your\s*kundli)?|key\s*(?:points|highlights)|मुख्य\s*बिंदु|महत्वपूर्ण\s*बिंदु))?[^\n]*/gi;
+
+  // Match line 6 header safely up to end-of-line
+  const s6Regex = /(?:^|\n)\s*(?:#{1,6}\s*|\*{1,2}\s*)?(?:point\s*6(?:\s*explain)?|6\.)(?:\s*explain)?(?:\s*(?:practical\s*guidance(?:\s*for\s*your\s*kundli)?|actionable\s*advice|व्यावहारिक\s*मार्गदर्शन))?[^\n]*/gi;
+
   return markdown
+    // Replace Section 5 and 6 headers with natural human voice phrasing
+    .replace(s5Regex, "\n" + s5Replacement)
+    .replace(s6Regex, "\n" + s6Replacement)
     // Remove markdown headers (#, ##, ###, etc.)
     .replace(/^#{1,6}\s+/gm, "")
     // Remove bold and italic markers (**text**, *text*, __text__, _text_)
@@ -63,11 +92,20 @@ export function sanitizeTextForTTS(markdown: string): string {
     .replace(/[#~`|]/g, "")
     // Remove empty parentheses
     .replace(/\(\s*\)/g, "")
+    // Strip any remaining literal "point 5 explain", "point 6 explain", or isolated "point 5/6"
+    .replace(/\bpoint\s*5(?:\s*explain)?\b/gi, "")
+    .replace(/\bpoint\s*6(?:\s*explain)?\b/gi, "")
     // Normalize spaces and line breaks
     .replace(/[ \t]+/g, " ")
     .replace(/\n{2,}/g, ". ")
     .replace(/\n/g, ", ")
+    // Normalize punctuation after header colons
+    .replace(/:\s*,\s*/g, ": ")
     // Collapse duplicate punctuation (e.g. ",," or "..")
     .replace(/([.,?!])\s*([.,?!])+/g, "$1 ")
+    // Clean punctuation around sentence boundaries
+    .replace(/,\s*\./g, ".")
+    .replace(/\.\s*,/g, ".")
+    .replace(/^[,.\s]+/, "")
     .trim();
 }

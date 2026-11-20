@@ -23,7 +23,6 @@ import {
 } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { useLanguage } from "@/lib/i18n/language-context";
-import { LanguageSelector } from "@/components/language-selector";
 
 interface AppDesktopSidebarProps {
   onNewConsultation?: () => void;
@@ -425,8 +424,7 @@ export default function AppDesktopSidebar({
       {/* Permanently Fixed Footer: Account Profile (ChatGPT-style fixed at bottom) */}
       <div className="sidebar-fixed-footer sidebar-bottom pb-6">
         {!isCollapsed && (
-          <div className="sidebar-version-row flex items-center justify-between px-1 pb-2">
-            <LanguageSelector variant="compact" showIcon={false} />
+          <div className="sidebar-version-row flex items-center justify-end px-1 pb-2">
             <span className="sidebar-version-pill text-[10px] text-[var(--quiet)] font-mono">Vedic 4.0</span>
           </div>
         )}
