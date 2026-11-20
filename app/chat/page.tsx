@@ -16,6 +16,8 @@ import type { KundliReport } from "@/lib/astrology";
 import { printKundliReport, downloadKundliPdfFile } from "@/lib/print-report";
 import { buildKundliHouseSummary, buildKundliPlanetSummary, buildKundliSimpleSummary } from "@/lib/kundli-summary";
 import { build15PointVedicReport, calculatePlanetaryAspects } from "@/lib/vedic-15-point-report";
+import KundliVoicePlayer from "@/components/voice/kundli-voice-player";
+import { stopAllSpeech } from "@/lib/voice/unified-tts-client";
 import {
   ArrowDown, ArrowUp, Mic, MicOff, CalendarDays, Check, ChevronLeft, ChevronRight,
   CircleHelp, Gem, History, LogOut, Menu, MoonStar, Orbit, Plus, Sun,
@@ -609,6 +611,10 @@ export default function Home() {
  
 
   function startNewChat() {
+    stopAllSpeech();
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("vedic-stop-voice"));
+    }
     conversationLoadRequestRef.current += 1;
     setMessages([]);
     setInput("");
@@ -629,6 +635,10 @@ export default function Home() {
   }
 
   async function loadConversation(id: string) {
+    stopAllSpeech();
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("vedic-stop-voice"));
+    }
     if (!isSignedIn) { setToast("Sign in to open your saved conversations."); return; }
     const requestId = ++conversationLoadRequestRef.current;
     setLoadingConversationId(id);
@@ -713,6 +723,10 @@ export default function Home() {
   }
 
   async function sendMessage(value?: string) {
+    stopAllSpeech();
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("vedic-stop-voice"));
+    }
     const trimmed = (value === undefined ? input : value).trim();
     if (!trimmed || isLoading) return;
     if (!authReady) { setToast("Checking your sign-in session. Please try again in a moment."); return; }
@@ -986,6 +1000,11 @@ export default function Home() {
       }
     }
     if (!place) return;
+
+    stopAllSpeech();
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("vedic-stop-voice"));
+    }
 
     setIsLoading(true);
     const profile: BirthProfile = {
@@ -1400,6 +1419,11 @@ export default function Home() {
                   )}
                 </div>
                 <div className="assistant-response-card">
+                  <KundliVoicePlayer
+                    content={translatedMessages[`${message.id}:${language}`] || message.content}
+                    language={language}
+                    messageId={message.id}
+                  />
                   <StructuredMessageView
                     content={translatedMessages[`${message.id}:${language}`] || message.content}
                     language={language}

@@ -5,6 +5,7 @@ import type { SupportedLanguage, LanguageContextValue } from "./types";
 import en from "./locales/en";
 import hi from "./locales/hi";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { stopAllSpeech } from "@/lib/voice/unified-tts-client";
 
 export const STORAGE_KEY = "vedic-language";
 export const STORAGE_TIMESTAMP_KEY = "vedic-language-timestamp";
@@ -70,6 +71,11 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     activeRequestIdRef.current++; // Invalidate any in-flight asynchronous profile queries
 
     setLanguageState(newLang);
+
+    // Cancel active TTS playback when language changes
+    try {
+      stopAllSpeech();
+    } catch {}
 
     if (typeof window !== "undefined") {
       try {
