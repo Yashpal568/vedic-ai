@@ -16,6 +16,7 @@ import type { KundliReport } from "@/lib/astrology";
 import { printKundliReport, downloadKundliPdfFile } from "@/lib/print-report";
 import { buildKundliHouseSummary, buildKundliPlanetSummary, buildKundliSimpleSummary } from "@/lib/kundli-summary";
 import { build15PointVedicReport, calculatePlanetaryAspects } from "@/lib/vedic-15-point-report";
+import KundliVoicePlayer from "@/components/voice/kundli-voice-player";
 import { stopAllSpeech } from "@/lib/voice/unified-tts-client";
 import {
   ArrowDown, ArrowUp, Mic, MicOff, CalendarDays, Check, ChevronLeft, ChevronRight,
@@ -1356,13 +1357,23 @@ export default function Home() {
             {messages.map((message, messageIndex) => <div className={"message-row " + message.role + (message.animated ? " is-new" : "")} key={message.id}>
               {message.role === "assistant" && <div className="message-avatar"><MoonStar size={16} /></div>}
               {message.role === "assistant" ? <div className="message-content">
-                <div className="message-meta">
-                  {language === "hi" ? "वैदिक एआई · ज्योतिष सहचर" : "VEDIC AI · ASTROLOGY COMPANION"}
-                  {isTranslatingChat && !translatedMessages[`${message.id}:${language}`] && (
-                    <span style={{ color: "var(--gold)", marginLeft: 6, fontSize: "11px" }}>
-                      · {language === "hi" ? "अनुवाद हो रहा है…" : "Translating…"}
+                <div className="message-meta flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className="truncate">
+                      {language === "hi" ? "वैदिक एआई · ज्योतिष सहचर" : "VEDIC AI · ASTROLOGY COMPANION"}
                     </span>
-                  )}
+                    {isTranslatingChat && !translatedMessages[`${message.id}:${language}`] && (
+                      <span style={{ color: "var(--gold)", fontSize: "11px" }} className="shrink-0">
+                        · {language === "hi" ? "अनुवाद हो रहा है…" : "Translating…"}
+                      </span>
+                    )}
+                  </div>
+                  <KundliVoicePlayer
+                    content={translatedMessages[`${message.id}:${language}`] || message.content}
+                    language={language}
+                    messageId={message.id}
+                    autoPlay={Boolean(message.animated && messageIndex === messages.length - 1)}
+                  />
                 </div>
                 <div className="assistant-response-card">
                   <StructuredMessageView

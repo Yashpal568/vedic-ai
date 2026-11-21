@@ -34,7 +34,7 @@ let activeStatus: "idle" | "playing" | "paused" = "idle";
 let activeHandleId: string | null = null;
 let abortController: AbortController | null = null;
 
-function cleanupAudio() {
+function cleanupAudio(preserveHandle: boolean = false) {
   if (abortController) {
     try {
       abortController.abort();
@@ -67,7 +67,9 @@ function cleanupAudio() {
     activeUtterance = null;
   }
   activeStatus = "idle";
-  activeHandleId = null;
+  if (!preserveHandle) {
+    activeHandleId = null;
+  }
 }
 
 /**
@@ -238,15 +240,13 @@ export async function speakUnified(options: UnifiedSpeechOptions): Promise<Activ
         try {
           await audio.play();
         } catch (playErr) {
-          const isNotAllowed =
-            playErr instanceof Error &&
-            (playErr.name === "NotAllowedError" || playErr.message.toLowerCase().includes("interact"));
-          if (isNotAllowed) {
-            cleanupAudio();
+          console.warn("[unified-tts] audio.play() was prevented by browser, switching to Web Speech:", playErr);
+          cleanupAudio(true);
+          activeHandleId = handleId;
+          const fallbackStarted = speakWithBrowserSpeech();
+          if (!fallbackStarted) {
             throw playErr;
           }
-          cleanupAudio();
-          speakWithBrowserSpeech();
         }
         return {
           id: handleId,
@@ -255,11 +255,19 @@ export async function speakUnified(options: UnifiedSpeechOptions): Promise<Activ
               activeAudio.pause();
               activeStatus = "paused";
               options.onPause?.();
+            } else if (typeof window !== "undefined" && "speechSynthesis" in window && activeHandleId === handleId) {
+              window.speechSynthesis.pause();
+              activeStatus = "paused";
+              options.onPause?.();
             }
           },
           resume: async () => {
             if (activeAudio && activeHandleId === handleId) {
               await activeAudio.play();
+              activeStatus = "playing";
+              options.onResume?.();
+            } else if (typeof window !== "undefined" && "speechSynthesis" in window && activeHandleId === handleId) {
+              window.speechSynthesis.resume();
               activeStatus = "playing";
               options.onResume?.();
             }
@@ -288,6 +296,7 @@ export async function speakUnified(options: UnifiedSpeechOptions): Promise<Activ
       };
     }
     console.warn("[unified-tts] Server TTS fetch failed, switching to browser speech:", error);
+    activeHandleId = handleId;
   }
 
   // Fallback to Web Speech if server TTS was not returned

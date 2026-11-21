@@ -9,18 +9,24 @@ interface KundliVoicePlayerProps {
   content: string;
   language: "en" | "hi";
   messageId: string;
+  autoPlay?: boolean;
 }
+
+// Global registry of played Kundli message narration IDs to prevent duplicate autoplays across re-renders
+const playedKundliNarrationIds = new Set<string>();
 
 export default function KundliVoicePlayer({
   content,
   language,
   messageId,
+  autoPlay = false,
 }: KundliVoicePlayerProps) {
   // Extract Section 5 and Section 6
   const rawSections = extractKundliSections5And6(content);
   const [playerState, setPlayerState] = useState<"idle" | "loading" | "playing" | "paused" | "completed">("idle");
   const speechHandleRef = useRef<ActiveSpeechHandle | null>(null);
   const isPlayingRef = useRef(false);
+  const hasAutoPlayedRef = useRef(false);
 
   // Stop any active speech
   const handleStop = useCallback(() => {
@@ -33,7 +39,7 @@ export default function KundliVoicePlayer({
     setPlayerState("idle");
   }, []);
 
-  // Play or Resume
+  // Play or Resume narration
   const handlePlay = useCallback(async () => {
     if (!rawSections) return;
 
@@ -44,15 +50,18 @@ export default function KundliVoicePlayer({
         setPlayerState("playing");
         return;
       } catch (e) {
-        console.warn("[kundli-voice] Could not resume, restarting:", e);
+        console.warn("[kundli-voice] Could not resume speech, restarting:", e);
       }
     }
 
-    // Stop any existing speech before starting new
+    // Stop any existing speech before starting new narration
     stopAllSpeech();
     setPlayerState("loading");
 
-    // Strictly sanitize ONLY Section 5 and Section 6 for audio synthesis
+    // Strictly sanitize ONLY Section 5 and Section 6 for audio synthesis:
+    // Replaces robotic "Point 5 explain" / "Point 6 explain" with natural phrases:
+    // - English: "Important points about your Kundli:" & "Practical guidance for your Kundli:"
+    // - Hindi: "आपकी कुंडली के महत्वपूर्ण बिंदु:" & "आपकी कुंडली के लिए व्यावहारिक मार्गदर्शन:"
     const textToSpeak = sanitizeTextForTTS(rawSections, language);
 
     try {
@@ -87,13 +96,16 @@ export default function KundliVoicePlayer({
 
       speechHandleRef.current = handle;
     } catch (error) {
-      console.error("[kundli-voice] Failed to play:", error);
+      console.warn("[kundli-voice] Playback could not start (possibly autoplay policy):", error);
       speechHandleRef.current = null;
       setPlayerState("idle");
     }
   }, [language, playerState, rawSections]);
 
-  // Pause
+  const handlePlayRef = useRef(handlePlay);
+  handlePlayRef.current = handlePlay;
+
+  // Pause narration
   const handlePause = useCallback(() => {
     if (speechHandleRef.current) {
       speechHandleRef.current.pause();
@@ -103,6 +115,24 @@ export default function KundliVoicePlayer({
       handleStop();
     }
   }, [handleStop]);
+
+  // Automatic Voice Narration on Kundli Generation:
+  // When a new Kundli response is generated, automatically start explaining Sections 5 & 6
+  useEffect(() => {
+    if (!autoPlay || !rawSections || hasAutoPlayedRef.current || playedKundliNarrationIds.has(messageId)) {
+      return;
+    }
+
+    hasAutoPlayedRef.current = true;
+    playedKundliNarrationIds.add(messageId);
+
+    // Give a brief delay for UI mounting and DOM readiness before starting auto voice
+    const timer = setTimeout(() => {
+      void handlePlayRef.current();
+    }, 450);
+
+    return () => clearTimeout(timer);
+  }, [autoPlay, messageId, rawSections]);
 
   // Auto-Cleanup 1: When user switches tabs or hides document
   useEffect(() => {
@@ -125,11 +155,10 @@ export default function KundliVoicePlayer({
     window.addEventListener("vedic-language-change", handleLanguageChange);
     return () => {
       window.removeEventListener("vedic-language-change", handleLanguageChange);
-      handleStop();
     };
-  }, [handleStop, language]);
+  }, [handleStop]);
 
-  // Auto-Cleanup 3: When a new Kundli report is generated or stop requested
+  // Auto-Cleanup 3: When a new turn or query is initiated
   useEffect(() => {
     const handleStopVoiceEvent = () => {
       handleStop();
@@ -150,7 +179,7 @@ export default function KundliVoicePlayer({
     };
   }, []);
 
-  // If this message does not contain Section 5 & 6, do not render player
+  // If this message does not contain Section 5 & 6, do not render speaker control
   if (!rawSections) {
     return null;
   }
@@ -159,130 +188,113 @@ export default function KundliVoicePlayer({
 
   return (
     <div
-      className="kundli-voice-player mb-4 p-3 rounded-xl border border-[var(--gold)]/30 bg-[var(--wash)] shadow-sm transition-all duration-300"
+      className="kundli-voice-pill-container inline-flex items-center"
       data-testid="kundli-voice-player"
       data-message-id={messageId}
       role="region"
-      aria-label={isHindi ? "कुंडली मुख्य बिंदु और मार्गदर्शन वाक् वाचन" : "Kundli Key Points & Guidance Voice Narration"}
+      aria-label={isHindi ? "कुंडली मुख्य बिंदु और व्यावहारिक मार्गदर्शन वाचन" : "Kundli Important Points & Guidance Voice Narration"}
     >
-      <div className="flex flex-wrap items-center justify-between gap-2.5">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div
-            className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
-              playerState === "playing"
-                ? "bg-[var(--gold)] text-black animate-pulse shadow-md shadow-[var(--gold)]/20"
-                : "bg-[var(--gold)]/15 text-[var(--gold)]"
-            }`}
-          >
-            {playerState === "playing" ? (
-              <Volume2 size={16} className="animate-bounce" />
-            ) : (
-              <Volume2 size={16} />
-            )}
+      {playerState === "loading" ? (
+        <span
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300 animate-pulse backdrop-blur-md"
+          aria-label={isHindi ? "ऑडियो तैयार हो रहा है…" : "Preparing voice…"}
+        >
+          <LoaderCircle size={12} className="animate-spin text-amber-600 dark:text-amber-400" />
+          <span className="hidden sm:inline">{isHindi ? "वाचन तैयार हो रहा है…" : "Loading voice…"}</span>
+          <span className="sm:hidden">{isHindi ? "तैयारी…" : "Loading…"}</span>
+        </span>
+      ) : playerState === "playing" ? (
+        <div
+          className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-[11px] font-semibold border border-amber-500/40 bg-amber-500/15 text-amber-900 dark:text-amber-200 shadow-[0_0_12px_rgba(212,163,60,0.18)] backdrop-blur-md transition-all animate-pulse"
+        >
+          {/* Animated soundwave bars */}
+          <div className="flex items-center gap-0.5">
+            <Volume2 size={13} className="text-amber-600 dark:text-amber-400 shrink-0" />
+            <span className="flex items-end gap-0.5 ml-1 h-3">
+              <span className="w-0.5 h-2 bg-amber-600 dark:bg-amber-400 rounded-full animate-[pulse_0.5s_ease-in-out_infinite]" />
+              <span className="w-0.5 h-3 bg-amber-600 dark:bg-amber-400 rounded-full animate-[pulse_0.35s_ease-in-out_infinite]" />
+              <span className="w-0.5 h-1.5 bg-amber-600 dark:bg-amber-400 rounded-full animate-[pulse_0.6s_ease-in-out_infinite]" />
+            </span>
           </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs font-bold uppercase tracking-wider text-[var(--gold)] font-sans">
-                {isHindi ? "ऑडियो वाचन · महत्वपूर्ण बिंदु" : "VOICE NARRATION · IMPORTANT POINTS"}
-              </span>
-              {playerState === "playing" && (
-                <span className="inline-flex items-center px-1.5 py-0.2 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-400 animate-pulse">
-                  {isHindi ? "बोल रहा है…" : "Speaking…"}
-                </span>
-              )}
-              {playerState === "paused" && (
-                <span className="inline-flex items-center px-1.5 py-0.2 rounded-full text-[10px] font-semibold bg-amber-500/20 text-amber-400">
-                  {isHindi ? "रोका गया" : "Paused"}
-                </span>
-              )}
-            </div>
-            <p className="text-xs text-[var(--text)] font-medium truncate mt-0.5">
-              {isHindi
-                ? "आपकी कुंडली के महत्वपूर्ण बिंदु व मार्गदर्शन सुनें"
-                : "Listen to Important Points About Your Kundli"}
-            </p>
-          </div>
-        </div>
 
-        {/* Playback Controls (Play / Pause / Stop / Replay) */}
-        <div className="flex items-center gap-1.5 ml-auto">
-          {playerState === "loading" ? (
+          <span className="truncate max-w-[120px] sm:max-w-none text-xs">
+            {isHindi ? "महत्वपूर्ण बिंदु वाचन" : "Speaking Important Points"}
+          </span>
+
+          <div className="flex items-center gap-1 border-l border-amber-600/30 dark:border-amber-400/30 pl-1.5">
             <button
               type="button"
-              disabled
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--gold)]/20 text-[var(--gold)] cursor-not-allowed opacity-80"
-              aria-label="Loading voice"
+              onClick={handlePause}
+              className="p-1 rounded-full hover:bg-amber-600/20 dark:hover:bg-amber-400/20 text-amber-800 dark:text-amber-200 transition-colors cursor-pointer"
+              title={isHindi ? "वाचन रोकें" : "Pause narration"}
+              aria-label={isHindi ? "वाचन रोकें" : "Pause narration"}
             >
-              <LoaderCircle size={13} className="animate-spin" />
-              <span>{isHindi ? "तैयार हो रहा है…" : "Loading…"}</span>
+              <Pause size={11} fill="currentColor" />
             </button>
-          ) : playerState === "playing" ? (
-            <>
-              <button
-                type="button"
-                onClick={handlePause}
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--gold)] text-black hover:bg-[var(--gold)]/90 transition-all shadow-sm"
-                aria-label={isHindi ? "वाचन रोकें" : "Pause narration"}
-              >
-                <Pause size={13} />
-                <span>{isHindi ? "रोकें" : "Pause"}</span>
-              </button>
-              <button
-                type="button"
-                onClick={handleStop}
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-[var(--muted)] hover:text-rose-400 hover:bg-rose-500/10 transition-all"
-                title={isHindi ? "वाचन बंद करें" : "Stop narration"}
-                aria-label={isHindi ? "वाचन बंद करें" : "Stop narration"}
-              >
-                <Square size={13} />
-                <span>{isHindi ? "बंद करें" : "Stop"}</span>
-              </button>
-            </>
-          ) : playerState === "paused" ? (
-            <>
-              <button
-                type="button"
-                onClick={handlePlay}
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--gold)] text-black hover:bg-[var(--gold)]/90 transition-all shadow-sm"
-                aria-label={isHindi ? "वाचन पुनः शुरू करें" : "Resume narration"}
-              >
-                <Play size={13} />
-                <span>{isHindi ? "जारी रखें" : "Resume"}</span>
-              </button>
-              <button
-                type="button"
-                onClick={handleStop}
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-[var(--muted)] hover:text-rose-400 hover:bg-rose-500/10 transition-all"
-                title={isHindi ? "वाचन बंद करें" : "Stop narration"}
-                aria-label={isHindi ? "वाचन बंद करें" : "Stop narration"}
-              >
-                <Square size={13} />
-                <span>{isHindi ? "बंद करें" : "Stop"}</span>
-              </button>
-            </>
-          ) : playerState === "completed" ? (
             <button
               type="button"
-              onClick={handlePlay}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--gold)] text-black hover:bg-[var(--gold)]/90 transition-all shadow-sm"
-              aria-label={isHindi ? "पुनः सुनें" : "Replay narration"}
+              onClick={handleStop}
+              className="p-1 rounded-full hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 transition-colors cursor-pointer"
+              title={isHindi ? "वाचन बंद करें" : "Stop narration"}
+              aria-label={isHindi ? "वाचन बंद करें" : "Stop narration"}
             >
-              <RotateCcw size={13} />
-              <span>{isHindi ? "पुनः सुनें" : "Replay"}</span>
+              <Square size={10} fill="currentColor" />
             </button>
-          ) : (
-            <button
-              type="button"
-              onClick={handlePlay}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-[var(--gold)] text-black hover:bg-[var(--gold)]/90 transition-all shadow-sm hover:scale-[1.02] active:scale-[0.98]"
-              aria-label={isHindi ? "खंड 5 और 6 सुनें" : "Listen to Sections 5 & 6"}
-            >
-              <Play size={13} fill="currentColor" />
-              <span>{isHindi ? "सुनें (खंड 5 और 6)" : "Listen to Sec 5 & 6"}</span>
-            </button>
-          )}
+          </div>
         </div>
-      </div>
+      ) : playerState === "paused" ? (
+        <div
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-200 backdrop-blur-md transition-all"
+        >
+          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 dark:text-amber-400">
+            <Pause size={11} />
+            <span>{isHindi ? "रुका हुआ" : "Paused"}</span>
+          </span>
+
+          <div className="flex items-center gap-1 border-l border-amber-600/30 dark:border-amber-400/30 pl-1.5">
+            <button
+              type="button"
+              onClick={handlePlay}
+              className="p-1 rounded-full hover:bg-amber-600/20 dark:hover:bg-amber-400/20 text-amber-800 dark:text-amber-200 transition-colors cursor-pointer"
+              title={isHindi ? "वाचन जारी रखें" : "Resume narration"}
+              aria-label={isHindi ? "वाचन जारी रखें" : "Resume narration"}
+            >
+              <Play size={11} fill="currentColor" />
+            </button>
+            <button
+              type="button"
+              onClick={handleStop}
+              className="p-1 rounded-full hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 transition-colors cursor-pointer"
+              title={isHindi ? "वाचन बंद करें" : "Stop narration"}
+              aria-label={isHindi ? "वाचन बंद करें" : "Stop narration"}
+            >
+              <Square size={10} fill="currentColor" />
+            </button>
+          </div>
+        </div>
+      ) : playerState === "completed" ? (
+        <button
+          type="button"
+          onClick={handlePlay}
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border border-amber-500/25 bg-amber-500/10 hover:bg-amber-500/20 text-amber-800 dark:text-amber-300 backdrop-blur-md transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+          title={isHindi ? "महत्वपूर्ण बिंदु पुनः सुनें" : "Replay Important Points"}
+          aria-label={isHindi ? "महत्वपूर्ण बिंदु पुनः सुनें" : "Replay Important Points"}
+        >
+          <RotateCcw size={11} className="text-amber-600 dark:text-amber-400" />
+          <span>{isHindi ? "पुनः सुनें" : "Replay Points"}</span>
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={handlePlay}
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border border-amber-500/25 bg-amber-500/10 hover:bg-amber-500/20 text-amber-800 dark:text-amber-300 backdrop-blur-md transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+          title={isHindi ? "आपकी कुंडली के महत्वपूर्ण बिंदु सुनें" : "Listen to Important Points About Your Kundli"}
+          aria-label={isHindi ? "आपकी कुंडली के महत्वपूर्ण बिंदु सुनें" : "Listen to Important Points About Your Kundli"}
+        >
+          <Volume2 size={12} className="text-amber-600 dark:text-amber-400 shrink-0" />
+          <span>{isHindi ? "महत्वपूर्ण बिंदु सुनें" : "Listen Important Points"}</span>
+        </button>
+      )}
     </div>
   );
 }

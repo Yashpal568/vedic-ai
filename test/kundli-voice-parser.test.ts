@@ -226,4 +226,69 @@ Ancient texts remind us that free will guides destiny.
     expect(sanitized).toContain("Practical guidance for your Kundli:");
     expect(sanitized).toContain("Point Alpha: Leading strategic vision");
   });
+
+  it("handles the exact 7-section structure prompt format from chat route", () => {
+    const routeReport = `
+### 1. आपका प्रश्न
+करियर कब तक सेटल होगा?
+
+### 2. संक्षेप में उत्तर
+आपकी कुंडली में 10वें भाव में शुभ ग्रह स्थित हैं।
+
+### 3. आपकी कुंडली क्या दर्शाती है
+दशम भाव में सूर्य और बुध का बुधादित्य योग निर्मित हो रहा है।
+
+### 4. आपके लिए इसका क्या अर्थ है
+यह समय प्रशासनिक और बौद्धिक कार्यों के लिए बहुत अनुकूल है।
+
+### 5. मुख्य बिंदु (Important Points About Your Kundli)
+- **दशमेश की स्थिति:** दशम भाव मजबूत है और पदोन्नति के योग बन रहे हैं।
+- **बृहस्पति की दृष्टि:** ज्ञान और सही निर्णय लेने में सहायता मिलेगी।
+- **वर्तमान दशा:** आगामी 6 महीने नए उत्तरदायित्वों के लिए महत्वपूर्ण हैं।
+
+### 6. व्यावहारिक मार्गदर्शन
+- **दैनिक दिनचर्या:** सूर्य नमस्कार और प्रातःकालीन अध्ययन से ऊर्जा संचित रखें।
+- **कार्यस्थल पर संवाद:** सहयोगियों के साथ विनम्रता और स्पष्टता बनाए रखें।
+
+### 7. परंपरा व संदर्भ
+यह ज्योतिषीय संकेत मात्र है, अंतिम परिणाम जातक के पुरुषार्थ और कर्म पर निर्भर है।
+`;
+
+    const extracted = extractKundliSections5And6(routeReport);
+    expect(extracted).not.toBeNull();
+    expect(extracted).toContain("दशमेश की स्थिति");
+    expect(extracted).toContain("दैनिक दिनचर्या");
+    expect(extracted).not.toContain("1. आपका प्रश्न");
+    expect(extracted).not.toContain("4. आपके लिए इसका क्या अर्थ है");
+    expect(extracted).not.toContain("7. परंपरा व संदर्भ");
+
+    const sanitized = sanitizeTextForTTS(extracted!, "hi");
+    expect(sanitized).toContain("आपकी कुंडली के महत्वपूर्ण बिंदु:");
+    expect(sanitized).toContain("आपकी कुंडली के लिए व्यावहारिक मार्गदर्शन:");
+    expect(sanitized).not.toContain("### 5");
+    expect(sanitized).not.toContain("### 6");
+    expect(sanitized).not.toContain("point 5 explain");
+    expect(sanitized).not.toContain("point 6 explain");
+  });
+
+  it("verifies single-play autoplay registry prevents repeating narration on re-renders", () => {
+    const playedRegistry = new Set<string>();
+    const testMessageId = "msg_kundli_turn_101";
+
+    const shouldAutoPlay = (id: string, isAnimated: boolean) => {
+      if (!isAnimated) return false;
+      if (playedRegistry.has(id)) return false;
+      playedRegistry.add(id);
+      return true;
+    };
+
+    // First render of new Kundli turn: autoplays
+    expect(shouldAutoPlay(testMessageId, true)).toBe(true);
+
+    // Subsequent re-render of same turn: does not autoplay again
+    expect(shouldAutoPlay(testMessageId, true)).toBe(false);
+
+    // Historical message without animation: does not autoplay
+    expect(shouldAutoPlay("msg_historical_turn", false)).toBe(false);
+  });
 });
