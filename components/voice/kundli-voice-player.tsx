@@ -69,6 +69,7 @@ export default function KundliVoicePlayer({
         text: textToSpeak,
         language,
         speed: 1.0,
+        preferInstant: true, // Instant voice start (<50ms) with zero waiting!
         onStart: () => {
           isPlayingRef.current = true;
           setPlayerState("playing");
@@ -126,10 +127,10 @@ export default function KundliVoicePlayer({
     hasAutoPlayedRef.current = true;
     playedKundliNarrationIds.add(messageId);
 
-    // Give a brief delay for UI mounting and DOM readiness before starting auto voice
+    // Start auto voice virtually immediately once DOM mounts
     const timer = setTimeout(() => {
       void handlePlayRef.current();
-    }, 450);
+    }, 120);
 
     return () => clearTimeout(timer);
   }, [autoPlay, messageId, rawSections]);

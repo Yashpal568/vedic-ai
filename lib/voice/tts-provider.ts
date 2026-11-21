@@ -373,16 +373,17 @@ export class GeminiTTSProvider implements TTSProvider {
       };
     }
 
-    // Candidate Gemini TTS models in preference order:
-    // 1. gemini-2.5-flash-preview-tts (Ultra low-latency, warm expressive prosody, high availability)
-    // 2. gemini-3.8-flash-tts (Next-gen Gemini audio)
-    // 3. gemini-3.8-flash-lite-tts / gemini-3.1-flash-tts-preview
+    // For long spoken passages (> 450 chars), monolithic server generation takes 30-40s.
+    // Throw to yield to client Web Speech immediately for instant zero-wait audio playback (<50ms).
+    if (options.text.length > 450 && !options.voiceId) {
+      throw new Error("TEXT_TOO_LONG_FOR_SERVER_TTS");
+    }
+
+    // Candidate Gemini TTS models in preference order
     const candidateModels = [
       modelName,
       "gemini-2.5-flash-preview-tts",
       "gemini-3.8-flash-tts",
-      "gemini-3.8-flash-lite-tts",
-      "gemini-3.1-flash-tts-preview",
     ].filter((m, i, arr) => arr.indexOf(m) === i);
 
     let lastError: unknown = null;
@@ -417,7 +418,7 @@ export class GeminiTTSProvider implements TTSProvider {
               },
             },
           }),
-          signal: AbortSignal.timeout(20_000),
+          signal: AbortSignal.timeout(5_000), // Max 5s timeout, never hangs
         });
 
         if (!response.ok) {
@@ -490,6 +491,12 @@ export class GeminiTTSProvider implements TTSProvider {
  * Tries Gemini TTS first if configured, then ElevenLabs, then OpenAI TTS, then yields null to trigger client Web Speech.
  */
 export async function synthesizeAudio(options: TTSGenerateOptions): Promise<TTSResult | null> {
+  // For long passages (> 450 chars), server generation takes 30-40s.
+  // Return null immediately to trigger instant client Web Speech playback (<50ms).
+  if (options.text.length > 450 && !options.voiceId) {
+    return null;
+  }
+
   const gemini = new GeminiTTSProvider();
   if (gemini.validateConfiguration().configured) {
     try {

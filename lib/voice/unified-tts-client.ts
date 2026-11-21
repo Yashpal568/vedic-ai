@@ -10,6 +10,7 @@ export interface UnifiedSpeechOptions {
   text: string;
   language: TTSLanguageCode;
   speed?: number;
+  preferInstant?: boolean; // When true, starts speech playback instantly via Web Speech (<50ms latency)
   onStart?: () => void;
   onPause?: () => void;
   onResume?: () => void;
@@ -183,7 +184,40 @@ export async function speakUnified(options: UnifiedSpeechOptions): Promise<Activ
     }
   };
 
-  // Try server-side synthesis via /api/voice/speech first
+  // If preferInstant is requested and Web Speech is supported in this browser,
+  // start speaking immediately with zero network latency (<50ms)!
+  if (options.preferInstant && typeof window !== "undefined" && "speechSynthesis" in window) {
+    const started = speakWithBrowserSpeech();
+    if (started) {
+      return {
+        id: handleId,
+        pause: () => {
+          if (typeof window !== "undefined" && "speechSynthesis" in window && activeHandleId === handleId) {
+            window.speechSynthesis.pause();
+            activeStatus = "paused";
+            options.onPause?.();
+          }
+        },
+        resume: async () => {
+          if (typeof window !== "undefined" && "speechSynthesis" in window && activeHandleId === handleId) {
+            window.speechSynthesis.resume();
+            activeStatus = "playing";
+            options.onResume?.();
+          }
+        },
+        stop: () => {
+          if (activeHandleId === handleId) {
+            cleanupAudio();
+            options.onEnd?.();
+          }
+        },
+        isPlaying: () => activeStatus === "playing" && activeHandleId === handleId,
+        isPaused: () => activeStatus === "paused" && activeHandleId === handleId,
+      };
+    }
+  }
+
+  // Try server-side synthesis via /api/voice/speech with tight timeout
   try {
     const response = await fetch("/api/voice/speech", {
       method: "POST",
@@ -193,7 +227,7 @@ export async function speakUnified(options: UnifiedSpeechOptions): Promise<Activ
         language,
         speed,
       }),
-      signal,
+      signal: AbortSignal.timeout(5_000), // Max 5s timeout, never hangs for a minute!
     });
 
     if (response.ok && activeHandleId === handleId) {
