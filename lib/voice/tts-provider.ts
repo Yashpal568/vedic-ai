@@ -58,6 +58,31 @@ const audioCache = new Map<string, CacheEntry>();
 const MAX_CACHE_ENTRIES = 100;
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
+/**
+ * Wraps raw linear PCM (L16) audio buffer in a standard 44-byte RIFF/WAVE header.
+ * Allows HTML5 <audio> elements and Web Audio across all browsers (iOS, Android, Chrome, Safari)
+ * to natively play Google Gemini Flash TTS audio with full fidelity.
+ */
+function pcmToWav(pcmBuffer: Buffer, sampleRate = 24000, numChannels = 1, bitsPerSample = 16): Buffer {
+  const byteRate = (sampleRate * numChannels * bitsPerSample) / 8;
+  const blockAlign = (numChannels * bitsPerSample) / 8;
+  const wavHeader = Buffer.alloc(44);
+  wavHeader.write("RIFF", 0);
+  wavHeader.writeUInt32LE(36 + pcmBuffer.length, 4);
+  wavHeader.write("WAVE", 8);
+  wavHeader.write("fmt ", 12);
+  wavHeader.writeUInt32LE(16, 16);
+  wavHeader.writeUInt16LE(1, 20); // PCM format code
+  wavHeader.writeUInt16LE(numChannels, 22);
+  wavHeader.writeUInt32LE(sampleRate, 24);
+  wavHeader.writeUInt32LE(byteRate, 28);
+  wavHeader.writeUInt16LE(blockAlign, 32);
+  wavHeader.writeUInt16LE(bitsPerSample, 34);
+  wavHeader.write("data", 36);
+  wavHeader.writeUInt32LE(pcmBuffer.length, 40);
+  return Buffer.concat([wavHeader, pcmBuffer]);
+}
+
 function generateCacheKey(text: string, provider: string, voiceId: string, speed = 1.0): string {
   const hash = crypto.createHash("sha256");
   hash.update(`${provider}:${voiceId}:${speed}:${text.trim()}`);
@@ -332,8 +357,9 @@ export class GeminiTTSProvider implements TTSProvider {
     }
 
     const requestedModel = options.voiceId?.trim();
-    const modelName = (requestedModel?.startsWith("gemini-") ? requestedModel : process.env.GEMINI_TTS_MODEL?.trim()) || "gemini-3.8-flash-tts";
-    const voiceName = process.env.GEMINI_TTS_VOICE?.trim() || "Kore";
+    const modelName = (requestedModel?.startsWith("gemini-") ? requestedModel : process.env.GEMINI_TTS_MODEL?.trim()) || "gemini-2.5-flash-preview-tts";
+    // Voice "Aoede" delivers authentic emotional resonance, curious inflection, and gentle warmth
+    const voiceName = process.env.GEMINI_TTS_VOICE?.trim() || "Aoede";
     const languageCode = options.language === "hi" ? "hi-IN" : options.language === "en" ? "en-IN" : undefined;
     const cacheKey = generateCacheKey(options.text, "gemini", `${modelName}:${voiceName}:${options.language}`, options.speed);
     const cached = getFromCache(cacheKey);
@@ -347,11 +373,16 @@ export class GeminiTTSProvider implements TTSProvider {
       };
     }
 
-    // Candidate Gemini TTS models in preference order
+    // Candidate Gemini TTS models in preference order:
+    // 1. gemini-2.5-flash-preview-tts (Ultra low-latency, warm expressive prosody, high availability)
+    // 2. gemini-3.8-flash-tts (Next-gen Gemini audio)
+    // 3. gemini-3.8-flash-lite-tts / gemini-3.1-flash-tts-preview
     const candidateModels = [
       modelName,
+      "gemini-2.5-flash-preview-tts",
       "gemini-3.8-flash-tts",
       "gemini-3.8-flash-lite-tts",
+      "gemini-3.1-flash-tts-preview",
     ].filter((m, i, arr) => arr.indexOf(m) === i);
 
     let lastError: unknown = null;
@@ -406,20 +437,38 @@ export class GeminiTTSProvider implements TTSProvider {
         const part = Array.isArray(parts)
           ? parts.find((candidate: { inlineData?: { data?: string } }) => candidate?.inlineData?.data)
           : undefined;
-        const audioBase64 = part?.inlineData?.data;
+        const rawAudioBase64 = part?.inlineData?.data;
         const mimeType = part?.inlineData?.mimeType || "audio/wav";
 
-        if (audioBase64 && typeof audioBase64 === "string" && audioBase64.length > 0) {
+        if (rawAudioBase64 && typeof rawAudioBase64 === "string" && rawAudioBase64.length > 0) {
+          let audioBase64 = rawAudioBase64;
+          let contentType = mimeType;
+
+          // If the model returned raw PCM samples (e.g. audio/L16;codec=pcm;rate=24000), wrap in
+          // standard 44-byte WAV container so HTML5 <audio> can decode and play the studio voice instantly!
+          if (mimeType.includes("L16") || mimeType.includes("pcm")) {
+            try {
+              const rateMatch = mimeType.match(/rate=(\d+)/);
+              const sampleRate = rateMatch ? parseInt(rateMatch[1], 10) : 24000;
+              const pcmBuffer = Buffer.from(rawAudioBase64, "base64");
+              const wavBuffer = pcmToWav(pcmBuffer, sampleRate, 1, 16);
+              audioBase64 = wavBuffer.toString("base64");
+              contentType = "audio/wav";
+            } catch (convErr) {
+              console.warn("[tts-provider] Could not convert PCM to WAV, using raw:", convErr);
+            }
+          }
+
           const result: TTSResult = {
             audioBase64,
-            contentType: mimeType,
+            contentType,
             provider: "gemini",
             voiceId: model,
           };
 
           setToCache(cacheKey, {
             audioBase64,
-            contentType: mimeType,
+            contentType,
             provider: "gemini",
             voiceId: model,
           });

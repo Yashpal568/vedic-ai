@@ -105,20 +105,26 @@ export async function speakUnified(options: UnifiedSpeechOptions): Promise<Activ
     try {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = Math.max(0.7, Math.min(1.5, speed));
-      utterance.pitch = 1.0;
+      // Gentle, thoughtful conversational pacing with emotional warmth & curiosity
+      utterance.rate = Math.max(0.7, Math.min(1.5, (speed || 1.0) * 0.94));
+      utterance.pitch = 1.05;
       utterance.lang = language === "hi" ? "hi-IN" : "en-US";
 
-      // Select matching voice if available
+      // Select neural / natural Indian voices with priority to avoid flat robotic timbre
       const voices = window.speechSynthesis.getVoices();
       if (voices && voices.length > 0) {
         if (language === "hi") {
           const hiVoice =
+            voices.find((v) => v.name.includes("Natural") && v.lang.toLowerCase().includes("hi")) ||
+            voices.find((v) => v.name.includes("Google") && v.lang.toLowerCase().includes("hi")) ||
             voices.find((v) => v.lang.toLowerCase().startsWith("hi") || v.name.includes("Hindi")) ||
             voices.find((v) => v.lang.toLowerCase().includes("in"));
           if (hiVoice) utterance.voice = hiVoice;
         } else {
           const enVoice =
+            voices.find((v) => v.name.includes("Natural") && (v.lang.toLowerCase() === "en-in" || v.name.includes("India"))) ||
+            voices.find((v) => v.name.includes("Google") && (v.lang.toLowerCase() === "en-in" || v.name.includes("India"))) ||
+            voices.find((v) => v.name.includes("Natural")) ||
             voices.find((v) => v.lang.toLowerCase() === "en-in") ||
             voices.find((v) => v.lang.toLowerCase().startsWith("en"));
           if (enVoice) utterance.voice = enVoice;

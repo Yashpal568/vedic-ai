@@ -58,13 +58,15 @@ export function sanitizeTextForTTS(markdown: string, language?: "en" | "hi"): st
   // Auto-detect Hindi if explicit language is 'hi' or text contains Devanagari Unicode
   const isHi = language === "hi" || /[\u0900-\u097F]/.test(markdown);
 
+  // Warm, expressive introductory phrasing infused with curiosity, intrigue, and authentic Vedic warmth
   const s5Replacement = isHi
-    ? "आपकी कुंडली के महत्वपूर्ण बिंदु: "
-    : "Important points about your Kundli: ";
+    ? "नमस्ते! आपकी जन्म कुंडली में कुछ बहुत ही दिलचस्प और महत्वपूर्ण बिंदु सामने आए हैं... इन्हें ध्यान से समझिए: आपकी कुंडली के महत्वपूर्ण बिंदु: "
+    : "Namaste! Looking deeply into your birth chart, there are some truly fascinating and important observations to explore. Important points about your Kundli: ";
 
+  // Empathetic, caring transition into practical daily life guidance
   const s6Replacement = isHi
-    ? ". आपकी कुंडली के लिए व्यावहारिक मार्गदर्शन: "
-    : ". Practical guidance for your Kundli: ";
+    ? ". और आपके दैनिक जीवन में शांति व संतुलन के लिए, आपकी कुंडली के लिए व्यावहारिक मार्गदर्शन: "
+    : ". And to bring daily harmony and conscious balance into your life, Practical guidance for your Kundli: ";
 
   // Match line 5 header safely up to end-of-line
   const s5Regex = /(?:^|\n)\s*(?:#{1,6}\s*|\*{1,2}\s*)?(?:point\s*5(?:\s*explain)?|5\.)(?:\s*explain)?(?:\s*(?:important\s*points(?:\s*about\s*your\s*kundli)?|key\s*(?:points|highlights)|मुख्य\s*बिंदु|महत्वपूर्ण\s*बिंदु))?[^\n]*/gi;
@@ -72,8 +74,8 @@ export function sanitizeTextForTTS(markdown: string, language?: "en" | "hi"): st
   // Match line 6 header safely up to end-of-line
   const s6Regex = /(?:^|\n)\s*(?:#{1,6}\s*|\*{1,2}\s*)?(?:point\s*6(?:\s*explain)?|6\.)(?:\s*explain)?(?:\s*(?:practical\s*guidance(?:\s*for\s*your\s*kundli)?|actionable\s*advice|व्यावहारिक\s*मार्गदर्शन))?[^\n]*/gi;
 
-  return markdown
-    // Replace Section 5 and 6 headers with natural human voice phrasing
+  let text = markdown
+    // Replace Section 5 and 6 headers with natural human voice phrasing infused with curiosity & emotion
     .replace(s5Regex, "\n" + s5Replacement)
     .replace(s6Regex, "\n" + s6Replacement)
     // Remove markdown headers (#, ##, ###, etc.)
@@ -82,6 +84,22 @@ export function sanitizeTextForTTS(markdown: string, language?: "en" | "hi"): st
     .replace(/[*_]{1,3}([^*_]+)[*_]{1,3}/g, "$1")
     // Remove inline code formatting (`code`)
     .replace(/`([^`]+)`/g, "$1")
+    // Natural ordinal house pronunciations in Hindi so it doesn't sound mechanical like "char-tha bhav"
+    .replace(/4-था\s*भाव|4th\s*भाव/gi, "चौथे भाव")
+    .replace(/10-वाँ\s*भाव|10-वां\s*भाव|10th\s*भाव/gi, "दसवें भाव")
+    .replace(/11-वाँ\s*भाव|11-वां\s*भाव|11th\s*भाव/gi, "ग्यारहवें भाव")
+    .replace(/12-वाँ\s*भाव|12-वां\s*भाव|12th\s*भाव/gi, "बारहवें भाव")
+    .replace(/1-ला\s*भाव|1st\s*भाव/gi, "प्रथम भाव")
+    .replace(/2-रा\s*भाव|2nd\s*भाव/gi, "दूसरे भाव")
+    .replace(/3-रा\s*भाव|3rd\s*भाव/gi, "तीसरे भाव")
+    .replace(/5-वाँ\s*भाव|5-वां\s*भाव|5th\s*भाव/gi, "पांचवें भाव")
+    .replace(/6-ठा\s*भाव|6-वां\s*भाव|6th\s*भाव/gi, "छठे भाव")
+    .replace(/7-वाँ\s*भाव|7-वां\s*भाव|7th\s*भाव/gi, "सातवें भाव")
+    .replace(/8-वाँ\s*भाव|8-वां\s*भाव|8th\s*भाव/gi, "आठवें भाव")
+    .replace(/9-वाँ\s*भाव|9-वां\s*भाव|9th\s*भाव/gi, "नवम भाव")
+    // Clean grouped planet dashes inside parentheses e.g. (मंगल-बृहस्पति-केतु)
+    .replace(/\(([^\)]+)-([^\)]+)-([^\)]+)\)/g, isHi ? " में $1, $2 और $3 " : " with $1, $2 and $3 ")
+    .replace(/\(([^\)]+)-([^\)]+)\)/g, isHi ? " में $1 और $2 " : " with $1 and $2 ")
     // Remove leading bullet points (-, *, •, +, >)
     .replace(/^[\s*•\-+>]+\s*/gm, "")
     // Turn em-dashes and en-dashes into commas for natural conversational pauses
@@ -108,4 +126,15 @@ export function sanitizeTextForTTS(markdown: string, language?: "en" | "hi"): st
     .replace(/\.\s*,/g, ".")
     .replace(/^[,.\s]+/, "")
     .trim();
+
+  // Conclude with warm, supportive Vedic wisdom
+  const closingWisdom = isHi
+    ? ". याद रखें, जन्म कुंडली संभावनाओं का सुंदर दर्पण है, आपका सजग कर्म, धैर्य और आत्म-विश्वास ही आपकी सच्ची शक्ति है।"
+    : ". Always remember, your birth chart reflects celestial potentials, but your conscious karma, clarity of mind, and inner strength guide your path.";
+
+  if (!text.endsWith("।") && !text.endsWith(".")) {
+    text += ".";
+  }
+
+  return text + closingWisdom;
 }
